@@ -1,6 +1,7 @@
-package gfx;
+package turtleduck.display;
 
-public interface IPaintLayer {
+
+public interface Layer {
 	/**
 	 * Clear the layer.
 	 * 

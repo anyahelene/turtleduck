@@ -1,11 +1,18 @@
 package turtleduck.demo;
 
-import turtleduck.colors.IColor;
-import turtleduck.colors.Xlate;
+import turtleduck.Launcher;
+import turtleduck.TurtleDuckApp;
+import turtleduck.display.Screen;
 
-public class Demo {
+public class Demo implements TurtleDuckApp {
 
 	public static void main(String[] args) {
-		System.out.println(Xlate.xlator.translate(IColor.color(1, 0.5, 1)));
+		Launcher.application(new Demo()).launch(args);
+	}
+
+	@Override
+	public void start(Screen screen) {
+		// TODO Auto-generated method stub
+		
 	}
 }
