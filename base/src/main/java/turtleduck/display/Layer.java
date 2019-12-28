@@ -1,5 +1,6 @@
 package turtleduck.display;
 
+import turtleduck.turtle.Canvas;
 
 public interface Layer {
 	/**
@@ -29,11 +30,19 @@ public interface Layer {
 	/**
 	 * @return Width (in pixels) of graphics layer
 	 */
-	double getWidth();
+	double width();
 
 	/**
 	 * @return Height (in pixels) of graphics layer
 	 */
-	double getHeight();
+	double height();
+	
+	/**
+	 * @return A canvas for drawing on
+	 */
+	Canvas canvas();
 
+	void show();
+	
+	void hide();
 }

@@ -1,5 +1,5 @@
 package turtleduck.turtle;
 
-public interface Painter {
+public interface Path {
 
 }

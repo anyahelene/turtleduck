@@ -1,12 +1,16 @@
 package turtleduck.colors;
 
-public class ColorRGB implements IColor {
+public class ColorRGB implements Paint {
 	private final float red;
 	private final float green;
 	private final float blue;
 	private final float alpha;
 
 	protected ColorRGB(float r, float g, float b, float a) {
+		assert r >= 0.0 && r <= 1.0;
+		assert g >= 0.0 && g <= 1.0;
+		assert b >= 0.0 && b <= 1.0;
+		assert a >= 0.0 && a <= 1.0;
 		this.red = r;
 		this.green = g;
 		this.blue = b;
@@ -34,35 +38,35 @@ public class ColorRGB implements IColor {
 	}
 
 	@Override
-	public IColor red(double r) {
+	public Paint red(double r) {
 		if (r < 0 || r > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + r + ")");
 		return new ColorRGB((float) r, green, blue, alpha);
 	}
 
 	@Override
-	public IColor green(double g) {
+	public Paint green(double g) {
 		if (g < 0 || g > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + g + ")");
 		return new ColorRGB(red, (float) g, blue, alpha);
 	}
 
 	@Override
-	public IColor blue(double b) {
+	public Paint blue(double b) {
 		if (b < 0 || b > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + b + ")");
 		return new ColorRGB(red, green, (float) b, alpha);
 	}
 
 	@Override
-	public IColor opacity(double a) {
+	public Paint opacity(double a) {
 		if (a < 0 || a > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + a + ")");
 		return new ColorRGB(red, green, blue, (float) a);
 	}
 
 	@Override
-	public IColor mix(IColor other, double proportion) {
+	public Paint mix(Paint other, double proportion) {
 		if (proportion <= 0)
 			return this;
 		else if (proportion >= 1.0)
@@ -118,8 +122,8 @@ public class ColorRGB implements IColor {
 	}
 
 	@Override
-	public IColor brighter() {
-		if (false)
+	public Paint brighter() {
+		if (true)
 			return new ColorRGB(.1f + .9f * red, .1f + .9f * green, .1f + .9f * blue, alpha);
 		else {
 			YCC ycc = new YCC(red, green, blue, alpha);
@@ -129,8 +133,8 @@ public class ColorRGB implements IColor {
 	}
 
 	@Override
-	public IColor darker() {
-		if (false)
+	public Paint darker() {
+		if (true)
 			return new ColorRGB(.9f * red, .9f * green, .9f * blue, alpha);
 		else {
 			YCC ycc = new YCC(red, green, blue, alpha);
@@ -140,12 +144,12 @@ public class ColorRGB implements IColor {
 	}
 
 	@Override
-	public IColor asRGBA() {
+	public Paint asRGBA() {
 		return this;
 	}
 
 	@Override
-	public IColor asCMYK() {
+	public Paint asCMYK() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -173,7 +177,9 @@ public class ColorRGB implements IColor {
 		protected ColorRGB rgb() {
 			float tmp = Y - Cg / 2;
 			float B = tmp - Co / 2;
-			return new ColorRGB(B + Co, Cg + tmp, tmp - Co / 2, A);
+			if(Cg + tmp < 0) 
+				System.out.println("oops!");
+			return new ColorRGB(Math.max(0, B + Co), Math.max(0, Cg + tmp), Math.max(0, tmp - Co / 2), A);
 		}
 	}
 

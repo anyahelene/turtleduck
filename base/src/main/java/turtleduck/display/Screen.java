@@ -2,8 +2,8 @@ package turtleduck.display;
 
 import java.util.function.Predicate;
 
-import turtleduck.turtle.Painter;
-import turtleduck.colors.IColor;
+import turtleduck.turtle.Pen;
+import turtleduck.colors.Paint;
 import turtleduck.events.KeyEvent;
 import turtleduck.text.Printer;
 
@@ -90,7 +90,7 @@ public interface Screen {
 
 	void clearBackground();
 
-	Painter createPainter();
+	Layer createPainter();
 
 	Printer createPrinter();
 
@@ -100,7 +100,7 @@ public interface Screen {
 
 	int getAspect();
 
-	Painter getBackgroundPainter();
+	Layer getBackgroundPainter();
 
 	double getHeight();
 
@@ -134,7 +134,7 @@ public interface Screen {
 
 	void setAspect(int aspect);
 
-	void setBackground(IColor bgColor);
+	void setBackground(Paint bgColor);
 
 	void setFullScreen(boolean fullScreen);
 
@@ -178,4 +178,5 @@ public interface Screen {
 
 	void zoomOut();
 
+	Layer debugLayer();
 }

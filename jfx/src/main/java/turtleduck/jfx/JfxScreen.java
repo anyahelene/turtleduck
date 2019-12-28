@@ -18,20 +18,18 @@ import javafx.scene.canvas.Canvas;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
-import turtleduck.colors.IColor;
+import turtleduck.colors.Paint;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.display.MouseCursor;
 import turtleduck.events.KeyEvent;
-import turtleduck.turtle.Painter;
+import turtleduck.turtle.Pen;
 import turtleduck.text.Printer;
 
 public class JfxScreen implements Screen {
 	private static final javafx.scene.paint.Color JFX_BLACK = javafx.scene.paint.Color.BLACK;
 	private static final double STD_CANVAS_WIDTH = 1280;
 	private static final List<Double> STD_ASPECTS = Arrays.asList(16.0 / 9.0, 16.0 / 10.0, 4.0 / 3.0);
-
-
 
 	public static Screen startPaintScene(Stage stage, int configuration) {
 		int configAspect = (configuration & _CONFIG_ASPECT_MASK);
@@ -141,7 +139,8 @@ public class JfxScreen implements Screen {
 				suppressKeyTyped[0] = false;
 				event.consume();
 			}
-			if (!event.isConsumed() && pScene.keyTypedHandler != null && pScene.keyTypedHandler.test(new JfxKeyEvent(event))) {
+			if (!event.isConsumed() && pScene.keyTypedHandler != null
+					&& pScene.keyTypedHandler.test(new JfxKeyEvent(event))) {
 				event.consume();
 			}
 			if (pScene.logKeyEvents)
@@ -149,7 +148,8 @@ public class JfxScreen implements Screen {
 		});
 		scene.setOnKeyReleased((javafx.scene.input.KeyEvent event) -> {
 			suppressKeyTyped[0] = false;
-			if (!event.isConsumed() && pScene.keyReleasedHandler != null && pScene.keyReleasedHandler.test(new JfxKeyEvent(event))) {
+			if (!event.isConsumed() && pScene.keyReleasedHandler != null
+					&& pScene.keyReleasedHandler.test(new JfxKeyEvent(event))) {
 				event.consume();
 			}
 			if (pScene.logKeyEvents)
@@ -165,8 +165,9 @@ public class JfxScreen implements Screen {
 	private final List<Canvas> canvases = new ArrayList<>();
 	private final Map<Layer, Canvas> layerCanvases = new IdentityHashMap<>();
 	private final Canvas background;
+	private Layer debugLayer;
 	private final Group root;
-	private IColor bgColor = IColor.color(0, 0, 0);
+	private Paint bgColor = Paint.color(0, 0, 0);
 	private int aspect = 0;
 	private double scaling = 0;
 	private double currentScale = 1.0;
@@ -188,7 +189,7 @@ public class JfxScreen implements Screen {
 	private boolean hideFullScreenMouseCursor = true;
 
 	private Cursor oldCursor;
-	private JfxPainter backgroundPainter;
+	private JfxLayer backgroundPainter;
 
 	public JfxScreen(double width, double height, double pixWidth, double pixHeight, double canvasWidth,
 			double canvasHeight) {
@@ -227,12 +228,23 @@ public class JfxScreen implements Screen {
 	}
 
 	@Override
-	public Painter createPainter() {
+	public Layer createPainter() {
 		Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
 		canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
 		canvases.add(canvas);
 		root.getChildren().add(canvas);
-		return new JfxPainter(this, canvas);
+		return new JfxLayer(getWidth(), getHeight(), this, canvas);
+	}
+
+	public Layer debugLayer() {
+		if (debugLayer == null) {
+			Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
+			canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
+			canvases.add(canvas);
+			root.getChildren().add(canvas);
+			debugLayer = new JfxLayer(getWidth(), getHeight(), this, canvas);
+		}
+		return debugLayer;
 	}
 
 	@Override
@@ -262,9 +274,9 @@ public class JfxScreen implements Screen {
 	}
 
 	@Override
-	public Painter getBackgroundPainter() {
-		if(backgroundPainter == null)
-			backgroundPainter = new JfxPainter(this, background);
+	public Layer getBackgroundPainter() {
+		if (backgroundPainter == null)
+			backgroundPainter = new JfxLayer(getWidth(), getHeight(), this, background);
 		return backgroundPainter;
 	}
 
@@ -426,7 +438,7 @@ public class JfxScreen implements Screen {
 	}
 
 	@Override
-	public void setBackground(IColor bgColor) {
+	public void setBackground(Paint bgColor) {
 		this.bgColor = bgColor;
 		subScene.setFill(JfxColor.toJfxColor(bgColor.darker()));
 	}
@@ -541,5 +553,4 @@ public class JfxScreen implements Screen {
 		recomputeLayout(false);
 	}
 
-	
 }

@@ -19,7 +19,7 @@ public enum PixelFormat {
 		nBytes = 4;
 	}
 
-	public IColor decode(byte[] pixels, int offset) {
+	public Paint decode(byte[] pixels, int offset) {
 		if (pixels.length < offset + nBytes)
 			throw new IllegalArgumentException(); // TODO
 		float r = 0, g = 0, b = 0, a = 1;
@@ -38,7 +38,7 @@ public enum PixelFormat {
 		return new ColorRGB(r, g, b, a);
 	}
 
-	public IColor decode(ByteBuffer pixels, int offset) {
+	public Paint decode(ByteBuffer pixels, int offset) {
 //		if(pixels.pixels.length < offset + nBytes)
 //			throw new IllegalArgumentException(); // TODO
 		if(nBytes == 1) {
