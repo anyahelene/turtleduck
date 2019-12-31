@@ -45,6 +45,7 @@ public abstract class StatefulCanvas implements Canvas {
 
 	@Override
 	public Canvas polyline(Stroke stroke, Fill fill, Geometry geom, Point... points) {
+		flush();
 		setup(stroke, fill, geom);
 		loadArray(points);
 		if (fill != null)
@@ -56,6 +57,7 @@ public abstract class StatefulCanvas implements Canvas {
 
 	@Override
 	public Canvas polygon(Stroke stroke, Fill fill, Geometry geom, Point... points) {
+		flush();
 		setup(stroke, fill, geom);
 		loadArray(points);
 		if (fill != null)
@@ -67,6 +69,7 @@ public abstract class StatefulCanvas implements Canvas {
 
 	@Override
 	public Canvas triangles(Stroke stroke, Fill fill, Geometry geom, Point... points) {
+		flush();
 		setup(stroke, fill, geom);
 		loadArray(points);
 		if (fill != null)
@@ -78,6 +81,7 @@ public abstract class StatefulCanvas implements Canvas {
 
 	@Override
 	public Canvas shape(Stroke stroke, Fill fill, Geometry geom, IShape shape) {
+		flush();
 		setup(stroke, fill, geom);
 		if (fill != null)
 			fillShape(shape);
@@ -88,6 +92,7 @@ public abstract class StatefulCanvas implements Canvas {
 
 	@Override
 	public Canvas path(Stroke stroke, Fill fill, Geometry geom, Path path) {
+		flush();
 		setup(stroke, fill, geom);
 		if (fill != null)
 			fillPath(path);
@@ -98,11 +103,13 @@ public abstract class StatefulCanvas implements Canvas {
 
 	@Override
 	public Canvas clear() {
+		flush();
 		clearAll();
 		return this;
 	}
 	@Override
 	public Canvas clear(Fill fill) {
+		flush();
 		setup(null, fill, null);
 		fillAll();
 		return this;

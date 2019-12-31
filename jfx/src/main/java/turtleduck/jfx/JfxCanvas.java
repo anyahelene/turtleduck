@@ -1,24 +1,39 @@
 package turtleduck.jfx;
 
 import java.util.Arrays;
+import java.util.List;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.shape.StrokeLineCap;
 import turtleduck.geometry.Point;
+import turtleduck.jfx.internal.JfxLineBuilder;
+import turtleduck.jfx.internal.PointList;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
+import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.base.StatefulCanvas;
 
 public class JfxCanvas extends StatefulCanvas {
+	private static int totalOps = 0;
+	private static int lineOps = 0;
+	private static int fillOps = 0;
+	private static int contextOps = 0;
+	private static int lineSegments = 0;
 	private Canvas canvas;
 	private GraphicsContext context;
 	private double xs[], ys[];
 	private int xyLen;
+	private JfxLineBuilder lines;
 
+	static {
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+		public void run() {printStats();}
+		});
+	}
 	public JfxCanvas(Canvas canvas) {
 		this.canvas = canvas;
 		this.context = canvas.getGraphicsContext2D();
@@ -29,11 +44,13 @@ public class JfxCanvas extends StatefulCanvas {
 	protected void changeStroke(Stroke stroke) {
 		context.setStroke(JfxColor.toJfxPaint(stroke.strokePaint()));
 		context.setLineWidth(stroke.strokeWidth());
+		contextOps += 2;
 	}
 
 	@Override
 	protected void changeFill(Fill fill) {
 		context.setFill(JfxColor.toJfxPaint(fill.fillPaint()));
+		contextOps += 1;
 	}
 
 	@Override
@@ -45,32 +62,49 @@ public class JfxCanvas extends StatefulCanvas {
 		double w = context.getLineWidth();
 		double x = point.getX() - w / 2;
 		double y = point.getY() - w / 2;
+		context.save();
+		context.setFill(context.getStroke());
 		context.fillOval(x, y, w, w);
+//		context.restore();
+		totalOps++;
 	}
 
 	@Override
 	protected void strokeLine(Point from, Point to) {
 		context.strokeLine(from.getX(), from.getY(), to.getX(), to.getY());
+		totalOps++;
+		lineOps++;
+		lineSegments++;
 	}
 
 	@Override
 	protected void strokePolyline() {
 		context.strokePolyline(xs, ys, xyLen);
+		totalOps++;
+		lineOps++;
+		lineSegments += xyLen;
 	}
 
 	@Override
 	protected void strokePolygon() {
 		context.strokePolygon(xs, ys, xyLen);
+		totalOps++;
+		lineOps++;
+		lineSegments += xyLen + 1;
 	}
 
 	@Override
 	protected void fillPolyline() {
 		context.fillPolygon(xs, ys, xyLen);
+		totalOps++;
+		fillOps++;
 	}
 
 	@Override
 	protected void fillPolygon() {
 		context.fillPolygon(xs, ys, xyLen);
+		totalOps++;
+		fillOps++;
 	}
 
 	@Override
@@ -78,6 +112,9 @@ public class JfxCanvas extends StatefulCanvas {
 		context.strokePolyline(xs, ys, xyLen);
 		for (int i = 2; i < xyLen; i++) {
 			context.strokeLine(xs[i], ys[i], xs[i - 2], ys[i - 2]);
+			totalOps++;
+			lineOps++;
+			lineSegments++;
 		}
 	}
 
@@ -92,6 +129,8 @@ public class JfxCanvas extends StatefulCanvas {
 			triXs[2] = xs[i];
 			triYs[2] = ys[i];
 			context.fillPolygon(triXs, triYs, 3);
+			totalOps++;
+			fillOps++;
 		}
 	}
 
@@ -137,15 +176,72 @@ public class JfxCanvas extends StatefulCanvas {
 		}
 	}
 
-
 	@Override
 	protected void fillAll() {
 		context.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+		totalOps++;
+		fillOps++;
 	}
 
 	@Override
 	protected void clearAll() {
 		context.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+		totalOps++;
+		fillOps++;
 	}
 
+	public Object beginLines() {
+		StrokeLineCap lineCap = context.getLineCap();
+		if (lineCap != StrokeLineCap.BUTT) {
+			context.setLineCap(StrokeLineCap.BUTT);
+			return lineCap;
+		} else {
+			return null;
+		}
+	}
+
+	public void endLines(Object obj) {
+		if (obj instanceof StrokeLineCap)
+			context.setLineCap((StrokeLineCap) obj);
+	}
+
+	public void strokePolyline(Stroke stroke, Geometry geom, PointList points) {
+		setup(stroke, null, geom);
+		context.strokePolyline(points.xs(), points.ys(), points.size());
+		totalOps++;
+		lineOps++;
+		lineSegments += points.size();
+	}
+
+	public void strokePolygon(Stroke stroke, Geometry geom, PointList points) {
+		setup(stroke, null, geom);
+		context.strokePolygon(points.xs(), points.ys(), points.size());
+		totalOps++;
+		lineOps++;
+		lineSegments += points.size() + 1;
+	}
+
+	@Override
+	public void flush() {
+		if (lines != null) {
+			lines.done();
+			lines = null;
+		}
+	}
+	
+	public static void printStats() {
+		System.err.println("Canvas stats: ");
+		System.err.println("  Total ops: " + totalOps);
+		System.err.println("  Line ops: " + lineOps);
+		System.err.println("  Fill ops: " + fillOps);
+		System.err.println("  Context ops: " + contextOps);
+		System.err.println("  Line segments: " + lineSegments);
+	}
+
+	@Override
+	public LineBuilder lines(Stroke pen, Geometry geom, Point from) {
+		flush();
+		lines = new JfxLineBuilder(pen, geom, from, this);
+		return lines;
+	}
 }

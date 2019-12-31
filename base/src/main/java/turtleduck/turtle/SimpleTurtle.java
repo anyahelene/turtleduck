@@ -1,5 +1,7 @@
 package turtleduck.turtle;
 
+import turtleduck.geometry.Point;
+
 public interface SimpleTurtle {
 
 	/**
@@ -51,6 +53,14 @@ public interface SimpleTurtle {
 	SimpleTurtle draw();
 
 	/**
+	 * Move to the given position while drawing a line
+	 *
+	 * @param to Position to move to
+	 * @return {@code this}, for sending more draw commands
+	 */
+	SimpleTurtle drawTo(Point to);
+
+	/**
 	 * Move forward the given distance while drawing a line.
 	 * 
 	 * <p>Negative distances will draw backwards.
@@ -92,10 +102,18 @@ public interface SimpleTurtle {
 	/**
 	 * Move to a new position, without drawing.
 	 *
-	 * @param dist Distance to move
+	 * @param x New x position
+	 * @param y New y position
 	 * @return {@code this}, for sending more draw commands
 	 */
 	SimpleTurtle moveTo(double x, double y);
+	/**
+	 * Move to a new position, without drawing.
+	 *
+	 * @param newPos New position
+	 * @return {@code this}, for sending more draw commands
+	 */
+	SimpleTurtle moveTo(Point newPos);
 
 	/**
 	 * Adjust heading by rotating one step to the right.
@@ -195,4 +213,33 @@ public interface SimpleTurtle {
 	Pen pen();
 	
 	SimpleTurtle pen(Pen newPen);
+	
+	void done();
+	
+	/**
+	 * Spawn a sub-turtle for making a sub-drawing.
+	 * 
+	 * <p>
+	 * The sub-turtle will have its own position, heading and pen, all of which
+	 * start off equal to that of <code>this</code> turtle. Further changes to
+	 * <code>this</code> turtle will not affect the sub-turtle, and vice versa.
+	 * 
+	 * @return A fresh turtle, equal to this one, ready for new drawing adventures
+	 */
+	SimpleTurtle child();
+	
+	boolean isChild();
+	
+	SimpleTurtle parent();
+	
+	SimpleTurtle startRecording();
+	
+	CommandRecorder endRecording();
+	
+	/**
+	 * @return The current position of the turtle.
+	 */
+	Point position();
+
+
 }

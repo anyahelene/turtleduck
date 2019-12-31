@@ -242,6 +242,7 @@ public class JfxScreen implements Screen {
 			canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
 			canvases.add(canvas);
 			root.getChildren().add(canvas);
+			canvas.toFront();
 			debugLayer = new JfxLayer(getWidth(), getHeight(), this, canvas);
 		}
 		return debugLayer;

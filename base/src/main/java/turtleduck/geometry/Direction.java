@@ -15,7 +15,7 @@ public class Direction {
 	 *            Angle in degrees, where 0 is (1,0)
 	 */
 	public static Direction fromDegrees(double degrees) {
-		return new Direction(degrees);
+		return new Direction(Math.toRadians(degrees));
 	}
 
 	/**
@@ -25,7 +25,7 @@ public class Direction {
 	 *            Angle in radians, where 0 is (1,0)
 	 */
 	public static Direction fromRadians(double radians) {
-		return new Direction(Math.toRadians(radians));
+		return new Direction(radians);
 	}
 
 	@Override
@@ -318,6 +318,10 @@ public class Direction {
 		// double otherAngle = dir.toAngle();
 		// turnTo(thisAngle*(1.00 - percent/100.0) +
 		// otherAngle*(percent/100.0));
+	}
+
+	public Direction relativeTo(Direction other) {
+		return new Direction(x - other.x, y - other.y, z - other.z);
 	}
 
 }

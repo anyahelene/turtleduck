@@ -1,5 +1,6 @@
 package turtleduck.turtle.impl;
 
+import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
 import turtleduck.colors.Paint;
 import turtleduck.geometry.Point;
@@ -19,7 +20,7 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 		strokeWidth = 1;
 		projection = new OrthographicProjection(100, 100);
 		stroke = Paint.color(0,0,0);
-		fill = Paint.TRANSPARENT;
+		fill = Colors.TRANSPARENT;
 	}
 
 	public BasePen(BasePen original) {
@@ -118,7 +119,7 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 		if(frozen)
 			throw new IllegalStateException("Changing pen properties after done()");
 		if (ink == null)
-			stroke = Paint.TRANSPARENT;
+			stroke = Colors.TRANSPARENT;
 		else
 			stroke = ink;
 		return this;
@@ -135,7 +136,7 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	@Override
 	public PenBuilder<Pen> fillPaint(Paint ink) {
 		if (ink == null)
-			fill = Paint.TRANSPARENT;
+			fill = Colors.TRANSPARENT;
 		else
 			fill = ink;
 		return this;

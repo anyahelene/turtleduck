@@ -1,8 +1,6 @@
 package turtleduck.colors;
 
 public interface Paint  {
-	Paint TRANSPARENT = color(0,0,0,0);
-
 	enum ColorModel { GREY, RGB, CMYK, HSL, HSV, XYZ, PALETTE };
 	/**
 	 * @param rgb 0xRRGGBB

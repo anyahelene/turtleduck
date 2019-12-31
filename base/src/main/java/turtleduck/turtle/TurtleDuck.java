@@ -79,12 +79,7 @@ public interface TurtleDuck extends SimpleTurtle {
 	 */
 	TurtleDuck drawTo(double x, double y);
 
-	/**
-	 * Move to the given position while drawing a line
-	 *
-	 * @param to Position to move to
-	 * @return {@code this}, for sending more draw commands
-	 */
+	@Override
 	TurtleDuck drawTo(Point to);
 
 	/**
@@ -164,17 +159,11 @@ public interface TurtleDuck extends SimpleTurtle {
 	 */
 	TurtleDuck pitch(double angle);
 
-	/**
-	 * Spawn a sub-turtle for making a sub-drawing.
-	 * 
-	 * <p>
-	 * The sub-turtle will have its own position, heading and pen, all of which
-	 * start off equal to that of <code>this</code> turtle. Further changes to
-	 * <code>this</code> turtle will not affect the sub-turtle, and vice versa.
-	 * 
-	 * @return A fresh turtle, equal to this one, ready for new drawing adventures
-	 */
-	TurtleDuck subTurtle();
+	@Override
+	TurtleDuck child();
+	
+	@Override
+	TurtleDuck parent();
 
 	/**
 	 * Begin constructing a path at the current turtle position.
@@ -269,7 +258,11 @@ public interface TurtleDuck extends SimpleTurtle {
 
 	@Override
 	TurtleDuck trace(boolean enabled);
+	@Override
 	PenBuilder<TurtleDuck> changePen();
+	@Override
 	TurtleDuck pen(Pen newPen);
+	
+	TurtleMark mark(String name);
 
 }

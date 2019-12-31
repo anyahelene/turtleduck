@@ -130,4 +130,27 @@ public class Point2 implements Point {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public boolean isLeftOf(Point otherPoint) {
+		return x < otherPoint.getX();
+	}
+
+	@Override
+	public boolean isAbove(Point otherPoint) {
+		return y < otherPoint.getY();
+	}
+
+	@Override
+	public Point interpolate(Point otherPoint, double fraction) {
+		if (fraction <= 0.0)
+			return this;
+		else if (fraction >= 1.0)
+			return otherPoint;
+		else if (otherPoint.getZ() != 0.0)
+			return new Point3(x + (otherPoint.getX() - x) * fraction, y + (otherPoint.getY() - y) * fraction,
+					otherPoint.getZ() * fraction);
+		else
+			return new Point2(x + (otherPoint.getX() - x) * fraction, y + (otherPoint.getY() - y) * fraction);
+	}
+
 }

@@ -4,7 +4,7 @@ import turtleduck.geometry.impl.Point2;
 import turtleduck.geometry.impl.Point3;
 
 public interface Point {
-
+	static final Point ZERO = point(0,0);
 	static Point point(double x, double y) {
 		return new Point2(x, y);
 	}
@@ -173,5 +173,11 @@ public interface Point {
 	double asLength();
 
 	double distanceToSq(Point otherPoint);
+	
+	boolean isLeftOf(Point otherPoint);
+	
+	boolean isAbove(Point otherPoint);
+	
+	Point interpolate(Point otherPoint, double fraction);
 
 }

@@ -1,5 +1,7 @@
 package turtleduck.turtle;
 
+import java.util.List;
+
 import turtleduck.geometry.Point;
 import turtleduck.turtle.impl.BasePen;
 import turtleduck.turtle.impl.TurtleDuckImpl;
@@ -24,6 +26,9 @@ public interface Canvas {
 	 * @return {@code this}, for sending more draw commands
 	 */
 	Canvas line(Stroke pen, Geometry geom, Point from, Point to);
+	
+	LineBuilder lines(Stroke pen, Geometry geom, Point from);
+	
 	/**
 	 * Draw lines
 	 *
@@ -59,4 +64,7 @@ public interface Canvas {
 	
 	default SimpleTurtle createSimpleTurtle() { return new TurtleDuckImpl(this); }
 	default TurtleDuck createTurtleDuck() { return new TurtleDuckImpl(this); }
+
+	void flush();
+
 }

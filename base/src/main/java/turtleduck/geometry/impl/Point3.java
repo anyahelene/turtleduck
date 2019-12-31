@@ -89,7 +89,7 @@ public class Point3 extends Point2 implements IPoint3 {
 	public IPoint3 moveYTo(double newY) {
 		return moveTo(getX(), newY, getZ());
 	}
-	
+
 	@Override
 	public IPoint3 moveZ(double deltaZ) {
 		return move(0.0, 0.0, deltaZ);
@@ -103,6 +103,17 @@ public class Point3 extends Point2 implements IPoint3 {
 	@Override
 	public String toString() {
 		return String.format("(%.2f,%.2f,%.2f)", x, y, z);
+	}
+
+	@Override
+	public Point interpolate(Point otherPoint, double fraction) {
+		if (fraction <= 0.0)
+			return this;
+		else if (fraction >= 1.0)
+			return otherPoint;
+		else
+			return new Point3(x + (otherPoint.getX() - x) * fraction, y + (otherPoint.getY() - y) * fraction,
+				z + (otherPoint.getZ() - z) * fraction);
 	}
 
 }
