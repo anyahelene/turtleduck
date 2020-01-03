@@ -6,6 +6,7 @@ import java.util.List;
 import turtleduck.geometry.Point;
 import turtleduck.jfx.JfxCanvas;
 import turtleduck.turtle.Canvas;
+import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
 import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Stroke;
@@ -62,6 +63,26 @@ public class JfxLineBuilder implements LineBuilder {
 		}
 		polygon = true;
 		return null;
+	}
+	@Override
+	public Canvas fill(Fill fill, boolean andStroke) {
+		int size = 0;
+		for(Segment s : segments)
+			size += s.points.size();
+		PointList points = new PointList(size);
+		for(Segment s : segments) {
+			System.arraycopy(s.points.xs, 0, points.xs, points.nPoints, s.points.size());
+			System.arraycopy(s.points.ys, 0, points.ys, points.nPoints, s.points.size());
+			points.nPoints += s.points.size();
+		}
+		canvas.fillPolygon(fill, geom, points);
+		if(andStroke) {
+			return done();
+		} else {		
+			segments.clear();
+			segment = null;
+			return canvas;
+		}
 	}
 
 	@Override

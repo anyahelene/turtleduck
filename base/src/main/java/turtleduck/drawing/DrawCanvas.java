@@ -124,8 +124,8 @@ public class DrawCanvas implements Canvas {
 			data = new float[n * 2];
 			for (int i = 0; i < ps.length; i++) {
 				Point p1 = geom.projection().project(ps[i]);
-				data[i * 2] = (float) p1.getX();
-				data[i * 2 + 1] = (float) p1.getY();
+				data[i * 2] = (float) p1.x();
+				data[i * 2 + 1] = (float) p1.y();
 			}
 
 		}
@@ -207,15 +207,15 @@ public class DrawCanvas implements Canvas {
 				instr.data = new float[16];
 				instr.stroke = stroke;
 				Point p = geom.projection().project(last);
-				instr.data[instr.n * 2] = (float) p.getX();
-				instr.data[instr.n * 2 + 1] = (float) p.getY();
+				instr.data[instr.n * 2] = (float) p.x();
+				instr.data[instr.n * 2 + 1] = (float) p.y();
 				instr.n++;
 			} else if (instr.data.length <= instr.n * 2) {
 				instr.data = Arrays.copyOf(instr.data, instr.n * 3 + 1);
 			}
 			Point p = geom.projection().project(next);
-			instr.data[instr.n * 2] = (float) p.getX();
-			instr.data[instr.n * 2 + 1] = (float) p.getY();
+			instr.data[instr.n * 2] = (float) p.x();
+			instr.data[instr.n * 2 + 1] = (float) p.y();
 			instr.n++;
 
 			return this;
@@ -231,15 +231,15 @@ public class DrawCanvas implements Canvas {
 				instr.data = new float[16];
 				instr.stroke = stroke;
 				Point p = geom.projection().project(last);
-				instr.data[instr.n * 2] = (float) p.getX();
-				instr.data[instr.n * 2 + 1] = (float) p.getY();
+				instr.data[instr.n * 2] = (float) p.x();
+				instr.data[instr.n * 2 + 1] = (float) p.y();
 				instr.n++;
 			} else if (instr.data.length <= instr.n * 2) {
 				instr.data = Arrays.copyOf(instr.data, instr.n * 3 + 1);
 			}
 			Point p = geom.projection().project(next);
-			instr.data[instr.n * 2] = (float) p.getX();
-			instr.data[instr.n * 2 + 1] = (float) p.getY();
+			instr.data[instr.n * 2] = (float) p.x();
+			instr.data[instr.n * 2 + 1] = (float) p.y();
 			instr.n++;
 
 			return this;

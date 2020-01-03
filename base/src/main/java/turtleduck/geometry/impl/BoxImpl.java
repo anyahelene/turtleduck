@@ -22,7 +22,7 @@ public class BoxImpl implements Box {
 	@Override
 	public Box size(double newW, double newH) {
 		if (newW < 0 || newH < 0) {
-			return new BoxImpl(point.move(Math.min(0, newW), Math.min(0, newH)), Math.abs(newW), Math.abs(newH));
+			return new BoxImpl(point.add(Math.min(0, newW), Math.min(0, newH)), Math.abs(newW), Math.abs(newH));
 		}
 		return new BoxImpl(point, newW, newH);
 	}
@@ -39,12 +39,12 @@ public class BoxImpl implements Box {
 
 	@Override
 	public double x() {
-		return point.getX();
+		return point.x();
 	}
 
 	@Override
 	public double y() {
-		return point.getY();
+		return point.y();
 	}
 
 	@Override
@@ -54,13 +54,13 @@ public class BoxImpl implements Box {
 
 	@Override
 	public boolean contains(Point point) {
-		return point.getX() >= point.getX() && point.getX() <= point.getX() + width //
-				&& point.getY() >= point.getY() && point.getY() <= point.getY() + height;
+		return point.x() >= point.x() && point.x() <= point.x() + width //
+				&& point.y() >= point.y() && point.y() <= point.y() + height;
 	}
 
 	@Override
 	public boolean contains(Box other) {
-		return contains(other.position()) && contains(other.position().move(other.x(), other.y()));
+		return contains(other.position()) && contains(other.position().add(other.x(), other.y()));
 	}
 
 	@Override

@@ -16,7 +16,7 @@ public class OrthographicProjection implements Projection {
 
 	@Override
 	public Point project(Point pos) {
-		return new Point2(pos.getX() * sx + dx, pos.getY() * sy + dy);
+		return new Point2(pos.x() * sx + dx, pos.y() * sy + dy);
 	}
 
 	@Override

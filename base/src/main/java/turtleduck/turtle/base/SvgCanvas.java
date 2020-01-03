@@ -38,10 +38,10 @@ public class SvgCanvas implements Canvas {
 
 	@Override
 	public Canvas line(Stroke pen, Geometry geom, Point from, Point to) {
-		element("line", "x1", String.valueOf(from.getX()),//
-				"y1", String.valueOf(from.getY()),//
-				"x2", String.valueOf(to.getX()),//
-				"y2", String.valueOf(to.getY()),
+		element("line", "x1", String.valueOf(from.x()),//
+				"y1", String.valueOf(from.y()),//
+				"x2", String.valueOf(to.x()),//
+				"y2", String.valueOf(to.y()),
 				"style", toSvg(pen));
 		return this;
 	}
@@ -106,13 +106,13 @@ public class SvgCanvas implements Canvas {
 	}
 
 	public void adjustBounds(Point p) {
-		x0 = Math.min(x0, p.getX());
-		x1 = Math.max(x1, p.getX());
-		y0 = Math.min(y0, p.getY());
-		y1 = Math.max(y1, p.getY());
+		x0 = Math.min(x0, p.x());
+		x1 = Math.max(x1, p.x());
+		y0 = Math.min(y0, p.y());
+		y1 = Math.max(y1, p.y());
 	}
 	public String toSvg(Point point) {
-		return new StringBuilder().append(point.getX()).append(",").append(point.getY()).toString();
+		return new StringBuilder().append(point.x()).append(",").append(point.y()).toString();
 	}
 	public String toSvg(Point[] points) {
 		StringBuilder sb = new StringBuilder();
@@ -120,7 +120,7 @@ public class SvgCanvas implements Canvas {
 			if(i > 0)
 				sb.append(" ");
 
-			sb.append(String.format("%.3f,%.3f", points[i].getX(), points[i].getY()));
+			sb.append(String.format("%.3f,%.3f", points[i].x(), points[i].y()));
 		}
 		return sb.toString();
 	}

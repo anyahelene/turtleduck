@@ -24,8 +24,8 @@ public class PointList {
 			xs = Arrays.copyOf(xs, newCapacity);
 			ys = Arrays.copyOf(ys, newCapacity);
 		}
-		xs[nPoints] = p.getX();
-		ys[nPoints] = p.getY();
+		xs[nPoints] = p.x();
+		ys[nPoints] = p.y();
 		nPoints++;
 	}
 	

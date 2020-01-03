@@ -1,6 +1,7 @@
 package turtleduck.turtle.impl;
 
-import turtleduck.geometry.Direction;
+import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Navigator;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Canvas;
@@ -16,11 +17,7 @@ import turtleduck.turtle.TurtleMark;
 import turtleduck.turtle.TurtlePathBuilder;
 
 public class TurtleDuckImpl implements TurtleDuck {
-	protected Point position = Point.point(0, 0);
-	protected Direction heading = Direction.fromDegrees(0);
-	protected double circle = 360;
-	protected double angleScale = 2.0 * Math.PI / 360.0;
-	protected double moveStep = 10, angleStep = 90;
+	protected Navigator nav;
 	protected Pen pen;
 	protected PenBuilder<Pen> penBuilder;
 	protected LineBuilder lines;
@@ -32,33 +29,27 @@ public class TurtleDuckImpl implements TurtleDuck {
 		this.canvas = canvas;
 		this.pen = canvas.createPen();
 		parent = null;
+		this.nav = new Navigator.DefaultNavigator();
 	}
 
 	public TurtleDuckImpl(TurtleDuckImpl td) {
 		parent = td;
-		position = td.position;
-		heading = td.heading;
-		angleScale = td.angleScale;
-		circle = td.circle;
-		moveStep = td.moveStep;
-		angleStep = td.angleStep;
+		nav = td.nav.copy();
 		canvas = td.canvas;
 		pen = td.pen();
 		penBuilder = null;
 		if (td.recorder != null) {
 			recorder = td.recorder.child();
-			recorder.init(pen, position, heading.toRadians());
+			recorder.init(pen, nav.position(), nav.bearing().toRadians());
+			nav.recordTo(recorder);
+		} else {
+			nav.recordTo(null);
 		}
 	}
 
 	@Override
 	public double angle() {
-		return heading.toRadians() / angleScale;
-	}
-
-	@Override
-	public double angleTo(double x, double y) {
-		return position.directionTo(Point.point(x, y)).toRadians() / angleScale;
+		return nav.bearing().azimuth();
 	}
 
 	@Override
@@ -70,18 +61,13 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	@Override
-	public double distanceTo(double x, double y) {
-		return position.distanceTo(Point.point(x, y));
-	}
-
-	@Override
 	public double x() {
-		return position.getX();
+		return nav.x();
 	}
 
 	@Override
 	public double y() {
-		return position.getX();
+		return nav.y();
 	}
 
 	@Override
@@ -94,30 +80,16 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	@Override
-	public Direction directionTo(Point point) {
-		return position.directionTo(point);
-	}
-
-	@Override
-	public double distanceTo(Point point) {
-		return position.distanceTo(point);
-	}
-
-	@Override
-	public TurtleDuck draw() {
-		return draw(moveStep);
-	}
-
-	@Override
 	public TurtleDuck draw(double dist) {
-//		System.out.println("draw(" + dist + ")");
-		Point to = position.move(heading, dist);
-		if (recorder != null) {
-			recorder.draw(dist);
-		} else {
-			penDown().to(pen, to);
+		if (dist != 0) {
+			penDown();
+			nav.forward(dist);
+			if (recorder != null) {
+				recorder.draw();
+			} else {
+				lines.to(pen, nav.position());
+			}
 		}
-		position = to;
 		return this;
 	}
 
@@ -139,7 +111,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 	protected LineBuilder penDown() {
 		Pen p = pen();
 		if (lines == null) {
-			lines = canvas.lines(p, p, position);
+			lines = canvas.lines(p, p, nav.position());
 		}
 		return lines;
 	}
@@ -157,45 +129,52 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	protected TurtleDuck absMove(Point to, boolean draw) {
-		turnTo(position.directionTo(to));
+		turnTowards(to);
 		if (draw)
-			return draw(position.distanceTo(to));
-		else
-			return move(position.distanceTo(to));
+			return draw(nav.distanceTo(to));
+		else {
+			penUp();
+			return move(nav.distanceTo(to));
+		}
 	}
 
 	@Override
-	public Direction heading() {
-		return heading;
-	}
-
-	@Override
-	public TurtleDuck left() {
-		return turn(angleStep);
-	}
-
-	@Override
-	public TurtleDuck move() {
-		return move(moveStep);
+	public Bearing heading() {
+		return nav.bearing();
 	}
 
 	@Override
 	public TurtleDuck move(double dist) {
-		position = position.move(heading, dist);
-		if (recorder != null) {
-			recorder.move(dist);
-		} else {
-			penUp();
-		}
+		penUp();
+		nav.forward(dist);
 		return this;
 	}
 
+	@Override
+	public TurtleDuck fill() {
+		if(lines != null) {
+			lines.fill(pen, false);
+			lines = null;
+		}
+		return this;
+	}
+	@Override
+	public TurtleDuck fillAndStroke() {
+		if(lines != null) {
+			lines.fill(pen, true);
+			lines = null;
+		}
+		return this;
+	}
+	
 	protected TurtleDuck relMove(Point relPos, boolean draw) {
-		turnTo(relPos.asDirection());
+		turnTo(Bearing.absolute(relPos.x(), relPos.y()));
 		if (draw)
 			return draw(relPos.asLength());
-		else
+		else {
+			penUp();
 			return move(relPos.asLength());
+		}
 
 	}
 
@@ -242,12 +221,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 
 	@Override
 	public Point position() {
-		return position;
-	}
-
-	@Override
-	public TurtleDuck right() {
-		return turn(-angleStep);
+		return nav.position();
 	}
 
 	@Override
@@ -261,66 +235,27 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	@Override
-	public TurtleDuck stepSize(double moving, double turning) {
-		if (moving < 0 || turning < 0)
-			throw new IllegalArgumentException("Argument must not be negative");
-		moveStep = moving;
-		angleStep = turning;
-		return this;
-	}
-
-	@Override
 	public TurtleDuck turn(double a) {
-		heading = heading.rotZ(a * angleScale);
-		if (recorder != null) {
-			recorder.turn(a * angleScale);
-		}
-		return this;
-	}
+		nav.right(a);
 
-
-	@Override
-	public TurtleDuck turnAround() {
-		heading = heading.turnBack();
-		if (recorder != null) {
-			recorder.turn(Math.PI);
-		}
 		return this;
 	}
 
 	@Override
-	public TurtleDuck turnTo(Direction dir) {
-		if (!heading.equals(dir)) {
-			Direction old = heading;
-			heading = dir;
-			if (recorder != null) {
-				recorder.turn(heading.relativeTo(old).toRadians());
-			}
-		}
+	public TurtleDuck turnTo(Bearing dir) {
+		nav.face(dir);
+
 		return this;
 	}
 
 	@Override
 	public TurtleDuck turnTo(double a) {
-		return turnTo(Direction.fromRadians(a * angleScale));
+		return turnTo(Bearing.absolute(a));
 	}
 
 	@Override
 	public TurtleDuck turnTowards(Point to) {
-		return turnTo(position.directionTo(to));
-	}
-
-	@Override
-	public TurtleDuck useDegrees() {
-		circle = 360;
-		angleScale = 2.0 * Math.PI / 360.0;
-		return this;
-	}
-
-	@Override
-	public TurtleDuck useRadians() {
-		circle = 2 * Math.PI;
-		angleScale = 1;
+		nav.face(to);
 		return this;
 	}
 
@@ -368,7 +303,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 
 	@Override
 	public TurtleMark mark(String name) {
-		return new TurtleMark(position, heading, name);
+		return new TurtleMark(nav.position(), nav.bearing(), name);
 	}
 
 	@Override
@@ -387,7 +322,8 @@ public class TurtleDuckImpl implements TurtleDuck {
 			throw new IllegalStateException("Alreadyy recording commands!");
 		penUp();
 		recorder = new CommandRecorder();
-		recorder.init(pen, position, heading.toRadians());
+		recorder.init(pen, nav.position(), nav.bearing().azimuth());
+		nav.recordTo(recorder);
 		return this;
 	}
 
@@ -397,6 +333,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 			throw new IllegalStateException("Not currently recording commands!");
 		CommandRecorder r = recorder;
 		recorder = null;
+		nav.recordTo(null);
 		return r;
 	}
 }

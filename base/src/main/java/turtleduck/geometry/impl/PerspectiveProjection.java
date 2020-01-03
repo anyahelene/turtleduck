@@ -36,7 +36,7 @@ public class PerspectiveProjection implements Projection {
 	 */
 	@Override
 	public Point project(Point pos) {
-		double px = pos.getX(), py = pos.getY(), pz = pos.getZ();
+		double px = pos.x(), py = pos.y(), pz = pos.z();
 
 		double x = px * cRotY - pz * sRotY;// - z*cRotY; //x + 0*x*cRotY + z*sRotY;
 		double z = pz * cRotY * cRotX + px * sRotY * sRotX;// + x*sRotY; //x*sRotY + z + 0*z*cRotY;

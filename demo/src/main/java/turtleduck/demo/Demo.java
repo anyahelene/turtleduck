@@ -35,27 +35,43 @@ public class Demo implements TurtleDuckApp {
 		Layer layer = screen.createPainter();
 		canvas = false ? new SvgCanvas() : layer.canvas();
 		debugCanvas = screen.debugLayer().canvas();
-		debugPen = debugCanvas.createPen().change().strokePaint(Colors.GREEN).done();
+		debugPen = debugCanvas.createPen().change().strokePaint(Colors.GREEN).strokeWidth(1).done();
 		debugTurtle = debugCanvas.createTurtleDuck().pen(debugPen);
 		long startMillis = System.currentTimeMillis();
 		turtle = canvas.createTurtleDuck();
 		double t = System.currentTimeMillis();
 
-		turtle.moveTo(300, 350).turnTo(0);
-		colorWheel(turtle, 100);
-
-		
+		turtle.moveTo(300, 350).turnTo(0).draw(50).turn(90).draw(100).turn(-45).draw(20).move(0);
+		turtle.moveTo(300, 550);
+				colorWheel(turtle, 100);
+				turtle.moveTo(500, 150);
+				colorWheel(turtle, 100);
+		turtle.turnTo(90);
+		footprint(turtle.child().turn(0).draw(50).move(0), 10);
+		int a = 10;
+		for (int i = 0; i < 360; i+=a) {
+			if (i % 20 == 0)
+				footprint(turtle.child().turn(90).move(2.5).turn(-80), 1);
+			else
+				footprint(turtle.child().turn(-90).move(2.5).turn(80), 1);
+			turtle.move(15);
+			turtle.turn(a/3.0);
+		}
+		turtle.moveTo(30, 30).draw(50);
+		turtle.moveTo(200, 500).draw(200);
 		/*
 		 * turtle.moveTo(300, 100); Parrot parrot = new Parrot(); parrot.draw(turtle);
 		 */
 		turtle.moveTo(500, 350).turnTo(0);
 		turtle.startRecording();
+//		turtle.moveTo(200, 500);
+//		turtle.turn(0).draw(100).move(0);
 		colorWheel(turtle.child(), 100);
 		System.err.println("Wheel:   " + ((System.currentTimeMillis() - t) / 1000.0) + " s");
 		t = System.currentTimeMillis();
-		turtle.moveTo(200, 500); 
-		feather(turtle.child().turn(-90), 200); System.err.println("Feather: " +
-				((System.currentTimeMillis() - t) / 1000.0) + " s");
+		turtle.moveTo(200, 500);
+		feather(turtle.child().turn(-90), 200);
+		System.err.println("Feather: " + ((System.currentTimeMillis() - t) / 1000.0) + " s");
 		t = System.currentTimeMillis();
 //		for (int i = 0; i < 36; i++)
 //			turtle.turn(10).draw(5);
@@ -74,9 +90,8 @@ public class Demo implements TurtleDuckApp {
 		 */
 		System.err.println("Total:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
 		recorder = turtle.endRecording();
-		System.out.println(recorder.toString().replaceAll(",", ",\n    "));
+		System.out.println(recorder.toString().replaceAll("\\),", "),\n    "));
 		turtle.moveTo(0, 0);
-		turtle.useRadians();
 		turtle.moveTo(500, 350).turnTo(0);
 		anim = recorder.playbackAnimation(turtle);
 	}
@@ -146,7 +161,7 @@ public class Demo implements TurtleDuckApp {
 		Paint ink = red;
 		double step = (2 * Math.PI * radius) / 360.0;
 		turtle.move(radius);
-		
+
 		for (int i = 0; i < 360; i++) {
 			if (i < 120)
 				ink = red.mix(green, i / 119.0);
@@ -181,11 +196,19 @@ public class Demo implements TurtleDuckApp {
 			boolean more = anim.step(deltaTime);
 			debugCanvas.clear();
 			anim.debug(debugTurtle);
-			if(!more) {
-				turtle.turn(Math.PI/2);
+			if (!more) {
+				turtle.turn(Math.PI / 2);
 				turtle.move(100);
 				anim = recorder.playbackAnimation(turtle);
 			}
 		}
+	}
+
+	public static void footprint(TurtleDuck turtle, double size) {
+		size /= 10;
+		turtle.changePen().fillPaint(Colors.BLACK).fillOpacity(0.5).done();
+		turtle.turn(60).draw(size * 15).turn(-45).draw(size * 100).turn(-150).draw(size * 30);
+		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
+		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15).fill();
 	}
 }

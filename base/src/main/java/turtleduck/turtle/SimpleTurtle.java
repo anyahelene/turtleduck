@@ -18,7 +18,7 @@ public interface SimpleTurtle {
 	 * @param y Y-coordinate of the point
 	 * @return Relative angle towards that point
 	 */
-	double angleTo(double x, double y);
+//	double angleTo(double x, double y);
 
 	/**
 	 * This method is used to convert the turtle to an other type, determined by the
@@ -40,7 +40,7 @@ public interface SimpleTurtle {
 	 * @param y Y-coordinate of the point
 	 * @return The distance
 	 */
-	double distanceTo(double x, double y);
+//	double distanceTo(double x, double y);
 
 	/**
 	 * Move forward while drawing a line
@@ -50,7 +50,7 @@ public interface SimpleTurtle {
 	 * 
 	 * @return {@code this}, for sending more draw commands
 	 */
-	SimpleTurtle draw();
+//	SimpleTurtle draw();
 
 	/**
 	 * Move to the given position while drawing a line
@@ -77,7 +77,7 @@ public interface SimpleTurtle {
 	 * @return {@code this}, for sending more draw commands
 	 * @see {@link #stepSize(double, double)}
 	 */
-	SimpleTurtle left();
+//	SimpleTurtle left();
 
 	/**
 	 * Move a distance without drawing.
@@ -87,7 +87,7 @@ public interface SimpleTurtle {
 	 *
 	 * @return {@code this}, for sending more draw commands
 	 */
-	SimpleTurtle move();
+//	SimpleTurtle move();
 
 	/**
 	 * Move a distance without drawing.
@@ -122,7 +122,7 @@ public interface SimpleTurtle {
 	 * @return {@code this}, for sending more draw commands
 	 * @see {@link #stepSize(double, double)}
 	 */
-	SimpleTurtle right();
+//	SimpleTurtle right();
 
 	/**
 	 * Adjust the step size for future calls to {@link #draw()}, {@link #move()},
@@ -136,7 +136,7 @@ public interface SimpleTurtle {
 	 *                by {@link #useDegrees()} or {@link #useRadians()})
 	 * @return {@code this}, for sending more draw commands
 	 */
-	SimpleTurtle stepSize(double moving, double turning);
+//	SimpleTurtle stepSize(double moving, double turning);
 
 	/**
 	 * Adjust heading by turning the given number of degrees (relative to the
@@ -176,7 +176,7 @@ public interface SimpleTurtle {
 	 * 
 	 * @return {@code this}, for sending more draw commands
 	 */
-	SimpleTurtle useDegrees();
+//	SimpleTurtle useDegrees();
 
 	/**
 	 * Measure angles in radians (0–2π).
@@ -186,7 +186,7 @@ public interface SimpleTurtle {
 	 * 
 	 * @return {@code this}, for sending more draw commands
 	 */
-	SimpleTurtle useRadians();
+//	SimpleTurtle useRadians();
 
 	/**
 	 * @return The current X-position of the turtle.

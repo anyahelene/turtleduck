@@ -9,7 +9,7 @@ import turtleduck.turtle.CommandRecorder.ChildCommand;
 import turtleduck.turtle.CommandRecorder.PartialTurtleCommand;
 
 public class TurtleAnimation {
-	private double stepsPerSec = 30, defaultStepsPerSec = 300;
+	private double stepsPerSec = 30, defaultStepsPerSec = 1000;
 	private TurtleDuck turtle;
 	private List<PartialTurtleCommand> commands;
 	private Iterator<PartialTurtleCommand> iter;
@@ -26,24 +26,26 @@ public class TurtleAnimation {
 
 	public boolean step(double deltaTime) {
 		steps += stepsPerSec * deltaTime;
-		
-		for(ListIterator<TurtleAnimation> li = children.listIterator(); li.hasNext();) {
+
+		for (ListIterator<TurtleAnimation> li = children.listIterator(); li.hasNext();) {
 			TurtleAnimation animation = li.next();
-			if(!animation.step(deltaTime))
+			if (!animation.step(deltaTime))
 				li.remove();
+			if (num > 1)
+				return true;
 		}
 		while (steps > 1) {
 			if (currentCommand == null) {
 				if (iter.hasNext()) {
 					currentCommand = iter.next();
-					System.out.println("" + num + ":>" + currentCommand.toString());
+//					System.out.println("" + num + ":>" + currentCommand.toString());
 					stepsDone = 0;
 					stepsPerSec = defaultStepsPerSec;
 				} else {
 					turtle.done();
 					return !children.isEmpty();
 				}
-			} 
+			}
 			if (currentCommand instanceof CommandRecorder.ChildCommand) {
 				CommandRecorder.ChildCommand cc = (ChildCommand) currentCommand;
 				TurtleDuck child = turtle.child();
@@ -60,24 +62,27 @@ public class TurtleAnimation {
 				currentCommand = null;
 				if (stepsDone < -1)
 					steps = -(stepsDone + 1); // we have leftover steps
-			} else if(stepsDone > defaultStepsPerSec) {
+			} else if (stepsDone > defaultStepsPerSec) {
 				stepsPerSec += .5;
 			}
 		}
 		turtle.done();
 		return true;
 	}
+
 	public void debug(TurtleDuck debugTurtle) {
-		debug(debugTurtle, 10);
-	}	
+		debug(debugTurtle, 30);
+	}
+
 	public void debug(TurtleDuck debugTurtle, double size) {
 		debugTurtle.moveTo(turtle.position());
 		debugTurtle.turnTo(turtle.angle());
+//		debugTurtle.pen(turtle.pen().change().strokeWidth(2).done());
 //		System.out.println(turtle.heading()+ ", " + debugTurtle.heading());
-		debugTurtle.move(size/2).turn(150).draw(size).turn(120).draw(size).turn(120).draw(size);
+		debugTurtle.move(size / 2).turn(150).draw(size).turn(120).draw(size).turn(120).draw(size);
 		debugTurtle.done();
-		for(TurtleAnimation an : children) {
-			an.debug(debugTurtle, size*.7);
+		for (TurtleAnimation an : children) {
+			an.debug(debugTurtle, size * .5);
 		}
 	}
 }

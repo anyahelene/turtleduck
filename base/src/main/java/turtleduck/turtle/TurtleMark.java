@@ -1,16 +1,17 @@
 package turtleduck.turtle;
 
+import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 
 public class TurtleMark {
 	Point point;
-	Direction dir;
+	Bearing dir;
 	String name;
 	
-	public TurtleMark(Point p, Direction d, String n) {
+	public TurtleMark(Point p, Bearing bearing, String n) {
 		point = p;
-		dir = d;
+		dir = bearing;
 		name = n;
 	}
 	
@@ -18,16 +19,16 @@ public class TurtleMark {
 		return point;
 	}
 	
-	public Direction getDirection() {
+	public Bearing getDirection() {
 		return dir;
 	}
 	
 	public TurtleMark turn(double degrees) {
-		return new TurtleMark(point, dir.turn(degrees), name);
+		return new TurtleMark(point, dir.add(Bearing.relative(degrees)), name);
 	}
 	
 	public TurtleMark move(double distance) {
-		return new TurtleMark(point.move(dir, distance), dir, name);
+		return new TurtleMark(point.add(dir, distance), dir, name);
 	}
 	
 	public TurtleMark rename(String name) {

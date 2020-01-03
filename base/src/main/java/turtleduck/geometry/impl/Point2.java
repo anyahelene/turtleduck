@@ -1,7 +1,9 @@
 package turtleduck.geometry.impl;
 
+import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
+import turtleduck.geometry.PositionVector;
 
 public class Point2 implements Point {
 	protected final double x;
@@ -13,96 +15,84 @@ public class Point2 implements Point {
 	}
 
 	@Override
-	public Direction directionTo(Point otherPoint) {
-		return new Direction(otherPoint.getX() - getX(), otherPoint.getY() - getY(), otherPoint.getZ() - getZ());
+	public Direction directionTo(PositionVector otherPoint) {
+		return new Direction(otherPoint.x() - x(), otherPoint.y() - y(), otherPoint.z() - z());
 	}
 
 	@Override
-	public double distanceTo(Point otherPoint) {
-		return Math.sqrt(distanceToSq(otherPoint));
+	public double distanceTo(PositionVector otherPoint) {
+		double x = otherPoint.x() - x();
+		double y = otherPoint.y() - y();
+		double z = otherPoint.z() - z();
+		if (z == 0)
+			return Math.hypot(x, y);
+		else
+			return Math.sqrt(x * x + y * y + z * z);
 	}
 
 	@Override
-	public double distanceToSq(Point otherPoint) {
-		double x = otherPoint.getX() - getX();
-		double y = otherPoint.getY() - getY();
-		double z = otherPoint.getZ() - getZ();
+	public double distanceToSq(PositionVector otherPoint) {
+		double x = otherPoint.x() - x();
+		double y = otherPoint.y() - y();
+		double z = otherPoint.z() - z();
 		return x * x + y * y + z * z;
 	}
 
 	@Override
 	public double asLength() {
-		return Math.sqrt(Math.pow(getX(), 2) + Math.pow(getY(), 2) + Math.pow(getZ(), 2));
+		return Math.sqrt(Math.pow(x(), 2) + Math.pow(y(), 2) + Math.pow(z(), 2));
 	}
 
 	@Override
 	public Direction asDirection() {
-		return new Direction(getX(), getY(), getZ());
+		return new Direction(x(), y(), z());
 	}
 
 	@Override
-	public double getX() {
+	public double x() {
 		return x;
 	}
 
 	@Override
-	public double getY() {
+	public double y() {
 		return y;
 	}
 
 	@Override
-	public double getZ() {
+	public double z() {
 		return 0;
 	}
 
 	@Override
-	public Point move(Direction dir, double distance) {
-		return new Point2(x + dir.getX() * distance, y + dir.getY() * distance);
+	public Point add(Bearing dir, double distance) {
+		return new Point2(Math.fma(dir.dirX(), distance, x), Math.fma(dir.dirY(), distance, y));
 	}
 
 	@Override
-	public Point move(double deltaX, double deltaY) {
-		return new Point2(getX() + deltaX, getY() + deltaY);
+	public Point add(double deltaX, double deltaY) {
+		return new Point2(x() + deltaX, y() + deltaY);
 	}
 
 	@Override
-	public Point move(Point deltaPos) {
-		return new Point2(getX() + deltaPos.getX(), getY() + deltaPos.getY());
+	public Point add(PositionVector deltaPos) {
+		double dz = deltaPos.z();
+		if(dz != 0)
+			return new Point3(x() + deltaPos.x(), y() + deltaPos.y(), dz);
+		else
+			return new Point2(x() + deltaPos.x(), y() + deltaPos.y());
+	}
+	@Override
+	public Point sub(PositionVector deltaPos) {
+		double dz = deltaPos.z();
+		if(dz != 0)
+			return new Point3(x() - deltaPos.x(), y() - deltaPos.y(), -dz);
+		else
+			return new Point2(x() - deltaPos.x(), y() - deltaPos.y());
 	}
 
 	@Override
-	public Point moveTo(double newX, double newY) {
+	public Point xy(double newX, double newY) {
 		return new Point2(newX, newY);
-	}
-
-	@Override
-	public Point moveX(double deltaX) {
-		return move(deltaX, 0.0);
-	}
-
-	@Override
-	public Point moveXTo(double newX) {
-		return moveTo(newX, getY());
-	}
-
-	@Override
-	public Point moveY(double deltaY) {
-		return move(0.0, deltaY);
-	}
-
-	@Override
-	public Point moveYTo(double newY) {
-		return moveTo(getX(), newY);
-	}
-
-	@Override
-	public Point moveZ(double deltaZ) {
-		return new Point3(getX(), getY(), getZ() + deltaZ);
-	}
-
-	@Override
-	public Point moveZTo(double newZ) {
-		return new Point3(getX(), getY(), newZ);
 	}
 
 	@Override
@@ -116,28 +106,27 @@ public class Point2 implements Point {
 	}
 
 	@Override
-	public Point deltaTo(Point point) {
-		return new Point2(getX() - x, getY() - y);
+	public Point xyz(double newX, double newY, double newZ) {
+		return new Point3(newX, newY, newZ);
+	}
+	@Override
+	public Point diff(PositionVector point) {
+		return new Point2(x() - x, y() - y);
 	}
 
 	@Override
-	public double angleTo(Point otherPoint) {
+	public double angleTo(PositionVector otherPoint) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public double angleTo(double x, double y) {
-		throw new UnsupportedOperationException();
+	public boolean isLeftOf(PositionVector otherPoint) {
+		return x < otherPoint.x();
 	}
 
 	@Override
-	public boolean isLeftOf(Point otherPoint) {
-		return x < otherPoint.getX();
-	}
-
-	@Override
-	public boolean isAbove(Point otherPoint) {
-		return y < otherPoint.getY();
+	public boolean isAbove(PositionVector otherPoint) {
+		return y < otherPoint.y();
 	}
 
 	@Override
@@ -146,11 +135,11 @@ public class Point2 implements Point {
 			return this;
 		else if (fraction >= 1.0)
 			return otherPoint;
-		else if (otherPoint.getZ() != 0.0)
-			return new Point3(x + (otherPoint.getX() - x) * fraction, y + (otherPoint.getY() - y) * fraction,
-					otherPoint.getZ() * fraction);
+		else if (otherPoint.z() != 0.0)
+			return new Point3(x + (otherPoint.x() - x) * fraction, y + (otherPoint.y() - y) * fraction,
+					otherPoint.z() * fraction);
 		else
-			return new Point2(x + (otherPoint.getX() - x) * fraction, y + (otherPoint.getY() - y) * fraction);
+			return new Point2(x + (otherPoint.x() - x) * fraction, y + (otherPoint.y() - y) * fraction);
 	}
 
 }

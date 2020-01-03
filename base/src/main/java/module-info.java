@@ -14,4 +14,5 @@ module turtleduck.base {
 	uses turtleduck.Launcher;
 	requires java.logging;
 	requires java.xml;
+	requires org.joml;
 }

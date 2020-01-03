@@ -11,4 +11,6 @@ public interface LineBuilder {
 	LineBuilder close();
 	
 	Canvas done();
+
+	Canvas fill(Fill fill, boolean andStroke);
 }

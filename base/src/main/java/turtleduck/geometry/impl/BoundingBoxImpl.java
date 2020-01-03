@@ -14,22 +14,22 @@ public class BoundingBoxImpl extends BoxImpl implements BoundingBox {
 	public BoundingBox extend(Point pt) {
 		if(contains(pt))
 			return this;
-		double x = point.getX(), y = point.getY();
+		double x = point.x(), y = point.y();
 		double w = width, h = height;
 		if(pt.isLeftOf(point))
-			x = pt.getX();
-		else if(pt.getX() > x + w)
-			w = pt.getX() - x;
+			x = pt.x();
+		else if(pt.x() > x + w)
+			w = pt.x() - x;
 		if(pt.isAbove(point))
-			y = pt.getY();
-		else if(pt.getY() > y + h)
-			h = pt.getY() - y;
+			y = pt.y();
+		else if(pt.y() > y + h)
+			h = pt.y() - y;
 		return new BoundingBoxImpl(x, y, w, h);
 	}
 
 	@Override
 	public BoundingBox extend(Box box) {
-		return extend(box.position()).extend(box.position().move(box.width(), box.height()));
+		return extend(box.position()).extend(box.position().add(box.width(), box.height()));
 	}
 
 }

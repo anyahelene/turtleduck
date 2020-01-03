@@ -8,7 +8,7 @@ import turtleduck.geometry.Point;
 
 public class CommandRecorder implements TurtleCommand {
 	private final List<PartialTurtleCommand> commands = new ArrayList<>();
-
+	
 	public CommandRecorder init(Pen pen, Point position, double angle) {
 		commands.add(new InitCommand(pen, position, angle));
 		return this;
@@ -24,14 +24,19 @@ public class CommandRecorder implements TurtleCommand {
 	}
 
 	public CommandRecorder move(double dist) {
-		if (dist != 0.0)
 			commands.add(new RelCommand(dist, false));
 		return this;
 	}
 
-	public CommandRecorder draw(double dist) {
-		if (dist != 0.0)
-			commands.add(new RelCommand(dist, true));
+	public CommandRecorder draw() {
+		if(commands.isEmpty())
+			throw new IllegalStateException("Must be preceded by move()");
+		PartialTurtleCommand ptc = commands.get(commands.size()-1);
+		if(ptc instanceof RelCommand) {
+			((RelCommand) ptc).draw = true;
+		} else {
+			throw new IllegalStateException("Must be preceded by move()");
+		}
 		return this;
 	}
 	/*
@@ -128,7 +133,7 @@ public class CommandRecorder implements TurtleCommand {
 
 	public static class RelCommand implements PartialTurtleCommand {
 		private final double dist, sign;
-		private final boolean draw;
+		private boolean draw;
 
 		public RelCommand(double dist, boolean draw) {
 			this.dist = Math.abs(dist);
@@ -199,6 +204,8 @@ public class CommandRecorder implements TurtleCommand {
 			 * while (radians < -Math.PI) radians += 2 * Math.PI; while (radians > Math.PI)
 			 * radians -= 2 * Math.PI;
 			 */
+			if(angle > 180)
+				angle -= 360;
 			this.a = Math.abs(angle);
 			this.sign = Math.signum(angle);
 		}
@@ -210,20 +217,20 @@ public class CommandRecorder implements TurtleCommand {
 
 		@Override
 		public double execute(TurtleDuck turtle, double step, double stepsDone) {
-			double todo = a*30 - stepsDone;
+			double todo = a - stepsDone;
 			if (step >= todo) {
 				step = todo;
 				stepsDone = -(1 + step - todo); // leftovers
 			} else {
 				stepsDone += step;
 			}
-			turtle.turn(sign*step/30);
+			turtle.turn(sign*step);
 
 			return stepsDone;
 		}
 
 		public String toString() {
-			return String.format("turn(%.2f)", Math.toDegrees(a));
+			return String.format("turn(%.2f)", sign*a);
 		}
 	}
 

@@ -1,6 +1,7 @@
 package turtleduck.turtle;
 
-import turtleduck.geometry.Direction;
+import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 
@@ -11,8 +12,8 @@ public interface TurtleDuck extends SimpleTurtle {
 	 *
 	 * <p>
 	 * The resulting curve is a cubic Bézier curve with the control points located
-	 * at <code>getPos().move(getDirection, startControl)</code> and
-	 * <code>to.move(Direction.fromDegrees(endAngle+180), endControl)</code>.
+	 * at <code>getPos().move(getBearing, startControl)</code> and
+	 * <code>to.move(Bearing.fromDegrees(endAngle+180), endControl)</code>.
 	 * <p>
 	 * The turtle is left at point <code>to</code>, facing <code>endAngle</code>.
 	 * <p>
@@ -34,9 +35,9 @@ public interface TurtleDuck extends SimpleTurtle {
 	 * Calculate direction towards a point
 	 *
 	 * @param point A point
-	 * @return Direction towards that point
+	 * @return Bearing towards that point
 	 */
-	Direction directionTo(Point point);
+//	Bearing directionTo(Point point);
 
 	/**
 	 * Calculate distance to a point
@@ -44,10 +45,7 @@ public interface TurtleDuck extends SimpleTurtle {
 	 * @param point
 	 * @return The distance
 	 */
-	double distanceTo(Point point);
-
-	@Override
-	TurtleDuck draw();
+//	double distanceTo(Point point);
 
 	@Override
 	TurtleDuck draw(double dist);
@@ -86,13 +84,7 @@ public interface TurtleDuck extends SimpleTurtle {
 	 * @return The current direction of the turtle.
 	 * @see {@link #angle()} – to get the heading as an angle
 	 */
-	Direction heading();
-
-	@Override
-	TurtleDuck left();
-
-	@Override
-	TurtleDuck move();
+	Bearing heading();
 
 	@Override
 	TurtleDuck move(double dist);
@@ -177,9 +169,6 @@ public interface TurtleDuck extends SimpleTurtle {
 	 */
 	Point position();
 
-	@Override
-	TurtleDuck right();
-
 	/**
 	 * Adjust turtle's orientation by rolling the given number of degrees. Only
 	 * relevant in 3D environments.
@@ -213,9 +202,6 @@ public interface TurtleDuck extends SimpleTurtle {
 	IShape shape();
 
 	@Override
-	TurtleDuck stepSize(double moving, double turning);
-
-	@Override
 	TurtleDuck turn(double angle);
 
 	/**
@@ -226,12 +212,12 @@ public interface TurtleDuck extends SimpleTurtle {
 	 *
 	 * @return {@code this}, for sending more draw commands
 	 */
-	TurtleDuck turnAround();
+	default TurtleDuck turnAround() { return turn(180); }
 
 	/**
 	 * Set the current heading of the turtle.
 	 */
-	TurtleDuck turnTo(Direction dir);
+	TurtleDuck turnTo(Bearing dir);
 
 	@Override
 	TurtleDuck turnTo(double angle);
@@ -250,12 +236,12 @@ public interface TurtleDuck extends SimpleTurtle {
 	 */
 	TurtleDuck turnTowards(Point to);
 
-	@Override
+	/*@Override
 	TurtleDuck useDegrees();
 
 	@Override
 	TurtleDuck useRadians();
-
+*/
 	@Override
 	TurtleDuck trace(boolean enabled);
 	@Override
@@ -264,5 +250,9 @@ public interface TurtleDuck extends SimpleTurtle {
 	TurtleDuck pen(Pen newPen);
 	
 	TurtleMark mark(String name);
+
+	TurtleDuck fill();
+
+	TurtleDuck fillAndStroke();
 
 }

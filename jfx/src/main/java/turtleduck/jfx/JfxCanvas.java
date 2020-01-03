@@ -60,8 +60,8 @@ public class JfxCanvas extends StatefulCanvas {
 	@Override
 	protected void strokeDot(Point point) {
 		double w = context.getLineWidth();
-		double x = point.getX() - w / 2;
-		double y = point.getY() - w / 2;
+		double x = point.x() - w / 2;
+		double y = point.y() - w / 2;
 		context.save();
 		context.setFill(context.getStroke());
 		context.fillOval(x, y, w, w);
@@ -71,7 +71,7 @@ public class JfxCanvas extends StatefulCanvas {
 
 	@Override
 	protected void strokeLine(Point from, Point to) {
-		context.strokeLine(from.getX(), from.getY(), to.getX(), to.getY());
+		context.strokeLine(from.x(), from.y(), to.x(), to.y());
 		totalOps++;
 		lineOps++;
 		lineSegments++;
@@ -170,8 +170,8 @@ public class JfxCanvas extends StatefulCanvas {
 			}
 			xyLen = points.length;
 			for (int i = 0; i < points.length; i++) {
-				xs[i] = points[i].getX();
-				ys[i] = points[i].getY();
+				xs[i] = points[i].x();
+				ys[i] = points[i].y();
 			}
 		}
 	}
@@ -220,6 +220,13 @@ public class JfxCanvas extends StatefulCanvas {
 		lineOps++;
 		lineSegments += points.size() + 1;
 	}
+	public void fillPolygon(Fill fill, Geometry geom, PointList points) {
+		setup(null, fill, geom);
+		context.fillPolygon(points.xs(), points.ys(), points.size());
+		totalOps++;
+		fillOps++;
+		lineSegments += points.size() + 1;
+	}
 
 	@Override
 	public void flush() {
@@ -244,4 +251,5 @@ public class JfxCanvas extends StatefulCanvas {
 		lines = new JfxLineBuilder(pen, geom, from, this);
 		return lines;
 	}
+
 }
