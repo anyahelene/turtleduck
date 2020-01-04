@@ -254,5 +254,6 @@ public interface TurtleDuck extends SimpleTurtle {
 	TurtleDuck fill();
 
 	TurtleDuck fillAndStroke();
+	TurtleDuck child(Canvas canvas);
 
 }

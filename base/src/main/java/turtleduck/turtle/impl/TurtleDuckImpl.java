@@ -33,9 +33,13 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	public TurtleDuckImpl(TurtleDuckImpl td) {
+		this(td, td.canvas);
+	}
+
+	public TurtleDuckImpl(TurtleDuckImpl td, Canvas c) {
 		parent = td;
 		nav = td.nav.copy();
-		canvas = td.canvas;
+		canvas = c;
 		pen = td.pen();
 		penBuilder = null;
 		if (td.recorder != null) {
@@ -129,13 +133,20 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	protected TurtleDuck absMove(Point to, boolean draw) {
-		turnTowards(to);
-		if (draw)
-			return draw(nav.distanceTo(to));
-		else {
+		if (!nav.isAt(to)) {
+			turnTowards(to);
+			if (draw)
+				return draw(nav.distanceTo(to));
+			else {
+				penUp();
+				return move(nav.distanceTo(to));
+			}
+		} else if (draw) {
+			draw(0);
+		} else {
 			penUp();
-			return move(nav.distanceTo(to));
 		}
+		return this;
 	}
 
 	@Override
@@ -152,21 +163,24 @@ public class TurtleDuckImpl implements TurtleDuck {
 
 	@Override
 	public TurtleDuck fill() {
-		if(lines != null) {
+		if (lines != null) {
 			lines.fill(pen, false);
 			lines = null;
 		}
+		if(recorder != null)
+			recorder.fill(pen);
 		return this;
 	}
+
 	@Override
 	public TurtleDuck fillAndStroke() {
-		if(lines != null) {
+		if (lines != null) {
 			lines.fill(pen, true);
 			lines = null;
 		}
 		return this;
 	}
-	
+
 	protected TurtleDuck relMove(Point relPos, boolean draw) {
 		turnTo(Bearing.absolute(relPos.x(), relPos.y()));
 		if (draw)
@@ -211,6 +225,11 @@ public class TurtleDuckImpl implements TurtleDuck {
 	@Override
 	public TurtleDuck child() {
 		return new TurtleDuckImpl(this);
+	}
+
+	@Override
+	public TurtleDuck child(Canvas canvas) {
+		return new TurtleDuckImpl(this, canvas);
 	}
 
 	@Override

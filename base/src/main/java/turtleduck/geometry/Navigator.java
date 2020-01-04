@@ -169,5 +169,12 @@ public interface Navigator extends PositionVector, DirectionVector {
 			return this;
 		}
 
+		@Override
+		public boolean isAt(PositionVector p) {
+			return x() == p.x() && y() == p.y() && z() == p.z();
+		}
+
 	}
+
+	boolean isAt(PositionVector point);
 }

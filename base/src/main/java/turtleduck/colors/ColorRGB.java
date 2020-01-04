@@ -1,6 +1,7 @@
 package turtleduck.colors;
 
 public class ColorRGB implements Paint {
+	private final short r, g, b;
 	private final float red;
 	private final float green;
 	private final float blue;
@@ -15,6 +16,13 @@ public class ColorRGB implements Paint {
 		this.green = g;
 		this.blue = b;
 		this.alpha = a;
+		this.r = Colors.Gamma.gammaExpand((int) (r*255), 255);
+		this.g = Colors.Gamma.gammaExpand((int) (g*255), 255);
+		this.b = Colors.Gamma.gammaExpand((int) (b*255), 255);
+		r = Math.round(Colors.Gamma.gammaExpand(r)*4095);
+		g = Math.round(Colors.Gamma.gammaExpand(g)*4095);
+		b = Math.round(Colors.Gamma.gammaExpand(b)*4095);
+		System.out.printf("(%.5f,%.5f,%.5f) = (%5d,%5d,%5d) = (%5.0f,%5.0f,%5.0f)\n", red, green, blue, this.r, this.g, this.b, r, g, b);
 	}
 
 	@Override

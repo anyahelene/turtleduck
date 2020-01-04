@@ -22,7 +22,9 @@ public class Demo implements TurtleDuckApp {
 	private Canvas canvas, debugCanvas;
 	private TurtleDuck turtle;
 	private Pen debugPen;
-	private TurtleDuck debugTurtle;
+	private static Canvas duckCanvas;
+	private static Layer duckLayer;
+	private static TurtleDuck debugTurtle;
 
 	public static void main(String[] args) {
 		Launcher.application(new Demo()).launch(args);
@@ -36,6 +38,9 @@ public class Demo implements TurtleDuckApp {
 		canvas = false ? new SvgCanvas() : layer.canvas();
 		debugCanvas = screen.debugLayer().canvas();
 		debugPen = debugCanvas.createPen().change().strokePaint(Colors.GREEN).strokeWidth(1).done();
+		duckLayer = screen.createPainter();
+		duckCanvas = duckLayer.canvas();
+
 		debugTurtle = debugCanvas.createTurtleDuck().pen(debugPen);
 		long startMillis = System.currentTimeMillis();
 		turtle = canvas.createTurtleDuck();
@@ -43,19 +48,19 @@ public class Demo implements TurtleDuckApp {
 
 		turtle.moveTo(300, 350).turnTo(0).draw(50).turn(90).draw(100).turn(-45).draw(20).move(0);
 		turtle.moveTo(300, 550);
-				colorWheel(turtle, 100);
-				turtle.moveTo(500, 150);
-				colorWheel(turtle, 100);
+		colorWheel(turtle, 100);
+		turtle.moveTo(500, 150);
+		colorWheel(turtle, -100);
 		turtle.turnTo(90);
 		footprint(turtle.child().turn(0).draw(50).move(0), 10);
 		int a = 10;
-		for (int i = 0; i < 360; i+=a) {
+		for (int i = 0; i < 360; i += a) {
 			if (i % 20 == 0)
 				footprint(turtle.child().turn(90).move(2.5).turn(-80), 1);
 			else
 				footprint(turtle.child().turn(-90).move(2.5).turn(80), 1);
 			turtle.move(15);
-			turtle.turn(a/3.0);
+			turtle.turn(a / 3.0);
 		}
 		turtle.moveTo(30, 30).draw(50);
 		turtle.moveTo(200, 500).draw(200);
@@ -64,9 +69,10 @@ public class Demo implements TurtleDuckApp {
 		 */
 		turtle.moveTo(500, 350).turnTo(0);
 		turtle.startRecording();
+		footprint(turtle.child().turn(90).move(2.5).turn(-80), 1);
 //		turtle.moveTo(200, 500);
 //		turtle.turn(0).draw(100).move(0);
-		colorWheel(turtle.child(), 100);
+		colorWheel(turtle.child(), -100);
 		System.err.println("Wheel:   " + ((System.currentTimeMillis() - t) / 1000.0) + " s");
 		t = System.currentTimeMillis();
 		turtle.moveTo(200, 500);
@@ -162,6 +168,7 @@ public class Demo implements TurtleDuckApp {
 		double step = (2 * Math.PI * radius) / 360.0;
 		turtle.move(radius);
 
+//		for (int k = 0; k < 360; k++)
 		for (int i = 0; i < 360; i++) {
 			if (i < 120)
 				ink = red.mix(green, i / 119.0);
@@ -178,6 +185,23 @@ public class Demo implements TurtleDuckApp {
 				ink = ink.brighter();
 			}
 			sub.done();
+			if (radius < 0) {
+				if (i % 3 == 0) {
+					TurtleDuck child = turtle.child(duckCanvas).moveTo(turtle.position()).turnTo(i).draw(20);
+					//child./*draw(step/2).*/turn(180).move(20).turn(-180);//.draw(20);
+					if (i % 6 == 0)
+						footprint(child.turn(90).move(2.5).turn(-80), 1);
+					else// if(i % 20 == 10)
+						footprint(child.turn(-90).move(2.5).turn(80), 1);
+				}
+				turtle.turn(10);
+				if (i % 2 == 0) {
+					double a = turtle.angle();
+					turtle.turnTo(i).move(10).turnTo(a);
+				}
+				turtle.draw(-step / 2);
+
+			}
 			turtle.turn(1);
 		}
 		turtle.done();
@@ -206,7 +230,7 @@ public class Demo implements TurtleDuckApp {
 
 	public static void footprint(TurtleDuck turtle, double size) {
 		size /= 10;
-		turtle.changePen().fillPaint(Colors.BLACK).fillOpacity(0.5).done();
+		turtle.changePen().strokePaint(Colors.BLACK).fillPaint(Colors.BLACK).fillOpacity(0.5).done();
 		turtle.turn(60).draw(size * 15).turn(-45).draw(size * 100).turn(-150).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15).fill();

@@ -5,6 +5,8 @@ import java.util.Arrays;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+import turtleduck.colors.Colors;
+
 public class Orientation {
 	private Quaternionf quat = new Quaternionf().setAngleAxis(-Math.PI / 2, 0, 0, 1);// .lookAlong(0, -1, 0, 0, 0, 1);
 
@@ -21,6 +23,34 @@ public class Orientation {
 	}
 
 	public static void main(String[] args) {
+		int isum = 0, dsum = 0;
+		for (int k = 0; k < 2; k++) {
+			int sum = 0;
+			long t = System.currentTimeMillis();
+			for (int j = 0; j < 512; j++)
+				for (int i = 0; i < 16384; i++) {
+					Colors.Gamma.gammaCompress(i, 16383);
+				}
+			isum += (System.currentTimeMillis() - t);
+			System.out.println("i: " + (System.currentTimeMillis() - t) + "    " + isum);
+			 t = System.currentTimeMillis();
+			for (int j = 0; j < 512; j++)
+				for (int i = 0; i < 16384; i++) {
+					Colors.Gamma.gammaCompress(i/16383.0);
+				}
+			dsum += (System.currentTimeMillis() - t);
+			System.out.println("d: " + (System.currentTimeMillis() - t) + "    " + dsum);
+		}
+//		System.exit(0);
+		for (int i = 0; i <= 255; i++) {
+			double d = i / 255.0;
+			double l = Colors.Gamma.gammaExpand(d);
+			int li = Colors.Gamma.gammaExpand(i, 255);
+			int lo = Colors.Gamma.gammaCompress(li, 4095);
+			double dl = Colors.Gamma.gammaCompress(li / 4095.0);
+			System.out.printf("%6s → %6s → %6s → %6s → % .13f → % .13f\n", i, li, lo, d, l, dl);
+		}
+		System.exit(0);
 		Orientation orient = new Orientation();
 		Vector3f euler = new Vector3f();
 		orient.quat.getEulerAnglesXYZ(euler);
@@ -44,7 +74,8 @@ public class Orientation {
 		for (int i = 0; i <= 360; i += 5) {
 			double y = -Math.cos(Math.toRadians(i)), x = Math.sin(Math.toRadians(i));
 			int atan2 = MasBearing.atan2(x, y);
-			System.out.printf("%4d → (%.25f,%.25f) → %10d %.25f %7.4f\n", i, x, y, atan2, MasBearing.sin(atan2), MasBearing.bradToDegrees(atan2));
+			System.out.printf("%4d → (%.25f,%.25f) → %10d %.25f %7.4f\n", i, x, y, atan2, MasBearing.sin(atan2),
+					MasBearing.bradToDegrees(atan2));
 
 		}
 //		System.exit(0);
@@ -68,9 +99,8 @@ public class Orientation {
 			double d = i * 15;
 			Bearing abs = Bearing.absolute(d);
 			Bearing rel = Bearing.relative(d);
-			System.out.printf("a=%9.6f, abs=%s (%4.2f), dx=%5.2f, dy=%5.2f, rel=%s, nav=%7s, rnv=%7s\n", d, abs, abs.azimuth(),
-					abs.dirX(), abs.dirY(), rel,
-					abs.toNavString(), rel.toNavString());
+			System.out.printf("a=%9.6f, abs=%s (%4.2f), dx=%5.2f, dy=%5.2f, rel=%s, nav=%7s, rnv=%7s\n", d, abs,
+					abs.azimuth(), abs.dirX(), abs.dirY(), rel, abs.toNavString(), rel.toNavString());
 			System.out.println(abs.add(rel));
 			System.out.printf("%.2f,%.2f → %7.2f°\n", abs.dirX(), abs.dirY(),
 					Math.toDegrees(Math.atan2(abs.dirX(), -abs.dirY())));

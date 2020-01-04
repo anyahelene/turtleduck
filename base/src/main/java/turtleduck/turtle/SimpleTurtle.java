@@ -228,6 +228,7 @@ public interface SimpleTurtle {
 	 */
 	SimpleTurtle child();
 	
+	SimpleTurtle child(Canvas canvas);
 	boolean isChild();
 	
 	SimpleTurtle parent();

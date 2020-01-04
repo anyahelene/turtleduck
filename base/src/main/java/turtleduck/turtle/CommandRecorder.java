@@ -2,13 +2,15 @@ package turtleduck.turtle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 
 public class CommandRecorder implements TurtleCommand {
 	private final List<PartialTurtleCommand> commands = new ArrayList<>();
-	
+	private int penDownAt = -1, penUpAt = -1;
+
 	public CommandRecorder init(Pen pen, Point position, double angle) {
 		commands.add(new InitCommand(pen, position, angle));
 		return this;
@@ -23,16 +25,45 @@ public class CommandRecorder implements TurtleCommand {
 		return this;
 	}
 
+	public CommandRecorder fill(Fill fill) {
+		if (penDownAt >= 0) {
+			ListIterator<PartialTurtleCommand> li = commands.listIterator(penDownAt);
+			List<PartialTurtleCommand> cmds = new ArrayList<>(commands.size() - penDownAt);
+			while (li.hasNext()) {
+				PartialTurtleCommand ptc = li.next();
+				if (ptc instanceof RelCommand) {
+					RelCommand rc = ((RelCommand) ptc);
+					cmds.add(new RelCommand(rc.sign*rc.dist, rc.draw));
+					rc.draw = true;
+				} else {
+					cmds.add(ptc);
+				}
+			}
+			commands.add(penDownAt, new FillCommand(fill, cmds));
+			penUpAt = penDownAt = -1;
+		}
+		return this;
+	}
+
 	public CommandRecorder move(double dist) {
-			commands.add(new RelCommand(dist, false));
+		penUpAt = penDownAt;
+		penDownAt = -1;
+		commands.add(new RelCommand(dist, false));
 		return this;
 	}
 
 	public CommandRecorder draw() {
-		if(commands.isEmpty())
+		if (commands.isEmpty())
 			throw new IllegalStateException("Must be preceded by move()");
-		PartialTurtleCommand ptc = commands.get(commands.size()-1);
-		if(ptc instanceof RelCommand) {
+		if (penDownAt < 0) {
+			if(penUpAt < 0) {
+			penDownAt = commands.size() - 1;
+			} else {
+				penDownAt = penUpAt;
+			}
+		}
+		PartialTurtleCommand ptc = commands.get(commands.size() - 1);
+		if (ptc instanceof RelCommand) {
 			((RelCommand) ptc).draw = true;
 		} else {
 			throw new IllegalStateException("Must be preceded by move()");
@@ -51,8 +82,36 @@ public class CommandRecorder implements TurtleCommand {
 	 */
 
 	public CommandRecorder turn(double angle) {
-			commands.add(new TurnCommand(angle));
+		commands.add(new TurnCommand(angle));
 		return this;
+	}
+
+	public static class FillCommand implements PartialTurtleCommand {
+		private final Fill fill;
+		private List<PartialTurtleCommand> cmds;
+
+		public FillCommand(Fill fill, List<PartialTurtleCommand> cmds) {
+			this.fill = fill;
+			this.cmds = cmds;
+		}
+
+		@Override
+		public void execute(TurtleDuck turtle) {
+			TurtleDuck child = turtle.child();
+			for(PartialTurtleCommand ptc : cmds)
+				ptc.execute(child);
+			child.fill();
+		}
+
+		@Override
+		public double execute(TurtleDuck turtle, double step, double stepsDone) {
+			execute(turtle);
+			return -1;
+		}
+
+		public String toString() {
+			return "fill(" + fill + ")";// child.toString();
+		}
 	}
 
 	public static class ChildCommand implements PartialTurtleCommand {
@@ -77,7 +136,7 @@ public class CommandRecorder implements TurtleCommand {
 		}
 
 		public String toString() {
-			return "";//child.toString();
+			return "";// child.toString();
 		}
 	}
 
@@ -144,9 +203,9 @@ public class CommandRecorder implements TurtleCommand {
 		@Override
 		public void execute(TurtleDuck turtle) {
 			if (draw)
-				turtle.draw(dist);
+				turtle.draw(sign*dist);
 			else
-				turtle.move(dist);
+				turtle.move(sign*dist);
 		}
 
 		@Override
@@ -159,9 +218,9 @@ public class CommandRecorder implements TurtleCommand {
 				stepsDone += step;
 			}
 			if (draw)
-				turtle.draw(sign*step);
+				turtle.draw(sign * step);
 			else
-				turtle.move(sign*step);
+				turtle.move(sign * step);
 			return stepsDone;
 		}
 
@@ -204,7 +263,7 @@ public class CommandRecorder implements TurtleCommand {
 			 * while (radians < -Math.PI) radians += 2 * Math.PI; while (radians > Math.PI)
 			 * radians -= 2 * Math.PI;
 			 */
-			if(angle > 180)
+			if (angle > 180)
 				angle -= 360;
 			this.a = Math.abs(angle);
 			this.sign = Math.signum(angle);
@@ -212,7 +271,7 @@ public class CommandRecorder implements TurtleCommand {
 
 		@Override
 		public void execute(TurtleDuck turtle) {
-			turtle.turn(sign*a);
+			turtle.turn(sign * a);
 		}
 
 		@Override
@@ -224,13 +283,13 @@ public class CommandRecorder implements TurtleCommand {
 			} else {
 				stepsDone += step;
 			}
-			turtle.turn(sign*step);
+			turtle.turn(sign * step);
 
 			return stepsDone;
 		}
 
 		public String toString() {
-			return String.format("turn(%.2f)", sign*a);
+			return String.format("turn(%.2f)", sign * a);
 		}
 	}
 

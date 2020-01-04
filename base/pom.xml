@@ -7,8 +7,17 @@
 		<artifactId>turtleduck</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-
+	<properties>
+		<joml.version>1.9.19</joml.version>
+	</properties>
 	<artifactId>turtleduck-base</artifactId>
 	<packaging>jar</packaging>
 	<name>turtleduck-base</name>
+	<dependencies>
+		<dependency>
+			<groupId>org.joml</groupId>
+			<artifactId>joml</artifactId>
+			<version>${joml.version}</version>
+		</dependency>
+	</dependencies>
 </project>
