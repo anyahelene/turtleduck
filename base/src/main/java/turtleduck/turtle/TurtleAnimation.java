@@ -5,11 +5,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import turtleduck.colors.Colors;
 import turtleduck.turtle.CommandRecorder.ChildCommand;
 import turtleduck.turtle.CommandRecorder.PartialTurtleCommand;
 
 public class TurtleAnimation {
-	private double stepsPerSec = 30, defaultStepsPerSec = 1000;
+	private double stepsPerSec = 300, defaultStepsPerSec = 1000;
 	private TurtleDuck turtle;
 	private List<PartialTurtleCommand> commands;
 	private Iterator<PartialTurtleCommand> iter;
@@ -26,13 +27,14 @@ public class TurtleAnimation {
 
 	public boolean step(double deltaTime) {
 		steps += stepsPerSec * deltaTime;
+//		System.out.println("" + num + ": +" + steps + ", " + deltaTime);
 
 		for (ListIterator<TurtleAnimation> li = children.listIterator(); li.hasNext();) {
 			TurtleAnimation animation = li.next();
 			if (!animation.step(deltaTime))
 				li.remove();
-			if (num > 1)
-				return true;
+//			if (num > 2)
+//				return true;
 		}
 		while (steps > 1) {
 			if (currentCommand == null) {
@@ -51,12 +53,14 @@ public class TurtleAnimation {
 				TurtleDuck child = turtle.child();
 				TurtleAnimation anim = cc.playbackAnimation(child);
 				anim.num = num + 1;
-				children.add(anim);
+				if (anim.step(deltaTime))
+					children.add(anim);
 				currentCommand = null;
 				continue;
 			}
 //			System.out.println("" + num + ": " + currentCommand.toString() + ": @" + stepsDone + " +" + steps);
 			stepsDone = currentCommand.execute(turtle, steps, stepsDone);
+//			System.out.println("" + num + ": " + currentCommand.toString() + ": @" + stepsDone + " +" + steps);
 			steps = 0.0;
 			if (stepsDone < 0) {
 				currentCommand = null;
@@ -77,8 +81,8 @@ public class TurtleAnimation {
 	public void debug(TurtleDuck debugTurtle, double size) {
 		debugTurtle.moveTo(turtle.position());
 		debugTurtle.turnTo(turtle.angle());
-//		debugTurtle.pen(turtle.pen().change().strokeWidth(2).done());
-//		System.out.println(turtle.heading()+ ", " + debugTurtle.heading());
+		debugTurtle.pen(turtle.pen().change().strokePaint(Colors.RED).strokeWidth(2).done());
+		System.out.println(turtle.position() + ", " + turtle.heading()+ ", " + debugTurtle.heading());
 		debugTurtle.move(size / 2).turn(150).draw(size).turn(120).draw(size).turn(120).draw(size);
 		debugTurtle.done();
 		for (TurtleAnimation an : children) {

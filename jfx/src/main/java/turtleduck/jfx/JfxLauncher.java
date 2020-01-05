@@ -6,7 +6,7 @@ import turtleduck.TurtleDuckApp;
 import turtleduck.jfx.internal.JfxApp;
 
 public class JfxLauncher implements Launcher  {
-	protected  int config = 0;
+	protected  int config = JfxScreen.CONFIG_FLAG_DEBUG;
 	protected  TurtleDuckApp app;
 
 	@Override

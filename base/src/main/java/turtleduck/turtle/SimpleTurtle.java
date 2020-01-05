@@ -213,6 +213,8 @@ public interface SimpleTurtle {
 	Pen pen();
 	
 	SimpleTurtle pen(Pen newPen);
+	SimpleTurtle pen(Stroke newPen);
+	SimpleTurtle pen(Fill newPen);
 	
 	void done();
 	
@@ -235,7 +237,7 @@ public interface SimpleTurtle {
 	
 	SimpleTurtle startRecording();
 	
-	CommandRecorder endRecording();
+	TurtleControl endRecording();
 	
 	/**
 	 * @return The current position of the turtle.

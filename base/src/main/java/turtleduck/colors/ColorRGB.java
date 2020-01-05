@@ -22,7 +22,7 @@ public class ColorRGB implements Paint {
 		r = Math.round(Colors.Gamma.gammaExpand(r)*4095);
 		g = Math.round(Colors.Gamma.gammaExpand(g)*4095);
 		b = Math.round(Colors.Gamma.gammaExpand(b)*4095);
-		System.out.printf("(%.5f,%.5f,%.5f) = (%5d,%5d,%5d) = (%5.0f,%5.0f,%5.0f)\n", red, green, blue, this.r, this.g, this.b, r, g, b);
+//		System.out.printf("(%.5f,%.5f,%.5f) = (%5d,%5d,%5d) = (%5.0f,%5.0f,%5.0f)\n", red, green, blue, this.r, this.g, this.b, r, g, b);
 	}
 
 	@Override

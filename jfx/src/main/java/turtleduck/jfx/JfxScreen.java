@@ -396,7 +396,7 @@ public class JfxScreen implements Screen {
 			double myWidth = getRawWidth() * currentScale;
 			double myHeight = getRawHeight() * currentScale;
 			if (debug)
-				System.out.printf(
+				System.err.printf(
 						"Resizing before: screen: %1.0fx%1.0f, screen: %1.0fx%1.0f, scene: %1.0fx%1.0f, window: %1.0fx%1.0f,%n border: %1.0fx%1.0f, new window size: %1.0fx%1.0f, canvas size: %1.0fx%1.0f%n", //
 						javafx.stage.Screen.getPrimary().getVisualBounds().getWidth(),
 						javafx.stage.Screen.getPrimary().getVisualBounds().getHeight(), subScene.getWidth(),
@@ -407,7 +407,7 @@ public class JfxScreen implements Screen {
 			window.setWidth(myWidth + hBorder);
 			window.setHeight(myHeight + vBorder);
 			if (debug)
-				System.out.printf(
+				System.err.printf(
 						"Resizing after : screen: %1.0fx%1.0f, screen: %1.0fx%1.0f, scene: %1.0fx%1.0f, window: %1.0fx%1.0f,%n border: %1.0fx%1.0f, new window size: %1.0fx%1.0f, canvas size: %1.0fx%1.0f%n",
 						javafx.stage.Screen.getPrimary().getVisualBounds().getWidth(),
 						javafx.stage.Screen.getPrimary().getVisualBounds().getHeight(), subScene.getWidth(),
@@ -416,7 +416,7 @@ public class JfxScreen implements Screen {
 		}
 
 		if (debug)
-			System.out.printf("Rescaling: subscene %1.2fx%1.2f, scale %1.2f, aspect %.4f (%d), canvas %1.0fx%1.0f%n",
+			System.err.printf("Rescaling: subscene %1.2fx%1.2f, scale %1.2f, aspect %.4f (%d), canvas %1.0fx%1.0f%n",
 					subScene.getWidth(), subScene.getHeight(), currentScale, aspects.get(aspect), aspect, getRawWidth(),
 					getRawHeight());
 		for (Node n : root.getChildren()) {
@@ -425,7 +425,7 @@ public class JfxScreen implements Screen {
 			n.setTranslateX(-Math.floor(rawCanvasWidth / 2));
 			n.setTranslateY(-Math.floor(rawCanvasHeight / 2));
 			if (debug)
-				System.out.printf(" *  layout %1.2fx%1.2f, translate %1.2fx%1.2f%n", n.getLayoutX(), n.getLayoutY(),
+				System.err.printf(" *  layout %1.2fx%1.2f, translate %1.2fx%1.2f%n", n.getLayoutX(), n.getLayoutY(),
 						n.getTranslateX(), n.getTranslateY());
 			n.setScaleX(currentScale);
 			n.setScaleY(currentScale);

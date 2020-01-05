@@ -4,12 +4,80 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 
-public class CommandRecorder implements TurtleCommand {
+public class CommandRecorder implements TurtleControl, TurtleCommand {
 	private final List<PartialTurtleCommand> commands = new ArrayList<>();
+	private List<PartialTurtleCommand> current;
 	private int penDownAt = -1, penUpAt = -1;
+	private boolean validate = true;
+	private Stroke stroke;
+	private Fill fill;
+
+	@Override
+	public boolean validationMode() {
+		return validate;
+	}
+
+	@Override
+	public TurtleControl validationMode(boolean enable) {
+		validate = enable;
+		return this;
+	}
+
+	@Override
+	public TurtleControl begin(Stroke s, Fill f) {
+		if (stroke != s || fill != f) {
+			stroke = s;
+			fill = f;
+			commands.add(new PenCommand(s, f));
+		}
+		return this;
+	}
+
+	@Override
+	public TurtleControl pen(Stroke s, Fill f) {
+		if (stroke != s || fill != f) {
+			stroke = s;
+			fill = f;
+			commands.add(new PenCommand(s, f));
+		}
+		return this;
+	}
+
+	@Override
+	public TurtleControl turn(Bearing from, double degrees, Bearing to) {
+		commands.add(new TurnCommand(degrees));
+		return this;
+	}
+
+	@Override
+	public TurtleControl go(Bearing bearing, Point from, double distance, Point to) {
+		if (stroke != null)
+			commands.add(new RelCommand(distance, true));
+		else
+			commands.add(new RelCommand(distance, false));
+		return this;
+	}
+
+	@Override
+	public TurtleControl control(Bearing heading, Point from, double distance, Point to) {
+		return this;
+	}
+
+	@Override
+	public TurtleControl cancel() {
+		return this;
+	}
+
+	@Override
+	public TurtleControl end() {
+		stroke = null;
+		fill = null;
+		return this;
+	}
 
 	public CommandRecorder init(Pen pen, Point position, double angle) {
 		commands.add(new InitCommand(pen, position, angle));
@@ -20,11 +88,6 @@ public class CommandRecorder implements TurtleCommand {
 		return commands.size();
 	}
 
-	public CommandRecorder pen(Pen pen) {
-		commands.add(new PenCommand(pen));
-		return this;
-	}
-
 	public CommandRecorder fill(Fill fill) {
 		if (penDownAt >= 0) {
 			ListIterator<PartialTurtleCommand> li = commands.listIterator(penDownAt);
@@ -33,7 +96,7 @@ public class CommandRecorder implements TurtleCommand {
 				PartialTurtleCommand ptc = li.next();
 				if (ptc instanceof RelCommand) {
 					RelCommand rc = ((RelCommand) ptc);
-					cmds.add(new RelCommand(rc.sign*rc.dist, rc.draw));
+					cmds.add(new RelCommand(rc.sign * rc.dist, rc.draw));
 					rc.draw = true;
 				} else {
 					cmds.add(ptc);
@@ -45,19 +108,12 @@ public class CommandRecorder implements TurtleCommand {
 		return this;
 	}
 
-	public CommandRecorder move(double dist) {
-		penUpAt = penDownAt;
-		penDownAt = -1;
-		commands.add(new RelCommand(dist, false));
-		return this;
-	}
-
 	public CommandRecorder draw() {
 		if (commands.isEmpty())
 			throw new IllegalStateException("Must be preceded by move()");
 		if (penDownAt < 0) {
-			if(penUpAt < 0) {
-			penDownAt = commands.size() - 1;
+			if (penUpAt < 0) {
+				penDownAt = commands.size() - 1;
 			} else {
 				penDownAt = penUpAt;
 			}
@@ -81,11 +137,6 @@ public class CommandRecorder implements TurtleCommand {
 	 * TurnCommand(radians, false)); return this; }
 	 */
 
-	public CommandRecorder turn(double angle) {
-		commands.add(new TurnCommand(angle));
-		return this;
-	}
-
 	public static class FillCommand implements PartialTurtleCommand {
 		private final Fill fill;
 		private List<PartialTurtleCommand> cmds;
@@ -98,7 +149,7 @@ public class CommandRecorder implements TurtleCommand {
 		@Override
 		public void execute(TurtleDuck turtle) {
 			TurtleDuck child = turtle.child();
-			for(PartialTurtleCommand ptc : cmds)
+			for (PartialTurtleCommand ptc : cmds)
 				ptc.execute(child);
 			child.fill();
 		}
@@ -168,25 +219,30 @@ public class CommandRecorder implements TurtleCommand {
 	}
 
 	public static class PenCommand implements PartialTurtleCommand {
-		private final Pen pen;
+		private final Stroke stroke;
+		private final Fill fill;
 
-		public PenCommand(Pen pen) {
-			this.pen = pen;
+		public PenCommand(Stroke s, Fill f) {
+			this.stroke = s;
+			this.fill = f;
 		}
 
 		@Override
 		public void execute(TurtleDuck turtle) {
-			turtle.pen(pen);
+			if (stroke != null)
+				turtle.pen(stroke);
+			if (fill != null)
+				turtle.pen(fill);
 		}
 
 		@Override
 		public double execute(TurtleDuck turtle, double step, double stepsDone) {
 			execute(turtle);
-			return -1.0;
+			return -step;
 		}
 
 		public String toString() {
-			return String.format("pen(%s)", pen.toString());
+			return String.format("pen(%s,%s)", stroke, fill);
 		}
 	}
 
@@ -203,17 +259,17 @@ public class CommandRecorder implements TurtleCommand {
 		@Override
 		public void execute(TurtleDuck turtle) {
 			if (draw)
-				turtle.draw(sign*dist);
+				turtle.draw(sign * dist);
 			else
-				turtle.move(sign*dist);
+				turtle.move(sign * dist);
 		}
 
 		@Override
 		public double execute(TurtleDuck turtle, double step, double stepsDone) {
 			double todo = dist - stepsDone;
 			if (step >= todo) {
-				step = todo;
 				stepsDone = -(1 + step - todo); // leftovers
+				step = todo;
 			} else {
 				stepsDone += step;
 			}
@@ -278,8 +334,8 @@ public class CommandRecorder implements TurtleCommand {
 		public double execute(TurtleDuck turtle, double step, double stepsDone) {
 			double todo = a - stepsDone;
 			if (step >= todo) {
-				step = todo;
 				stepsDone = -(1 + step - todo); // leftovers
+				step = todo;
 			} else {
 				stepsDone += step;
 			}
@@ -316,4 +372,5 @@ public class CommandRecorder implements TurtleCommand {
 	public String toString() {
 		return commands.toString();
 	}
+
 }

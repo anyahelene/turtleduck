@@ -6,13 +6,16 @@ import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.CommandRecorder;
+import turtleduck.turtle.Fill;
 import turtleduck.turtle.IShape;
 import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.ShapeImpl;
 import turtleduck.turtle.SimpleTurtle;
+import turtleduck.turtle.Stroke;
 import turtleduck.turtle.TurtleDuck;
+import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.TurtleMark;
 import turtleduck.turtle.TurtlePathBuilder;
 
@@ -20,16 +23,21 @@ public class TurtleDuckImpl implements TurtleDuck {
 	protected Navigator nav;
 	protected Pen pen;
 	protected PenBuilder<Pen> penBuilder;
-	protected LineBuilder lines;
+	protected TurtleControl journal;
+	protected final TurtleControl mainJournal;
 	protected final Canvas canvas;
 	protected final TurtleDuckImpl parent;
-	protected CommandRecorder recorder;
+	protected TurtleControl recorder;
+	private boolean drawing = false, moving = false;
 
-	public TurtleDuckImpl(Canvas canvas) {
+	public TurtleDuckImpl(Canvas canvas, TurtleControl journal) {
 		this.canvas = canvas;
 		this.pen = canvas.createPen();
+		this.mainJournal = journal;
+		this.journal = journal;
 		parent = null;
 		this.nav = new Navigator.DefaultNavigator();
+		nav.recordTo(journal);
 	}
 
 	public TurtleDuckImpl(TurtleDuckImpl td) {
@@ -42,13 +50,9 @@ public class TurtleDuckImpl implements TurtleDuck {
 		canvas = c;
 		pen = td.pen();
 		penBuilder = null;
-		if (td.recorder != null) {
-			recorder = td.recorder.child();
-			recorder.init(pen, nav.position(), nav.bearing().toRadians());
-			nav.recordTo(recorder);
-		} else {
-			nav.recordTo(null);
-		}
+		mainJournal = td.mainJournal.child();
+		journal = td.journal == td.mainJournal ? mainJournal : td.journal.child();
+		nav.recordTo(journal);
 	}
 
 	@Override
@@ -85,14 +89,9 @@ public class TurtleDuckImpl implements TurtleDuck {
 
 	@Override
 	public TurtleDuck draw(double dist) {
+		penDown();
 		if (dist != 0) {
-			penDown();
 			nav.forward(dist);
-			if (recorder != null) {
-				recorder.draw();
-			} else {
-				lines.to(pen, nav.position());
-			}
 		}
 		return this;
 	}
@@ -112,18 +111,25 @@ public class TurtleDuckImpl implements TurtleDuck {
 		return absMove(Point.point(x, y), true);
 	}
 
-	protected LineBuilder penDown() {
-		Pen p = pen();
-		if (lines == null) {
-			lines = canvas.lines(p, p, nav.position());
+	protected void penDown() {
+		if(moving) {
+			moving = false;
+			journal.end();
 		}
-		return lines;
+		if (!drawing) {
+			drawing = true;
+			journal.begin(pen(), null);
+		}
 	}
 
 	protected void penUp() {
-		if (lines != null) {
-			lines.done();
-			lines = null;
+		if (drawing) {
+			drawing = false;
+			journal.end();
+		}
+		if(!moving) {
+			moving = true;
+			journal.begin(null, null);
 		}
 	}
 
@@ -163,21 +169,11 @@ public class TurtleDuckImpl implements TurtleDuck {
 
 	@Override
 	public TurtleDuck fill() {
-		if (lines != null) {
-			lines.fill(pen, false);
-			lines = null;
-		}
-		if(recorder != null)
-			recorder.fill(pen);
 		return this;
 	}
 
 	@Override
 	public TurtleDuck fillAndStroke() {
-		if (lines != null) {
-			lines.fill(pen, true);
-			lines = null;
-		}
 		return this;
 	}
 
@@ -289,9 +285,8 @@ public class TurtleDuckImpl implements TurtleDuck {
 		if (pen == null) {
 			pen = penBuilder.done();
 			penBuilder = null;
-			if (recorder != null) {
-				recorder.pen(pen);
-			}
+			if(drawing)
+				journal.pen(pen, null);
 		}
 		return pen;
 	}
@@ -308,10 +303,9 @@ public class TurtleDuckImpl implements TurtleDuck {
 		if (newPen == null)
 			throw new IllegalArgumentException("Argument must not be null");
 		pen = newPen;
-		if (recorder != null) {
-			recorder.pen(pen);
-		}
-
+		if(drawing)
+			journal.pen(pen, null);
+	
 		return this;
 	}
 
@@ -341,18 +335,33 @@ public class TurtleDuckImpl implements TurtleDuck {
 			throw new IllegalStateException("Alreadyy recording commands!");
 		penUp();
 		recorder = new CommandRecorder();
-		recorder.init(pen, nav.position(), nav.bearing().azimuth());
-		nav.recordTo(recorder);
+		journal = recorder;
+		nav.recordTo(journal);
 		return this;
 	}
 
 	@Override
-	public CommandRecorder endRecording() {
+	public TurtleControl endRecording() {
 		if (recorder == null)
 			throw new IllegalStateException("Not currently recording commands!");
-		CommandRecorder r = recorder;
+		TurtleControl r = recorder;
 		recorder = null;
-		nav.recordTo(null);
+		journal = mainJournal;
+		nav.recordTo(journal);
 		return r;
+	}
+
+	@Override
+	public TurtleDuck pen(Stroke newPen) {
+		if(newPen instanceof Pen)
+			pen((Pen)newPen);
+		return this;
+	}
+
+	@Override
+	public TurtleDuck pen(Fill newPen) {
+		if(newPen instanceof Pen)
+			pen((Pen)newPen);
+		return this;
 	}
 }

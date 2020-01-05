@@ -1,5 +1,6 @@
 package turtleduck.jfx;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -7,7 +8,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.shape.StrokeLineCap;
 import turtleduck.geometry.Point;
-import turtleduck.jfx.internal.JfxLineBuilder;
+import turtleduck.jfx.internal.JfxApp;
+import turtleduck.jfx.internal.JfxControl;
 import turtleduck.jfx.internal.PointList;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
@@ -15,6 +17,7 @@ import turtleduck.turtle.IShape;
 import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Stroke;
+import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.base.StatefulCanvas;
 
 public class JfxCanvas extends StatefulCanvas {
@@ -23,17 +26,21 @@ public class JfxCanvas extends StatefulCanvas {
 	private static int fillOps = 0;
 	private static int contextOps = 0;
 	private static int lineSegments = 0;
+	private static long flushTime = 0, flushN = 0;
 	private Canvas canvas;
 	private GraphicsContext context;
 	private double xs[], ys[];
 	private int xyLen;
-	private JfxLineBuilder lines;
+	private List<JfxControl> controls = new ArrayList<>();
 
 	static {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
-		public void run() {printStats();}
+			public void run() {
+				printStats();
+			}
 		});
 	}
+
 	public JfxCanvas(Canvas canvas) {
 		this.canvas = canvas;
 		this.context = canvas.getGraphicsContext2D();
@@ -220,6 +227,7 @@ public class JfxCanvas extends StatefulCanvas {
 		lineOps++;
 		lineSegments += points.size() + 1;
 	}
+
 	public void fillPolygon(Fill fill, Geometry geom, PointList points) {
 		setup(null, fill, geom);
 		context.fillPolygon(points.xs(), points.ys(), points.size());
@@ -230,12 +238,17 @@ public class JfxCanvas extends StatefulCanvas {
 
 	@Override
 	public void flush() {
-		if (lines != null) {
-			lines.done();
-			lines = null;
+		this.context = canvas.getGraphicsContext2D();
+		long t = System.currentTimeMillis();
+
+		for (JfxControl j : controls) {
+			j.flush();
 		}
+		flushTime += System.currentTimeMillis() - t;
+		flushN++;
+//		this.context = null;
 	}
-	
+
 	public static void printStats() {
 		System.err.println("Canvas stats: ");
 		System.err.println("  Total ops: " + totalOps);
@@ -243,13 +256,19 @@ public class JfxCanvas extends StatefulCanvas {
 		System.err.println("  Fill ops: " + fillOps);
 		System.err.println("  Context ops: " + contextOps);
 		System.err.println("  Line segments: " + lineSegments);
+		System.err.printf("  Flushes:      %10d\n", flushN);
+		System.err.printf("    Total time: %10.5f s\n", (flushTime / 1000.0));
+		System.err.printf("    Average:    %10.5f ms\n", (flushTime * 1.0)/flushN);
+		JfxControl.printStats();
+		PointList.printStats();
+		JfxApp.printStats();
 	}
 
 	@Override
-	public LineBuilder lines(Stroke pen, Geometry geom, Point from) {
-		flush();
-		lines = new JfxLineBuilder(pen, geom, from, this);
-		return lines;
+	public TurtleControl createJournal() {
+		JfxControl journal = new JfxControl(this, null);
+		controls.add(journal);
+		return journal;
 	}
 
 }

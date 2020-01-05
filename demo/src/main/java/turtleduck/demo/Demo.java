@@ -12,12 +12,13 @@ import turtleduck.turtle.CommandRecorder;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.SimpleTurtle;
 import turtleduck.turtle.TurtleAnimation;
+import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.TurtleDuck;
 import turtleduck.turtle.base.SvgCanvas;
 
 public class Demo implements TurtleDuckApp {
 
-	private CommandRecorder recorder;
+	private TurtleControl recorder;
 	private TurtleAnimation anim;
 	private Canvas canvas, debugCanvas;
 	private TurtleDuck turtle;
@@ -45,10 +46,11 @@ public class Demo implements TurtleDuckApp {
 		long startMillis = System.currentTimeMillis();
 		turtle = canvas.createTurtleDuck();
 		double t = System.currentTimeMillis();
-
+		
+		
 		turtle.moveTo(300, 350).turnTo(0).draw(50).turn(90).draw(100).turn(-45).draw(20).move(0);
 		turtle.moveTo(300, 550);
-		colorWheel(turtle, 100);
+		colorWheel(turtle, 50);
 		turtle.moveTo(500, 150);
 		colorWheel(turtle, -100);
 		turtle.turnTo(90);
@@ -96,10 +98,17 @@ public class Demo implements TurtleDuckApp {
 		 */
 		System.err.println("Total:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
 		recorder = turtle.endRecording();
-		System.out.println(recorder.toString().replaceAll("\\),", "),\n    "));
+//		System.out.println(recorder.toString().replaceAll("\\),", "),\n    "));
 		turtle.moveTo(0, 0);
 		turtle.moveTo(500, 350).turnTo(0);
-		anim = recorder.playbackAnimation(turtle);
+		anim = ((CommandRecorder)recorder).playbackAnimation(turtle);
+		System.err.println("Draw:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
+		t = System.currentTimeMillis();
+		canvas.flush();
+		debugCanvas.flush();
+		duckCanvas.flush();
+		System.err.println("Flush:   " + ((System.currentTimeMillis() - t) / 1000.0) + " s");
+		System.err.println("Total:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
 	}
 
 	public static void stem(TurtleDuck turtle, double len) {
@@ -188,11 +197,12 @@ public class Demo implements TurtleDuckApp {
 			if (radius < 0) {
 				if (i % 3 == 0) {
 					TurtleDuck child = turtle.child(duckCanvas).moveTo(turtle.position()).turnTo(i).draw(20);
-					//child./*draw(step/2).*/turn(180).move(20).turn(-180);//.draw(20);
+					// child./*draw(step/2).*/turn(180).move(20).turn(-180);//.draw(20);
 					if (i % 6 == 0)
 						footprint(child.turn(90).move(2.5).turn(-80), 1);
 					else// if(i % 20 == 10)
 						footprint(child.turn(-90).move(2.5).turn(80), 1);
+					turtle.done();
 				}
 				turtle.turn(10);
 				if (i % 2 == 0) {
@@ -213,8 +223,11 @@ public class Demo implements TurtleDuckApp {
 
 	}
 
+	long step = 0;
+
 	@Override
 	public void bigStep(double deltaTime) {
+		long startMillis = System.currentTimeMillis();
 //		System.out.println(deltaTime);
 		if (anim != null) {
 			boolean more = anim.step(deltaTime);
@@ -223,9 +236,25 @@ public class Demo implements TurtleDuckApp {
 			if (!more) {
 				turtle.turn(Math.PI / 2);
 				turtle.move(100);
-				anim = recorder.playbackAnimation(turtle);
+				anim = ((CommandRecorder)recorder).playbackAnimation(turtle);
 			}
 		}
+		if (true) {
+			debugTurtle.moveTo(200 * Math.cos(step / 36.0) + 500, 200 * Math.sin(step / 36.0) + 500).turnTo(step*10);
+			colorWheel(debugTurtle, -50);
+			debugTurtle.moveTo(300 * Math.sin(step / 36.0) + 600, 300 * Math.cos(step / 36.0) + 300).turnTo(step*5);
+			colorWheel(debugTurtle, 50);
+			debugTurtle.moveTo(300 * Math.sin(step / 50.0) + 300, 300 * Math.cos(step / 25.0) + 300).turnTo(step*3);
+			feather(debugTurtle.child().turn(-90), 200);
+		}
+//		System.err.println("Draw:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
+		long t = System.currentTimeMillis();
+		canvas.flush();
+		debugCanvas.flush();
+		duckCanvas.flush();
+//		System.err.println("Flush:   " + ((System.currentTimeMillis() - t) / 1000.0) + " s");
+//		System.err.println("Total:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
+		step++;
 	}
 
 	public static void footprint(TurtleDuck turtle, double size) {
@@ -234,5 +263,6 @@ public class Demo implements TurtleDuckApp {
 		turtle.turn(60).draw(size * 15).turn(-45).draw(size * 100).turn(-150).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15).fill();
+		turtle.done();
 	}
 }

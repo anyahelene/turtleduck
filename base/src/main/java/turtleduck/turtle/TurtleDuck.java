@@ -248,7 +248,9 @@ public interface TurtleDuck extends SimpleTurtle {
 	PenBuilder<TurtleDuck> changePen();
 	@Override
 	TurtleDuck pen(Pen newPen);
-	
+	TurtleDuck pen(Stroke newPen);
+	TurtleDuck pen(Fill newPen);
+
 	TurtleMark mark(String name);
 
 	TurtleDuck fill();

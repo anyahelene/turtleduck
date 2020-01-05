@@ -1,12 +1,17 @@
 package turtleduck.geometry;
 
 import turtleduck.turtle.CommandRecorder;
+import turtleduck.turtle.TurtleControl;
 
 public interface Navigator extends PositionVector, DirectionVector {
 
 	Bearing bearing();
 
+	Bearing bearing(int index);
+
 	Point position();
+
+	Point position(int index);
 
 	Navigator left(double degrees);
 
@@ -32,12 +37,12 @@ public interface Navigator extends PositionVector, DirectionVector {
 		return position().distanceTo(dest);
 	}
 
-	Navigator recordTo(CommandRecorder recorder);
+	Navigator recordTo(TurtleControl journal);
 
 	static class DefaultNavigator implements Navigator, Cloneable {
-		Point point = Point.point(0, 0);
-		Bearing bearing = Bearing.absolute(0);
-		CommandRecorder recorder;
+		Point point = Point.point(0, 0), point1 = point, point2 = point;
+		Bearing bearing = Bearing.absolute(0), bearing1 = bearing, bearing2 = bearing;
+		TurtleControl recorder;
 
 		@Override
 		public Bearing bearing() {
@@ -67,18 +72,26 @@ public interface Navigator extends PositionVector, DirectionVector {
 
 		@Override
 		public Navigator forward(double distance) {
+			point2 = point1;
+			point1 = point;
 			if (distance != 0) {
 				point = point.add(bearing, distance);
 			}
-			if (recorder != null)
-				recorder.move(distance);
+			if(recorder != null)
+			recorder.go(bearing(), position(1), distance, position());
+
+
 			return this;
 		}
 
 		protected void bearing(Bearing b) {
-			if (recorder != null)
-				recorder.turn(b.azimuth());
+//			if (recorder != null)
+//				recorder.turn(b.azimuth());
+			bearing2 = bearing1;
+			bearing1 = bearing;
 			bearing = bearing.add(b);
+			if(recorder != null)
+			recorder.turn(bearing1, b.azimuth(), bearing);
 		}
 
 		@Override
@@ -164,7 +177,7 @@ public interface Navigator extends PositionVector, DirectionVector {
 		}
 
 		@Override
-		public Navigator recordTo(CommandRecorder recorder) {
+		public Navigator recordTo(TurtleControl recorder) {
 			this.recorder = recorder;
 			return this;
 		}
@@ -172,6 +185,34 @@ public interface Navigator extends PositionVector, DirectionVector {
 		@Override
 		public boolean isAt(PositionVector p) {
 			return x() == p.x() && y() == p.y() && z() == p.z();
+		}
+
+		@Override
+		public Bearing bearing(int index) {
+			switch (index) {
+			case 0:
+				return bearing;
+			case 1:
+				return bearing1;
+			case 2:
+				return bearing2;
+			default:
+				throw new IndexOutOfBoundsException(index);
+			}
+		}
+
+		@Override
+		public Point position(int index) {
+			switch (index) {
+			case 0:
+				return point;
+			case 1:
+				return point1;
+			case 2:
+				return point2;
+			default:
+				throw new IndexOutOfBoundsException(index);
+			}
 		}
 
 	}
