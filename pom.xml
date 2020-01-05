@@ -48,7 +48,9 @@
 
 	<modules>
 		<module>base</module>
-		<module>fx</module>
+		<module>jfx</module>
 		<module>demo</module>
+		<module>shell</module>
+		<module>gl</module>
 	</modules>
 </project>
