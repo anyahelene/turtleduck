@@ -5,15 +5,9 @@ import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
 import turtleduck.jfx.internal.JfxApp;
 
-public class JfxLauncher implements Launcher  {
-	protected  int config = JfxScreen.CONFIG_FLAG_DEBUG;
-	protected  TurtleDuckApp app;
-
-	@Override
-	public Launcher config(int config) {
-		this.config = config;
-		return this;
-	}
+public class JfxLauncher implements Launcher {
+	protected int config = JfxScreen.CONFIG_FLAG_DEBUG;
+	protected TurtleDuckApp app;
 
 	@Override
 	public Launcher app(TurtleDuckApp app) {
@@ -21,6 +15,19 @@ public class JfxLauncher implements Launcher  {
 		return this;
 	}
 
+	@Override
+	public Launcher config(int config) {
+		this.config = config;
+		return this;
+	}
+
+	public TurtleDuckApp getApp() {
+		return app;
+	}
+
+	public int getConfig() {
+		return config;
+	}
 
 	public void launch(String[] args) {
 		JfxApp.launcher = this;
@@ -33,14 +40,6 @@ public class JfxLauncher implements Launcher  {
 			getApp().start(JfxScreen.startPaintScene((Stage) displaySystem, getConfig()));
 		else
 			throw new IllegalArgumentException();
-	}
-
-	public TurtleDuckApp getApp() {
-		return app;
-	}
-
-	public int getConfig() {
-		return config;
 	}
 
 }

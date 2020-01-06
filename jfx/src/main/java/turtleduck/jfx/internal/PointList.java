@@ -16,12 +16,26 @@ public class PointList {
 	private static Map<Integer, Integer> sizes = new HashMap<>();
 	private static long maxSize = 0, minSize = Integer.MAX_VALUE;
 	private static long totSize = 0, totN = 0, nReuse = 0, nAlloc = CACHE_SIZE, maxAvail = 0;
+
+	public static void printStats() {
+		System.err.println("PointList: ");
+		System.err.println("  Array pairs allocated: " + nAlloc);
+		System.err.println("  Array pairs reused:    " + nReuse);
+		System.err.println("  Avg available:    " + ((double) maxAvail) / totN);
+		System.err.println("  Max list size:    " + maxSize);
+		System.err.println("  Max list size:    " + maxSize);
+		System.err.println("  Min list size:    " + minSize);
+		System.err.println("  Avg list size:    " + ((double) totSize / totN));
+		System.err.println("  Sizes: " + sizes.toString());
+	}
+
 	double xs[];
 	double ys[];
+
 	int nPoints = 0;
 
 	public PointList() {
-		if(smallArraysNext > 1) {
+		if (smallArraysNext > 1) {
 			xs = smallArrays[--smallArraysNext];
 			ys = smallArrays[--smallArraysNext];
 			nReuse++;
@@ -31,15 +45,14 @@ public class PointList {
 			nAlloc++;
 		}
 	}
-/*
-	public PointList(int initialCapacity) {
-		arrays(initialCapacity);
-	}
-*/
+
+	/*
+	 * public PointList(int initialCapacity) { arrays(initialCapacity); }
+	 */
 	public void add(Point p) {
 		if (nPoints >= xs.length) {
 			int newCapacity = (xs.length * 3 / 2) & 0xfffffffe;
-			if(xs.length == ARRAY_SIZE && smallArraysNext < CACHE_SIZE-1) { // TODO: not thread safe
+			if (xs.length == ARRAY_SIZE && smallArraysNext < CACHE_SIZE - 1) { // TODO: not thread safe
 				smallArrays[smallArraysNext++] = xs;
 				smallArrays[smallArraysNext++] = ys;
 			}
@@ -52,17 +65,13 @@ public class PointList {
 		nPoints++;
 	}
 
-	public int size() {
-		return nPoints;
-	}
-
 	public void clear() {
 		maxSize = Math.max(maxSize, nPoints);
 		minSize = Math.min(minSize, nPoints);
 		totSize += nPoints;
 		totN++;
 		sizes.put(nPoints, sizes.getOrDefault(nPoints, 0) + 1);
-		if(xs.length == ARRAY_SIZE && smallArraysNext < CACHE_SIZE-1) { // TODO: not thread safe
+		if (xs.length == ARRAY_SIZE && smallArraysNext < CACHE_SIZE - 1) { // TODO: not thread safe
 			smallArrays[smallArraysNext++] = xs;
 			smallArrays[smallArraysNext++] = ys;
 		}
@@ -70,12 +79,14 @@ public class PointList {
 		nPoints = 0;
 	}
 
-	public double[] xs() {
-		return xs;
+	public void dispose() {
+		clear();
+		xs = null;
+		ys = null;
 	}
 
-	public double[] ys() {
-		return ys;
+	public int size() {
+		return nPoints;
 	}
 
 	public String toString() {
@@ -95,23 +106,11 @@ public class PointList {
 		return sb.toString();
 	}
 
-	public void dispose() {
-		clear();
-		xs = null;
-		ys = null;
+	public double[] xs() {
+		return xs;
 	}
-	
 
-
-	public static void printStats() {
-		System.err.println("PointList: ");
-		System.err.println("  Array pairs allocated: " + nAlloc);
-		System.err.println("  Array pairs reused:    " + nReuse);
-		System.err.println("  Avg available:    " + ((double)maxAvail)/totN);
-		System.err.println("  Max list size:    " + maxSize);
-		System.err.println("  Max list size:    " + maxSize);
-		System.err.println("  Min list size:    " + minSize);
-		System.err.println("  Avg list size:    " + ((double)totSize/totN));
-		System.err.println("  Sizes: " + sizes.toString());
+	public double[] ys() {
+		return ys;
 	}
 }

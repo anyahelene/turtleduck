@@ -44,7 +44,7 @@ import turtleduck.turtle.Canvas;
  *
  */
 public class JfxTextFont implements TextFont {
-	private static final String[] searchPath = { "/fonts/", "", "../", "../fonts/", "../../fonts/", "../../../fonts/"  };
+	private static final String[] searchPath = { "/fonts/", "", "../", "../fonts/", "../../fonts/", "../../../fonts/" };
 	private static final Map<String, String> loadedFonts = new HashMap<>();
 	private static final double thin = 2.0, thick = 4.0;
 	private static final String[] boxDrawingShapes = { // lines
@@ -432,6 +432,103 @@ public class JfxTextFont implements TextFont {
 
 	}
 
+	protected GraphicsContext context(Canvas canvas) {
+		if (canvas instanceof JfxCanvas) {
+			return ((JfxCanvas) canvas).context;
+		} else {
+			throw new IllegalArgumentException("Expected a JfxCanvas: " + canvas);
+		}
+	}
+
+	private void doDraw(String text, double xScaleFactor, Paint fill, Paint stroke, int mode, GraphicsContext target,
+			int width) {
+		if ((mode & ATTR_BRIGHT) != 0) {
+			fill = fill.brighter();
+			stroke = stroke.brighter();
+		}
+		if ((mode & ATTR_FAINT) != 0) {
+			fill = fill.opacity(0.5);
+			stroke = stroke.opacity(0.5);
+		}
+		target.setFill(JfxColor.toJfxPaint(fill));
+		target.setStroke(JfxColor.toJfxPaint(stroke));
+		if (text.length() > 0 && text.charAt(0) >= 0x2500 && text.charAt(0) <= 0x259f
+				&& (mode & ATTR_NO_FAKE_CHARS) == 0) {
+			target.save(); // save 3
+			target.setStroke(target.getFill());
+			fakeBlockElement(target, text, xScaleFactor);
+			target.restore(); // restore 3
+		} else {
+			target.save(); // save 3
+			if ((mode & ATTR_ITALIC) != 0) {
+				target.translate(-0.2, 0);
+				target.transform(new Affine(Transform.shear(-0.2, 0)));
+			}
+			setGraphicsContext(target, xScaleFactor);
+			if (fill != null) {
+				target.fillText(text, 0.0, 0.0);
+			}
+			if ((mode & ATTR_BOLD) != 0) {
+				// System.err.println("stroke2");
+				target.save(); // save 4
+				target.setLineWidth(thin);
+				target.setStroke(target.getFill());
+				target.strokeText(text, 0.0, 0.0);
+				target.restore(); // restore 4
+			}
+			if (stroke != null || (mode & ATTR_OUTLINE) != 0) {
+				// System.err.println("stroke2");
+				target.setLineWidth(((mode & ATTR_BOLD) != 0) ? thin : thin / 2);
+				target.strokeText(text, 0.0, 0.0);
+			}
+			target.restore(); // restore 3
+		}
+
+		if ((mode & ATTR_UNDERLINE) != 0) {
+			target.fillRect(0, yTranslate - 2, width * squareSize * xScaleFactor, thin);
+		}
+		if ((mode & ATTR_OVERLINE) != 0) {
+			target.fillRect(0, -squareSize + 2, width * squareSize * xScaleFactor, thin);
+		}
+		if ((mode & ATTR_LINE_THROUGH) != 0) {
+			target.fillRect(0, -squareSize / 2 + 2, width * squareSize * xScaleFactor, thin);
+		}
+	}
+
+	/**
+	 * Draw a single character to an offscreen buffer, and return it as an
+	 * {@link Image}.
+	 *
+	 * The contents of the returned {@link Image} is valid until then next call to
+	 * {@link #drawCharacter(String, int, Paint, Paint)} or one of the other text
+	 * drawing commands.
+	 *
+	 * @param c      A string containing the single character to be drawn.
+	 * @param mode   Text attributes (zero or more <code>ATTR_*</code> flags ORed
+	 *               together)
+	 * @param fill   Fill paint, or null for no fill.
+	 * @param stroke Stroke paint, normally null for no stroke.
+	 * @return An image, where pixels can be read by {@link Image#getPixelReader()}
+	 */
+	protected Image drawCharacter(String c, int mode, Paint fill, Paint stroke) {
+		if (c.codePointCount(0, c.length()) != 1) {
+			throw new IllegalArgumentException("String argument should have exactly 1 codepoint: '" + c + "'");
+		}
+		javafx.scene.canvas.Canvas tmpCanvas = getTmpCanvas();
+		GraphicsContext target = tmpCanvas.getGraphicsContext2D();
+		target.save(); // save 2 if drawIndirect
+		target.translate(0, squareSize);
+		if (fill == null) {
+			fill = Colors.TRANSPARENT;
+		}
+		if (stroke == null) {
+			stroke = Colors.TRANSPARENT;
+		}
+		doDraw(c, 1, fill, stroke, mode, target, 1);
+		tmpCanvas.snapshot(snapshotParameters, img);
+		return img;
+	}
+
 	/**
 	 * Draw the given text at position (0,0).
 	 *
@@ -643,6 +740,16 @@ public class JfxTextFont implements TextFont {
 
 	}
 
+	@Override
+	public String fontName() {
+		return getFont().getName();
+	}
+
+	@Override
+	public double fontSize() {
+		return getFont().getSize();
+	}
+
 	/**
 	 * @return the font
 	 */
@@ -651,6 +758,14 @@ public class JfxTextFont implements TextFont {
 			font = findFont(fileName, size);
 		}
 		return font;
+	}
+
+	@Override
+	public <T> T getFont(Class<T> fontClass) {
+		if (fontClass == Font.class)
+			return (T) getFont();
+		else
+			return null;
 	}
 
 	/**
@@ -862,14 +977,6 @@ public class JfxTextFont implements TextFont {
 		}
 	}
 
-	protected GraphicsContext context(Canvas canvas) {
-		if (canvas instanceof JfxCanvas) {
-			return ((JfxCanvas) canvas).context;
-		} else {
-			throw new IllegalArgumentException("Expected a JfxCanvas: " + canvas);
-		}
-	}
-
 	/**
 	 * Draw text at the given position.
 	 *
@@ -942,112 +1049,5 @@ public class JfxTextFont implements TextFont {
 		}
 
 		ctx.restore(); // restore 1
-	}
-
-	private void doDraw(String text, double xScaleFactor, Paint fill, Paint stroke, int mode, GraphicsContext target,
-			int width) {
-		if ((mode & ATTR_BRIGHT) != 0) {
-			fill = fill.brighter();
-			stroke = stroke.brighter();
-		}
-		if ((mode & ATTR_FAINT) != 0) {
-			fill = fill.opacity(0.5);
-			stroke = stroke.opacity(0.5);
-		}
-		target.setFill(JfxColor.toJfxPaint(fill));
-		target.setStroke(JfxColor.toJfxPaint(stroke));
-		if (text.length() > 0 && text.charAt(0) >= 0x2500 && text.charAt(0) <= 0x259f
-				&& (mode & ATTR_NO_FAKE_CHARS) == 0) {
-			target.save(); // save 3
-			target.setStroke(target.getFill());
-			fakeBlockElement(target, text, xScaleFactor);
-			target.restore(); // restore 3
-		} else {
-			target.save(); // save 3
-			if ((mode & ATTR_ITALIC) != 0) {
-				target.translate(-0.2, 0);
-				target.transform(new Affine(Transform.shear(-0.2, 0)));
-			}
-			setGraphicsContext(target, xScaleFactor);
-			if (fill != null) {
-				target.fillText(text, 0.0, 0.0);
-			}
-			if ((mode & ATTR_BOLD) != 0) {
-				// System.err.println("stroke2");
-				target.save(); // save 4
-				target.setLineWidth(thin);
-				target.setStroke(target.getFill());
-				target.strokeText(text, 0.0, 0.0);
-				target.restore(); // restore 4
-			}
-			if (stroke != null || (mode & ATTR_OUTLINE) != 0) {
-				// System.err.println("stroke2");
-				target.setLineWidth(((mode & ATTR_BOLD) != 0) ? thin : thin / 2);
-				target.strokeText(text, 0.0, 0.0);
-			}
-			target.restore(); // restore 3
-		}
-
-		if ((mode & ATTR_UNDERLINE) != 0) {
-			target.fillRect(0, yTranslate - 2, width * squareSize * xScaleFactor, thin);
-		}
-		if ((mode & ATTR_OVERLINE) != 0) {
-			target.fillRect(0, -squareSize + 2, width * squareSize * xScaleFactor, thin);
-		}
-		if ((mode & ATTR_LINE_THROUGH) != 0) {
-			target.fillRect(0, -squareSize / 2 + 2, width * squareSize * xScaleFactor, thin);
-		}
-	}
-
-	/**
-	 * Draw a single character to an offscreen buffer, and return it as an
-	 * {@link Image}.
-	 *
-	 * The contents of the returned {@link Image} is valid until then next call to
-	 * {@link #drawCharacter(String, int, Paint, Paint)} or one of the other text
-	 * drawing commands.
-	 *
-	 * @param c      A string containing the single character to be drawn.
-	 * @param mode   Text attributes (zero or more <code>ATTR_*</code> flags ORed
-	 *               together)
-	 * @param fill   Fill paint, or null for no fill.
-	 * @param stroke Stroke paint, normally null for no stroke.
-	 * @return An image, where pixels can be read by {@link Image#getPixelReader()}
-	 */
-	protected Image drawCharacter(String c, int mode, Paint fill, Paint stroke) {
-		if (c.codePointCount(0, c.length()) != 1) {
-			throw new IllegalArgumentException("String argument should have exactly 1 codepoint: '" + c + "'");
-		}
-		javafx.scene.canvas.Canvas tmpCanvas = getTmpCanvas();
-		GraphicsContext target = tmpCanvas.getGraphicsContext2D();
-		target.save(); // save 2 if drawIndirect
-		target.translate(0, squareSize);
-		if (fill == null) {
-			fill = Colors.TRANSPARENT;
-		}
-		if (stroke == null) {
-			stroke = Colors.TRANSPARENT;
-		}
-		doDraw(c, 1, fill, stroke, mode, target, 1);
-		tmpCanvas.snapshot(snapshotParameters, img);
-		return img;
-	}
-
-	@Override
-	public <T> T getFont(Class<T> fontClass) {
-		if (fontClass == Font.class)
-			return (T) getFont();
-		else
-			return null;
-	}
-
-	@Override
-	public String fontName() {
-		return getFont().getName();
-	}
-
-	@Override
-	public double fontSize() {
-		return getFont().getSize();
 	}
 }

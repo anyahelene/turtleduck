@@ -11,8 +11,28 @@ public class JfxKeyEvent implements KeyEvent {
 	}
 
 	@Override
-	public boolean isShortcutDown() {
-		return ev.isShortcutDown();
+	public <T> T as(Class<T> type) {
+		if (type == javafx.scene.input.KeyEvent.class)
+			return (T) ev;
+		else
+			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String character() {
+		return ev.getCharacter();
+	}
+
+	@Override
+	public KeyCode getCode() {
+		String name = ev.getCode().name();
+		KeyCode code = KeyCode.valueOf(name);
+		return code;
+	}
+
+	@Override
+	public boolean hasCharacter() {
+		return ev.getCharacter() != javafx.scene.input.KeyEvent.CHAR_UNDEFINED;
 	}
 
 	@Override
@@ -36,27 +56,8 @@ public class JfxKeyEvent implements KeyEvent {
 	}
 
 	@Override
-	public KeyCode getCode() {
-		String name = ev.getCode().name();
-		KeyCode code = KeyCode.valueOf(name);
-		return code;
-	}
-	@Override
-	public <T> T as(Class<T> type) {
-		if (type == javafx.scene.input.KeyEvent.class)
-			return (T) ev;
-		else
-			throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String character() {
-		return ev.getCharacter();
-	}
-
-	@Override
-	public boolean hasCharacter() {
-		return ev.getCharacter() != javafx.scene.input.KeyEvent.CHAR_UNDEFINED;
+	public boolean isShortcutDown() {
+		return ev.isShortcutDown();
 	}
 
 }

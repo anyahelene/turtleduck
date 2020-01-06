@@ -10,11 +10,11 @@ public class JfxCursor implements MouseCursor {
 	public JfxCursor() {
 		this(Cursor.DEFAULT);
 	}
-	
+
 	protected JfxCursor(Cursor c) {
 		cursor = c;
 	}
-	
+
 	@Override
 	public <T> T as(Class<T> type) {
 		if (type == Cursor.class)

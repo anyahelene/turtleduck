@@ -238,18 +238,6 @@ public class JfxScreen extends BaseScreen {
 		return new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
 	}
 
-	public Layer debugLayer() {
-		if (debugLayer == null) {
-			Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
-			canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
-			canvases.add(canvas);
-			root.getChildren().add(canvas);
-			canvas.toFront();
-			debugLayer = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
-		}
-		return debugLayer;
-	}
-
 	@Override
 	public Printer createPrinter() {
 		Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
@@ -265,6 +253,18 @@ public class JfxScreen extends BaseScreen {
 	public void cycleAspect() {
 		aspect = (aspect + 1) % aspects.size();
 		recomputeLayout(false);
+	}
+
+	public Layer debugLayer() {
+		if (debugLayer == null) {
+			Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
+			canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
+			canvases.add(canvas);
+			root.getChildren().add(canvas);
+			canvas.toFront();
+			debugLayer = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
+		}
+		return debugLayer;
 	}
 
 	@Override

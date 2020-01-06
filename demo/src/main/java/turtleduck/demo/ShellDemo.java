@@ -21,6 +21,28 @@ public class ShellDemo implements TurtleDuckApp {
 	private TShell tshell;
 
 	@Override
+	public void bigStep(double deltaTime) {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void printHelp() {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void printInfo() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void smallStep(double deltaTime) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
 	public void start(Screen screen) {
 		this.screen = screen;
 		printer = screen.createPrinter();
@@ -84,28 +106,6 @@ public class ShellDemo implements TurtleDuckApp {
 			return false;
 		});
 		printer.redrawDirty();
-
-	}
-
-	private void printInfo() {
-		// TODO Auto-generated method stub
-
-	}
-
-	private void printHelp() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void smallStep(double deltaTime) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void bigStep(double deltaTime) {
-		// TODO Auto-generated method stub
 
 	}
 

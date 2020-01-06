@@ -27,7 +27,7 @@ public class TShell {
 		Builder builder = JShell.builder();
 		shell = builder.build();
 		sca = shell.sourceCodeAnalysis();
-	
+
 		printer.print("java> ");
 	}
 
@@ -40,6 +40,23 @@ public class TShell {
 		}
 		// TODO Auto-generated method stub
 
+	}
+
+	public void charKey(String character) {
+		if (character.equals("\r") || character.equals("\n"))
+			enterKey();
+		else if (character.equals("\t")) {
+			int[] anchor = { 0 };
+			List<Suggestion> sugs = sca.completionSuggestions(input, input.length(), anchor);
+			for (Suggestion s : sugs) {
+				System.out.println(input + "…" + s.continuation());
+			}
+		} else {
+			input += character;
+			printer.print(character);
+			CompletionInfo info = sca.analyzeCompletion(input);
+			System.out.println(info.completeness());
+		}
 	}
 
 	public void enterKey() {
@@ -99,23 +116,6 @@ public class TShell {
 		System.out.println("'" + input + "' → " + eval);
 		input = "";
 		printer.print("java> ");
-	}
-
-	public void charKey(String character) {
-		if (character.equals("\r") || character.equals("\n"))
-			enterKey();
-		else if (character.equals("\t")) {
-			int[] anchor = { 0 };
-			List<Suggestion> sugs = sca.completionSuggestions(input, input.length(), anchor);
-			for (Suggestion s : sugs) {
-				System.out.println(input + "…" + s.continuation());
-			}
-		} else {
-			input += character;
-			printer.print(character);
-			CompletionInfo info = sca.analyzeCompletion(input);
-			System.out.println(info.completeness());
-		}
 	}
 
 }

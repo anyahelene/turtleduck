@@ -47,6 +47,56 @@ public class JfxPrinter extends PrinterImpl<JfxScreen> implements Printer {
 		font = FONT_LMMONO;
 	}
 
+	@Override
+	public turtleduck.turtle.Canvas canvas() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	protected void clearCanvas() {
+
+	}
+
+	@Override
+	protected void doDrawChar(int x, int y, Char c) {
+		GraphicsContext context = canvas.getGraphicsContext2D();
+
+		context.save();
+		try {
+			context.setFill(JfxColor.toJfxPaint(c.fill));
+			context.setStroke(JfxColor.toJfxPaint(c.stroke));
+			font.drawTextAt(textPage, (x - 1) * getCharWidth(), y * getCharHeight(), c.s,
+					textMode.getCharWidth() / textMode.getCharBoxSize(), c.mode, c.bg);
+		} finally {
+			context.restore();
+		}
+	}
+
+	public void drawCharCells() {
+		if (screen != null) {
+			GraphicsContext context = ((JfxScreen) screen).background.getGraphicsContext2D();
+			screen.clearBackground();
+			double w = getCharWidth();
+			double h = getCharHeight();
+			context.save();
+			context.setGlobalBlendMode(BlendMode.EXCLUSION);
+			context.setFill(Color.WHITE.deriveColor(0.0, 1.0, 1.0, 0.1));
+			for (int x = 0; x < getLineWidth(); x++) {
+				for (int y = 0; y < getPageHeight(); y++) {
+					if ((x + y) % 2 == 0)
+						context.fillRect(x * w, y * h, w, h);
+				}
+			}
+			context.restore();
+		}
+	}
+
+	@Override
+	public void hide() {
+		// TODO Auto-generated method stub
+
+	}
+
 	protected void redrawTextPage(int x0, int y0, int x1, int y1) {
 		/*
 		 * System.out.printf("redrawTextPage benchmark");
@@ -100,60 +150,10 @@ public class JfxPrinter extends PrinterImpl<JfxScreen> implements Printer {
 		 */
 	}
 
-	protected void clearCanvas() {
-
-	}
-
-	@Override
-	public turtleduck.turtle.Canvas canvas() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	@Override
 	public void show() {
 		// TODO Auto-generated method stub
 
-	}
-
-	@Override
-	public void hide() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected void doDrawChar(int x, int y, Char c) {
-		GraphicsContext context = canvas.getGraphicsContext2D();
-
-		context.save();
-		try {
-			context.setFill(JfxColor.toJfxPaint(c.fill));
-			context.setStroke(JfxColor.toJfxPaint(c.stroke));
-			font.drawTextAt(textPage, (x - 1) * getCharWidth(), y * getCharHeight(), c.s,
-					textMode.getCharWidth() / textMode.getCharBoxSize(), c.mode, c.bg);
-		} finally {
-			context.restore();
-		}
-	}
-
-	public void drawCharCells() {
-		if (screen != null) {
-			GraphicsContext context = ((JfxScreen)screen).background.getGraphicsContext2D();
-			screen.clearBackground();
-			double w = getCharWidth();
-			double h = getCharHeight();
-			context.save();
-			context.setGlobalBlendMode(BlendMode.EXCLUSION);
-			context.setFill(Color.WHITE.deriveColor(0.0, 1.0, 1.0, 0.1));
-			for (int x = 0; x < getLineWidth(); x++) {
-				for (int y = 0; y < getPageHeight(); y++) {
-					if ((x + y) % 2 == 0)
-						context.fillRect(x * w, y * h, w, h);
-				}
-			}
-			context.restore();
-		}
 	}
 
 }

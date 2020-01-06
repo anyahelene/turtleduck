@@ -14,23 +14,23 @@ public class JfxLayer extends BaseLayer<JfxScreen> {
 	}
 
 	@Override
-	public void clear() {
-		jfxCanvas.getGraphicsContext2D().clearRect(0, 0, jfxCanvas.getWidth(), jfxCanvas.getHeight());
-	}
-
-	@Override
 	public Canvas canvas() {
 		return canvas;
 	}
 
 	@Override
-	public void show() {
-		jfxCanvas.setVisible(true);
+	public void clear() {
+		jfxCanvas.getGraphicsContext2D().clearRect(0, 0, jfxCanvas.getWidth(), jfxCanvas.getHeight());
 	}
 
 	@Override
 	public void hide() {
 		jfxCanvas.setVisible(false);
+	}
+
+	@Override
+	public void show() {
+		jfxCanvas.setVisible(true);
 	}
 
 }

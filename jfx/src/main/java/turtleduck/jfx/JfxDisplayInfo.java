@@ -7,12 +7,37 @@ import turtleduck.display.Screen;
 public class JfxDisplayInfo implements DisplayInfo {
 	public static final DisplayInfo INSTANCE = new JfxDisplayInfo();
 
+	public static DisplayInfo provider() {
+		return INSTANCE;
+	}
+
 	private JfxDisplayInfo() {
 
 	}
 
-	public static DisplayInfo provider() {
-		return INSTANCE;
+	@Override
+	public double getDisplayDpi() {
+		return javafx.stage.Screen.getPrimary().getDpi();
+	}
+
+	@Override
+	public double getDisplayHeight() {
+		return javafx.stage.Screen.getPrimary().getVisualBounds().getHeight();
+	}
+
+	@Override
+	public double getDisplayWidth() {
+		return javafx.stage.Screen.getPrimary().getVisualBounds().getWidth();
+	}
+
+	@Override
+	public double getRawDisplayHeight() {
+		return javafx.stage.Screen.getPrimary().getBounds().getHeight();
+	}
+
+	@Override
+	public double getRawDisplayWidth() {
+		return javafx.stage.Screen.getPrimary().getBounds().getWidth();
 	}
 
 	/**
@@ -43,31 +68,6 @@ public class JfxDisplayInfo implements DisplayInfo {
 	@Override
 	public Screen startPaintScene(Object stage, int configuration) {
 		return JfxScreen.startPaintScene((Stage) stage, configuration);
-	}
-
-	@Override
-	public double getDisplayDpi() {
-		return javafx.stage.Screen.getPrimary().getDpi();
-	}
-
-	@Override
-	public double getDisplayHeight() {
-		return javafx.stage.Screen.getPrimary().getVisualBounds().getHeight();
-	}
-
-	@Override
-	public double getDisplayWidth() {
-		return javafx.stage.Screen.getPrimary().getVisualBounds().getWidth();
-	}
-
-	@Override
-	public double getRawDisplayHeight() {
-		return javafx.stage.Screen.getPrimary().getBounds().getHeight();
-	}
-
-	@Override
-	public double getRawDisplayWidth() {
-		return javafx.stage.Screen.getPrimary().getBounds().getWidth();
 	}
 
 }

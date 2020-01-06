@@ -15,12 +15,7 @@ public class JfxApp extends Application {
 	public static JfxLauncher launcher;
 	public static final long NOMINAL_SMALL_STEP_MILLIS = 1000 / 60;
 	public static final long NOMINAL_BIG_STEP_MILLIS = 10;
-	private TurtleDuckApp app;
-	private Timeline bigStepTimeline;
-	private Timeline smallStepTimeline;
 	private static long startMillis = 0, appTime = 0, appFrames = 0;
-	private long stepNanos = 0, smallStepMillis = 0, bigStepMillis = 0;
-	private AnimationTimer animTimer;
 
 	public static void launch(String[] args) {
 		startMillis = System.currentTimeMillis();
@@ -28,30 +23,34 @@ public class JfxApp extends Application {
 		Application.launch(args);
 	}
 
-	@Override
-	public void init() {
-		System.err.printf("T+%05dms: Init\n", System.currentTimeMillis() - startMillis);
+	public static void printStats() {
+		System.err.println("App: ");
+		System.err.printf("  Total frame time: %8.4f\n", appTime / 1000.0);
+		System.err.printf("  Average frame time: %8.4f\n", (appTime / 1000.0) / appFrames);
+	}
+
+	private TurtleDuckApp app;
+	private Timeline bigStepTimeline;
+	private Timeline smallStepTimeline;
+
+	private long stepNanos = 0, smallStepMillis = 0, bigStepMillis = 0;
+
+	private AnimationTimer animTimer;
+
+	protected void bigStep() {
+		long t = System.currentTimeMillis();
+		if (bigStepMillis == 0) {
+			System.err.printf("T+%05dms: First Big Step\n", System.currentTimeMillis() - startMillis);
+			bigStepMillis = t - NOMINAL_BIG_STEP_MILLIS;
+		}
+		double dt = (t - bigStepMillis) / 1000.0;
+		app.bigStep(dt);
+		bigStepMillis = t;
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
-		System.err.printf("T+%05dms: Starting primary stage\n", System.currentTimeMillis() - startMillis);
-		primaryStage.setOnShowing((ev) -> {
-			System.err.printf("T+%05dms: Start showing window: %s\n", System.currentTimeMillis() - startMillis,
-					ev.getSource());
-		});
-		primaryStage.setOnShown((ev) -> {
-			System.err.printf("T+%05dms: Window shown  : %s\n", System.currentTimeMillis() - startMillis,
-					ev.getSource());
-			animTimer.start();
-		});
-
-		setupTimers();
-
-		app = launcher.getApp();
-		app.start(JfxScreen.startPaintScene(primaryStage, launcher.getConfig()));
-		System.err.printf("T+%05dms: User app started: %s\n", System.currentTimeMillis() - startMillis, app);
-		primaryStage.show();
+	public void init() {
+		System.err.printf("T+%05dms: Init\n", System.currentTimeMillis() - startMillis);
 	}
 
 	public void setupTimers() {
@@ -86,6 +85,27 @@ public class JfxApp extends Application {
 		smallStepMillis = t;
 	}
 
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		System.err.printf("T+%05dms: Starting primary stage\n", System.currentTimeMillis() - startMillis);
+		primaryStage.setOnShowing((ev) -> {
+			System.err.printf("T+%05dms: Start showing window: %s\n", System.currentTimeMillis() - startMillis,
+					ev.getSource());
+		});
+		primaryStage.setOnShown((ev) -> {
+			System.err.printf("T+%05dms: Window shown  : %s\n", System.currentTimeMillis() - startMillis,
+					ev.getSource());
+			animTimer.start();
+		});
+
+		setupTimers();
+
+		app = launcher.getApp();
+		app.start(JfxScreen.startPaintScene(primaryStage, launcher.getConfig()));
+		System.err.printf("T+%05dms: User app started: %s\n", System.currentTimeMillis() - startMillis, app);
+		primaryStage.show();
+	}
+
 	protected void step(long nanos) {
 		if (stepNanos == 0) {
 			System.err.printf("T+%05dms: First Step: @ %d ns\n", System.currentTimeMillis() - startMillis, nanos);
@@ -95,24 +115,8 @@ public class JfxApp extends Application {
 //		System.err.printf("T+%05dms: First Step: @ %20.18f ns\n", System.currentTimeMillis() - startMillis, dt);
 		long t = System.currentTimeMillis();
 		app.bigStep(dt);
-		appTime += System.currentTimeMillis()-t;
+		appTime += System.currentTimeMillis() - t;
 		appFrames++;
 		stepNanos = nanos;
-	}
-
-	protected void bigStep() {
-		long t = System.currentTimeMillis();
-		if (bigStepMillis == 0) {
-			System.err.printf("T+%05dms: First Big Step\n", System.currentTimeMillis() - startMillis);
-			bigStepMillis = t - NOMINAL_BIG_STEP_MILLIS;
-		}
-		double dt = (t - bigStepMillis) / 1000.0;
-		app.bigStep(dt);
-		bigStepMillis = t;
-	}
-	public static void printStats() {
-		System.err.println("App: ");
-		System.err.printf("  Total frame time: %8.4f\n", appTime/1000.0);
-		System.err.printf("  Average frame time: %8.4f\n", (appTime/1000.0)/appFrames);
 	}
 }
