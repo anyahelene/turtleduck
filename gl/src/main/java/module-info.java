@@ -1,4 +1,4 @@
-module turtleduck.jfx {
+module turtleduck.gl {
 	exports turtleduck.gl;
 	requires transitive turtleduck.base;
 	requires org.lwjgl;

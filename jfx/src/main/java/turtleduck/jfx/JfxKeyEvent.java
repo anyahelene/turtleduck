@@ -37,15 +37,9 @@ public class JfxKeyEvent implements KeyEvent {
 
 	@Override
 	public KeyCode getCode() {
-		return new KeyCode() {
-			@Override
-			public <T> T as(Class<T> type) {
-				if (type == javafx.scene.input.KeyCode.class)
-					return (T) ev.getCode();
-				else
-					throw new UnsupportedOperationException();
-			}
-		};
+		String name = ev.getCode().name();
+		KeyCode code = KeyCode.valueOf(name);
+		return code;
 	}
 	@Override
 	public <T> T as(Class<T> type) {
@@ -53,6 +47,16 @@ public class JfxKeyEvent implements KeyEvent {
 			return (T) ev;
 		else
 			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String character() {
+		return ev.getCharacter();
+	}
+
+	@Override
+	public boolean hasCharacter() {
+		return ev.getCharacter() != javafx.scene.input.KeyEvent.CHAR_UNDEFINED;
 	}
 
 }

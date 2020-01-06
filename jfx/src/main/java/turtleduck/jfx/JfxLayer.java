@@ -1,47 +1,21 @@
 package turtleduck.jfx;
 
-import turtleduck.display.Layer;
+import turtleduck.display.impl.BaseLayer;
 import turtleduck.turtle.Canvas;
 
-public class JfxLayer implements Layer {
-
-	private final JfxScreen screen;
+public class JfxLayer extends BaseLayer<JfxScreen> {
 	private final javafx.scene.canvas.Canvas jfxCanvas;
-	private final double width;
-	private final double height;
 	private final JfxCanvas canvas;
 
-	public JfxLayer(double width, double height, JfxScreen jfxScreen, javafx.scene.canvas.Canvas canvas) {
-		this.width = width;
-		this.height = height;
-		this.screen = jfxScreen;
+	public JfxLayer(String id, double width, double height, JfxScreen jfxScreen, javafx.scene.canvas.Canvas canvas) {
+		super(id, jfxScreen, width, height);
 		this.jfxCanvas = canvas;
-		this.canvas = new JfxCanvas(canvas);
+		this.canvas = new JfxCanvas(id + ".canvas", canvas);
 	}
 
 	@Override
 	public void clear() {
 		jfxCanvas.getGraphicsContext2D().clearRect(0, 0, jfxCanvas.getWidth(), jfxCanvas.getHeight());
-	}
-
-	@Override
-	public void layerToBack() {
-		screen.moveToBack(this);
-	}
-
-	@Override
-	public void layerToFront() {
-		screen.moveToFront(this);
-	}
-
-	@Override
-	public double width() {
-		return width;
-	}
-
-	@Override
-	public double height() {
-		return height;
 	}
 
 	@Override

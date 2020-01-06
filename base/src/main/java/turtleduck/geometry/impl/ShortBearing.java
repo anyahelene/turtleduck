@@ -2,7 +2,11 @@ package turtleduck.geometry.impl;
 
 import java.util.logging.Logger;
 
-public class ShrtBearing implements DirectionVector, Bearing {
+import turtleduck.geometry.Bearing;
+import turtleduck.geometry.DirectionVector;
+
+@Deprecated
+public class ShortBearing implements DirectionVector, Bearing {
 	static final Bearing DUE_NORTH = absolute(0), DUE_EAST = absolute(90), DUE_SOUTH = absolute(180),
 			DUE_WEST = absolute(270);
 	static final int ARCSEC_NORTH = 360 * 3600, ARCSEC_EAST = 90 * 3600, ARCSEC_SOUTH = 180 * 3600,

@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 
 import turtleduck.colors.Paint;
 import turtleduck.geometry.Point;
+import turtleduck.objects.IdentifiedObject;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
@@ -13,16 +14,22 @@ import turtleduck.turtle.IShape;
 import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Stroke;
+import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.impl.LineBuilderImpl;
 import turtleduck.turtle.impl.SvgLineBuilder;
 
-public class SvgCanvas implements Canvas {
+public class SvgCanvas extends BaseCanvas {
 	private StringBuilder builder = new StringBuilder();
 	private int indent = 1;
 	private double x0 = 0, y0 = 0, x1 = 0, y1 = 0;
 	private PrintWriter output;
 	
+	
 	public SvgCanvas() {
+		super(IdentifiedObject.Registry.makeId(SvgCanvas.class, null));
+	}
+	public SvgCanvas(String canvasId) {
+		super(canvasId);
 		try {
 			output = new PrintWriter(new File("/tmp/example.svg"));
 		} catch (FileNotFoundException e) {
@@ -44,11 +51,6 @@ public class SvgCanvas implements Canvas {
 				"y2", String.valueOf(to.y()),
 				"style", toSvg(pen));
 		return this;
-	}
-
-	@Override
-	public LineBuilder lines(Stroke pen, Geometry geom, Point from) {
-		return new SvgLineBuilder(pen, geom, from, this);
 	}
 
 	@Override
@@ -154,5 +156,9 @@ public class SvgCanvas implements Canvas {
 			builder.append("\" ");
 		}
 		builder.append(" />\n");
+	}
+	@Override
+	public TurtleControl createControl() {
+		return null;
 	}
 }

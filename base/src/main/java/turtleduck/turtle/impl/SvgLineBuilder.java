@@ -5,6 +5,7 @@ import java.util.List;
 
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Canvas;
+import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
 import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Stroke;
@@ -92,5 +93,11 @@ public class SvgLineBuilder implements LineBuilder {
 					.append(geom).append("]");
 			return builder.toString();
 		}
+	}
+
+	@Override
+	public Canvas fill(Fill fill, boolean andStroke) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

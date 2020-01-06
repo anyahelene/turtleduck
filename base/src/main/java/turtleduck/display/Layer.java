@@ -1,8 +1,9 @@
 package turtleduck.display;
 
+import turtleduck.objects.IdentifiedObject;
 import turtleduck.turtle.Canvas;
 
-public interface Layer {
+public interface Layer extends IdentifiedObject {
 	/**
 	 * Clear the layer.
 	 * 

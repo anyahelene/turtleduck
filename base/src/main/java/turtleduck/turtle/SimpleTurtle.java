@@ -1,8 +1,9 @@
 package turtleduck.turtle;
 
 import turtleduck.geometry.Point;
+import turtleduck.objects.IdentifiedObject;
 
-public interface SimpleTurtle {
+public interface SimpleTurtle extends IdentifiedObject {
 
 	/**
 	 * @return The current heading of the turtle, with 0° pointing to the right and

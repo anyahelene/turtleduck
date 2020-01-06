@@ -22,5 +22,10 @@
 			<artifactId>turtleduck-fx</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>no.uib.ii</groupId>
+			<artifactId>turtleduck-shell</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
 	</dependencies>
 </project>

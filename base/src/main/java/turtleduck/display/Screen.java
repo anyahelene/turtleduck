@@ -5,9 +5,10 @@ import java.util.function.Predicate;
 import turtleduck.turtle.Pen;
 import turtleduck.colors.Paint;
 import turtleduck.events.KeyEvent;
+import turtleduck.objects.IdentifiedObject;
 import turtleduck.text.Printer;
 
-public interface Screen {
+public interface Screen extends IdentifiedObject {
 
 	/** 16:9 */
 	public static final int ASPECT_WIDE = 0;

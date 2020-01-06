@@ -12,12 +12,14 @@ import turtleduck.turtle.Stroke;
  * This canvas sends its drawing commands to one or more other canvases.
  *
  */
-public abstract class StatefulCanvas implements Canvas {
+public abstract class StatefulCanvas extends BaseCanvas {
+
 	private Stroke currentStroke;
 	private Fill currentFill;
 	private Geometry currentGeometry;
 
-	public StatefulCanvas() {
+	public StatefulCanvas(String id) {
+		super(id);
 	}
 
 	protected void setup(Stroke stroke, Fill fill, Geometry geom) {
@@ -149,4 +151,6 @@ public abstract class StatefulCanvas implements Canvas {
 	protected abstract void fillPath(Path path);
 
 	protected abstract void loadArray(Point... points);
+	
+
 }

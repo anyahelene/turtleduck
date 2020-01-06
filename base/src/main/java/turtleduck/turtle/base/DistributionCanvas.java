@@ -7,16 +7,18 @@ import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Stroke;
+import turtleduck.turtle.TurtleControl;
 
 /**
  * This canvas sends its drawing commands to one or more other canvases.
  *
  */
-public class DistributionCanvas implements Canvas {
+public class DistributionCanvas extends BaseCanvas {
 
 	private final Canvas[] canvases;
 
-	public DistributionCanvas(Canvas... canvases) {
+	public DistributionCanvas(String id, Canvas... canvases) {
+		super(id);
 		this.canvases = canvases;
 	}
 
@@ -81,5 +83,17 @@ public class DistributionCanvas implements Canvas {
 		for (Canvas c : canvases)
 			c.clear(fill);
 		return this;
+	}
+
+	@Override
+	public TurtleControl createControl() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void flush() {
+		for (Canvas c : canvases)
+			c.flush();
 	}
 }

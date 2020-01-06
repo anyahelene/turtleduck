@@ -2,15 +2,20 @@ package turtleduck.geometry.impl;
 
 import java.util.logging.Logger;
 
+import turtleduck.geometry.Bearing;
+import turtleduck.geometry.DirectionVector;
+
+@Deprecated
 public class DoubleBearing implements DirectionVector, Bearing {
-	static final Bearing DUE_NORTH = absolute(0), DUE_EAST = absolute(90), DUE_SOUTH = absolute(180),
-			DUE_WEST = absolute(270);
+	static final Bearing DUE_NORTH = new DoubleBearing(0, true, true),//
+			DUE_EAST = new DoubleBearing(Math.PI/2, true, true),//
+			DUE_SOUTH = new DoubleBearing(Math.PI, true, true),//
+			DUE_WEST = new DoubleBearing(3*Math.PI/2, true, true);
 	static final int ARCSEC_NORTH = 360 * 3600, ARCSEC_EAST = 90 * 3600, ARCSEC_SOUTH = 180 * 3600,
 			ARCSEC_WEST = 270 * 3600;
 	static final double SIGN_LEFT = -1, SIGN_RIGHT = 1;
 	public static final double HALF_PI = Math.PI / 2;
 	public static final double TWO_PI = 2 * Math.PI;
-	public static final double THREE_PI = 2 * Math.PI;
 	private final double radians;
 	private final int arcsecs;
 	private final boolean absolute;
@@ -49,7 +54,8 @@ public class DoubleBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public DoubleBearing add(Bearing other) {
+	public DoubleBearing add(Bearing o) {
+		DoubleBearing other = (DoubleBearing) o;
 		if (!absolute)
 			return new DoubleBearing(radians + other.radians, other.absolute, false);
 		else if (!other.absolute) {
@@ -61,7 +67,8 @@ public class DoubleBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public DoubleBearing sub(Bearing other) {
+	public DoubleBearing sub(Bearing o) {
+		DoubleBearing other = (DoubleBearing) o;
 		if (!absolute)
 			return new DoubleBearing(radians - other.radians, other.absolute, false);
 		else if (!other.absolute) {
@@ -72,7 +79,8 @@ public class DoubleBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public Bearing interpolate(Bearing other, double t) {
+	public Bearing interpolate(Bearing o, double t) {
+		DoubleBearing other = (DoubleBearing) o;
 		if (t <= 0.0)
 			return this;
 		else if (t >= 1.0)

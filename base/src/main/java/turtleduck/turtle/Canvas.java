@@ -1,12 +1,11 @@
 package turtleduck.turtle;
 
-import java.util.List;
-
 import turtleduck.geometry.Point;
+import turtleduck.objects.IdentifiedObject;
 import turtleduck.turtle.impl.BasePen;
 import turtleduck.turtle.impl.TurtleDuckImpl;
 
-public interface Canvas {
+public interface Canvas extends IdentifiedObject {
 	/**
 	 * Draw a dot
 	 *
@@ -58,20 +57,14 @@ public interface Canvas {
 
 	Canvas clear(Fill fill);
 
-	TurtleControl createJournal();
+	TurtleControl createControl();
 	
-	default Pen createPen() {
-		return new BasePen();
-	}
+	Pen createPen();
 
-	default SimpleTurtle createSimpleTurtle() {
-		return new TurtleDuckImpl(this, createJournal());
-	}
+	SimpleTurtle createSimpleTurtle();
 
-	default TurtleDuck createTurtleDuck() {
-		return new TurtleDuckImpl(this, createJournal());
-	}
-
+	TurtleDuck createTurtleDuck();
+	
 	void flush();
 
 }

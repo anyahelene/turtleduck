@@ -2,7 +2,10 @@ package turtleduck.events;
 
 
 public interface KeyEvent {
-
+	String character();
+	
+	boolean hasCharacter();
+	
 	boolean isShortcutDown();
 
 	boolean isAltDown();

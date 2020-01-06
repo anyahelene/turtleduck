@@ -28,7 +28,7 @@ public class JfxCanvas extends StatefulCanvas {
 	private static int lineSegments = 0;
 	private static long flushTime = 0, flushN = 0;
 	private Canvas canvas;
-	private GraphicsContext context;
+	GraphicsContext context;
 	private double xs[], ys[];
 	private int xyLen;
 	private List<JfxControl> controls = new ArrayList<>();
@@ -41,7 +41,8 @@ public class JfxCanvas extends StatefulCanvas {
 		});
 	}
 
-	public JfxCanvas(Canvas canvas) {
+	public JfxCanvas(String canvasId, Canvas canvas) {
+		super(canvasId);
 		this.canvas = canvas;
 		this.context = canvas.getGraphicsContext2D();
 		context.setLineCap(StrokeLineCap.BUTT);
@@ -265,7 +266,7 @@ public class JfxCanvas extends StatefulCanvas {
 	}
 
 	@Override
-	public TurtleControl createJournal() {
+	public TurtleControl createControl() {
 		JfxControl journal = new JfxControl(this, null);
 		controls.add(journal);
 		return journal;

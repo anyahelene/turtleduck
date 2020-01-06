@@ -4,6 +4,7 @@ import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Navigator;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
+import turtleduck.objects.IdentifiedObject;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.CommandRecorder;
 import turtleduck.turtle.Fill;
@@ -29,9 +30,12 @@ public class TurtleDuckImpl implements TurtleDuck {
 	protected final TurtleDuckImpl parent;
 	protected TurtleControl recorder;
 	private boolean drawing = false, moving = false;
+	private String id;
+	private int nSpawns = 0;
 
-	public TurtleDuckImpl(Canvas canvas, TurtleControl journal) {
+	public TurtleDuckImpl(String id, Canvas canvas, TurtleControl journal) {
 		this.canvas = canvas;
+		this.id = id;
 		this.pen = canvas.createPen();
 		this.mainJournal = journal;
 		this.journal = journal;
@@ -46,6 +50,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 
 	public TurtleDuckImpl(TurtleDuckImpl td, Canvas c) {
 		parent = td;
+		id = td.id + "." + td.nSpawns++;
 		nav = td.nav.copy();
 		canvas = c;
 		pen = td.pen();
@@ -363,5 +368,10 @@ public class TurtleDuckImpl implements TurtleDuck {
 		if(newPen instanceof Pen)
 			pen((Pen)newPen);
 		return this;
+	}
+
+	@Override
+	public String id() {
+		return id;
 	}
 }

@@ -21,12 +21,14 @@ import javafx.stage.Window;
 import turtleduck.colors.Paint;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
+import turtleduck.display.impl.BaseScreen;
 import turtleduck.display.MouseCursor;
 import turtleduck.events.KeyEvent;
+import turtleduck.events.KeyCode;
 import turtleduck.turtle.Pen;
 import turtleduck.text.Printer;
 
-public class JfxScreen implements Screen {
+public class JfxScreen extends BaseScreen {
 	private static final javafx.scene.paint.Color JFX_BLACK = javafx.scene.paint.Color.BLACK;
 	private static final double STD_CANVAS_WIDTH = 1280;
 	private static final List<Double> STD_ASPECTS = Arrays.asList(16.0 / 9.0, 16.0 / 10.0, 4.0 / 3.0);
@@ -164,7 +166,7 @@ public class JfxScreen implements Screen {
 	private final SubScene subScene;
 	private final List<Canvas> canvases = new ArrayList<>();
 	private final Map<Layer, Canvas> layerCanvases = new IdentityHashMap<>();
-	private final Canvas background;
+	protected final Canvas background;
 	private Layer debugLayer;
 	private final Group root;
 	private Paint bgColor = Paint.color(0, 0, 0);
@@ -233,7 +235,7 @@ public class JfxScreen implements Screen {
 		canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
 		canvases.add(canvas);
 		root.getChildren().add(canvas);
-		return new JfxLayer(getWidth(), getHeight(), this, canvas);
+		return new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
 	}
 
 	public Layer debugLayer() {
@@ -243,7 +245,7 @@ public class JfxScreen implements Screen {
 			canvases.add(canvas);
 			root.getChildren().add(canvas);
 			canvas.toFront();
-			debugLayer = new JfxLayer(getWidth(), getHeight(), this, canvas);
+			debugLayer = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
 		}
 		return debugLayer;
 	}
@@ -254,7 +256,9 @@ public class JfxScreen implements Screen {
 		canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
 		canvases.add(canvas);
 		root.getChildren().add(canvas);
-		return new JfxPrinter(this, canvas);
+		JfxPrinter jfxPrinter = new JfxPrinter(newLayerId(), this, canvas);
+		jfxPrinter.resetFull();
+		return jfxPrinter;
 	}
 
 	@Override
@@ -277,7 +281,7 @@ public class JfxScreen implements Screen {
 	@Override
 	public Layer getBackgroundPainter() {
 		if (backgroundPainter == null)
-			backgroundPainter = new JfxLayer(getWidth(), getHeight(), this, background);
+			backgroundPainter = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, background);
 		return backgroundPainter;
 	}
 
@@ -341,19 +345,19 @@ public class JfxScreen implements Screen {
 
 	@Override
 	public boolean minimalKeyHandler(KeyEvent event) {
-		javafx.scene.input.KeyCode code = event.getCode().as(javafx.scene.input.KeyCode.class);
+		KeyCode code = event.getCode();
 		if (event.isShortcutDown()) {
-			if (code == javafx.scene.input.KeyCode.Q) {
+			if (code == KeyCode.Q) {
 				System.exit(0);
-			} else if (code == javafx.scene.input.KeyCode.PLUS) {
+			} else if (code == KeyCode.PLUS) {
 				zoomIn();
 				return true;
-			} else if (code == javafx.scene.input.KeyCode.MINUS) {
+			} else if (code == KeyCode.MINUS) {
 				zoomOut();
 				return true;
 			}
 		} else if (!(event.isAltDown() || event.isControlDown() || event.isMetaDown() || event.isShiftDown())) {
-			if (code == javafx.scene.input.KeyCode.F11) {
+			if (code == KeyCode.F11) {
 				setFullScreen(!isFullScreen());
 				return true;
 			}
