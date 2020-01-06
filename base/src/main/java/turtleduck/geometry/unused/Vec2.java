@@ -1,4 +1,4 @@
-package turtleduck.geometry;
+package turtleduck.geometry.unused;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;

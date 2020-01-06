@@ -1,10 +1,10 @@
 package turtleduck.geometry.impl;
 
 import turtleduck.geometry.Bearing;
-import turtleduck.geometry.Direction;
 import turtleduck.geometry.IPoint3;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
+import turtleduck.geometry.unused.Direction;
 
 /**
  * A 3D version of {@link Point2}

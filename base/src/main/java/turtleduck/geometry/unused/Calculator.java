@@ -1,4 +1,4 @@
-package turtleduck.geometry;
+package turtleduck.geometry.unused;
 
 public interface Calculator<T> {
 

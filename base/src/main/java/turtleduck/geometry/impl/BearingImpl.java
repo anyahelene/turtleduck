@@ -1,8 +1,11 @@
-package turtleduck.geometry;
+package turtleduck.geometry.impl;
 
 import java.util.logging.Logger;
 
-public class MasBearing implements DirectionVector, Bearing {
+import turtleduck.geometry.Bearing;
+import turtleduck.geometry.DirectionVector;
+
+public class BearingImpl implements DirectionVector, Bearing {
 	static final Bearing DUE_NORTH = absolute(0), DUE_EAST = absolute(90), DUE_SOUTH = absolute(180),
 			DUE_WEST = absolute(270);
 
@@ -18,26 +21,26 @@ public class MasBearing implements DirectionVector, Bearing {
 	private final int mas;
 	private final boolean absolute;
 
-	protected MasBearing(int angle, boolean absolute) {
+	protected BearingImpl(int angle, boolean absolute) {
 		if(angle < 0)
 			angle += TWO_MI;
 		mas = Math.floorMod(angle, TWO_MI);
 		this.absolute = absolute;
 	}
 
-	public static int degreesToBrad(double angle) {
+	public static int degreesToMilliArcSec(double angle) {
 		if(angle < 0)
 			angle += 360;
 		int m = Math.floorMod(Math.round(angle * MARCSEC), TWO_MI);
 		return angle < 0 ? -m : m;
 	}
 
-	public static int radiansToBrad(double angle) {
+	public static int radiansToMilliArcSec(double angle) {
 		int m = Math.floorMod(Math.round(Math.PI * angle * MARCSEC / 180.0), TWO_MI);
 		return m;
 	}
 
-	public static double bradToDegrees(int angle) {
+	public static double milliArcSecToDegrees(int angle) {
 //		if (angle == Short.MIN_VALUE)
 //			return 180.0;
 //		else
@@ -45,32 +48,32 @@ public class MasBearing implements DirectionVector, Bearing {
 		return ((double) angle) / MARCSEC;
 	}
 
-	public static double bradToRadians(int angle) {
+	public static double milliArcSecToRadians(int angle) {
 //		if (angle == Short.MIN_VALUE)
 //			return Math.PI;
 //		else
 		return ((double) angle) * Math.PI / MI;
 	}
 
-	public static MasBearing absolute(double a) {
-		return new MasBearing(degreesToBrad(a), true);
+	public static BearingImpl absolute(double a) {
+		return new BearingImpl(degreesToMilliArcSec(a), true);
 	}
 
-	public static MasBearing relative(double a) {
-		return new MasBearing(degreesToBrad(a), false);
+	public static BearingImpl relative(double a) {
+		return new BearingImpl(degreesToMilliArcSec(a), false);
 	}
 
-	public static MasBearing absolute(double x, double y) {
-		return new MasBearing(atan2(x, y), true);
+	public static BearingImpl absolute(double x, double y) {
+		return new BearingImpl(atan2(x, y), true);
 	}
 
 	public static Bearing relative(double x, double y) {
-		return new MasBearing(atan2(x, y), false);
+		return new BearingImpl(atan2(x, y), false);
 	}
 
 	@Override
 	public double azimuth() {
-		return bradToDegrees(mas);
+		return milliArcSecToDegrees(mas);
 	}
 
 	/*
@@ -87,31 +90,31 @@ public class MasBearing implements DirectionVector, Bearing {
 
 	@Override
 	public double toRadians() {
-		return bradToRadians(mas);
+		return milliArcSecToRadians(mas);
 	}
 
 	@Override
 	public Bearing add(Bearing other) {
-		int b = ((MasBearing) other).mas;
+		int b = ((BearingImpl) other).mas;
 		if (!absolute)
-			return new MasBearing(mas + b, other.isAbsolute());
+			return new BearingImpl(mas + b, other.isAbsolute());
 		else if (!other.isAbsolute()) {
-			return new MasBearing(mas + b, true);
+			return new BearingImpl(mas + b, true);
 		} else {
 			Logger.getLogger("TurtleDuck").warning("Adding two absolute bearings: " + this + " + " + other);
-			return new MasBearing(mas + b, false);
+			return new BearingImpl(mas + b, false);
 		}
 	}
 
 	@Override
 	public Bearing sub(Bearing other) {
-		int b = ((MasBearing) other).mas;
+		int b = ((BearingImpl) other).mas;
 		if (!absolute)
-			return new MasBearing(mas - b, other.isAbsolute());
+			return new BearingImpl(mas - b, other.isAbsolute());
 		else if (!other.isAbsolute()) {
-			return new MasBearing(mas - b, true);
+			return new BearingImpl(mas - b, true);
 		} else {
-			return new MasBearing(mas - b, false);
+			return new BearingImpl(mas - b, false);
 		}
 	}
 
@@ -121,17 +124,17 @@ public class MasBearing implements DirectionVector, Bearing {
 			return this;
 		else if (t >= 1.0)
 			return other;
-		int a = mas, b = ((MasBearing) other).mas;
+		int a = mas, b = ((BearingImpl) other).mas;
 		if (a + Short.MAX_VALUE < b)
 			a += 65536;
 		else if (b + Short.MAX_VALUE < a)
 			b += 65536;
-		return new MasBearing((short) Math.round(a + (b - a) * t), absolute);
+		return new BearingImpl((short) Math.round(a + (b - a) * t), absolute);
 	}
 
 	@Override
 	public String toNavString() {
-		double d = bradToDegrees(mas);
+		double d = milliArcSecToDegrees(mas);
 		if (absolute) {
 			assert mas >= 0 && mas < ARCSEC_NORTH : String.format("0 <= %d < %d", mas, ARCSEC_NORTH);
 			if (mas == 0) {
@@ -202,11 +205,11 @@ public class MasBearing implements DirectionVector, Bearing {
 
 	@Override
 	public String toString() {
-		return toArrow() + (absolute || mas < 0 ? "" : "+") + bradToDegrees(mas) + "°";
+		return toArrow() + (absolute || mas < 0 ? "" : "+") + milliArcSecToDegrees(mas) + "°";
 	}
 
 
-	static double sin(int a) {
+	public static double sin(int a) {
 		double sign = -1;
 		if (a < 0)
 			a += TWO_MI;
@@ -265,7 +268,7 @@ public class MasBearing implements DirectionVector, Bearing {
 		}
 	}
 
-	static int atan2(double x, double y) {
+	public static int atan2(double x, double y) {
 		double absX = Math.abs(x), absY = Math.abs(y);
 		if (absX < 1e-10) {
 			if (absY < 1e-10)
@@ -278,7 +281,7 @@ public class MasBearing implements DirectionVector, Bearing {
 			else
 				return -MI / 2;
 		} else {
-			int m = degreesToBrad(Math.toDegrees(Math.atan(y / x)) + 90);
+			int m = degreesToMilliArcSec(Math.toDegrees(Math.atan(y / x)) + 90);
 			if (x < 0)
 				return m - MI;
 			else

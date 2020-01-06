@@ -2,6 +2,7 @@ package turtleduck.geometry;
 
 import turtleduck.geometry.impl.Point2;
 import turtleduck.geometry.impl.Point3;
+import turtleduck.geometry.unused.Direction;
 
 public interface Point extends PositionVector {
 	static final Point ZERO = point(0, 0);

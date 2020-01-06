@@ -2,8 +2,8 @@ package turtleduck.turtle.impl;
 
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Navigator;
-import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
+import turtleduck.geometry.unused.Orientation;
 import turtleduck.objects.IdentifiedObject;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.CommandRecorder;

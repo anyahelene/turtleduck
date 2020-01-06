@@ -1,5 +1,6 @@
-package turtleduck.geometry;
+package turtleduck.geometry.unused;
 
+import turtleduck.geometry.Point;
 import turtleduck.geometry.impl.Point2;
 import turtleduck.geometry.impl.Point3;
 

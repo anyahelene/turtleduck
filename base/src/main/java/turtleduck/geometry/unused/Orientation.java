@@ -1,4 +1,4 @@
-package turtleduck.geometry;
+package turtleduck.geometry.unused;
 
 import java.util.Arrays;
 
@@ -6,6 +6,8 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import turtleduck.colors.Colors;
+import turtleduck.geometry.Bearing;
+import turtleduck.geometry.impl.BearingImpl;
 
 public class Orientation {
 	private Quaternionf quat = new Quaternionf().setAngleAxis(-Math.PI / 2, 0, 0, 1);// .lookAlong(0, -1, 0, 0, 0, 1);
@@ -73,25 +75,25 @@ public class Orientation {
 		System.out.println(String.format("%.30f", Math.sin(Math.PI)));
 		for (int i = 0; i <= 360; i += 5) {
 			double y = -Math.cos(Math.toRadians(i)), x = Math.sin(Math.toRadians(i));
-			int atan2 = MasBearing.atan2(x, y);
-			System.out.printf("%4d → (%.25f,%.25f) → %10d %.25f %7.4f\n", i, x, y, atan2, MasBearing.sin(atan2),
-					MasBearing.bradToDegrees(atan2));
+			int atan2 = BearingImpl.atan2(x, y);
+			System.out.printf("%4d → (%.25f,%.25f) → %10d %.25f %7.4f\n", i, x, y, atan2, BearingImpl.sin(atan2),
+					BearingImpl.milliArcSecToDegrees(atan2));
 
 		}
 //		System.exit(0);
 		for (int i = -72; i <= 72; i++) {
 			for (int j = -1; j <= 1; j++) {
-				int b = MasBearing.degreesToBrad(i * 5) + j;
+				int b = BearingImpl.degreesToMilliArcSec(i * 5) + j;
 				System.out.printf("%4d° = %6.2f° = %12d = %17.12f° = %15.12f\n", i * 5, //
 						Math.toDegrees(Math.atan2(Math.sin(Math.toRadians(i * 5)), Math.cos(Math.toRadians(i * 5)))), //
-						b, MasBearing.bradToDegrees(b), MasBearing.bradToRadians(b));
+						b, BearingImpl.milliArcSecToDegrees(b), BearingImpl.milliArcSecToRadians(b));
 			}
 		}
 		int a = -540;
-		int m = MasBearing.degreesToBrad(a);
+		int m = BearingImpl.degreesToMilliArcSec(a);
 		System.out.printf("%4d° = %6.2f° = %12d = %17.12f° = %15.12f\n", a, //
 				Math.toDegrees(Math.atan2(Math.sin(Math.toRadians(a)), Math.cos(Math.toRadians(a)))), m,
-				MasBearing.bradToDegrees(m), MasBearing.bradToRadians(m));
+				BearingImpl.milliArcSecToDegrees(m), BearingImpl.milliArcSecToRadians(m));
 //		System.exit(0);
 		Bearing b = Bearing.absolute(90);
 		System.out.println(b);

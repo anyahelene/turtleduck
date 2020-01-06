@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.ListIterator;
 
 import turtleduck.geometry.Bearing;
-import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
+import turtleduck.geometry.unused.Direction;
 
 public class CommandRecorder implements TurtleControl, TurtleCommand {
 	private final List<PartialTurtleCommand> commands = new ArrayList<>();

@@ -1,20 +1,22 @@
 package turtleduck.geometry;
 
+import turtleduck.geometry.impl.BearingImpl;
+
 public interface Bearing {
 	public static Bearing absolute(double a) {
-		return MasBearing.absolute(a);
+		return BearingImpl.absolute(a);
 	}
 
 	public static Bearing relative(double a) {
-		return MasBearing.relative(a);
+		return BearingImpl.relative(a);
 	}
 
 	public static Bearing absolute(double x, double y) {
-		return MasBearing.absolute(x, y);
+		return BearingImpl.absolute(x, y);
 	}
 
 	public static Bearing relative(double x, double y) {
-		return MasBearing.relative(x, y);
+		return BearingImpl.relative(x, y);
 	}
 
 	double azimuth();

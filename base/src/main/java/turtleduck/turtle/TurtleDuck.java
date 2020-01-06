@@ -2,8 +2,8 @@ package turtleduck.turtle;
 
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Bearing;
-import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
+import turtleduck.geometry.unused.Orientation;
 
 public interface TurtleDuck extends SimpleTurtle {
 

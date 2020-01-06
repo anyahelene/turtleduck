@@ -1,9 +1,9 @@
 package turtleduck.geometry.impl;
 
 import turtleduck.geometry.Bearing;
-import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
+import turtleduck.geometry.unused.Direction;
 
 public class Point2 implements Point {
 	protected final double x;

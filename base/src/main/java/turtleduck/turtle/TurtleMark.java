@@ -1,8 +1,8 @@
 package turtleduck.turtle;
 
 import turtleduck.geometry.Bearing;
-import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
+import turtleduck.geometry.unused.Direction;
 
 public class TurtleMark {
 	Point point;
