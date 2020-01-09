@@ -34,7 +34,7 @@ public interface IdentifiedObject {
 			String name = clazz.getSimpleName();
 			int i = ID_MAP.getOrDefault(name, 0);
 			ID_MAP.put(name, i + 1);
-			String id = name + "_" + i;
+			String id = (name + "_" + i).intern();
 			if (obj != null) {
 				OBJ_MAP.put(id, new WeakReference<>(obj));
 				if(OBJ_MAP.size() > lastClean + CLEAN_THRESHOLD)
@@ -57,7 +57,7 @@ public interface IdentifiedObject {
 		 */
 		@SuppressWarnings("unchecked")
 		public synchronized static <T extends IdentifiedObject> T findObject(Class<T> clazz, String id) {
-			WeakReference<IdentifiedObject> ref = OBJ_MAP.get(id);
+			WeakReference<IdentifiedObject> ref = OBJ_MAP.get(id.intern());
 			IdentifiedObject object = ref.get();
 			if (clazz.isInstance(object))
 				return (T) object;

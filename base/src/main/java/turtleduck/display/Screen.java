@@ -180,4 +180,12 @@ public interface Screen extends IdentifiedObject {
 	void zoomOut();
 
 	Layer debugLayer();
+
+	void flush();
+
+	void useAlternateShortcut(boolean useAlternate);
+
+	void setPasteHandler(Predicate<String> pasteHandler);
+
+	void clipboardPut(String copied);
 }

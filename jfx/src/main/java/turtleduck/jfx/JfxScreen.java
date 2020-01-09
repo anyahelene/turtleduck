@@ -6,6 +6,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
@@ -15,6 +16,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SubScene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -32,6 +35,8 @@ public class JfxScreen extends BaseScreen {
 	private static final javafx.scene.paint.Color JFX_BLACK = javafx.scene.paint.Color.BLACK;
 	private static final double STD_CANVAS_WIDTH = 1280;
 	private static final List<Double> STD_ASPECTS = Arrays.asList(16.0 / 9.0, 16.0 / 10.0, 4.0 / 3.0);
+	private Clipboard clipboard = Clipboard.getSystemClipboard();
+	protected int shortcutKeyMask = KeyEvent.MODIFIER_SHORTCUT;
 
 	public static Screen startPaintScene(Stage stage, int configuration) {
 		int configAspect = (configuration & _CONFIG_ASPECT_MASK);
@@ -122,7 +127,7 @@ public class JfxScreen extends BaseScreen {
 			break;
 		}
 		scene.setOnKeyPressed((javafx.scene.input.KeyEvent event) -> {
-			JfxKeyEvent wrapped = new JfxKeyEvent(event);
+			JfxKeyEvent wrapped = new JfxKeyEvent(event, pScene.shortcutKeyMask);
 			if (!event.isConsumed() && pScene.keyOverride != null && pScene.keyOverride.test(wrapped)) {
 				event.consume();
 			}
@@ -142,7 +147,7 @@ public class JfxScreen extends BaseScreen {
 				event.consume();
 			}
 			if (!event.isConsumed() && pScene.keyTypedHandler != null
-					&& pScene.keyTypedHandler.test(new JfxKeyEvent(event))) {
+					&& pScene.keyTypedHandler.test(new JfxKeyEvent(event, pScene.shortcutKeyMask))) {
 				event.consume();
 			}
 			if (pScene.logKeyEvents)
@@ -151,7 +156,7 @@ public class JfxScreen extends BaseScreen {
 		scene.setOnKeyReleased((javafx.scene.input.KeyEvent event) -> {
 			suppressKeyTyped[0] = false;
 			if (!event.isConsumed() && pScene.keyReleasedHandler != null
-					&& pScene.keyReleasedHandler.test(new JfxKeyEvent(event))) {
+					&& pScene.keyReleasedHandler.test(new JfxKeyEvent(event, pScene.shortcutKeyMask))) {
 				event.consume();
 			}
 			if (pScene.logKeyEvents)
@@ -192,6 +197,7 @@ public class JfxScreen extends BaseScreen {
 
 	private Cursor oldCursor;
 	private JfxLayer backgroundPainter;
+	private Predicate<String> pasteHandler;
 
 	public JfxScreen(double width, double height, double pixWidth, double pixHeight, double canvasWidth,
 			double canvasHeight) {
@@ -346,7 +352,7 @@ public class JfxScreen extends BaseScreen {
 	@Override
 	public boolean minimalKeyHandler(KeyEvent event) {
 		KeyCode code = event.getCode();
-		if (event.isShortcutDown()) {
+		if (event.isShortcutDown() && event.shortcutModifiers() == 0) {
 			if (code == KeyCode.Q) {
 				System.exit(0);
 			} else if (code == KeyCode.PLUS) {
@@ -355,8 +361,12 @@ public class JfxScreen extends BaseScreen {
 			} else if (code == KeyCode.MINUS) {
 				zoomOut();
 				return true;
+			} else if (code == KeyCode.V && pasteHandler != null) {
+				if (clipboard.hasString())
+					pasteHandler.test(clipboard.getString());
+				return true;
 			}
-		} else if (!(event.isAltDown() || event.isControlDown() || event.isMetaDown() || event.isShiftDown())) {
+		} else if (!event.isModified()) {
 			if (code == KeyCode.F11) {
 				setFullScreen(!isFullScreen());
 				return true;
@@ -508,6 +518,15 @@ public class JfxScreen extends BaseScreen {
 		this.keyReleasedHandler = keyReleasedHandler;
 	}
 
+	@Override
+	public void setPasteHandler(Predicate<String> pasteHandler) {
+		this.pasteHandler = pasteHandler;
+	}
+
+	@Override
+	public void clipboardPut(String copied) {
+		clipboard.setContent(Map.of(DataFormat.PLAIN_TEXT, copied));
+	}
 	/**
 	 * @param keyTypedHandler the keyTypedHandler to set
 	 */
@@ -558,4 +577,16 @@ public class JfxScreen extends BaseScreen {
 		recomputeLayout(false);
 	}
 
+	@Override
+	public void flush() {
+		layerCanvases.keySet().forEach(l -> l.flush());
+	}
+
+	@Override
+	public void useAlternateShortcut(boolean useAlternate) {
+		if (useAlternate)
+			shortcutKeyMask = KeyEvent.SHORTCUT_MASK_ALT;
+		else
+			shortcutKeyMask = KeyEvent.SHORTCUT_MASK;
+	}
 }

@@ -46,4 +46,6 @@ public interface Layer extends IdentifiedObject {
 	void show();
 	
 	void hide();
+
+	void flush();
 }

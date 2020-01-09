@@ -1,6 +1,7 @@
 package turtleduck.text;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,12 +80,12 @@ public class ControlSequences {
 				String[] args = argStr.split(";");
 				if (handler0 != null) {
 					if (DEBUG)
-						System.out.println("Handling " + getDescription() + ".");
+						logger().info(() -> "Handling " + getDescription() + ".");
 					handler0.accept(printer);
 				} else if (handler1 != null) {
 					int arg = args.length > 0 && !args[0].equals("") ? Integer.valueOf(args[0]) : defaultArg;
 					if (DEBUG)
-						System.out.println("Handling " + getDescription() + ": " + arg);
+						logger().info(() -> "Handling " + getDescription() + ": " + arg);
 					handler1.accept(printer, arg);
 				} else if (handlerN != null) {
 					List<Integer> argList = new ArrayList<>();
@@ -97,7 +99,7 @@ public class ControlSequences {
 						argList.add(defaultArg);
 					}
 					if (DEBUG)
-						System.out.println("Handling " + getDescription() + ": " + argList);
+						logger().info(() -> "Handling " + getDescription() + ": " + argList);
 					handlerN.accept(printer, argList);
 				}
 				return true;
@@ -143,14 +145,16 @@ public class ControlSequences {
 			});
 	private static final CsiPattern ED = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)J", 0, "erase in display",
 			(Printer p, Integer i) -> {
-				if (i == 2 || i == 3)
+				if (i == 2)
 					p.clear();
+				else if(i == 3)
+					p.clear(); // TODO: and clear scrollback
 				else
-					System.err.println("Unimplemented: ED");
+					logger().warning(() -> "Unimplemented: ED");
 			});
 	private static final CsiPattern EK = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)K", 0, "erase in line",
 			(Printer p, Integer i) -> {
-				System.err.println("Unimplemented: EK");
+				logger().warning(() -> "Unimplemented: EK");
 			});
 	private static final CsiPattern SU = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)S", 1, "scroll up",
 			(Printer p, Integer i) -> {
@@ -165,14 +169,15 @@ public class ControlSequences {
 				p.moveTo(l.get(1), l.get(0));
 			});
 	private static final CsiPattern AUX_ON = CsiPattern.compile0("\u001b\\\u005b5i", "aux port on", (Printer p) -> {
-		System.err.println("Unimplemented: AUX on");
+		logger().warning(() -> "Unimplemented: AUX on");
 	});
 	private static final CsiPattern AUX_OFF = CsiPattern.compile0("\u001b\\\u005b4i", "aux port off", (Printer p) -> {
-		System.err.println("Unimplemented: AUX off");
+		logger().warning(() -> "Unimplemented: AUX off");
 	});
 	private static final CsiPattern DSR = CsiPattern.compile0("\u001b\\\u005b6n", "device status report",
 			(Printer p) -> {
-				System.out.println("ESC[" + p.getY() + ";" + p.getX() + "R");
+				if(p.hasInput())
+				p.sendInput("ESC[" + p.getY() + ";" + p.getX() + "R\n");
 			});
 	private static final CsiPattern SCP = CsiPattern.compile0("\u001b\\\u005bs", "save cursor position", (Printer p) -> {
 		p.saveCursor();
@@ -181,6 +186,7 @@ public class ControlSequences {
 			(Printer p) -> {
 				p.restoreCursor();
 			});
+	private static final Map<String,CsiPattern> KEYS = new HashMap<>();
 	private static final int F = 0xFF, H = 0xAA, L = 0x55, OFF = 0x00;
 	public static final Paint[] PALETTE_CGA = { //
 			Paint.color(0, 0, 0), Paint.color(0, 0, H), Paint.color(0, H, 0), Paint.color(0, H, H), //
@@ -217,6 +223,50 @@ public class ControlSequences {
 			CSI_FG_COLORS[i] = csiStringSetColors(i, -1);
 			CSI_BG_COLORS[i] = csiStringSetColors(-1, i);
 		}
+		keyPattern("1", "Home");
+		String keys[] = {"", "Home", "Insert", "Delete", "End", "PgUp", "PgDn", "Home", "End", "",//
+				"F0", "F1", "F2", "F3", "F4", "F5", "", "F6", "F7", "F8", "F9", "F10", "", //
+				"F11", "F12", "F13", "F14", "", "F15", "F16", "", "F17", "F18", "F19", "F20", "" //
+				};
+		
+		CsiPattern vtKeys = new CsiPattern("\u001b\\\u005b([0-9;]*)~", 1, 2, "Keypress", null, null,
+				(Printer p, List<Integer> args) -> {
+					int k = args.get(0);
+					int i = args.get(1);
+			if(--i < 0)
+				i = 0;
+			i = i & 0xf;
+			if(k < keys.length)
+				System.err.println("key: " + keys[k] + " mods " + i); // TODO
+		});
+		KEYS.put(vtKeys.getCommandLetter(), vtKeys);
+		keyPattern("A", "Up");
+		keyPattern("B", "Down");
+		keyPattern("C", "Right");
+		keyPattern("D", "Left");
+		keyPattern("E", "");
+		keyPattern("F", "End");
+		keyPattern("G", "KP_5");
+		keyPattern("H", "Home");
+		keyPattern("I", "");
+		keyPattern("J", "");
+		keyPattern("K", "");
+		keyPattern("L", "");
+		keyPattern("M", "");
+		keyPattern("N", "");
+		keyPattern("O", "");
+		keyPattern("P", "F1");
+		keyPattern("Q", "F2");
+		keyPattern("R", "F3");
+		keyPattern("S", "F4");
+		keyPattern("T", "");
+		keyPattern("U", "");
+		keyPattern("V", "");
+		keyPattern("W", "");
+		keyPattern("X", "");
+		keyPattern("Y", "");
+		keyPattern("Z", "");
+
 	}
 	private static final CsiPattern SGR = CsiPattern.compileN("\u001b\\\u005b([0-9;]*)m", 0, -1,
 			"select graphics rendition", (Printer p, List<Integer> l) -> {
@@ -265,6 +315,16 @@ public class ControlSequences {
 	public static String csiStringResetColors() {
 		return "\u001b[0m";
 	}
+	private static void keyPattern(String ch, String key) {
+		CsiPattern csiPattern = new CsiPattern("\u001b\\\u005b([0-9;]*)" + ch, 1, 1, key + " key", null,
+				(Printer p, Integer i) -> {
+			if(--i < 0)
+				i = 0;
+			i = i & 0xf;
+			System.err.println("key: " + key + " mods " + i); // TODO
+		}, null);
+		KEYS.put(csiPattern.getCommandLetter(), csiPattern);
+	}
 	public static String csiStringSetColors(int fore, int back) {
 		StringBuilder b = new StringBuilder();
 		String fs = fore < 0 ? null : //
@@ -299,10 +359,10 @@ public class ControlSequences {
 			if (csiPattern.match(printer, csi))
 				return true;
 			else
-				System.err.println("Handler failed for escape sequence: " + csi.replaceAll("\u001b", "ESC"));
+				logger().severe(() -> "Handler failed for escape sequence: " + csi.replaceAll("\u001b", "ESC"));
 
 		} else {
-			System.err.println("No handler for escape sequence: " + csi.replaceAll("\u001b", "ESC"));
+			logger().severe(() -> "No handler for escape sequence: " + csi.replaceAll("\u001b", "ESC"));
 		}
 		return false;
 	}
@@ -328,5 +388,9 @@ public class ControlSequences {
 		} catch (NoSuchElementException e) {
 		}
 		return null;
+	}
+	
+	protected static Logger logger() {
+		return Logger.getLogger(ControlSequences.class.getPackageName());
 	}
 }

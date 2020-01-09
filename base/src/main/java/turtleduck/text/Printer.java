@@ -188,4 +188,10 @@ public interface Printer extends Layer {
 
 	void scroll(int i);
 
+	boolean hasInput();
+
+	void sendInput(String string);
+
+	void write(CodePoint codePoint);
+
 }

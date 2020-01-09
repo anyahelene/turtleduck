@@ -66,10 +66,9 @@ public abstract class PrinterImpl<S extends Screen> extends BaseLayer<S> impleme
 	private int videoAttrs = 0;
 
 	private String csiSeq = null;
+	private int csiMode = 0;
 
 	private boolean csiEnabled = true;
-
-	private int csiMode = 0;
 
 	private int dirtyX0 = Integer.MAX_VALUE;
 	private int dirtyX1 = Integer.MIN_VALUE;
@@ -92,6 +91,11 @@ public abstract class PrinterImpl<S extends Screen> extends BaseLayer<S> impleme
 		for (int i = 0; i < TextMode.PAGE_HEIGHT_MAX; i++) {
 			lineBuffer.add(new Char[TextMode.LINE_WIDTH_MAX]);
 		}
+	}
+
+	@Override
+	public void write(CodePoint codePoint) {
+		addToCharBuffer(codePoint.stringValue());
 	}
 
 	@Override

@@ -33,4 +33,9 @@ public class JfxLayer extends BaseLayer<JfxScreen> {
 		jfxCanvas.setVisible(true);
 	}
 
+	@Override
+	public void flush() {
+		canvas.flush();
+	}
+
 }

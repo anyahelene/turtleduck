@@ -1,5 +1,9 @@
 package turtleduck.geometry.unused;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 
 import org.joml.Quaternionf;
@@ -8,6 +12,8 @@ import org.joml.Vector3f;
 import turtleduck.colors.Colors;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.impl.BearingImpl;
+import turtleduck.terminal.TerminalInputStream;
+import turtleduck.terminal.TerminalPrintStream;
 
 public class Orientation {
 	private Quaternionf quat = new Quaternionf().setAngleAxis(-Math.PI / 2, 0, 0, 1);// .lookAlong(0, -1, 0, 0, 0, 1);
@@ -25,6 +31,24 @@ public class Orientation {
 	}
 
 	public static void main(String[] args) {
+		TerminalInputStream stream = new TerminalInputStream();
+		TerminalPrintStream p = new TerminalPrintStream();
+		stream.write("foobar");
+		BufferedReader stream2 = new BufferedReader(new InputStreamReader(stream));
+		try {
+			p.println(stream2.readLine());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		p.print(42);
+		p.println("42");
+		p.write(new byte[] {(byte) 0xf0, (byte) 0x90, (byte) 0x8d, (byte) 0x88});
+		p.write(new byte[] {0x24});
+		p.write(new byte[] {(byte) 0xc2, (byte) 0xa2});
+		p.write(new byte[] {(byte) 0xe0, (byte) 0xa4, (byte) 0xb9});
+		p.write(new byte[] {(byte) 0xe2, (byte) 0x82, (byte) 0xac});
+		p.write(new byte[] {(byte) 0xed, (byte) 0x95, (byte) 0x9c});
 		int isum = 0, dsum = 0;
 		for (int k = 0; k < 2; k++) {
 			int sum = 0;

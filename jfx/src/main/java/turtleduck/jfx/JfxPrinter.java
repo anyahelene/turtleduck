@@ -44,7 +44,7 @@ public class JfxPrinter extends PrinterImpl<JfxScreen> implements Printer {
 	public JfxPrinter(String layerId, JfxScreen jfxScreen, Canvas jfxCanvas) {
 		super(layerId, jfxScreen, new JfxCanvas(layerId + ".canvas", jfxCanvas));
 		this.canvas = jfxCanvas;
-		font = FONT_LMMONO;
+		font = FONT_MONOSPACED;
 	}
 
 	@Override
@@ -154,6 +154,23 @@ public class JfxPrinter extends PrinterImpl<JfxScreen> implements Printer {
 	public void show() {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public boolean hasInput() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void sendInput(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void flush() {
+		redrawDirty();
 	}
 
 }
