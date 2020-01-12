@@ -4,38 +4,38 @@ import turtleduck.display.impl.BaseLayer;
 import turtleduck.turtle.Canvas;
 
 public class JfxLayer extends BaseLayer<JfxScreen> {
-	private final javafx.scene.canvas.Canvas jfxCanvas;
-	private final JfxCanvas canvas;
+	private final javafx.scene.canvas.Canvas fxCanvas;
+	private final JfxCanvas tdCanvas;
 
 	public JfxLayer(String id, double width, double height, JfxScreen jfxScreen, javafx.scene.canvas.Canvas canvas) {
 		super(id, jfxScreen, width, height);
-		this.jfxCanvas = canvas;
-		this.canvas = new JfxCanvas(id + ".canvas", canvas);
+		this.fxCanvas = canvas;
+		this.tdCanvas = new JfxCanvas(id + ".canvas", canvas);
 	}
 
 	@Override
 	public Canvas canvas() {
-		return canvas;
+		return tdCanvas;
 	}
 
 	@Override
 	public void clear() {
-		jfxCanvas.getGraphicsContext2D().clearRect(0, 0, jfxCanvas.getWidth(), jfxCanvas.getHeight());
+		fxCanvas.getGraphicsContext2D().clearRect(0, 0, fxCanvas.getWidth(), fxCanvas.getHeight());
 	}
 
 	@Override
 	public void hide() {
-		jfxCanvas.setVisible(false);
+		fxCanvas.setVisible(false);
 	}
 
 	@Override
 	public void show() {
-		jfxCanvas.setVisible(true);
+		fxCanvas.setVisible(true);
 	}
 
 	@Override
 	public void flush() {
-		canvas.flush();
+		tdCanvas.flush();
 	}
 
 }

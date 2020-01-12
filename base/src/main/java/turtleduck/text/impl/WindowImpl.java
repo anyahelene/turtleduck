@@ -14,13 +14,16 @@ import turtleduck.colors.Paint;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.text.Attribute;
+import turtleduck.text.Attributed;
 import turtleduck.text.Attributes;
 import turtleduck.text.AttributesImpl;
 import turtleduck.text.CodePoint;
 import turtleduck.text.TextCursor;
+import turtleduck.text.TextFont;
 import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
 import turtleduck.text.CodePoint.CodePoints;
+import turtleduck.text.Region;
 import turtleduck.turtle.Canvas;
 
 public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implements TextWindow {
@@ -32,14 +35,52 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 			this.cp = cp;
 			this.attrs = attrs;
 		}
-		
+
 		public String toHtml(int col, int line) {
-			return String.format("<span id=\"L%dC%d\" style=\"%s\">%s</span>", line, col, attrs.toCss(), cp.toHtml()); 
+			if (cp == CodePoints.NUL)
+				return "&nbsp;";
+			else {
+				String css = attrs.toCss();
+				if (!css.equals(""))
+					css = String.format(" style=\"%s\"", css);
+				return String.format("<span id=\"L%dC%d\"%s>%s</span>", line, col, css, cp.toHtml());
+			}
+		}
+
+		public String toString() {
+			if (cp == CodePoints.NUL)
+				return "";
+			else
+				return cp.toString();
+		}
+
+		public CodePoint codePoint() {
+			return cp;
 		}
 
 		public void clear() {
 			cp = CodePoints.NUL;
 			attrs = DEFAULT_ATTRS;
+		}
+
+		public boolean notNull() {
+			return cp != CodePoints.NUL;
+		}
+
+		public Attributes attrs() {
+			return attrs;
+		}
+
+		public TextFont font() {
+			return attrs.get(Attribute.ATTR_FONT);
+		}
+
+		public Paint background() {
+			return attrs.get(Attribute.ATTR_BACKGROUND);
+		}
+
+		public Paint foreground() {
+			return attrs.get(Attribute.ATTR_FOREGROUND);
 		}
 	}
 
@@ -52,22 +93,39 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 				cells.add(new Cell(CodePoints.NUL, DEFAULT_ATTRS));
 		}
 
-		Cell col(int x) {
-			return cells.get(x);
+		public Cell col(int x) {
+			return cells.get(x - 1);
 		}
-		
+
 		public String toHtml(int l) {
-			return IntStream.range(0, cells.size()).mapToObj(i -> cells.get(i).toHtml(i+1, l))//
+			return IntStream.range(0, cells.size()).mapToObj(i -> cells.get(i).toHtml(i + 1, l))//
 					.collect(Collectors.joining("", String.format("<p id=\"L%d\">", l), "</p>"));
 		}
-		
+
 		public void clear() {
 			cells.stream().forEach(c -> c.clear());
+		}
+
+		public void forEachElement(int x0, int x1, int y, Consumer<TextElement> action) {
+			Attributes attrs = null;
+			for (int x = x0; x <= x1 + 1; x++) {
+				if (attrs == null && x <= x1) {
+					attrs = cells.get(x - 1).attrs;
+				}
+				if (x == x1 + 1) {
+					action.accept(new TextElement(x0, y, x - x0, 1, cells.subList(x0 - 1, x - 1), attrs));
+				} else if (attrs != cells.get(x - 1).attrs) {
+					action.accept(new TextElement(x0, y, x - x0 , 1, cells.subList(x0 - 1, x - 1), attrs));
+					x0 = x;
+					attrs = cells.get(x - 1).attrs;
+				}
+			}
 		}
 	}
 
 	protected static class Cells {
 		int cols, rows;
+		Region region;
 		List<Line> lines;
 
 		public Cells(int cols, int rows) {
@@ -76,107 +134,95 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 				lines.add(new Line(cols));
 			this.cols = cols;
 			this.rows = rows;
+			region = Region.rectangular(1, 1, cols, rows);
 		}
 
-		Line line(int y) {
-			return lines.get(y);
+		public Line line(int y) {
+			return lines.get(y - 1);
 		}
-		
+
 		public String toHtml() {
-			return IntStream.range(0, lines.size()).mapToObj(i -> lines.get(i).toHtml(i+1))//
-					.collect(Collectors.joining("", "<div id=\"CELLS\">", "</div>"));			
+			return IntStream.range(0, lines.size()).mapToObj(i -> lines.get(i).toHtml(i + 1))//
+					.collect(Collectors.joining("", "<code id=\"CELLS\">", "</code>"));
 		}
 
-		Stream<Cell> streamRegion(int x0, int y0, int x1, int y1) {
-			if (y0 > y1) {
-				int tmp = y1;
-				y1 = y0;
-				y0 = tmp;
-				tmp = x1;
-				x1 = x0;
-				x0 = tmp;
-			} else if (y0 == y1 && x0 > x1) {
-				int tmp = x1;
-				x1 = x0;
-				x0 = tmp;
-			}
-			x0 = Math.max(1, x0);
-			if (x0 > cols && y1 > y0) {
-				x0 = 1;
-				y0++;
-			}
-			x1 = Math.min(cols, x1);
-			y0 = Math.max(1, y0);
-			y1 = Math.min(rows, y1);
-			if (y0 > rows || y1 < 1)
-				return Stream.of();
-			else
-				return StreamSupport.stream(new RegionSpliterator(x0, y0, x1, y1), false);
+		public Stream<Cell> streamRegion(int x0, int y0, int x1, int y1) {
+			return Region.flow(x0, y0, x1, y1).posStream(region).map(pos -> line(pos.line()).col(pos.column()));
 		}
 
-		class RegionSpliterator implements Spliterator<Cell> {
-			private int x0, y0, x1, y1;
-
-			RegionSpliterator(int x0, int y0, int x1, int y1) {
-				this.x0 = x0;
-				this.y0 = y0;
-				this.x1 = x1;
-				this.y1 = y1;
+		public void forEachElement(Region region, Consumer<TextElement> action) {
+			for (int y = region.line(); y <= region.endLine(); y++) {
+				Line line = lines.get(y - 1);
+				int x0 = y == region.line() ? region.column() : 1;
+				int x1 = y == region.endLine() ? region.endColumn() : cols;
+				line.forEachElement(x0, x1, y, action);
 			}
-
-			@Override
-			public boolean tryAdvance(Consumer<? super Cell> action) {
-				Cell cell = null;
-				if (y0 < y1) {
-					if (x0 > cols) {
-						x0 = 1;
-						y0++;
-					}
-					cell = line(y0).col(x0++);
-					return true;
-				} else if (y0 == y1 && x0 <= x1) {
-					cell = line(y0).col(x0++);
-				}
-				if (cell != null) {
-					action.accept(cell);
-					return true;
-				}
-				return false;
-			}
-
-			@Override
-			public Spliterator<Cell> trySplit() {
-				if (y0 + 1 < y1) {
-					int y2 = (y0 + y1) / 2;
-					RegionSpliterator split = new RegionSpliterator(x0, y0, cols, y2-1);
-					x0 = 1;
-					y0 = y2;
-					return split;
-				}
-				return null;
-			}
-
-			@Override
-			public long estimateSize() {
-				if (y0 == y1)
-					return x1 - x0 + 1;
-				else
-					return cols - x0 + 1 + x1 + cols * (y1 - y0 - 1);
-			}
-
-			@Override
-			public int characteristics() {
-				return Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED;
-			}
-
 		}
+	}
+
+	protected static class TextElement {
+		protected List<Cell> data;
+		protected Attributes attrs;
+		private int x, y, w, h;
+
+		public int x() {
+			return x;
+		}
+
+		public int y() {
+			return y;
+		}
+
+		public TextElement(int x, int y, int w, int h, List<Cell> data, Attributes attrs) {
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;
+			this.data = data;
+			this.attrs = attrs;
+		}
+
+		public int width() {
+			return w;
+		}
+
+		public int height() {
+			return h;
+		}
+
+		public List<Cell> cells() {
+			return data;
+		}
+
+		public Attributes attributes() {
+			return attrs;
+		}
+
+		public String toHtml() {
+			StringBuilder sb = new StringBuilder();
+			String css = attrs.toCss();
+			if (!css.equals(""))
+				css = String.format(" style=\"%s\"", css);
+			sb.append(String.format("<span id=\"L%dC%d\"%s>", y, x, css));
+			for (Cell c : data) {
+				if (c.cp != CodePoints.NUL)
+					sb.append(c.cp.toHtml());
+			}
+			sb.append("</span>");
+			return sb.toString();
+		}
+
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			for (Cell c : data)
+				sb.append(c.cp.toString());
+			return sb.toString();
+		}
+
 	}
 
 	protected static final Attributes DEFAULT_ATTRS = new AttributesImpl();
 
-	protected static final Paint DEFAULT_BACKGROUND = null;
-	protected static final Paint DEFAULT_FILL = Colors.BLACK;
-	protected static final Paint DEFAULT_STROKE = Colors.TRANSPARENT;
 	protected static final TextMode DEFAULT_MODE = TextMode.MODE_40X22;
 	protected static final boolean DEBUG_REDRAW = false;
 
@@ -211,9 +257,7 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 	private int dirtyY0 = Integer.MAX_VALUE;
 	private int dirtyY1 = Integer.MIN_VALUE;
 	private boolean useBuffer = true;
-	private Cells cells;
-
-	protected Screen screen;
+	protected Cells cells;
 
 	public WindowImpl(String id, TextMode mode, S screen, double width, double height) {
 		super(id, screen, width, height);
@@ -259,7 +303,7 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 
 	@Override
 	public TextWindow clearRegion(int x0, int y0, int x1, int y1, CodePoint cp, Attributes attrs) {
-		cells.streamRegion(x0, y0, x1, y1).forEach(c -> { 
+		cells.streamRegion(x0, y0, x1, y1).forEach(c -> {
 			c.cp = cp;
 			c.attrs = attrs;
 		});
@@ -270,15 +314,11 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 		return this;
 	}
 
-
-	public void cycleMode(boolean adjustDisplayAspect) {
-		textMode = textMode.nextMode();
-		if (adjustDisplayAspect && screen != null)
-			screen.setAspect(textMode.getAspect());
-		dirty(1, 1);
-		dirty(pageWidth(), pageHeight());
-		if (!useBuffer)
-			flush();
+	@Override
+	public TextWindow cycleMode(boolean adjustDisplayAspect) {
+		textMode(textMode.nextMode(), true);
+		System.out.println(textMode);
+		return this;
 	}
 
 	/**
@@ -297,11 +337,12 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 		// TODO: bounds check
 		return cells.line(y).col(x).cp;
 	}
+
 	@Override
 	public String charAt(int x, int y) {
 		// TODO: bounds check
 		CodePoint cp = cells.line(y).col(x).cp;
-		if(cp == CodePoints.NUL)
+		if (cp == CodePoints.NUL)
 			return "";
 		else
 			return cp.stringValue();
@@ -309,14 +350,12 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 
 	@Override
 	public void redraw() {
-		redraw(1, 1, pageWidth(), pageHeight());
+		redraw(1, 1, pageWidth(), pageHeight(), DEFAULT_ATTRS);
 		clean();
 	}
 
-	//protected abstract void redrawTextPage(int x0, int y0, int x1, int y1);
-	protected abstract void redraw(int x0, int y0, int x1, int y1);
-
-	
+	// protected abstract void redrawTextPage(int x0, int y0, int x1, int y1);
+	protected abstract void redraw(int x0, int y0, int x1, int y1, Attributes attrs);
 
 	@Override
 	public TextWindow scroll(int i) {
@@ -358,8 +397,6 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 		return old;
 	}
 
-
-
 	@Override
 	public TextWindow textMode(TextMode mode) {
 		return textMode(mode, false);
@@ -379,8 +416,6 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 		return this;
 	}
 
-
-
 	private boolean isDirty() {
 		return dirtyX0 <= dirtyX1 || dirtyY0 <= dirtyY1;
 	}
@@ -393,10 +428,15 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 	 * @param y
 	 */
 	private void dirty(int x, int y) {
+		if (DEBUG_REDRAW)
+			System.out.printf("dirty(%d,%d): Dirty region is (%d,%d)–(%d,%d)%n", x, y, dirtyX0, dirtyY0, dirtyX1,
+					dirtyY1);
 		dirtyX0 = Math.max(Math.min(x, dirtyX0), 1);
 		dirtyX1 = Math.min(Math.max(x, dirtyX1), pageWidth());
 		dirtyY0 = Math.max(Math.min(y, dirtyY0), 1);
 		dirtyY1 = Math.min(Math.max(y, dirtyY1), pageHeight());
+		if (DEBUG_REDRAW)
+			System.out.printf("            → Dirty region is (%d,%d)–(%d,%d)%n", dirtyX0, dirtyY0, dirtyX1, dirtyY1);
 	}
 
 	/**
@@ -406,9 +446,8 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 	public void flush() {
 		if (isDirty()) {
 			if (DEBUG_REDRAW)
-				System.out.printf("redrawDirty(): Dirty region is (%d,%d)–(%d,%d)%n", dirtyX0, dirtyY0, dirtyX1,
-						dirtyY1);
-			redraw(dirtyX0, dirtyY0, dirtyX1, dirtyY1);
+				System.out.printf("flush(): Dirty region is (%d,%d)–(%d,%d)%n", dirtyX0, dirtyY0, dirtyX1, dirtyY1);
+			redraw(dirtyX0, dirtyY0, dirtyX1, dirtyY1, DEFAULT_ATTRS);
 			clean();
 		}
 	}
@@ -443,7 +482,6 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 	public boolean buffering() {
 		return useBuffer;
 	}
-
 
 	@Override
 	public TextMode textMode() {

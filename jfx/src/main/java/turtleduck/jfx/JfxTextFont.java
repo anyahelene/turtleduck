@@ -3,9 +3,11 @@ package turtleduck.jfx;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.GraphicsContext;
@@ -16,6 +18,8 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextBoundsType;
 import javafx.scene.transform.Affine;
 import javafx.scene.transform.Transform;
 import turtleduck.colors.Colors;
@@ -361,7 +365,23 @@ public class JfxTextFont implements TextFont {
 		this.yScale = yScale;
 		this.img = new WritableImage((int) squareSize, (int) squareSize);
 	}
-
+	public JfxTextFont(String fileName, double size, double squareSize) {
+		super();
+		this.fileName = fileName;
+		this.font = findFont(fileName, size);
+		this.size = size;
+		this.squareSize = squareSize;
+		double[] measure = measure("X");
+//		measure = measure("i");
+//		measure = measure("█");
+//		this.yScale = this.xScale = Math.min(squareSize / measure[0], squareSize / measure[1]);
+		this.xScale = squareSize / measure[0];
+		this.yScale = squareSize / measure[1];
+		this.xTranslate = 0;
+		this.yTranslate = -measure[5]*yScale;
+		this.img = new WritableImage((int) squareSize, (int) squareSize);
+		System.out.printf("%s: size=%f, sq=%fx%f, x=%f, y=%f, *x=%f, *y=%f\n", fileName, size, squareSize, squareSize, xTranslate, yTranslate, xScale, yScale);
+	}
 	/**
 	 * Create a new TextFont.
 	 *
@@ -605,7 +625,7 @@ public class JfxTextFont implements TextFont {
 	@Override
 	public void drawTextAt(Canvas canvas, double x, double y, String text, double xScaleFactor, int mode, Paint bg) {
 		GraphicsContext ctx = context(canvas);
-		textAt(ctx, x, y, text, xScaleFactor, true, false, JfxColor.fromJfxColor(ctx.getFill()), null, mode, bg);
+		textAt(ctx, x, y, text, xScaleFactor, false, false, JfxColor.fromJfxColor(ctx.getFill()), null, mode, bg);
 	}
 
 	/**
@@ -1033,8 +1053,8 @@ public class JfxTextFont implements TextFont {
 			target.translate(0, squareSize);
 			// target.setFill((mode & ATTR_INVERSE) != 0 ? Color.BLACK : fill);
 			// target.setStroke((mode & ATTR_INVERSE) != 0 ? Color.BLACK : stroke);
-			fill = (mode & ATTR_INVERSE) != 0 ? Colors.BLACK : fill;
-			stroke = (mode & ATTR_INVERSE) != 0 ? Colors.BLACK : stroke;
+			fill = (mode & ATTR_INVERSE) != 0 ? Colors.BLUCK : fill;
+			stroke = (mode & ATTR_INVERSE) != 0 ? Colors.BLUCK : stroke;
 		}
 		doDraw(text, xScaleFactor, fill, stroke, mode, target, width);
 
@@ -1049,5 +1069,27 @@ public class JfxTextFont implements TextFont {
 		}
 
 		ctx.restore(); // restore 1
+	}
+	
+	public double[] measure(String s) {
+		Text text = new Text(s);
+		text.setFont(font);
+//		text.setWrappingWidth(0);
+		text.setLineSpacing(0);
+		
+		text.setBoundsType(TextBoundsType.LOGICAL);
+		Bounds bounds = text.getLayoutBounds();
+		System.out.println("Logical bounds of " + s + ":" + bounds);
+		var logical = new double[] {bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY()};
+		text.setBoundsType(TextBoundsType.LOGICAL_VERTICAL_CENTER);
+		bounds = text.getLayoutBounds();
+		var center = new double[] {bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY()};
+		System.out.println("LogVCen bounds of " + s + ":" + bounds);
+		text.setBoundsType(TextBoundsType.VISUAL);
+		bounds = text.getLayoutBounds();
+		var visual = new double[] {bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY()};
+		System.out.println("Visual  bounds of " + s + ":" + bounds);
+		System.out.println("bounds of " + s + ": " + Arrays.toString(logical));
+		return logical;
 	}
 }

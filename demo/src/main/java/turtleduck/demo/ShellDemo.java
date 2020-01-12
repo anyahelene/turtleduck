@@ -9,8 +9,10 @@ import turtleduck.events.KeyEvent;
 import turtleduck.shell.TShell;
 import turtleduck.text.DemoPages;
 import turtleduck.text.Printer;
+import turtleduck.text.TextCursor;
 import turtleduck.text.TextFontAdjuster;
 import turtleduck.text.TextMode;
+import turtleduck.text.TextWindow;
 
 public class ShellDemo implements TurtleDuckApp {
 	public static void main(String[] args) {
@@ -18,13 +20,12 @@ public class ShellDemo implements TurtleDuckApp {
 	}
 
 	private Screen screen;
-	private Printer printer;
+	private TextWindow window;
+	private TextCursor printer;
 	private TShell tshell;
 
 	@Override
 	public void bigStep(double deltaTime) {
-		// TODO Auto-generated method stub
-
 	}
 
 	private void printHelp() {
@@ -46,15 +47,16 @@ public class ShellDemo implements TurtleDuckApp {
 	@Override
 	public void start(Screen screen) {
 		this.screen = screen;
-		printer = screen.createPrinter();
-		printer.setBackground(Colors.WHITE);
-		printer.setInk(Colors.BLACK);
-		printer.clear();
-		printer.setTextMode(TextMode.MODE_80X30, true);
+		screen.setBackground(Colors.WHITE);
 		screen.clearBackground();
+		window = screen.createTextWindow();
+		window.textMode(TextMode.MODE_80X30, true);
+		printer = window.cursor();
+		printer.background(Colors.TRANSPARENT);
+		printer.foreground(Colors.GREEN);
+		printer.clearPage();
 		screen.useAlternateShortcut(true);
-
-		tshell = new TShell(screen, printer);
+		tshell = new TShell(screen, window, printer);
 		screen.setKeyPressedHandler((KeyEvent event) -> {
 			KeyCode code = event.getCode();
 			if ((event.keyType() & KeyEvent.KEY_TYPE_MODIFIER) != 0) {
@@ -78,12 +80,12 @@ public class ShellDemo implements TurtleDuckApp {
 			}
 			if (event.hasCharacter()) {
 				tshell.charKey(event.character());
-				printer.redrawDirty();
+//				window.flush();
 				return true;
 			}
 			return false;
 		});
-		printer.redrawDirty();
+//		window.flush();
 
 	}
 
@@ -107,7 +109,8 @@ public class ShellDemo implements TurtleDuckApp {
 			if (code == KeyCode.Q || ch.equals("q")) {
 				System.exit(0);
 			} else if (code == KeyCode.R || ch.equals("r")) {
-				printer.cycleMode(true);
+				window.cycleMode(true);
+//				window.flush();
 				return true;
 			} else if (code == KeyCode.S || ch.equals("s")) {
 				if (event.isAltDown())
@@ -120,7 +123,7 @@ public class ShellDemo implements TurtleDuckApp {
 				return true;
 			} else if (code == KeyCode.D || ch.equals("d")) {
 				tshell.charKey("D");
-				printer.redrawDirty();
+//				window.flush();
 				return true;
 			} else if (code == KeyCode.H || ch.equals("h")) {
 				printHelp();

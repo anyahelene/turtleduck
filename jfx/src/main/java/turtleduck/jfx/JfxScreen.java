@@ -2,6 +2,7 @@ package turtleduck.jfx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,8 @@ import turtleduck.events.KeyEvent;
 import turtleduck.events.KeyCode;
 import turtleduck.turtle.Pen;
 import turtleduck.text.Printer;
+import turtleduck.text.TextMode;
+import turtleduck.text.TextWindow;
 
 public class JfxScreen extends BaseScreen {
 	private static final javafx.scene.paint.Color JFX_BLACK = javafx.scene.paint.Color.BLACK;
@@ -169,6 +172,7 @@ public class JfxScreen extends BaseScreen {
 	private final double rawCanvasHeight;
 	private boolean logKeyEvents = false;
 	private final SubScene subScene;
+	private final Map<String, Layer> layers = new HashMap<>();
 	private final List<Canvas> canvases = new ArrayList<>();
 	private final Map<Layer, Canvas> layerCanvases = new IdentityHashMap<>();
 	protected final Canvas background;
@@ -241,18 +245,24 @@ public class JfxScreen extends BaseScreen {
 		canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
 		canvases.add(canvas);
 		root.getChildren().add(canvas);
-		return new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
+		var layer = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
+		layers.put(layer.id(), layer);
+		layerCanvases.put(layer, canvas);
+		return layer;
 	}
 
 	@Override
-	public Printer createPrinter() {
+	public TextWindow createTextWindow() {
 		Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
 		canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
 		canvases.add(canvas);
 		root.getChildren().add(canvas);
-		JfxPrinter jfxPrinter = new JfxPrinter(newLayerId(), this, canvas);
-		jfxPrinter.resetFull();
-		return jfxPrinter;
+		JfxTextWindow win = new JfxTextWindow(newLayerId(), TextMode.MODE_80X30, this, getWidth(), getHeight(), canvas);
+		win.drawCharCells();
+		win.redraw();
+		layers.put(win.id(), win);
+		layerCanvases.put(win, canvas);
+		return win;
 	}
 
 	@Override
@@ -269,6 +279,8 @@ public class JfxScreen extends BaseScreen {
 			root.getChildren().add(canvas);
 			canvas.toFront();
 			debugLayer = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
+			layers.put(debugLayer.id(), debugLayer);
+			layerCanvases.put(debugLayer, canvas);
 		}
 		return debugLayer;
 	}
@@ -286,8 +298,10 @@ public class JfxScreen extends BaseScreen {
 
 	@Override
 	public Layer getBackgroundPainter() {
-		if (backgroundPainter == null)
+		if (backgroundPainter == null) {
 			backgroundPainter = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, background);
+			layers.put(backgroundPainter.id(), backgroundPainter);
+		}
 		return backgroundPainter;
 	}
 
@@ -579,7 +593,7 @@ public class JfxScreen extends BaseScreen {
 
 	@Override
 	public void flush() {
-		layerCanvases.keySet().forEach(l -> l.flush());
+		layers.values().forEach(Layer::flush);
 	}
 
 	@Override

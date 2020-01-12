@@ -1,18 +1,26 @@
 package turtleduck.jfx.internal;
 
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
-import java.util.ListIterator;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
+import javafx.application.Platform;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
 import turtleduck.jfx.JfxCanvas;
+import turtleduck.jfx.internal.JfxControl.StrokeSegment;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.TurtleControl;
 
 public class JfxControl implements TurtleControl {
-	protected static class FillSegment extends Segment {
+	protected static class FillSegment extends PolySegment {
 		Fill fill;
 
 		public void drawIt(JfxCanvas canvas) {
@@ -31,19 +39,144 @@ public class JfxControl implements TurtleControl {
 			builder.append(fill);
 			super.toString(builder);
 		}
+
+		public synchronized FillSegment add(Point p) {
+			points.add(p);
+			return this;
+		}
 	}
 
-	protected static abstract class Segment {
-		JfxControl owner;
-		PointList points = new PointList();
-		boolean closed = false, complete = false;
-		int done = 0;
+	protected static interface Segment {
+		void clear();
 
-		public Segment() {
+		boolean isComplete();
+
+		void end();
+
+		void draw(JfxCanvas canvas);
+
+		boolean isOwnedBy(JfxControl obj);
+
+		Segment add(Point p);
+	}
+
+	protected static interface StrokeSegment extends Segment {
+		void stroke(Stroke s);
+
+		StrokeSegment add(Point p);
+
+		boolean isDone();
+
+		Stroke stroke();
+	}
+
+	protected static class LineSegment implements StrokeSegment {
+		Point from, to;
+		Stroke stroke;
+		boolean done = false, complete = false;
+
+		@Override
+		public synchronized boolean isDone() {
+			return done;
+		}
+
+		@Override
+		public synchronized boolean isComplete() {
+			return complete;
+		}
+
+		public LineSegment(Stroke s, Point f, Point t) {
+			nSimpleLines++;
+			stroke = s;
+			from = f;
+			to = t;
+		}
+
+		public void stroke(Stroke s) {
+			stroke = s;
+		}
+
+		@Override
+		public void clear() {
+			from = to = null;
+		}
+
+		@Override
+		public void draw(JfxCanvas canvas) {
+			if (from != null && to != null) {
+				canvas.line(stroke, null, from, to);
+				done = true;
+			}
+
+		}
+
+		@Override
+		public boolean isOwnedBy(JfxControl obj) {
+			return false;
+		}
+
+		@Override
+		public StrokeSegment add(Point p) {
+			if (from == null)
+				from = p;
+			else if (to == null)
+				to = p;
+			else {
+				StrokeSegment seg = SegmentCache.strokeSegment();
+				seg.stroke(stroke);
+				seg.add(from).add(to).add(p);
+				nUpgradedLines++;
+				return seg;
+			}
+			return this;
+		}
+
+		@Override
+		public void end() {
+			complete = true;
+		}
+
+		@Override
+		public Stroke stroke() {
+			return stroke;
+		}
+
+	}
+
+	protected static abstract class PolySegment implements Segment {
+		protected JfxControl owner;
+		protected PointList points = new PointList();
+		protected boolean closed = false, complete = false;
+		protected int done = 0;
+
+		@Override
+		public synchronized boolean isComplete() {
+			return complete;
+		}
+
+		public boolean isOwnedBy(JfxControl obj) {
+			return owner == obj;
+		}
+
+		public PolySegment() {
 			JfxControl.nAlloc++;
 		}
 
-		public void clear() {
+		@Override
+		public void end() {
+			complete = true;
+		}
+
+		public synchronized boolean isDone() {
+			return done == points.nPoints;
+		}
+
+		public synchronized Segment add(Point p) {
+			points.add(p);
+			return this;
+		}
+
+		public synchronized void clear() {
 			owner = null;
 			done = 0;
 			closed = false;
@@ -51,7 +184,7 @@ public class JfxControl implements TurtleControl {
 			points.clear();
 		}
 
-		public void draw(JfxCanvas canvas) {
+		public synchronized void draw(JfxCanvas canvas) {
 			if (points.nPoints > done) {
 				drawIt(canvas);
 				nDraw++;
@@ -69,7 +202,7 @@ public class JfxControl implements TurtleControl {
 
 		protected abstract void drawIt(JfxCanvas canvas);
 
-		public void init(JfxControl o) {
+		public synchronized void init(JfxControl o) {
 			JfxControl.nSegments++;
 			if (owner == null && o.parent != null)
 				JfxControl.nChildSegments++;
@@ -86,9 +219,13 @@ public class JfxControl implements TurtleControl {
 		public void toString(StringBuilder builder) {
 			builder.append(points);
 		}
+
+		public void dispose() {
+			points.dispose();
+		}
 	}
 
-	protected static class StrokeSegment extends Segment {
+	protected static class PolyStrokeSegment extends PolySegment implements StrokeSegment {
 		Stroke stroke;
 
 		public void drawIt(JfxCanvas canvas) {
@@ -100,14 +237,29 @@ public class JfxControl implements TurtleControl {
 			done = points.nPoints;
 		}
 
+		@Override
+		public Stroke stroke() {
+			return stroke;
+		}
+
 		public void init(JfxControl o, Stroke s) {
 			super.init(o);
 			stroke = s;
 		}
 
+		public synchronized StrokeSegment add(Point p) {
+			points.add(p);
+			return this;
+		}
+
 		public void toString(StringBuilder builder) {
 			builder.append(stroke);
 			super.toString(builder);
+		}
+
+		@Override
+		public void stroke(Stroke s) {
+			stroke = s;
 		}
 	}
 
@@ -115,11 +267,57 @@ public class JfxControl implements TurtleControl {
 	private static long nSegments = 0, nAlloc = 0, nReused = 0, nInUse = 0, nDraw = 0, nSkipped = 0, nPartial = 0,
 			nComplete = 0;
 	private static long nChildren, nChildSegments = 0;
-	private static long nStrokeEdges = 0, nStrokes = 0, nStrokeBreaks = 0;
+	private static long nSimpleLines = 0, nUpgradedLines = 0, nStrokeEdges = 0, nStrokes = 0, nStrokeBreaks = 0;
 	private static long nFills = 0, nFillEdges = 0, nFillBreaks = 0;
 	private static long totQueueSize = 0, nQueueSize = 0;
-	private static final List<FillSegment> fillSegs = new ArrayList<>();
-	private static final List<StrokeSegment> strokeSegs = new ArrayList<>();
+
+	protected static class SegmentCache {
+		private static final List<FillSegment> fillSegs = new ArrayList<>();
+		private static final List<StrokeSegment> strokeSegs = new ArrayList<>();
+
+		public static synchronized FillSegment fillSegment() {
+			if (!fillSegs.isEmpty()) {
+				nReused++;
+				return fillSegs.remove(fillSegs.size() - 1);
+			} else {
+				return new FillSegment();
+			}
+		}
+
+		public static synchronized StrokeSegment strokeSegment() {
+			if (!strokeSegs.isEmpty()) {
+				nReused++;
+				return strokeSegs.remove(strokeSegs.size() - 1);
+			} else {
+				return new PolyStrokeSegment();
+			}
+		}
+
+		public static synchronized void free(FillSegment seg) {
+			if (fillSegs.size() < CACHE_SIZE) {
+				seg.clear();
+				fillSegs.add(seg);
+			} else {
+				seg.dispose();
+			}
+		}
+
+		public static synchronized void free(StrokeSegment seg) {
+			if (seg instanceof PolyStrokeSegment) {
+				PolyStrokeSegment ps = (PolyStrokeSegment) seg;
+				if (strokeSegs.size() < CACHE_SIZE) {
+					ps.clear();
+					strokeSegs.add(ps);
+				} else {
+					ps.dispose();
+				}
+			}
+		}
+
+		public static synchronized int numFree() {
+			return strokeSegs.size() + fillSegs.size();
+		}
+	}
 
 	public static void printStats() {
 		System.err.println("Canvas segments: ");
@@ -132,13 +330,15 @@ public class JfxControl implements TurtleControl {
 		System.err.println("    Alloc:     " + nAlloc);
 		System.err.println("    Reused:    " + nReused);
 		System.err.println("    Top-Level: " + (nSegments - nChildSegments));
-		System.err.println("    Free:      " + (strokeSegs.size() + fillSegs.size()));
+		System.err.println("    Free:      " + SegmentCache.numFree());
 		System.err.println("    In use:    " + nInUse);
 		System.err.println("  Children:    " + nChildren);
 		System.err.println("    Segments:  " + nChildSegments);
 		System.err.println("  Strokes:     " + nStrokes);
 		System.err.println("    Breaks:    " + nStrokeBreaks);
 		System.err.println("    Edges:     " + nStrokeEdges);
+		System.err.println("    Simple:    " + nSimpleLines);
+		System.err.println("    Upgraded:  " + nUpgradedLines);
 		System.err.println("  Fills:       " + nFills);
 		System.err.println("    Breaks:    " + nFillBreaks);
 		System.err.println("    Edges:     " + nFillEdges);
@@ -151,7 +351,7 @@ public class JfxControl implements TurtleControl {
 
 	private final JfxControl parent;
 
-	private final List<Segment> segs;
+	private final BlockingQueue<Segment> segs;
 
 	private Fill fill;
 
@@ -167,12 +367,12 @@ public class JfxControl implements TurtleControl {
 			segs = parent.segs;
 			nChildren++;
 		} else {
-			segs = new ArrayList<>();
+			segs = new ArrayBlockingQueue<>(16384);
 		}
 	}
 
 	@Override
-	public TurtleControl begin(Stroke s, Fill f) {
+	public synchronized TurtleControl begin(Stroke s, Fill f) {
 		if (strokeSeg != null || fillSeg != null) {
 			if (validation)
 				throw new IllegalStateException("begin without end");
@@ -191,38 +391,36 @@ public class JfxControl implements TurtleControl {
 	}
 
 	@Override
-	public TurtleControl cancel() {
+	public synchronized TurtleControl cancel() {
 		freeFillSegment();
 		freeStrokeSegment();
 		fill = null;
 		stroke = null;
-		segs.removeIf((seg) -> seg.owner == this);
+		segs.removeIf(seg -> seg.isOwnedBy(this));
 		return this;
 	}
 
 	@Override
-	public TurtleControl child() {
+	public synchronized TurtleControl child() {
 		JfxControl j = new JfxControl(canvas, this);
 
 		return j;
 	}
 
 	@Override
-	public TurtleControl control(Bearing heading, Point from, double distance, Point to) {
+	public synchronized TurtleControl control(Bearing heading, Point from, double distance, Point to) {
 		return this;
 	}
 
 	@Override
-	public TurtleControl end() {
+	public synchronized TurtleControl end() {
 		if (fillSeg != null) {
 			fillSeg.complete = true;
-			fillSeg.draw(canvas);
-			freeFillSegment();
+			flushFillSegment();
 		}
 		if (strokeSeg != null) {
-			strokeSeg.complete = true;
-			strokeSeg.draw(canvas);
-			freeStrokeSegment();
+			strokeSeg.end();
+			flushStrokeSegment();
 		}
 		fill = null;
 		stroke = null;
@@ -231,49 +429,49 @@ public class JfxControl implements TurtleControl {
 
 	protected FillSegment fillSegment(Point from) {
 		if (fillSeg == null) {
-			if (!fillSegs.isEmpty()) {
-				fillSeg = fillSegs.remove(fillSegs.size() - 1);
-				nReused++;
-			} else {
-				fillSeg = new FillSegment();
-			}
+			fillSeg = SegmentCache.fillSegment();
 			fillSeg.init(this, fill);
-			fillSeg.points.add(from);
-			segs.add(fillSeg);
+			fillSeg = fillSeg.add(from);
+			enqueue(fillSeg);
 			nInUse++;
-		} else if (fillSeg.done == fillSeg.points.nPoints) { // all points drawn
-			segs.add(fillSeg);
+		} else if (fillSeg.isDone()) { // all points drawn, re-add to queue
+			enqueue(fillSeg);
 			nInUse++;
 		}
 		return fillSeg;
 	}
 
-	public TurtleControl flush() {
-		totQueueSize += segs.size();
-		nQueueSize++;
-//		if (steps++ % 100 < 30)
-//			System.err.println("  Avg queue:   " + ((double) totQueueSize / nQueueSize));
-		ListIterator<Segment> li = segs.listIterator();
-		while (li.hasNext()) {
-			Segment seg = li.next();
-			seg.draw(canvas);
-//			if (seg.complete)
-			li.remove();
-			nInUse--;
-		}
+	public TurtleControl flush() { // should not be synchronized
+		flushAndAdd(null);
 		return this;
+	}
+
+	protected void flushAndAdd(Segment s) {
+		int size = segs.size();
+		if (size > 0) {
+			totQueueSize += segs.size();
+			nQueueSize++;
+			if (steps++ % 100 < 30)
+				System.err.println("  Cur/Avg queue:   " + segs.size() + ", " + ((double) totQueueSize / nQueueSize));
+			Segment seg;
+			int i = 0;
+			while (i++ < size && (seg = segs.poll()) != null) {
+				if (s != null && segs.offer(s))
+					s = null;
+//				System.err.println(seg.points.size());
+				seg.draw(canvas);
+				nInUse--;
+			}
+		}
+		if (s != null)
+			segs.add(s);
 	}
 
 	protected void freeFillSegment() {
 		if (fillSeg != null) {
 			segs.remove(fillSeg);
 			nInUse--;
-			if (strokeSegs.size() < CACHE_SIZE) {
-				fillSeg.clear();
-				fillSegs.add(fillSeg);
-			} else {
-				fillSeg.points.dispose();
-			}
+			SegmentCache.free(fillSeg);
 			fillSeg = null;
 		}
 	}
@@ -282,55 +480,48 @@ public class JfxControl implements TurtleControl {
 		if (strokeSeg != null) {
 			segs.remove(strokeSeg);
 			nInUse--;
-			if (strokeSegs.size() < CACHE_SIZE) {
-				strokeSeg.clear();
-				strokeSegs.add(strokeSeg);
-			} else {
-				strokeSeg.points.dispose();
-			}
+			SegmentCache.free(strokeSeg);
 			strokeSeg = null;
 		}
 	}
 
 	@Override
-	public TurtleControl go(Bearing bearing, Point from, double distance, Point to) {
+	public synchronized TurtleControl go(Bearing bearing, Point from, double distance, Point to) {
 		if (stroke != null) {
-			if (validation && strokeSeg != null && strokeSeg.complete)
+			if (validation && strokeSeg != null && strokeSeg.isComplete())
 				throw new IllegalStateException("adding more points to complete segment");
-			strokeSegment(from).points.add(to);
+			strokeSeg = strokeSegment(from).add(to);
 			nStrokeEdges++;
 
 		}
 		if (fill != null) {
-			if (validation && fillSeg != null && fillSeg.complete)
+			if (validation && fillSeg != null && fillSeg.isComplete())
 				throw new IllegalStateException("adding more points to complete segment");
-			fillSegment(from).points.add(to);
+			fillSeg = fillSegment(from).add(to);
 			nFillEdges++;
 		}
 		return this;
 	}
 
 	@Override
-	public TurtleControl pen(Stroke s, Fill f) {
+	public synchronized TurtleControl pen(Stroke s, Fill f) {
 		if (f != null) {
 			if (fill == null)
 				throw new IllegalStateException("Setting fill pen, but not currently filling");
-			if (fillSeg != null && fillSeg.points.nPoints > 0 && !f.equals(fillSeg.fill)) {
+			if (fillSeg != null && !f.equals(fillSeg.fill)) {
 				fillSeg.complete = true;
 				nFillBreaks++;
-				fillSeg.draw(canvas);
-				freeFillSegment();
+				flushFillSegment();
 			}
 			fill = f;
 		}
 		if (s != null) {
 			if (stroke == null)
 				throw new IllegalStateException("Setting stroke pen, but not currently stroking");
-			if (strokeSeg != null && strokeSeg.points.nPoints > 0 && !s.equals(strokeSeg.stroke)) {
-				strokeSeg.complete = true;
+			if (strokeSeg != null && !s.equals(strokeSeg.stroke())) {
+				strokeSeg.end();
 				nStrokeBreaks++;
-				strokeSeg.draw(canvas);
-				freeStrokeSegment();
+				flushStrokeSegment();
 			}
 			stroke = s;
 		}
@@ -338,23 +529,54 @@ public class JfxControl implements TurtleControl {
 		return this;
 	}
 
+	private void flushStrokeSegment() {
+		if (strokeSeg != null) {
+			if (Platform.isFxApplicationThread()) {
+				strokeSeg.draw(canvas);
+				freeStrokeSegment();
+			} // otherwise, draw operation will happen later
+			strokeSeg = null;
+		}
+	}
+
+	private void flushFillSegment() {
+		if (fillSeg != null) {
+			if (Platform.isFxApplicationThread()) {
+				fillSeg.draw(canvas);
+				freeFillSegment();
+			} // otherwise, draw operation will happen later
+			fillSeg = null;
+		}
+	}
+
 	protected StrokeSegment strokeSegment(Point from) {
 		if (strokeSeg == null) {
-			if (!strokeSegs.isEmpty()) {
-				strokeSeg = strokeSegs.remove(strokeSegs.size() - 1);
-				nReused++;
-			} else {
-				strokeSeg = new StrokeSegment();
-			}
-			strokeSeg.init(this, stroke);
-			strokeSeg.points.add(from);
-			segs.add(strokeSeg);
+			strokeSeg = new LineSegment(stroke, from, null);
+//			strokeSeg = SegmentCache.strokeSegment();
+//			strokeSeg.init(this, stroke);
+//			strokeSeg = strokeSeg.add(from);
+			enqueue(strokeSeg);
 			nInUse++;
-		} else if (strokeSeg.done == strokeSeg.points.nPoints) { // all points drawn
-			segs.add(strokeSeg);
+		} else if (strokeSeg.isDone()) { // all points drawn, re-add to queue
+			enqueue(strokeSeg);
 			nInUse++;
 		}
 		return strokeSeg;
+	}
+
+	private void enqueue(Segment seg) {
+		try {
+			if (Platform.isFxApplicationThread()) {
+				if (!segs.offer(seg)) {
+					flushAndAdd(seg);
+				}
+			} else {
+				segs.offer(seg, 1, TimeUnit.DAYS);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override

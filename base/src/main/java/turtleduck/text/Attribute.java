@@ -15,7 +15,7 @@ public interface Attribute<T> {
 	/**
 	 * Bold font weight (or bright color)
 	 */
-	Attribute<FontWeight> ATTR_WEIGHT = new AttributeImpl<>("weight", FontWeight.REGULAR, 0x00);
+	Attribute<FontWeight> ATTR_WEIGHT = new AttributeImpl<>("weight", FontWeight.NORMAL, 0x00);
 	/**
 	 * Draw character outline.
 	 */
@@ -59,11 +59,11 @@ public interface Attribute<T> {
 	/**
 	 * Foreground colour
 	 */
-	Attribute<Paint> ATTR_FOREGROUND = new AttributeImpl<>("foreground", Colors.BLACK, 0x00);
+	Attribute<Paint> ATTR_FOREGROUND = new AttributeImpl<>("foreground", Colors.BLUE, 0x00);
 	/**
 	 * Background colour
 	 */
-	Attribute<Paint> ATTR_BACKGROUND = new AttributeImpl<>("background", Colors.WHITE, 0x00);
+	Attribute<Paint> ATTR_BACKGROUND = new AttributeImpl<>("background", Colors.TRANSPARENT, 0x00);
 	/**
 	 * Font
 	 */

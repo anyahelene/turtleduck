@@ -16,12 +16,12 @@ public class ColorRGB implements Paint {
 		this.green = g;
 		this.blue = b;
 		this.alpha = a;
-		this.r = Colors.Gamma.gammaExpand((int) (r*255), 255);
-		this.g = Colors.Gamma.gammaExpand((int) (g*255), 255);
-		this.b = Colors.Gamma.gammaExpand((int) (b*255), 255);
-		r = Math.round(Colors.Gamma.gammaExpand(r)*4095);
-		g = Math.round(Colors.Gamma.gammaExpand(g)*4095);
-		b = Math.round(Colors.Gamma.gammaExpand(b)*4095);
+		this.r = Colors.Gamma.gammaExpand((int) (r * 255), 255);
+		this.g = Colors.Gamma.gammaExpand((int) (g * 255), 255);
+		this.b = Colors.Gamma.gammaExpand((int) (b * 255), 255);
+		r = Math.round(Colors.Gamma.gammaExpand(r) * 4095);
+		g = Math.round(Colors.Gamma.gammaExpand(g) * 4095);
+		b = Math.round(Colors.Gamma.gammaExpand(b) * 4095);
 //		System.out.printf("(%.5f,%.5f,%.5f) = (%5d,%5d,%5d) = (%5.0f,%5.0f,%5.0f)\n", red, green, blue, this.r, this.g, this.b, r, g, b);
 	}
 
@@ -185,7 +185,7 @@ public class ColorRGB implements Paint {
 		protected ColorRGB rgb() {
 			float tmp = Y - Cg / 2;
 			float B = tmp - Co / 2;
-			if(Cg + tmp < 0) 
+			if (Cg + tmp < 0)
 				System.out.println("oops!");
 			return new ColorRGB(Math.max(0, B + Co), Math.max(0, Cg + tmp), Math.max(0, tmp - Co / 2), A);
 		}
@@ -264,5 +264,15 @@ public class ColorRGB implements Paint {
 			return 1f;
 		else
 			return f;
+	}
+
+	@Override
+	public String toCss() {
+		if (alpha == 1.0)
+			return String.format("rgb(%d,%d,%d)", Math.round(red * 255), Math.round(green * 255),
+					Math.round(blue * 255));
+		else
+			return String.format("rgba(%d,%d,%d,%d)", Math.round(red * 255), Math.round(green * 255),
+					Math.round(blue * 255), Math.round(blue * 255));
 	}
 }

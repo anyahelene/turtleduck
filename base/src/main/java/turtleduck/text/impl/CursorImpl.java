@@ -41,20 +41,20 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor beginningOfLine() {
+	public CursorImpl beginningOfLine() {
 		x = 1;
 		return this;
 	}
 
 	@Override
-	public TextCursor beginningOfPage() {
+	public CursorImpl beginningOfPage() {
 		x = 1;
 		y = 1;
 		return this;
 	}
 
 	@Override
-	public TextCursor clearRegion(int x0, int y0, int x1, int y1) {
+	public CursorImpl clearRegion(int x0, int y0, int x1, int y1) {
 		page.clearRegion(x0, y0, x1, y1, CodePoints.NUL, attrs);
 		return this;
 	}
@@ -70,7 +70,7 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor attributes(Attributes attrs) {
+	public CursorImpl attributes(Attributes attrs) {
 		if (attrs != null)
 			this.attrs = attrs;
 		return this;
@@ -93,7 +93,7 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 
 	@Override
 	public int y() {
-		return x;
+		return y;
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor move(int deltaX, int deltaY) {
+	public CursorImpl move(int deltaX, int deltaY) {
 		x += deltaX;
 		y += deltaY;
 		if (x > page.pageWidth() + 1) {
@@ -120,37 +120,37 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor moveHoriz(int dist) {
+	public CursorImpl moveHoriz(int dist) {
 		move(dist, 0);
 		return this;
 	}
 
 	@Override
-	public TextCursor moveVert(int dist) {
+	public CursorImpl moveVert(int dist) {
 		move(0, dist);
 		return this;
 	}
 
 	@Override
-	public TextCursor print(String s, Attributes attrs) {
+	public CursorImpl print(String s, Attributes attrs) {
 		s.codePoints().forEach(cp -> write(CodePoint.codePoint(cp), attrs));
 		return this;
 	}
 
 	@Override
-	public TextCursor redrawTextPage() {
-		page.redraw();
+	public CursorImpl redrawTextPage() {
+		page.flush();
 		return this;
 	}
 
 	@Override
-	public TextCursor resetAttrs() {
+	public CursorImpl resetAttrs() {
 		attrs = WindowImpl.DEFAULT_ATTRS;
 		return this;
 	}
 
 	@Override
-	public TextCursor scroll(int lines) {
+	public CursorImpl scroll(int lines) {
 		page.scroll(lines);
 		return this;
 	}
@@ -168,14 +168,13 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor sendInput(String string) {
+	public CursorImpl sendInput(String string) {
 		// TODO Auto-generated method stub
 		return this;
 	}
 
 	@Override
-	public TextCursor write(CodePoint cp, Attributes attrs) {
-		page.set(x, y, cp, attrs);
+	public CursorImpl write(CodePoint cp, Attributes attrs) {
 		switch (cp.value()) {
 		case '\r':
 			page.set(x, y, cp, attrs);
@@ -184,6 +183,9 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 		case '\n':
 			page.set(x, y, cp, attrs);
 			at(1, y + 1);
+			break;
+		case 0x07:
+			System.out.println("BEL");
 			break;
 		case '\f':
 			clearPage();
@@ -209,14 +211,14 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor clearAt(int x, int y) {
+	public CursorImpl clearAt(int x, int y) {
 		at(x, y);
 		page.set(x, y, CodePoints.NUL, attrs);
 		return this;
 	}
 
 	@Override
-	public TextCursor at(int newX, int newY) {
+	public CursorImpl at(int newX, int newY) {
 		if (newX < 1 || newX > page.pageWidth() || newY < 1 || newY > page.pageHeight() + 1)
 			throw new IndexOutOfBoundsException("(" + newX + "," + newY + ")");
 		if (newY > page.pageHeight()) {
@@ -229,13 +231,13 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor plot(int x, int y) {
+	public CursorImpl plot(int x, int y) {
 		plot(x, y, (a, b) -> a | b);
 		return this;
 	}
 
 	@Override
-	public TextCursor plot(int x, int y, BiFunction<Integer, Integer, Integer> op) {
+	public CursorImpl plot(int x, int y, BiFunction<Integer, Integer, Integer> op) {
 		int textX = (x) / 2 + 1;
 		int textY = (y) / 2 + 1;
 //		System.out.println(textX + "," + textY);
@@ -251,13 +253,13 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor unplot(int x, int y) {
+	public CursorImpl unplot(int x, int y) {
 		plot(x, y, (a, b) -> a & ~b);
 		return this;
 	}
 
 	@Override
-	public TextCursor resetFull() {
+	public CursorImpl resetFull() {
 		resetAttrs();
 		beginningOfPage();
 		page.redraw();
@@ -270,7 +272,7 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	@Override
-	public TextCursor end() {
+	public CursorImpl end() {
 		close();
 		return parent;
 	}

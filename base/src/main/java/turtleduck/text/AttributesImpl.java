@@ -17,6 +17,7 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 	private Paint fore, back;
 	private Map<Attribute<?>, Object> map;
 	private boolean frozen = false;
+	private TextFont font = null;
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -28,6 +29,8 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 			}
 		}
 		switch (attr.name()) {
+		case "font":
+			return font != null ? (T) font : attr.defaultValue();
 		case "style":
 			return style != null ? (T) style : attr.defaultValue();
 		case "weight":
@@ -108,6 +111,9 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 			}
 		}
 		switch (attr.name()) {
+		case "font":
+			font = (TextFont) value;
+			break;
 		case "style":
 			style = (FontStyle) value;
 			break;
@@ -146,6 +152,9 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 			}
 		}
 		switch (attr.name()) {
+		case "font":
+			font = null;
+			break;
 		case "style":
 			style = null;
 			break;
@@ -184,5 +193,28 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 			throw new IllegalStateException("Attributes not changeable");
 		frozen = true;
 		return this;
+	}
+
+	@Override
+	public String toCss() {
+		StringBuilder sb = new StringBuilder();
+		if(weight != null && weight != FontWeight.NORMAL) {
+			sb.append("font-weight:").append(weight.toCss()).append(";");
+		}
+		if(style != null && style != FontStyle.NORMAL) {
+			sb.append("font-style:").append(style.toCss()).append(";");
+		}
+		if(fore != null) {
+			sb.append("color:").append(fore.toCss()).append(";");
+		}
+		if(back != null) {
+			sb.append("background-color:").append(back.toCss()).append(";");
+		}
+		if(opacity != 1.0) {
+			sb.append("opacity:").append(opacity).append(";");
+		}
+
+		// TODO Auto-generated method stub
+		return sb.toString();
 	}
 }

@@ -73,4 +73,5 @@ public interface Paint  {
 	boolean isSubtractive();
 	
 	<T> T as(Class<T> type);
+	String toCss();
 }

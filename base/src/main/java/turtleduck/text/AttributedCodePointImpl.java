@@ -1,5 +1,6 @@
 package turtleduck.text;
 
+@Deprecated
 public class AttributedCodePointImpl implements AttributedCodePoint {
 	int codepoint;
 	Attributes attrs;
@@ -31,6 +32,18 @@ public class AttributedCodePointImpl implements AttributedCodePoint {
 
 	@Override
 	public AttributeBuilder change() {
+		return null;
+	}
+
+	@Override
+	public String toHtml() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object toCss() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

@@ -45,4 +45,19 @@ public class CodePointImpl implements CodePoint {
 				.mapToObj(i -> new CodePointImpl(i)).toArray(l -> new CodePoint[l]);
 	}
 
+	@Override
+	public String toHtml() {
+		if(value == '&')
+			return "&amp;";
+		else if(value == '<')
+			return "&lt;";
+		else if(value == '>')
+			return "&gt;";
+		else if(Character.isWhitespace(value) || !Character.isISOControl(value)) {
+			return string;
+		} else {
+			return String.format("&#%x;", value);
+		}
+	}
+
 }

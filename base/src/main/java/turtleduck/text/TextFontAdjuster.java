@@ -122,7 +122,7 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 
 		this.screen = screen;
 
-		printer = screen.createPrinter();
+		printer = screen.createTextWindow();
 		printer.setInk(Colors.WHITE);
 //		printer.setFont(textFont);
 		textFont = printer.getFont();

@@ -94,6 +94,6 @@ public interface Attributes {
 		}
 	}
 
-	Object toCss();
+	String toCss();
 
 }

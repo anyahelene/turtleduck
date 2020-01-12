@@ -7,6 +7,7 @@ import turtleduck.colors.Paint;
 import turtleduck.events.KeyEvent;
 import turtleduck.objects.IdentifiedObject;
 import turtleduck.text.Printer;
+import turtleduck.text.TextWindow;
 
 public interface Screen extends IdentifiedObject {
 
@@ -93,7 +94,7 @@ public interface Screen extends IdentifiedObject {
 
 	Layer createPainter();
 
-	Printer createPrinter();
+	TextWindow createTextWindow();
 
 	void cycleAspect();
 

@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import turtleduck.jfx.JfxScreen;
 import turtleduck.TurtleDuckApp;
+import turtleduck.display.Screen;
 import turtleduck.jfx.JfxLauncher;
 
 public class JfxApp extends Application {
@@ -36,6 +37,7 @@ public class JfxApp extends Application {
 	private long stepNanos = 0, smallStepMillis = 0, bigStepMillis = 0;
 
 	private AnimationTimer animTimer;
+	private Screen screen;
 
 	protected void bigStep() {
 		long t = System.currentTimeMillis();
@@ -44,7 +46,12 @@ public class JfxApp extends Application {
 			bigStepMillis = t - NOMINAL_BIG_STEP_MILLIS;
 		}
 		double dt = (t - bigStepMillis) / 1000.0;
-		app.bigStep(dt);
+		try {
+			app.bigStep(dt);
+		} catch (Throwable ex) {
+			ex.printStackTrace();
+			throw ex;
+		}
 		bigStepMillis = t;
 	}
 
@@ -81,7 +88,13 @@ public class JfxApp extends Application {
 			smallStepMillis = t - NOMINAL_SMALL_STEP_MILLIS;
 		}
 		double dt = (t - smallStepMillis) / 1000.0;
-		app.smallStep(dt);
+		try {
+			app.smallStep(dt);
+		} catch (Throwable ex) {
+			ex.printStackTrace();
+			throw ex;
+		}
+
 		smallStepMillis = t;
 	}
 
@@ -101,7 +114,13 @@ public class JfxApp extends Application {
 		setupTimers();
 
 		app = launcher.getApp();
-		app.start(JfxScreen.startPaintScene(primaryStage, launcher.getConfig()));
+		screen = JfxScreen.startPaintScene(primaryStage, launcher.getConfig());
+		try {
+			app.start(screen);
+		} catch (Throwable ex) {
+			ex.printStackTrace();
+			throw ex;
+		}
 		System.err.printf("T+%05dms: User app started: %s\n", System.currentTimeMillis() - startMillis, app);
 		primaryStage.show();
 	}
@@ -114,9 +133,22 @@ public class JfxApp extends Application {
 		double dt = (nanos - stepNanos) / 1000_000_000.0;
 //		System.err.printf("T+%05dms: First Step: @ %20.18f ns\n", System.currentTimeMillis() - startMillis, dt);
 		long t = System.currentTimeMillis();
-		app.bigStep(dt);
-		appTime += System.currentTimeMillis() - t;
-		appFrames++;
-		stepNanos = nanos;
+		try {
+			try {
+
+				app.bigStep(dt);
+				screen.flush();
+			} catch (Throwable ex) {
+				ex.printStackTrace();
+				throw ex;
+			}
+		} finally {
+			long timeTaken = System.currentTimeMillis() - t;
+			appTime += timeTaken;
+			if (timeTaken > 100)
+				System.out.println("Step: " + timeTaken);
+			appFrames++;
+			stepNanos = nanos;
+		}
 	}
 }

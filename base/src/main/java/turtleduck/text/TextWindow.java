@@ -126,4 +126,6 @@ public interface TextWindow extends Layer {
 	 */
 	Attributes attributesAt(int x, int y);
 
+	TextWindow cycleMode(boolean b);
+
 }

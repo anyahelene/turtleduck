@@ -153,7 +153,7 @@ public interface TextCursor {
 	}
 
 	default Paint foreground() {
-		return attributes().get(Attribute.ATTR_BACKGROUND);
+		return attributes().get(Attribute.ATTR_FOREGROUND);
 	}
 
 	Attributes attributes();
@@ -163,7 +163,7 @@ public interface TextCursor {
 	}
 
 	default TextCursor foreground(Paint foreColor) {
-		return attributes(attributes().change().background(foreColor).done());
+		return attributes(attributes().change().foreground(foreColor).done());
 	}
 
 	/**
