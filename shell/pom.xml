@@ -10,17 +10,15 @@
 
 	<artifactId>turtleduck-shell</artifactId>
 	<packaging>jar</packaging>
-	<name>turtleduck-shell</name>
+	<name>TurtleDuck JShell</name>
 		<dependencies>
 		<dependency>
-			<groupId>no.uib.ii</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-base</artifactId>
-			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>no.uib.ii</groupId>
-			<artifactId>turtleduck-fx</artifactId>
-			<version>${project.parent.version}</version>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>turtleduck-jfx</artifactId>
 		</dependency>
 	</dependencies>
 </project>

@@ -8,21 +8,20 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<properties>
-   		<lwjgl.version>3.2.3</lwjgl.version>
+		<lwjgl.version>3.2.3</lwjgl.version>
 		<joml.version>1.9.19</joml.version>
 		<lwjgl.natives>natives-linux</lwjgl.natives>
 	</properties>
 
 	<artifactId>turtleduck-gl</artifactId>
 	<packaging>jar</packaging>
-	<name>turtleduck-gl</name>
-		<dependencies>
+	<name>TurtleDuck OpenGL Backend</name>
+	<dependencies>
 		<dependency>
-			<groupId>no.uib.ii</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-base</artifactId>
-			<version>${project.parent.version}</version>
 		</dependency>
-        <dependency>
+		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
 			<version>${lwjgl.version}</version>
@@ -92,13 +91,13 @@
 			<version>${lwjgl.version}</version>
 			<classifier>${lwjgl.natives}</classifier>
 		</dependency>
-			<dependency>
+		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opengl</artifactId>
 			<version>${lwjgl.version}</version>
 			<classifier>${lwjgl.natives}</classifier>
 		</dependency>
-			<dependency>
+		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-sse</artifactId>
 			<version>${lwjgl.version}</version>

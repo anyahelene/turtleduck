@@ -8,15 +8,14 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>turtleduck-fx</artifactId>
+	<artifactId>turtleduck-jfx</artifactId>
 	<packaging>jar</packaging>
-	<name>turtleduck-fx</name>
+	<name>TurtleDuck JavaFX Backend</name>
 
 	<dependencies>
 		<dependency>
-			<groupId>no.uib.ii</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-base</artifactId>
-			<version>${project.parent.version}</version>
 		</dependency>
   		<dependency>
 			<groupId>org.openjfx</groupId>
