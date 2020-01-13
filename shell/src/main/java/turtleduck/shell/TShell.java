@@ -157,7 +157,7 @@ public class TShell {
 					printer.foreground(Colors.YELLOW.darker());
 				if (pos != Diag.NOPOS) {
 					var errToken = code.substring((int)start, (int)end);
-					printer.begin().at(inputX+start, inputY-1).print(errToken, Colors.BLUCK, Colors.RED).end();
+					printer.begin().at(inputX+start, inputY-1).print(errToken, Colors.BLACK, Colors.RED).end();
 					printer.moveHoriz((int) (inputX + pos));
 					printer.println("^");
 				}
@@ -339,7 +339,7 @@ public class TShell {
 			if (input.length() > 0) {
 				input = input.substring(0, input.length() - 1);
 				printer.print(" \b");
-				printer.print("\b \b", Colors.WHITE, Colors.BLUCK);
+				printer.print("\b \b", Colors.WHITE, Colors.BLACK);
 			}
 		} else {
 			completions = null;
@@ -376,7 +376,7 @@ public class TShell {
 				break;
 			}
 			printer.begin().beginningOfLine().print(status).end();
-			printer.print(" \b", Colors.WHITE, Colors.BLUCK);
+			printer.print(" \b", Colors.WHITE, Colors.BLACK);
 			System.out.println(info.completeness());
 		}
 	}
@@ -396,7 +396,7 @@ public class TShell {
 		inputX = printer.x();
 		inputY = printer.y();
 		printer.print(input);
-		printer.print(" ", Colors.WHITE, Colors.BLUCK);
+		printer.print(" ", Colors.WHITE, Colors.BLACK);
 		printer.clearToEndOfLine();
 		printer.print("\b");
 	}

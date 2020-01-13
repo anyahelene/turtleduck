@@ -1053,8 +1053,8 @@ public class JfxTextFont implements TextFont {
 			target.translate(0, squareSize);
 			// target.setFill((mode & ATTR_INVERSE) != 0 ? Color.BLACK : fill);
 			// target.setStroke((mode & ATTR_INVERSE) != 0 ? Color.BLACK : stroke);
-			fill = (mode & ATTR_INVERSE) != 0 ? Colors.BLUCK : fill;
-			stroke = (mode & ATTR_INVERSE) != 0 ? Colors.BLUCK : stroke;
+			fill = (mode & ATTR_INVERSE) != 0 ? Colors.BLACK : fill;
+			stroke = (mode & ATTR_INVERSE) != 0 ? Colors.BLACK : stroke;
 		}
 		doDraw(text, xScaleFactor, fill, stroke, mode, target, width);
 

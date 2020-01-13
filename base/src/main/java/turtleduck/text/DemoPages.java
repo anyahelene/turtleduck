@@ -7,12 +7,11 @@ import java.io.InputStreamReader;
 
 import turtleduck.colors.Colors;
 
-
 public class DemoPages {
-	public static void printAnsiArt(Printer printer) {
-		printer.moveTo(1, 1);
-		printer.setAutoScroll(false);
-		printer.clear();
+	public static void printAnsiArt(TextCursor printer) {
+		printer.at(1, 1);
+		printer.autoScroll(false);
+		printer.clearPage();
 
 		try (InputStream stream = DemoPages.class.getResourceAsStream("flower.txt")) {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
@@ -25,10 +24,10 @@ public class DemoPages {
 
 	}
 
-	public static void printBlockPlotting(Printer printer) {
-		printer.clear();
-		printer.setAutoScroll(false);
-		printer.setVideoAttrs(0);
+	public static void printBlockPlotting(TextCursor printer) {
+		printer.clearPage();
+		printer.autoScroll(false);
+		printer.resetAttrs();
 		int topLine = 8;
 		for (int x = 0; x < 16; x += 1) {
 			if ((x & 1) > 0)
@@ -39,10 +38,10 @@ public class DemoPages {
 				printer.plot(4 * x + 1, (topLine - 1) * 2);
 			if ((x & 8) > 0)
 				printer.plot(4 * x, (topLine - 1) * 2);
-			printer.printAt(1 + 2 * x, topLine + 2, BlocksAndBoxes.unicodeBlocks[x]);
-			printer.printAt(1 + 2 * x, topLine + 4, BlocksAndBoxes.unicodeBlocks[15]);
-			printer.printAt(1 + 2 * x, topLine + 6, BlocksAndBoxes.unicodeBlocks[~x & +0xf]);
-			printer.printAt(1 + 2 * x, topLine + 7, String.format("%X", x));
+			printer.at(1 + 2 * x, topLine + 2).print(BlocksAndBoxes.unicodeBlocks[x]);
+			printer.at(1 + 2 * x, topLine + 4).print(BlocksAndBoxes.unicodeBlocks[15]);
+			printer.at(1 + 2 * x, topLine + 6).print(BlocksAndBoxes.unicodeBlocks[~x & +0xf]);
+			printer.at(1 + 2 * x, topLine + 7).print(String.format("%X", x));
 			if ((x & 1) > 0)
 				printer.unplot(4 * x + 1, 1 + (4 + topLine - 1) * 2);
 			if ((x & 2) > 0)
@@ -52,23 +51,22 @@ public class DemoPages {
 			if ((x & 8) > 0)
 				printer.unplot(4 * x, (4 + topLine - 1) * 2);
 		}
-		printer.printAt(1, 1,
-				"Plotting with Unicode Block Elements\n(ZX81-like Graphics)\n\nThe plot/print and unplot/inverse\nlines should be equal:");
-		printer.printAt(33, topLine, "plot");
-		printer.printAt(33, topLine + 2, "print");
-		printer.printAt(33, topLine + 4, "unplot");
-		printer.printAt(33, topLine + 6, "inverse");
-		printer.printAt(0, topLine + 9, String.format("Full blocks:\n   Clear[%s] Shaded[%s] Opaque[%s]",
+		printer.at(1, 1).print("Plotting with Unicode Block Elements\n(ZX81-like Graphics)\n\nThe plot/print and unplot/inverse\nlines should be equal:");
+		printer.at(33, topLine).print("plot");
+		printer.at(33, topLine + 2).print("print");
+		printer.at(33, topLine + 4).print("unplot");
+		printer.at(33, topLine + 6).print("inverse");
+		printer.at(0, topLine + 9).print(String.format("Full blocks:\n   Clear[%s] Shaded[%s] Opaque[%s]",
 				BlocksAndBoxes.unicodeBlocks[0], BlocksAndBoxes.unicodeBlocks[16], BlocksAndBoxes.unicodeBlocks[15]));
-		printer.printAt(41, topLine + 9, "(ZX81 inverted shade and half block");
-		printer.printAt(41, topLine + 10, "shades are missing in Unicode and");
-		printer.printAt(41, topLine + 11, "therefore not supported)");
+		printer.at(41, topLine + 9).print("(ZX81 inverted shade and half block");
+		printer.at(41, topLine + 10).print("shades are missing in Unicode and");
+		printer.at(41, topLine + 11).print("therefore not supported)");
 		printer.println();
 	}
 
-	public static void printBoxDrawing(Printer printer) {
-		printer.clear();
-		printer.setAutoScroll(false);
+	public static void printBoxDrawing(TextCursor printer) {
+		printer.clearPage();
+		printer.autoScroll(false);
 		printer.println("        Latin-1       Boxes & Blocks");
 		printer.println("     U+0000..00FF   U+2500..257F..259F");
 		printer.println("                                        ");
@@ -92,40 +90,40 @@ public class DemoPages {
 		}
 	}
 
-	public static void printVideoAttributes(Printer printer) {
-		printer.clear();
-		printer.setAutoScroll(false);
-		printer.setVideoAttrs(0);
-		printer.setInk(Colors.BLACK);
-		printer.setStroke(Colors.WHITE);
+	public static void printVideoAttributes(TextCursor printer) {
+		printer.clearPage();
+		printer.autoScroll(false);
+//		printer.setVideoAttrs(0);
+		printer.foreground(Colors.BLACK);
+//		printer.outline(Colors.WHITE);
 
 		String demoLine = "Lorem=ipsum-dolor$sit.ametÆØÅå*,|▞&Jumps Over\\the?fLat Dog{}()#\"!";
 		printer.println("RIBU|" + demoLine);
 		for (int i = 1; i < 16; i++) {
-			printer.setVideoAttrs(i);
+//			printer.setVideoAttrs(i);
 			String s = (i & 1) != 0 ? "X" : " ";
 			s += (i & 2) != 0 ? "X" : " ";
 			s += (i & 4) != 0 ? "X" : " ";
 			s += (i & 8) != 0 ? "X" : " ";
 			printer.println(s + "|" + demoLine);
 		}
-		printer.setVideoAttrs(0);
+//		printer.setVideoAttrs(0);
 		printer.println();
 		printer.println("Lines: under, through, over");
-		printer.setVideoAttrs(TextFont.ATTR_UNDERLINE);
+		printer.attributes(printer.attributes().change().underline(true).done());
 		printer.println("  " + demoLine + "  ");
-		printer.setVideoAttrs(TextFont.ATTR_LINE_THROUGH);
+		printer.attributes(printer.attributes().change().underline(false).lineThrough(true).done());
 		printer.println("  " + demoLine + "  ");
-		printer.setVideoAttrs(TextFont.ATTR_OVERLINE);
+		printer.attributes(printer.attributes().change().lineThrough(false).overline(true).done());
 		printer.println("  " + demoLine + "  ");
-		printer.setVideoAttrs(0);
+		printer.attributes(printer.attributes().change().overline(false).done());
 
 	}
 
-	public static void printZX(Printer printer) {
-		printer.moveTo(1, 1);
-		printer.setAutoScroll(false);
-		printer.clear();
+	public static void printZX(TextCursor printer) {
+		printer.at(1, 1);
+		printer.autoScroll(false);
+		printer.clearPage();
 		printer.println("         ▄▄▄  ▄   ▄  ▄");
 		printer.println("         █ █ █ █ █ █ █");
 		printer.println("         █ █ █ █ █ █ █");
@@ -147,8 +145,8 @@ public class DemoPages {
 		printer.println("      █      █   █   █   █  WITH");
 		printer.println("     █      █ █  █   █   █   16K");
 		printer.println("     █████ █   █  ███   ███  RAM");
-		printer.moveTo(1, 1);
-		printer.setAutoScroll(true);
+		printer.at(1, 1);
+		printer.autoScroll(true);
 	}
 
 }

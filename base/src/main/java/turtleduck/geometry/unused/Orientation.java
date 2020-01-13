@@ -32,7 +32,7 @@ public class Orientation {
 
 	public static void main(String[] args) {
 		TerminalInputStream stream = new TerminalInputStream();
-		TerminalPrintStream p = new TerminalPrintStream();
+		TerminalPrintStream p = new TerminalPrintStream(null);
 		stream.write("foobar");
 		BufferedReader stream2 = new BufferedReader(new InputStreamReader(stream));
 		try {

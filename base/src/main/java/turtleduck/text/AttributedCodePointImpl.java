@@ -42,7 +42,7 @@ public class AttributedCodePointImpl implements AttributedCodePoint {
 	}
 
 	@Override
-	public Object toCss() {
+	public String toCss() {
 		// TODO Auto-generated method stub
 		return null;
 	}

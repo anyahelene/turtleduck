@@ -22,11 +22,12 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 	private Screen screen;
 
 	private boolean paused;
-	private Printer printer;
+	private TextCursor printer;
 
 	private boolean grid = true;
 
 	private double adjustAmount = 0.1;
+	private TextWindow window;
 
 	private double adjustX(KeyCode code) {
 		switch (code) {
@@ -52,7 +53,7 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 
 	private void drawBackgroundGrid() {
 		if (grid) {
-			printer.drawCharCells();
+//		TODO:	window.drawCharCells();
 			/*
 			 * painter.turnTo(0); for (int y = 0; y < printer.getPageHeight(); y++) {
 			 * painter.jumpTo(0, y * printer.getCharHeight()); for (int x = 0; x <
@@ -67,8 +68,8 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 	}
 
 	private void printHelp() {
-		printer.moveTo(1, 1);
-		printer.setAutoScroll(false);
+		printer.at(1, 1);
+		printer.autoScroll(false);
 		printer.println("  " + PrinterImpl.center("TextFontAdjuster", 36) + "  ");
 		printer.println("                                        ");
 		printer.println("                                        ");
@@ -92,13 +93,13 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 		printer.println("DEN SINTE HUNDEN !\"#%&/()?,._-@£${[]}?|^");
 
 		// printer.print(" ");
-		printer.moveTo(1, 15);
-		printer.setAutoScroll(true);
+		printer.at(1, 15);
+		printer.autoScroll(true);
 
 	}
 
 	private void printInfo() {
-		printer.moveTo(1, 3);
+		printer.at(1, 3);
 		printer.println(String.format("Font: %s at %1.1fpt       ", textFont.fontName(),
 				textFont.fontSize()));
 		printer.println(String.format("  xTr=%-1.1f yTr=%-1.1f xSc=%-1.1f ySc=%-1.1f    ", textFont.getxTranslate(),
@@ -107,7 +108,7 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 				textFont.fontName(), textFont.getSize(), textFont.getxTranslate(), textFont.getyTranslate(),
 				textFont.getxScale(), textFont.getyScale());
 
-		printer.moveTo(1, 15);
+		printer.at(1, 15);
 	}
 
 	private void setup() {
@@ -122,10 +123,11 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 
 		this.screen = screen;
 
-		printer = screen.createTextWindow();
-		printer.setInk(Colors.WHITE);
+		window = screen.createTextWindow();
+		printer = window.cursor();
+		printer.foreground(Colors.WHITE);
 //		printer.setFont(textFont);
-		textFont = printer.getFont();
+		textFont = null; // TODO printer.getFont();
 		screen.setKeyOverride((KeyEvent event) -> {
 			KeyCode code = event.getCode();
 			 System.out.println(event);
@@ -136,7 +138,7 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 					paused = !paused;
 					return true;
 				} else if (code == KeyCode.R) {
-					printer.cycleMode(true);
+					window.cycleMode(true);
 					drawBackgroundGrid();
 					return true;
 				} else if (code == KeyCode.S) {
@@ -169,7 +171,6 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 				} else if (code == KeyCode.DIGIT1) {
 					DemoPages.printBoxDrawing(printer);
 					System.out.println("demo1");
-					printer.redrawDirty();
 					return true;
 				} else if (code == KeyCode.DIGIT2) {
 					DemoPages.printZX(printer);
@@ -186,27 +187,23 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 				} else if (code == KeyCode.PLUS) {
 					textFont = textFont.adjust(adjustAmount, 0.0, 0.0, 0.0, 0.0);
 					printer.setFont(textFont);
-					printer.redrawTextPage();
 					printInfo();
 					return true;
 				} else if (code == KeyCode.MINUS) {
 					textFont = textFont.adjust(-adjustAmount, 0.0, 0.0, 0.0, 0.0);
 					printer.setFont(textFont);
-					printer.redrawTextPage();
 					printInfo();
 					return true;
 				} else if (code == KeyCode.LEFT || code == KeyCode.RIGHT || code == KeyCode.UP
 						|| code == KeyCode.DOWN) {
 					textFont = textFont.adjust(0.0, 0.0, 0.0, adjustX(code), adjustY(code));
 					printer.setFont(textFont);
-					printer.redrawTextPage();
 					printInfo();
 					return true;
 				}
 			} else if (code == KeyCode.LEFT || code == KeyCode.RIGHT || code == KeyCode.UP || code == KeyCode.DOWN) {
 				textFont = textFont.adjust(0.0, adjustX(code), adjustY(code), 0.0, 0.0);
 				printer.setFont(textFont);
-				printer.redrawTextPage();
 				printInfo();
 				return true;
 			} else if (code == KeyCode.ENTER) {
@@ -234,7 +231,6 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 
 	@Override
 	public void bigStep(double deltaTime) {
-		printer.redrawDirty();
 	}
 
 }
