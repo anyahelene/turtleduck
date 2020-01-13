@@ -36,84 +36,34 @@ import turtleduck.text.TextWindow;
 
 public class JfxScreen extends BaseScreen {
 	private static final javafx.scene.paint.Color JFX_BLACK = javafx.scene.paint.Color.BLACK;
-	private static final double STD_CANVAS_WIDTH = 1280;
-	private static final List<Double> STD_ASPECTS = Arrays.asList(16.0 / 9.0, 16.0 / 10.0, 4.0 / 3.0);
 	private Clipboard clipboard = Clipboard.getSystemClipboard();
 	protected int shortcutKeyMask = KeyEvent.MODIFIER_SHORTCUT;
 
 	public static Screen startPaintScene(Stage stage, int configuration) {
-		int configAspect = (configuration & _CONFIG_ASPECT_MASK);
-		int configScreen = (configuration & _CONFIG_SCREEN_MASK);
-		int configPixels = (configuration & _CONFIG_PIXELS_MASK);
-		int configCoords = (configuration & _CONFIG_COORDS_MASK);
-		int configFlags = (configuration & _CONFIG_FLAG_MASK);
-		boolean debug = (configFlags & CONFIG_FLAG_DEBUG) != 0;
-		if (configPixels == CONFIG_PIXELS_DEFAULT) {
-			if (configCoords == CONFIG_COORDS_DEVICE || configScreen == CONFIG_SCREEN_FULLSCREEN)
-				configPixels = CONFIG_PIXELS_DEVICE;
-			else
-				configPixels = CONFIG_PIXELS_STEP_SCALED;
-		}
-		double rawWidth = JfxDisplayInfo.INSTANCE.getRawDisplayWidth();
-		double rawHeight = JfxDisplayInfo.INSTANCE.getRawDisplayHeight();
-		double width = JfxDisplayInfo.INSTANCE.getDisplayWidth() - 40;
-		double height = JfxDisplayInfo.INSTANCE.getDisplayHeight() - 100;
-		double canvasAspect = configAspect == CONFIG_ASPECT_DEVICE ? rawWidth / rawHeight
-				: STD_ASPECTS.get(configAspect);
-		double xScale = (height * canvasAspect) / JfxScreen.STD_CANVAS_WIDTH;
-		double yScale = (width / canvasAspect) / (JfxScreen.STD_CANVAS_WIDTH / canvasAspect);
-		double scale = Math.min(xScale, yScale);
-		if (configPixels == CONFIG_PIXELS_STEP_SCALED) {
-			if (scale > 1.0)
-				scale = Math.max(1, Math.floor(scale));
-			else if (scale < 1.0)
-				scale = 1 / Math.max(1, Math.floor(1 / scale));
-		}
-		double winWidth = Math.floor(JfxScreen.STD_CANVAS_WIDTH * scale);
-		double winHeight = Math.floor((JfxScreen.STD_CANVAS_WIDTH / canvasAspect) * scale);
-		double canvasWidth = JfxScreen.STD_CANVAS_WIDTH;
-		double canvasHeight = Math.floor(3 * JfxScreen.STD_CANVAS_WIDTH / 4);
-		double pixWidth = canvasWidth;
-		double pixHeight = canvasHeight;
-		if (configPixels == CONFIG_PIXELS_SCALED || configPixels == CONFIG_PIXELS_STEP_SCALED) {
-			pixWidth *= scale;
-			pixHeight *= scale;
-		} else if (configPixels == CONFIG_PIXELS_DEVICE) {
-			pixWidth = rawWidth;
-			pixHeight = rawHeight;
-		}
-		if (configCoords == CONFIG_COORDS_DEVICE) {
-			canvasWidth = pixWidth;
-			canvasHeight = pixHeight;
-		}
-		if (debug) {
-			System.out.printf("Screen setup:%n");
-			System.out.printf("  Display: %.0fx%.0f (raw %.0fx%.0f)%n", width, height, rawWidth, rawHeight);
-			System.out.printf("  Window:  %.0fx%.0f%n", winWidth, winHeight);
-			System.out.printf("  Canvas:  physical %.0fx%.0f, logical %.0fx%.0f%n", pixWidth, pixHeight, canvasWidth,
-					canvasHeight);
-			System.out.printf("  Aspect:  %.5f   Scale: %.5f%n", canvasAspect, scale);
-		}
+		Dimensions dim = computeDimensions(JfxDisplayInfo.INSTANCE, configuration);
 		Group root = new Group();
-		Scene scene = new Scene(root, winWidth, winHeight, JFX_BLACK);
+		Scene scene = new Scene(root, dim.winWidth, dim.winHeight, JFX_BLACK);
 		stage.setScene(scene);
 		// stage.setTitle(AppInfo.APP_NAME);
-		if ((configFlags & CONFIG_FLAG_HIDE_MOUSE) != 0) {
+		if ((dim.configFlags & CONFIG_FLAG_HIDE_MOUSE) != 0) {
 			scene.setCursor(Cursor.NONE);
 		}
-
-		JfxScreen pScene = new JfxScreen(scene.getWidth(), scene.getHeight(), //
-				pixWidth, pixHeight, //
-				canvasWidth, canvasHeight);
+		boolean debug = (dim.configFlags & CONFIG_FLAG_DEBUG) != 0;
+		dim.winWidth = scene.getWidth();
+		dim.winHeight = scene.getHeight();
+		JfxScreen pScene = new JfxScreen(dim);
+//				scene.getWidth(), scene.getHeight(), //
+//				dim.fbWidth, dim.fbHeight, //
+//				dim.canvasWidth, dim.canvasHeight);
 		pScene.subScene.widthProperty().bind(scene.widthProperty());
 		pScene.subScene.heightProperty().bind(scene.heightProperty());
 		pScene.debug = debug;
-		pScene.hideFullScreenMouseCursor = (configFlags & CONFIG_FLAG_NO_AUTOHIDE_MOUSE) == 0;
+		pScene.hideFullScreenMouseCursor = (dim.configFlags & CONFIG_FLAG_NO_AUTOHIDE_MOUSE) == 0;
 		root.getChildren().add(pScene.subScene);
 
 		boolean[] suppressKeyTyped = { false };
 
-		switch (configScreen) {
+		switch (dim.configScreen) {
 		case CONFIG_SCREEN_WINDOWED:
 			break;
 		case CONFIG_SCREEN_BORDERLESS:
@@ -168,23 +118,17 @@ public class JfxScreen extends BaseScreen {
 		return pScene;
 	}
 
-	private final double rawCanvasWidth;
-	private final double rawCanvasHeight;
 	private boolean logKeyEvents = false;
 	private final SubScene subScene;
-	private final Map<String, Layer> layers = new HashMap<>();
 	private final List<Canvas> canvases = new ArrayList<>();
 	private final Map<Layer, Canvas> layerCanvases = new IdentityHashMap<>();
 	protected final Canvas background;
-	private Layer debugLayer;
 	private final Group root;
 	private Paint bgColor = Paint.color(0, 0, 0);
-	private int aspect = 0;
-	private double scaling = 0;
-	private double currentScale = 1.0;
-	private double currentFit = 1.0;
-	private double resolutionScale = 1.0;
-	private int maxScale = 1;
+//	private double currentScale = 1.0;
+//	private double currentFit = 1.0;
+//	private double resolutionScale = 1.0;
+//	private int maxScale = 1;
 	private Predicate<KeyEvent> keyOverride = null;
 
 	private Predicate<KeyEvent> keyPressedHandler = null;
@@ -195,35 +139,20 @@ public class JfxScreen extends BaseScreen {
 
 	private boolean debug = true;
 
-	private List<Double> aspects;
-
 	private boolean hideFullScreenMouseCursor = true;
 
 	private Cursor oldCursor;
 	private JfxLayer backgroundPainter;
 	private Predicate<String> pasteHandler;
 
-	public JfxScreen(double width, double height, double pixWidth, double pixHeight, double canvasWidth,
-			double canvasHeight) {
+	public JfxScreen(Dimensions dim) {
+//	double width, double height, double pixWidth, double pixHeight, double canvasWidth,		double canvasHeight) {
 		root = new Group();
-		subScene = new SubScene(root, Math.floor(width), Math.floor(height));
-		resolutionScale = pixWidth / canvasWidth;
-		this.rawCanvasWidth = Math.floor(pixWidth);
-		this.rawCanvasHeight = Math.floor(pixHeight);
-		double aspectRatio = width / height;
-		aspect = 0;
-		for (double a : STD_ASPECTS)
-			if (Math.abs(aspectRatio - a) < 0.01) {
-				break;
-			} else {
-				aspect++;
-			}
-		aspects = new ArrayList<>(STD_ASPECTS);
-		if (aspect >= STD_ASPECTS.size()) {
-			aspects.add(aspectRatio);
-		}
-		background = new Canvas(rawCanvasWidth, rawCanvasHeight);
-		background.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
+		subScene = new SubScene(root, Math.floor(dim.winWidth), Math.floor(dim.winHeight));
+		this.dim = dim;
+		setupAspects(dim);
+		background = new Canvas(dim.fbWidth, dim.fbHeight);
+		background.getGraphicsContext2D().scale(dim.resolutionScale(), dim.resolutionScale());
 		setBackground(bgColor);
 		clearBackground();
 		root.getChildren().add(background);
@@ -239,67 +168,38 @@ public class JfxScreen extends BaseScreen {
 		background.getGraphicsContext2D().fillRect(0.0, 0.0, background.getWidth(), background.getHeight());
 	}
 
+	protected Canvas newCanvas() {
+		var c = new Canvas(dim.fbWidth, dim.fbHeight);
+		var s = dim.resolutionScale();
+		c.getGraphicsContext2D().scale(s, s);
+		canvases.add(c);
+		root.getChildren().add(c);
+		return c;
+	}
+
 	@Override
 	public Layer createPainter() {
-		Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
-		canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
-		canvases.add(canvas);
-		root.getChildren().add(canvas);
-		var layer = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
-		layers.put(layer.id(), layer);
+		Canvas canvas = newCanvas();
+		var layer = addLayer(new JfxLayer(newLayerId(), width(), getHeight(), this, canvas));
 		layerCanvases.put(layer, canvas);
 		return layer;
 	}
 
 	@Override
 	public TextWindow createTextWindow() {
-		Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
-		canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
-		canvases.add(canvas);
-		root.getChildren().add(canvas);
-		JfxTextWindow win = new JfxTextWindow(newLayerId(), TextMode.MODE_80X30, this, getWidth(), getHeight(), canvas);
+		Canvas canvas = newCanvas();
+		JfxTextWindow win = addLayer(
+				new JfxTextWindow(newLayerId(), TextMode.MODE_80X30, this, width(), getHeight(), canvas));
 		win.drawCharCells();
 		win.redraw();
-		layers.put(win.id(), win);
 		layerCanvases.put(win, canvas);
 		return win;
 	}
 
 	@Override
-	public void cycleAspect() {
-		aspect = (aspect + 1) % aspects.size();
-		recomputeLayout(false);
-	}
-
-	public Layer debugLayer() {
-		if (debugLayer == null) {
-			Canvas canvas = new Canvas(rawCanvasWidth, rawCanvasHeight);
-			canvas.getGraphicsContext2D().scale(resolutionScale, resolutionScale);
-			canvases.add(canvas);
-			root.getChildren().add(canvas);
-			canvas.toFront();
-			debugLayer = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, canvas);
-			layers.put(debugLayer.id(), debugLayer);
-			layerCanvases.put(debugLayer, canvas);
-		}
-		return debugLayer;
-	}
-
-	@Override
-	public void fitScaling() {
-		scaling = 0;
-		recomputeLayout(true);
-	}
-
-	@Override
-	public int getAspect() {
-		return aspect;
-	}
-
-	@Override
 	public Layer getBackgroundPainter() {
 		if (backgroundPainter == null) {
-			backgroundPainter = new JfxLayer(newLayerId(), getWidth(), getHeight(), this, background);
+			backgroundPainter = new JfxLayer(newLayerId(), width(), getHeight(), this, background);
 			layers.put(backgroundPainter.id(), backgroundPainter);
 		}
 		return backgroundPainter;
@@ -307,7 +207,7 @@ public class JfxScreen extends BaseScreen {
 
 	@Override
 	public double getHeight() {
-		return Math.floor(getRawHeight() / resolutionScale);
+		return Math.floor(frameBufferHeight() / dim.resolutionScale());
 	}
 
 	/** @return the keyOverride */
@@ -335,18 +235,18 @@ public class JfxScreen extends BaseScreen {
 	}
 
 	@Override
-	public double getRawHeight() {
-		return Math.floor(rawCanvasWidth / aspects.get(aspect));
+	public double frameBufferHeight() {
+		return Math.floor(dim.fbWidth / aspects.get(aspect));
 	}
 
 	@Override
-	public double getRawWidth() {
-		return rawCanvasWidth;
+	public double frameBufferWidth() {
+		return dim.fbWidth;
 	}
 
 	@Override
-	public double getWidth() {
-		return Math.floor(getRawWidth() / resolutionScale);
+	public double width() {
+		return Math.floor(dim.fbWidth / dim.resolutionScale());
 	}
 
 	@Override
@@ -407,29 +307,27 @@ public class JfxScreen extends BaseScreen {
 		}
 	}
 
-	private void recomputeLayout(boolean resizeWindow) {
-		double xScale = subScene.getWidth() / getRawWidth();
-		double yScale = subScene.getHeight() / getRawHeight();
-		double xMaxScale = JfxDisplayInfo.INSTANCE.getDisplayWidth() / getRawWidth();
-		double yMaxScale = JfxDisplayInfo.INSTANCE.getDisplayHeight() / getRawHeight();
-		currentFit = Math.min(xScale, yScale);
-		maxScale = (int) Math.max(1, Math.ceil(Math.min(xMaxScale, yMaxScale)));
-		currentScale = scaling == 0 ? currentFit : scaling;
+	protected void recomputeLayout(boolean resizeWindow) {
+		if(subScene.getWidth() <= 1 || subScene.getHeight() <= 1)
+			return;
+		dim.winWidth = subScene.getWidth();
+		dim.winHeight = subScene.getHeight();
+		recomputeDimensions(JfxDisplayInfo.INSTANCE);
 
 		if (resizeWindow) {
 			Scene scene = subScene.getScene();
 			Window window = scene.getWindow();
 			double hBorder = window.getWidth() - scene.getWidth();
 			double vBorder = window.getHeight() - scene.getHeight();
-			double myWidth = getRawWidth() * currentScale;
-			double myHeight = getRawHeight() * currentScale;
+			double myWidth = dim.fbWidth * dim.scale;
+			double myHeight = dim.fbHeight * dim.scale;
 			if (debug)
 				System.err.printf(
 						"Resizing before: screen: %1.0fx%1.0f, screen: %1.0fx%1.0f, scene: %1.0fx%1.0f, window: %1.0fx%1.0f,%n border: %1.0fx%1.0f, new window size: %1.0fx%1.0f, canvas size: %1.0fx%1.0f%n", //
 						javafx.stage.Screen.getPrimary().getVisualBounds().getWidth(),
 						javafx.stage.Screen.getPrimary().getVisualBounds().getHeight(), subScene.getWidth(),
 						subScene.getHeight(), scene.getWidth(), scene.getHeight(), window.getWidth(),
-						window.getHeight(), hBorder, vBorder, myWidth, myHeight, getRawWidth(), getRawHeight());
+						window.getHeight(), hBorder, vBorder, myWidth, myHeight, frameBufferWidth(), frameBufferHeight());
 			// this.setWidth(myWidth);
 			// this.setHeight(myHeight);
 			window.setWidth(myWidth + hBorder);
@@ -440,30 +338,31 @@ public class JfxScreen extends BaseScreen {
 						javafx.stage.Screen.getPrimary().getVisualBounds().getWidth(),
 						javafx.stage.Screen.getPrimary().getVisualBounds().getHeight(), subScene.getWidth(),
 						subScene.getHeight(), scene.getWidth(), scene.getHeight(), window.getWidth(),
-						window.getHeight(), hBorder, vBorder, myWidth, myHeight, getRawWidth(), getRawHeight());
+						window.getHeight(), hBorder, vBorder, myWidth, myHeight, frameBufferWidth(), frameBufferHeight());
 		}
 
 		if (debug)
-			System.err.printf("Rescaling: subscene %1.2fx%1.2f, scale %1.2f, aspect %.4f (%d), canvas %1.0fx%1.0f%n",
-					subScene.getWidth(), subScene.getHeight(), currentScale, aspects.get(aspect), aspect, getRawWidth(),
-					getRawHeight());
+			System.err.printf("Rescaling: virtual %1.2fx%1.2f subscene %1.2fx%1.2f, scale %1.2f, resscale %1.2f, aspect %.4f (%d), framebuffer %1.0fx%1.0f%n",
+					width(), getHeight(), subScene.getWidth(), subScene.getHeight(), dim.resolutionScale(), dim.scale, aspects.get(aspect), aspect, frameBufferWidth(),
+					frameBufferHeight());
 		for (Node n : root.getChildren()) {
-			n.relocate(Math.floor(subScene.getWidth() / 2),
-					Math.floor(subScene.getHeight() / 2 + (rawCanvasHeight - getRawHeight()) * currentScale / 2));
-			n.setTranslateX(-Math.floor(rawCanvasWidth / 2));
-			n.setTranslateY(-Math.floor(rawCanvasHeight / 2));
 			if (debug)
-				System.err.printf(" *  layout %1.2fx%1.2f, translate %1.2fx%1.2f%n", n.getLayoutX(), n.getLayoutY(),
-						n.getTranslateX(), n.getTranslateY());
-			n.setScaleX(currentScale);
-			n.setScaleY(currentScale);
+				System.err.printf(" *  layout< %1.2fx%1.2f, translate %1.2fx%1.2f, scale %1.2f%n", n.getLayoutX(), n.getLayoutY(),
+						n.getTranslateX(), n.getTranslateY(), n.getScaleX());
+			var h = frameBufferHeight();
+			var dh = dim.fbHeight - h;
+			var dhScaled = dh * dim.scale;
+			dhScaled /= 2;
+			n.relocate(Math.floor(subScene.getWidth() / 2),
+					Math.floor(subScene.getHeight() / 2 + dhScaled));
+			n.setTranslateX(-Math.floor(dim.fbWidth / 2));
+			n.setTranslateY(-Math.floor(dim.fbHeight / 2));
+			if (debug)
+				System.err.printf(" *  layout> %1.2fx%1.2f, translate %1.2fx%1.2f, scale %1.2f%n", n.getLayoutX(), n.getLayoutY(),
+						n.getTranslateX(), n.getTranslateY(), dim.scale);
+			n.setScaleX(dim.scale);
+			n.setScaleY(dim.scale);
 		}
-	}
-
-	@Override
-	public void setAspect(int aspect) {
-		this.aspect = (aspect) % aspects.size();
-		recomputeLayout(false);
 	}
 
 	@Override
@@ -541,6 +440,7 @@ public class JfxScreen extends BaseScreen {
 	public void clipboardPut(String copied) {
 		clipboard.setContent(Map.of(DataFormat.PLAIN_TEXT, copied));
 	}
+
 	/**
 	 * @param keyTypedHandler the keyTypedHandler to set
 	 */
@@ -559,37 +459,8 @@ public class JfxScreen extends BaseScreen {
 		subScene.getScene().setCursor(Cursor.DEFAULT);
 	}
 
-	@Override
-	public void zoomCycle() {
-		scaling++;
-		if (scaling > maxScale)
-			scaling = ((int) scaling) % maxScale;
-		recomputeLayout(true);
-	}
 
-	@Override
-	public void zoomFit() {
-		scaling = 0;
-		recomputeLayout(false);
-	}
 
-	@Override
-	public void zoomIn() {
-		scaling = Math.min(10, currentScale + 0.2);
-		recomputeLayout(false);
-	}
-
-	@Override
-	public void zoomOne() {
-		scaling = 1;
-		recomputeLayout(false);
-	}
-
-	@Override
-	public void zoomOut() {
-		scaling = Math.max(0.1, currentScale - 0.2);
-		recomputeLayout(false);
-	}
 
 	@Override
 	public void flush() {

@@ -1,5 +1,8 @@
 package turtleduck.display.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 
@@ -17,7 +20,7 @@ public abstract class BaseLayer<S extends Screen> implements Layer {
 	}
 
 	public BaseLayer(String layerId, S screen) {
-		this(layerId, screen, screen.getWidth(), screen.getHeight());
+		this(layerId, screen, screen.width(), screen.getHeight());
 	}
 
 	@Override

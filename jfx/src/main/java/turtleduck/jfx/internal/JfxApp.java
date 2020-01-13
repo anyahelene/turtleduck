@@ -114,7 +114,7 @@ public class JfxApp extends Application {
 		setupTimers();
 
 		app = launcher.getApp();
-		screen = JfxScreen.startPaintScene(primaryStage, launcher.getConfig());
+		screen = JfxScreen.startPaintScene(primaryStage, launcher.config());
 		try {
 			app.start(screen);
 		} catch (Throwable ex) {

@@ -118,11 +118,11 @@ public interface Screen extends IdentifiedObject {
 	/** @return the keyTypedHandler */
 	Predicate<KeyEvent> getKeyTypedHandler();
 
-	double getRawHeight();
+	double frameBufferHeight();
 
-	double getRawWidth();
+	double frameBufferWidth();
 
-	double getWidth();
+	double width();
 
 	void hideMouseCursor();
 

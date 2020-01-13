@@ -24,7 +24,7 @@ public class PerspectiveProjection implements Projection {
 	public double X, Y;
 
 	public PerspectiveProjection(Screen screen) {
-		width = screen.getWidth();
+		width = screen.width();
 		height = screen.getHeight();
 		x0 = width / 2;
 		y0 = height / 2;

@@ -1,32 +1,51 @@
 package turtleduck.gl;
 
+import static org.lwjgl.glfw.GLFW.glfwTerminate;
+
 import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
+import turtleduck.display.Screen;
 
 public class GLLauncher implements Launcher {
+	protected int config = Screen.CONFIG_FLAG_DEBUG;
+	protected TurtleDuckApp app;
+	private GLApp glApp;
 
 	@Override
 	public Launcher config(int config) {
-		// TODO Auto-generated method stub
-		return null;
+		this.config = config;
+		return this;
 	}
 
 	@Override
 	public Launcher app(TurtleDuckApp app) {
-		// TODO Auto-generated method stub
-		return null;
+		this.app = app;
+		return this;
 	}
 
 	@Override
 	public void launch(String[] args) {
-		// TODO Auto-generated method stub
-
+		GLApp.launcher = this;
+		glApp = new GLApp(args, app);
+		try {
+			glApp.start();
+			glApp.mainLoop();
+		} catch(Throwable t) {
+			t.printStackTrace();
+		}finally {
+			glApp.dispose();
+			glfwTerminate();
+		}
 	}
 
 	@Override
 	public <T> void launch(T displaySystem, Class<T> displaySystemType) {
-		// TODO Auto-generated method stub
+		throw new IllegalArgumentException("" + displaySystem + " of type " + displaySystemType);
+	}
 
+	@Override
+	public int config() {
+		return config;
 	}
 
 }

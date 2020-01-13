@@ -25,7 +25,7 @@ public class JfxLauncher implements Launcher {
 		return app;
 	}
 
-	public int getConfig() {
+	public int config() {
 		return config;
 	}
 
@@ -37,9 +37,9 @@ public class JfxLauncher implements Launcher {
 	@Override
 	public <T> void launch(T displaySystem, Class<T> displaySystemType) {
 		if (displaySystemType == Stage.class)
-			getApp().start(JfxScreen.startPaintScene((Stage) displaySystem, getConfig()));
+			getApp().start(JfxScreen.startPaintScene((Stage) displaySystem, config()));
 		else
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("" + displaySystem + " of type " + displaySystemType);
 	}
 
 }

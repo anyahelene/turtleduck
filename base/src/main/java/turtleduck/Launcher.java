@@ -12,6 +12,8 @@ public interface Launcher {
 
 	Launcher config(int config);
 
+	int config();
+
 	void launch(String[] args);
 
 	<T> void launch(T displaySystem, Class<T> displaySystemType);
