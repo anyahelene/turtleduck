@@ -3,5 +3,5 @@ module turtleduck.shell {
 
 	requires java.logging;
 	requires jdk.jshell;
-	requires turtleduck.base;
+	requires transitive turtleduck.base;
 }

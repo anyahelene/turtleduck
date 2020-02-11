@@ -24,7 +24,7 @@ public interface Point extends PositionVector {
 	 * @param otherPoint
 	 * @return
 	 */
-	Direction directionTo(PositionVector otherPoint);
+	Bearing bearingTo(PositionVector otherPoint);
 
 	/**
 	 * Calculate direction towards other point
@@ -114,7 +114,7 @@ public interface Point extends PositionVector {
 	 */
 	Point diff(PositionVector other);
 
-	Direction asDirection();
+	Bearing asBearing();
 
 	double asLength();
 

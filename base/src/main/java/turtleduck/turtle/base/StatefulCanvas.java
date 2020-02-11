@@ -5,7 +5,7 @@ import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
-import turtleduck.turtle.Path;
+import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Stroke;
 
 /**
@@ -93,7 +93,7 @@ public abstract class StatefulCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas path(Stroke stroke, Fill fill, Geometry geom, Path path) {
+	public Canvas path(Stroke stroke, Fill fill, Geometry geom, PathBuilder path) {
 		flush();
 		setup(stroke, fill, geom);
 		if (fill != null)
@@ -144,11 +144,11 @@ public abstract class StatefulCanvas extends BaseCanvas {
 
 	protected abstract void strokeShape(IShape shape);
 
-	protected abstract void strokePath(Path path);
+	protected abstract void strokePath(PathBuilder path);
 
 	protected abstract void fillShape(IShape shape);
 
-	protected abstract void fillPath(Path path);
+	protected abstract void fillPath(PathBuilder path);
 
 	protected abstract void loadArray(Point... points);
 	

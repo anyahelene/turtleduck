@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
@@ -30,14 +31,13 @@ import turtleduck.display.MouseCursor;
 import turtleduck.events.KeyEvent;
 import turtleduck.events.KeyCode;
 import turtleduck.turtle.Pen;
-import turtleduck.text.Printer;
 import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
 
 public class JfxScreen extends BaseScreen {
 	private static final javafx.scene.paint.Color JFX_BLACK = javafx.scene.paint.Color.BLACK;
 	private Clipboard clipboard = Clipboard.getSystemClipboard();
-	protected int shortcutKeyMask = KeyEvent.MODIFIER_SHORTCUT;
+	protected int shortcutKeyMask = KeyEvent.SHORTCUT_MASK;
 
 	public static Screen startPaintScene(Stage stage, int configuration) {
 		Dimensions dim = computeDimensions(JfxDisplayInfo.INSTANCE, configuration);
@@ -268,7 +268,7 @@ public class JfxScreen extends BaseScreen {
 		KeyCode code = event.getCode();
 		if (event.isShortcutDown() && event.shortcutModifiers() == 0) {
 			if (code == KeyCode.Q) {
-				System.exit(0);
+				Platform.exit();
 			} else if (code == KeyCode.PLUS) {
 				zoomIn();
 				return true;

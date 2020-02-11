@@ -53,7 +53,7 @@ public class JfxTextWindow extends WindowImpl<JfxScreen> {
 			}
 			TextFont font = elt.attributes().get(Attribute.ATTR_FONT);
 			if (font == null)
-				font = JfxPrinter.FONT_ZXSPECTRUM7;
+				font = JfxTextFont.FONT_ZXSPECTRUM7;
 			if (!s.equals("")) {
 				context.setFill(JfxColor.toJfxPaint(elt.attributes().get(Attribute.ATTR_FOREGROUND)));
 				font.drawTextAt(tdCanvas, (elt.x() - 1) * getCharWidth(), elt.y() * getCharHeight(), s,
@@ -160,7 +160,7 @@ public class JfxTextWindow extends WindowImpl<JfxScreen> {
 //			context.setStroke(null);
 			TextFont font = c.font();
 			if (font == null)
-				font = JfxPrinter.FONT_ZXSPECTRUM7;
+				font = JfxTextFont.FONT_ZXSPECTRUM7;
 			Font f = font.getFont(Font.class);
 
 			font.drawTextAt(tdCanvas, (x - 1) * getCharWidth(), y * getCharHeight(), c.codePoint().stringValue(),

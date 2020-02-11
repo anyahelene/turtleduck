@@ -26,6 +26,7 @@ import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
 import turtleduck.text.BlocksAndBoxes;
 import turtleduck.text.TextFont;
+import turtleduck.text.TextMode;
 import turtleduck.turtle.Canvas;
 
 /**
@@ -48,6 +49,33 @@ import turtleduck.turtle.Canvas;
  *
  */
 public class JfxTextFont implements TextFont {
+	public static TextFont FONT_MONOSPACED = new JfxTextFont("Monospaced", 27.00, TextMode.CHAR_BOX_SIZE, 3.4000,
+			-6.7000, 1.5000, 1.0000, true);
+	public static TextFont FONT_LMMONO = new JfxTextFont("lmmono10-regular.otf", 30.00, TextMode.CHAR_BOX_SIZE, 4.0000,
+			-8.5000, 1.5000, 1.0000, true);
+	public static TextFont FONT_ZXSPECTRUM7 = new JfxTextFont("lmmono10-regular.otf", 22.00, TextMode.CHAR_BOX_SIZE);
+//, 3.1000, -3.8000, 1.0000, 1.0000, true);
+	/**
+	 * ZXSpectrum-7.otf TTF file can be found here: http://users.teilar.gr/~g1951d/
+	 * in this ZIP file: http://users.teilar.gr/~g1951d/Symbola.zip
+	 * <p>
+	 * (Put the extracted Symbola.ttf in src/inf101/v18/gfx/fonts/)
+	 */
+	public static TextFont FONT_SYMBOLA = new JfxTextFont("Symbola.ttf", 26.70, TextMode.CHAR_BOX_SIZE, -0.4000,
+			-7.6000, 1.35000, 1.0000, true);
+	/**
+	 * TTF file can be found here:
+	 * http://www.kreativekorp.com/software/fonts/c64.shtml
+	 */
+	public static TextFont FONT_GIANA = new JfxTextFont("Giana.ttf", 25.00, TextMode.CHAR_BOX_SIZE, 4.6000, -5.0000,
+			1.0000, 1.0000, true);
+	/**
+	 * TTF file can be found here:
+	 * http://www.kreativekorp.com/software/fonts/c64.shtml
+	 */
+	public static TextFont FONT_C64 = new JfxTextFont("PetMe64.ttf", 31.50, TextMode.CHAR_BOX_SIZE, 0.0000, -4.000,
+			1.0000, 1.0000, true);
+
 	private static final String[] searchPath = { "/fonts/", "", "../", "../fonts/", "../../fonts/", "../../../fonts/" };
 	private static final Map<String, String> loadedFonts = new HashMap<>();
 	private static final double thin = 2.0, thick = 4.0;
@@ -219,6 +247,7 @@ public class JfxTextFont implements TextFont {
 		if (font.getName().equals(Font.getDefault().getName())) {
 			System.err.println("TextFont: Default font '" + font.getName() + "' substituted for '" + name + "'");
 		}
+
 		// System.err.println("Found: " + name + "=" + font.getName());
 		loadedFonts.put(name, name);
 		return font;
@@ -365,6 +394,7 @@ public class JfxTextFont implements TextFont {
 		this.yScale = yScale;
 		this.img = new WritableImage((int) squareSize, (int) squareSize);
 	}
+
 	public JfxTextFont(String fileName, double size, double squareSize) {
 		super();
 		this.fileName = fileName;
@@ -378,10 +408,12 @@ public class JfxTextFont implements TextFont {
 		this.xScale = squareSize / measure[0];
 		this.yScale = squareSize / measure[1];
 		this.xTranslate = 0;
-		this.yTranslate = -measure[5]*yScale;
+		this.yTranslate = -measure[5] * yScale;
 		this.img = new WritableImage((int) squareSize, (int) squareSize);
-		System.out.printf("%s: size=%f, sq=%fx%f, x=%f, y=%f, *x=%f, *y=%f\n", fileName, size, squareSize, squareSize, xTranslate, yTranslate, xScale, yScale);
+		System.out.printf("%s: size=%f, sq=%fx%f, x=%f, y=%f, *x=%f, *y=%f\n", fileName, size, squareSize, squareSize,
+				xTranslate, yTranslate, xScale, yScale);
 	}
+
 	/**
 	 * Create a new TextFont.
 	 *
@@ -1070,24 +1102,27 @@ public class JfxTextFont implements TextFont {
 
 		ctx.restore(); // restore 1
 	}
-	
+
 	public double[] measure(String s) {
 		Text text = new Text(s);
 		text.setFont(font);
 //		text.setWrappingWidth(0);
 		text.setLineSpacing(0);
-		
+
 		text.setBoundsType(TextBoundsType.LOGICAL);
 		Bounds bounds = text.getLayoutBounds();
 		System.out.println("Logical bounds of " + s + ":" + bounds);
-		var logical = new double[] {bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY()};
+		var logical = new double[] { bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(),
+				bounds.getMaxX(), bounds.getMaxY() };
 		text.setBoundsType(TextBoundsType.LOGICAL_VERTICAL_CENTER);
 		bounds = text.getLayoutBounds();
-		var center = new double[] {bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY()};
+		var center = new double[] { bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(),
+				bounds.getMaxX(), bounds.getMaxY() };
 		System.out.println("LogVCen bounds of " + s + ":" + bounds);
 		text.setBoundsType(TextBoundsType.VISUAL);
 		bounds = text.getLayoutBounds();
-		var visual = new double[] {bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY()};
+		var visual = new double[] { bounds.getWidth(), bounds.getHeight(), bounds.getMinX(), bounds.getMinY(),
+				bounds.getMaxX(), bounds.getMaxY() };
 		System.out.println("Visual  bounds of " + s + ":" + bounds);
 		System.out.println("bounds of " + s + ": " + Arrays.toString(logical));
 		return logical;

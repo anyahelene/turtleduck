@@ -21,7 +21,7 @@ public class Colors {
 		public static final short LINEAR_MAX = 4095, COMPRESSED_MAX = 255;
 		protected static final double LINEAR_MAX_D = (double) LINEAR_MAX;
 		protected static final double COMPRESSED_MAX_D = (double) COMPRESSED_MAX;
-		public static boolean USE_TABLE = true;
+		public static boolean USE_TABLE = false;
 		private static int INV_GAMMA_TABLE[];
 		private static int GAMMA_TABLE[];
 

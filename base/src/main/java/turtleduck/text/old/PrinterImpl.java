@@ -1,4 +1,4 @@
-package turtleduck.text;
+package turtleduck.text.old;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +10,11 @@ import turtleduck.colors.Paint;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseLayer;
+import turtleduck.text.BlocksAndBoxes;
+import turtleduck.text.CodePoint;
+import turtleduck.text.ControlSequences;
+import turtleduck.text.TextFont;
+import turtleduck.text.TextMode;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
 
@@ -276,7 +281,7 @@ public abstract class PrinterImpl<S extends Screen> extends BaseLayer<S> impleme
 	}
 
 	private void csiFinish() {
-		ControlSequences.applyCsi(this, csiSeq);
+//		ControlSequences.applyCsi(this, csiSeq);
 		csiReset();
 	}
 

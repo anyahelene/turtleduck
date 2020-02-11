@@ -6,9 +6,7 @@ import turtleduck.geometry.Bearing;
 import turtleduck.geometry.DirectionVector;
 
 public class BearingImpl implements DirectionVector, Bearing {
-	static final Bearing DUE_NORTH = absolute(0), DUE_EAST = absolute(90), DUE_SOUTH = absolute(180),
-			DUE_WEST = absolute(270);
-
+	
 	static final double SIGN_LEFT = -1, SIGN_RIGHT = 1;
 	public static final double HALF_PI = Math.PI / 2;
 	public static final double TWO_PI = 2 * Math.PI;
@@ -22,16 +20,21 @@ public class BearingImpl implements DirectionVector, Bearing {
 	private final boolean absolute;
 
 	protected BearingImpl(int angle, boolean absolute) {
-		if(angle < 0)
+		while(angle < 0)
 			angle += TWO_MI;
-		mas = Math.floorMod(angle, TWO_MI);
+		while(angle > TWO_MI)
+			angle -= TWO_MI;
+//		mas = Math.floorMod(angle, TWO_MI);
+		mas = angle;
 		this.absolute = absolute;
 	}
 
 	public static int degreesToMilliArcSec(double angle) {
-		if(angle < 0)
+		while(angle < 0)
 			angle += 360;
-		int m = Math.floorMod(Math.round(angle * MARCSEC), TWO_MI);
+		while(angle > 360)
+			angle -= 360;
+		int m = (int) Math.round(angle * MARCSEC); // Math.floorMod(Math.round(angle * MARCSEC), TWO_MI);
 		return angle < 0 ? -m : m;
 	}
 

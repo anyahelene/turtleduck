@@ -15,7 +15,7 @@ import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
 import turtleduck.turtle.LineBuilder;
-import turtleduck.turtle.Path;
+import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.base.StatefulCanvas;
@@ -127,7 +127,7 @@ public class JfxCanvas extends StatefulCanvas {
 	}
 
 	@Override
-	protected void fillPath(Path path) {
+	protected void fillPath(PathBuilder path) {
 		// TODO Auto-generated method stub
 
 	}
@@ -241,7 +241,7 @@ public class JfxCanvas extends StatefulCanvas {
 	}
 
 	@Override
-	protected void strokePath(Path path) {
+	protected void strokePath(PathBuilder path) {
 		// TODO Auto-generated method stub
 
 	}

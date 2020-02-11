@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import turtleduck.Debug;
 import turtleduck.display.DisplayInfo;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
@@ -183,13 +184,13 @@ public abstract class BaseScreen implements Screen {
 		}
 
 		if (debug) {
-			System.out.printf("Screen setup:%n");
-			System.out.printf("  Display: %.0fx%.0f (raw %.0fx%.0f)%n", dim.dispWidth, dim.dispHeight, dim.rawDispWidth,
+			Debug.printf("Screen setup:%n");
+			Debug.printf("  Display: %.0fx%.0f (raw %.0fx%.0f)%n", dim.dispWidth, dim.dispHeight, dim.rawDispWidth,
 					dim.rawDispHeight);
-			System.out.printf("  Window:  %.0fx%.0f%n", dim.winWidth, dim.winHeight);
-			System.out.printf("  Canvas:  physical %.0fx%.0f, logical %.0fx%.0f%n", dim.fbWidth, dim.fbHeight,
+			Debug.printf("  Window:  %.0fx%.0f%n", dim.winWidth, dim.winHeight);
+			Debug.printf("  Canvas:  physical %.0fx%.0f, logical %.0fx%.0f%n", dim.fbWidth, dim.fbHeight,
 					dim.canvasWidth, dim.canvasHeight);
-			System.out.printf("  Aspect:  %.5f   Scale: %.5f%n", dim.canvasAspect, dim.scale);
+			Debug.printf("  Aspect:  %.5f   Scale: %.5f%n", dim.canvasAspect, dim.scale);
 		}
 		return dim;
 	}

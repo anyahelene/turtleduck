@@ -12,7 +12,7 @@ import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
 import turtleduck.turtle.LineBuilder;
-import turtleduck.turtle.Path;
+import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.impl.LineBuilderImpl;
@@ -80,7 +80,7 @@ public class SvgCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas path(Stroke pen, Fill fill, Geometry geom, Path path) {
+	public Canvas path(Stroke pen, Fill fill, Geometry geom, PathBuilder path) {
 		// TODO Auto-generated method stub
 		return this;
 	}

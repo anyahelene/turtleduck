@@ -5,7 +5,7 @@ import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
-import turtleduck.turtle.Path;
+import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.TurtleControl;
 
@@ -65,7 +65,7 @@ public class DistributionCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas path(Stroke pen, Fill fill, Geometry geom, Path path) {
+	public Canvas path(Stroke pen, Fill fill, Geometry geom, PathBuilder path) {
 		for (Canvas c : canvases)
 			c.path(pen, fill, geom, path);
 		return this;

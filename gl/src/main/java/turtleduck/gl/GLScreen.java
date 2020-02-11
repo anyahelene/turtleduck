@@ -112,11 +112,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	private double fov = 50;
 	private boolean wireframe = false;
 	private int frameBuf;
-
-	protected GLScreen() {
-		super();
-	}
-
+	
 	@Override
 	public void clearBackground() {
 		// TODO Auto-generated method stub

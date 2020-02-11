@@ -1,7 +1,9 @@
 package turtleduck.geometry;
 
-import turtleduck.turtle.CommandRecorder;
-import turtleduck.turtle.TurtleControl;
+import turtleduck.turtle.Path;
+import turtleduck.turtle.PathBuilder;
+import turtleduck.turtle.Path.PointType;
+import turtleduck.turtle.Path.RelativeTo;
 
 public interface Navigator extends PositionVector, DirectionVector {
 
@@ -37,12 +39,14 @@ public interface Navigator extends PositionVector, DirectionVector {
 		return position().distanceTo(dest);
 	}
 
-	Navigator recordTo(TurtleControl journal);
+	PathBuilder beginPath();
+
+	Path endPath();
 
 	static class DefaultNavigator implements Navigator, Cloneable {
 		Point point = Point.point(0, 0), point1 = point, point2 = point;
 		Bearing bearing = Bearing.absolute(0), bearing1 = bearing, bearing2 = bearing;
-		TurtleControl recorder;
+		PathBuilder builder;
 
 		@Override
 		public Bearing bearing() {
@@ -77,9 +81,8 @@ public interface Navigator extends PositionVector, DirectionVector {
 			if (distance != 0) {
 				point = point.add(bearing, distance);
 			}
-			if(recorder != null)
-			recorder.go(bearing(), position(1), distance, position());
-
+			if (builder != null)
+				builder.add(bearing, point, PointType.POINT);
 
 			return this;
 		}
@@ -90,8 +93,6 @@ public interface Navigator extends PositionVector, DirectionVector {
 			bearing2 = bearing1;
 			bearing1 = bearing;
 			bearing = bearing.add(b);
-			if(recorder != null)
-			recorder.turn(bearing1, b.azimuth(), bearing);
 		}
 
 		@Override
@@ -177,9 +178,17 @@ public interface Navigator extends PositionVector, DirectionVector {
 		}
 
 		@Override
-		public Navigator recordTo(TurtleControl recorder) {
-			this.recorder = recorder;
-			return this;
+		public PathBuilder beginPath() {
+			builder = PathBuilder.beginPath(point, bearing, RelativeTo.ORIGIN);
+			return builder;
+		}
+		@Override
+		public Path endPath() {
+			if(builder == null)
+				throw new IllegalStateException("endPath() without beginPath()");
+			Path path = builder.done();
+			builder = null;
+			return path;
 		}
 
 		@Override

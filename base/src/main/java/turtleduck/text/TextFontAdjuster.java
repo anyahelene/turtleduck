@@ -70,7 +70,7 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 	private void printHelp() {
 		printer.at(1, 1);
 		printer.autoScroll(false);
-		printer.println("  " + PrinterImpl.center("TextFontAdjuster", 36) + "  ");
+		printer.println("  " + center("TextFontAdjuster", 36) + "  ");
 		printer.println("                                        ");
 		printer.println("                                        ");
 		printer.println("                                        ");
@@ -231,6 +231,12 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 
 	@Override
 	public void bigStep(double deltaTime) {
+	}
+
+	public static String center(String s, int width) {
+		for (; s.length() < width; s = " " + s + " ")
+			;
+		return s;
 	}
 
 }

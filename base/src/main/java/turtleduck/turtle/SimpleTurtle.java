@@ -236,10 +236,6 @@ public interface SimpleTurtle extends IdentifiedObject {
 	
 	SimpleTurtle parent();
 	
-	SimpleTurtle startRecording();
-	
-	TurtleControl endRecording();
-	
 	/**
 	 * @return The current position of the turtle.
 	 */

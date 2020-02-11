@@ -51,7 +51,7 @@ public interface Canvas extends IdentifiedObject {
 
 	Canvas shape(Stroke pen, Fill fill, Geometry geom, IShape shape);
 
-	Canvas path(Stroke pen, Fill fill, Geometry geom, Path path);
+	Canvas path(Stroke pen, Fill fill, Geometry geom, PathBuilder path);
 
 	Canvas clear();
 

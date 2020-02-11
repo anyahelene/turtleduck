@@ -7,10 +7,7 @@ import turtleduck.display.Screen;
 import turtleduck.events.KeyCode;
 import turtleduck.events.KeyEvent;
 import turtleduck.shell.TShell;
-import turtleduck.text.DemoPages;
-import turtleduck.text.Printer;
 import turtleduck.text.TextCursor;
-import turtleduck.text.TextFontAdjuster;
 import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
 

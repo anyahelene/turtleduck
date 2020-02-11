@@ -1,5 +1,9 @@
 package turtleduck.turtle.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import turtleduck.colors.Paint;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Navigator;
 import turtleduck.geometry.Point;
@@ -10,6 +14,8 @@ import turtleduck.turtle.CommandRecorder;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.IShape;
 import turtleduck.turtle.LineBuilder;
+import turtleduck.turtle.Path;
+import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.ShapeImpl;
@@ -28,7 +34,8 @@ public class TurtleDuckImpl implements TurtleDuck {
 	protected final TurtleControl mainJournal;
 	protected final Canvas canvas;
 	protected final TurtleDuckImpl parent;
-	protected TurtleControl recorder;
+	protected PathBuilder builder;
+	protected final List<Path> paths = new ArrayList<>();
 	private boolean drawing = false, moving = false;
 	private String id;
 	private int nSpawns = 0;
@@ -41,7 +48,6 @@ public class TurtleDuckImpl implements TurtleDuck {
 		this.journal = journal;
 		parent = null;
 		this.nav = new Navigator.DefaultNavigator();
-		nav.recordTo(journal);
 	}
 
 	public TurtleDuckImpl(TurtleDuckImpl td) {
@@ -57,7 +63,6 @@ public class TurtleDuckImpl implements TurtleDuck {
 		penBuilder = null;
 		mainJournal = td.mainJournal.child();
 		journal = td.journal == td.mainJournal ? mainJournal : td.journal.child();
-		nav.recordTo(journal);
 	}
 
 	@Override
@@ -117,24 +122,41 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	protected void penDown() {
-		if(moving) {
+		if (moving) {
 			moving = false;
-			journal.end();
+			if (builder != null) {
+//				paths.add(nav.endPath());
+//				System.out.println(paths.get(paths.size() - 1));
+				builder = null;
+			}
 		}
 		if (!drawing) {
 			drawing = true;
-			journal.begin(pen(), null);
+			builder = nav.beginPath();
+			builder.color(pen.strokePaint());
+			builder.width(pen.strokeWidth());
 		}
 	}
 
 	protected void penUp() {
 		if (drawing) {
 			drawing = false;
-			journal.end();
+			if (builder != null) {
+				Path path = nav.endPath();
+//				paths.add(path);
+				Point from = path.first();
+				for (int i = 1; i < path.size(); i++) {
+					Point to = path.point(i);
+					Pen p = pen.change().strokePaint(path.pointColor(i)).strokeWidth(path.pointWidth(i)).done();
+					canvas.line(p, null, from, to);
+					from = to;
+				}
+				builder = null;
+			}
 		}
-		if(!moving) {
+		if (!moving) {
 			moving = true;
-			journal.begin(null, null);
+			builder = nav.beginPath();
 		}
 	}
 
@@ -290,8 +312,10 @@ public class TurtleDuckImpl implements TurtleDuck {
 		if (pen == null) {
 			pen = penBuilder.done();
 			penBuilder = null;
-			if(drawing)
-				journal.pen(pen, null);
+			if (drawing) {
+				builder.color(pen.strokePaint());
+				builder.width(pen.strokeWidth());
+			}
 		}
 		return pen;
 	}
@@ -308,9 +332,11 @@ public class TurtleDuckImpl implements TurtleDuck {
 		if (newPen == null)
 			throw new IllegalArgumentException("Argument must not be null");
 		pen = newPen;
-		if(drawing)
-			journal.pen(pen, null);
-	
+		if (drawing) {
+			builder.color(pen.strokePaint());
+			builder.width(pen.strokeWidth());
+		}
+
 		return this;
 	}
 
@@ -335,38 +361,16 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	@Override
-	public SimpleTurtle startRecording() {
-		if (recorder != null)
-			throw new IllegalStateException("Alreadyy recording commands!");
-		penUp();
-		recorder = new CommandRecorder();
-		journal = recorder;
-		nav.recordTo(journal);
-		return this;
-	}
-
-	@Override
-	public TurtleControl endRecording() {
-		if (recorder == null)
-			throw new IllegalStateException("Not currently recording commands!");
-		TurtleControl r = recorder;
-		recorder = null;
-		journal = mainJournal;
-		nav.recordTo(journal);
-		return r;
-	}
-
-	@Override
 	public TurtleDuck pen(Stroke newPen) {
-		if(newPen instanceof Pen)
-			pen((Pen)newPen);
+		if (newPen instanceof Pen)
+			pen((Pen) newPen);
 		return this;
 	}
 
 	@Override
 	public TurtleDuck pen(Fill newPen) {
-		if(newPen instanceof Pen)
-			pen((Pen)newPen);
+		if (newPen instanceof Pen)
+			pen((Pen) newPen);
 		return this;
 	}
 

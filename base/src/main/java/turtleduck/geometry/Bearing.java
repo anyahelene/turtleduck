@@ -3,6 +3,9 @@ package turtleduck.geometry;
 import turtleduck.geometry.impl.BearingImpl;
 
 public interface Bearing {
+	static final Bearing DUE_NORTH = absolute(0), DUE_EAST = absolute(90), DUE_SOUTH = absolute(180),
+			DUE_WEST = absolute(270);
+	static final Bearing FORWARD = relative(0), RIGHT = relative(90), BACK = relative(180), LEFT = relative(270);
 	public static Bearing absolute(double a) {
 		return BearingImpl.absolute(a);
 	}

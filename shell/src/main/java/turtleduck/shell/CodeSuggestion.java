@@ -8,7 +8,7 @@ import jdk.jshell.SourceCodeAnalysis.CompletionInfo;
 import jdk.jshell.SourceCodeAnalysis.Documentation;
 import jdk.jshell.SourceCodeAnalysis.QualifiedNames;
 import jdk.jshell.SourceCodeAnalysis.Suggestion;
-import turtleduck.text.Printer;
+import turtleduck.text.TextCursor;
 
 public class CodeSuggestion implements Comparable<CodeSuggestion>, Suggestion {
 
@@ -48,7 +48,7 @@ public class CodeSuggestion implements Comparable<CodeSuggestion>, Suggestion {
 		return cont;
 	}
 
-	public void printContinuation(Printer printer) {
+	public void printContinuation(TextCursor printer) {
 		int replace = input.length() - anchor;
 		printer.print(cont.substring(replace));
 	}

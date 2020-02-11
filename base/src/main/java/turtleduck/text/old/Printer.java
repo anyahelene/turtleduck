@@ -1,9 +1,12 @@
-package turtleduck.text;
+package turtleduck.text.old;
 
 import java.util.function.BiFunction;
 
 import turtleduck.colors.Paint;
 import turtleduck.display.Layer;
+import turtleduck.text.CodePoint;
+import turtleduck.text.TextFont;
+import turtleduck.text.TextMode;
 
 public interface Printer extends Layer {
 

@@ -1,5 +1,6 @@
 package turtleduck.terminal;
 
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -9,10 +10,10 @@ import java.util.stream.Collectors;
 
 import turtleduck.text.CodePoint;
 import turtleduck.text.ControlSequences;
-import turtleduck.text.Printer;
+import turtleduck.text.TextCursor;
 
 public class TerminalPrintStream extends PrintStreamWrapper {
-	private final Printer dest;
+	private final TextCursor dest;
 	private final ByteBuffer bytes = ByteBuffer.allocate(4);
 	private int bytesExpected = 0;
 	private int utf8cp = 0;
@@ -20,7 +21,7 @@ public class TerminalPrintStream extends PrintStreamWrapper {
 	private int csiMode = 0;
 	private boolean csiEnabled;
 
-	public TerminalPrintStream(Printer destination) {
+	public TerminalPrintStream(TextCursor destination) {
 		dest = destination;
 	}
 

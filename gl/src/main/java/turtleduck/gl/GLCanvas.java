@@ -10,7 +10,7 @@ import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
-import turtleduck.turtle.Path;
+import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.base.BaseCanvas;
@@ -89,7 +89,7 @@ public class GLCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas path(Stroke pen, Fill fill, Geometry geom, Path path) {
+	public Canvas path(Stroke pen, Fill fill, Geometry geom, PathBuilder path) {
 		// TODO Auto-generated method stub
 		return null;
 	}

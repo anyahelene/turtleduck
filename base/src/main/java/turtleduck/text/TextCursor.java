@@ -417,5 +417,5 @@ public interface TextCursor {
 	};
 
 	TextCursor write(CodePoint codePoint, Attributes attrs);
-
+	
 }

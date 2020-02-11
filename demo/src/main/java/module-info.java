@@ -1,6 +1,6 @@
 module turtleduck.demo {
 	exports turtleduck.demo;
-	requires turtleduck.base;
+	requires transitive turtleduck.base;
 	requires turtleduck.jfx;
 	requires turtleduck.shell;
 }

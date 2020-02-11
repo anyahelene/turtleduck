@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>no.uib.ii</groupId>
+	<groupId>org.nuthatchery</groupId>
 	<artifactId>turtleduck</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -12,28 +12,17 @@
 	<url>http://maven.apache.org</url>
 
 	<properties>
-		<project.java.version>11</project.java.version>
-		<maven.compiler.target>11</maven.compiler.target>
-		<maven.compiler.source>11</maven.compiler.source>
+		<project.java.version>13</project.java.version>
+		<maven.compiler.target>13</maven.compiler.target>
+		<maven.compiler.source>13</maven.compiler.source>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<junit.jupiter.version>5.5.2</junit.jupiter.version>
+		<teavm.version>0.6.1</teavm.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
-			<dependency>
-				<groupId>com.google.gwt</groupId>
-				<artifactId>gwt</artifactId>
-				<version>2.8.2</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>javax.servlet</groupId>
-				<artifactId>javax.servlet-api</artifactId>
-				<version>3.1.0</version>
-			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>turtleduck-base</artifactId>
@@ -91,6 +80,57 @@
 			</plugin>
 		</plugins>
 		<pluginManagement>
+			<!-- Configure TeaVM -->
+			<plugins>
+				<plugin>
+					<groupId>org.teavm</groupId>
+					<artifactId>teavm-maven-plugin</artifactId>
+					<version>${teavm.version}</version>
+					<executions>
+						<execution>
+							<id>web-client</id>
+							<goals>
+								<goal>compile</goal>
+							</goals>
+							<!-- phase>process-classes</phase -->
+							<configuration>
+								<!-- Directory where TeaVM should put generated files. This configuration 
+									conforms to the settings of the WAR plugin -->
+								<targetDirectory>${project.build.directory}/generated/js/teavm</targetDirectory>
+
+								<!-- Main class, containing static void main(String[]) -->
+								<mainClass>turtleduck.tea.Client</mainClass>
+
+								<!-- Whether TeaVM should produce minified JavaScript. Can reduce 
+									JavaScript file size more than two times. TODO: set to true -->
+								<minifying>false</minifying>
+								<!-- Whether TeaVM should produce debug information for its built-in 
+									debugger -->
+								<debugInformationGenerated>true</debugInformationGenerated>
+
+								<!-- Whether TeaVM should produce source maps file -->
+								<sourceMapsGenerated>true</sourceMapsGenerated>
+
+								<!-- Whether TeaVM should also put source files into output directory, 
+									for compatibility with source maps -->
+								<sourceFilesCopied>true</sourceFilesCopied>
+
+								<!-- Optimization level. Valid values are: SIMPLE, ADVANCED, FULL -->
+								<optimizationLevel>ADVANCED</optimizationLevel>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>exec-maven-plugin</artifactId>
+					<version>1.6.0</version>
+					<configuration>
+						<mainClass>none</mainClass>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+			</plugins>
 		</pluginManagement>
 	</build>
 
@@ -100,5 +140,6 @@
 		<module>demo</module>
 		<module>shell</module>
 		<module>gl</module>
+		<module>tea</module>
 	</modules>
 </project>

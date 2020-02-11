@@ -19,23 +19,24 @@ import turtleduck.colors.Paint;
 @SuppressWarnings("unused")
 public class ControlSequences {
 	private static final boolean DEBUG = false;
-
+	private static int savedX = 1, savedY = 1;
+	
 	static class CsiPattern {
-		public static CsiPattern compile0(String pat, String desc, Consumer<Printer> handler) {
+		public static CsiPattern compile0(String pat, String desc, Consumer<TextCursor> handler) {
 			CsiPattern csiPattern = new CsiPattern(pat, 0, 0, desc, handler, null, null);
 			patterns.put(csiPattern.getCommandLetter(), csiPattern);
 			return csiPattern;
 		}
 
 		public static CsiPattern compile1(String pat, int defaultArg, String desc,
-				BiConsumer<Printer, Integer> handler) {
+				BiConsumer<TextCursor, Integer> handler) {
 			CsiPattern csiPattern = new CsiPattern(pat, defaultArg, 1, desc, null, handler, null);
 			patterns.put(csiPattern.getCommandLetter(), csiPattern);
 			return csiPattern;
 		}
 
 		public static CsiPattern compileN(String pat, int defaultArg, int numArgs, String desc,
-				BiConsumer<Printer, List<Integer>> handler) {
+				BiConsumer<TextCursor, List<Integer>> handler) {
 			CsiPattern csiPattern = new CsiPattern(pat, defaultArg, numArgs, desc, null, null, handler);
 			patterns.put(csiPattern.getCommandLetter(), csiPattern);
 			return csiPattern;
@@ -45,16 +46,16 @@ public class ControlSequences {
 		private Pattern pattern;
 		private int defaultArg = 0;
 		private String desc;
-		private Consumer<Printer> handler0;
+		private Consumer<TextCursor> handler0;
 
-		private BiConsumer<Printer, Integer> handler1;
+		private BiConsumer<TextCursor, Integer> handler1;
 
-		private BiConsumer<Printer, List<Integer>> handlerN;
+		private BiConsumer<TextCursor, List<Integer>> handlerN;
 
 		private int numArgs;
 
-		public CsiPattern(String pat, int defaultArg, int numArgs, String desc, Consumer<Printer> handler0,
-				BiConsumer<Printer, Integer> handler1, BiConsumer<Printer, List<Integer>> handlerN) {
+		public CsiPattern(String pat, int defaultArg, int numArgs, String desc, Consumer<TextCursor> handler0,
+				BiConsumer<TextCursor, Integer> handler1, BiConsumer<TextCursor, List<Integer>> handlerN) {
 			this.patStr = pat;
 			this.pattern = Pattern.compile(pat);
 			this.defaultArg = defaultArg;
@@ -73,7 +74,7 @@ public class ControlSequences {
 			return desc;
 		}
 
-		public boolean match(Printer printer, String input) {
+		public boolean match(TextCursor printer, String input) {
 			Matcher matcher = pattern.matcher(input);
 			if (matcher.matches()) {
 				String argStr = matcher.groupCount() > 0 ? matcher.group(1) : "";
@@ -110,81 +111,83 @@ public class ControlSequences {
 
 	private static final Map<String, CsiPattern> patterns = new HashMap<>();
 	private static final CsiPattern CUU = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)A", 1, "cursor up",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				p.move(0, -i);
 			});
 	private static final CsiPattern CUD = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)B", 1, "cursor down",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				p.move(0, i);
 			});
 	private static final CsiPattern CUF = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)C", 1, "cursor forward",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				p.move(i, 0);
 			});
 	private static final CsiPattern CUB = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)D", 1, "cursor back",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				p.move(-i, 0);
 			});
 	private static final CsiPattern CNL = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)E", 1, "cursor next line",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				p.move(0, i);
 				p.beginningOfLine();
 			});
 	private static final CsiPattern CPL = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)F", 1, "cursor previous line",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				p.move(0, -i);
 				p.beginningOfLine();
 			});
 	private static final CsiPattern CHA = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)G", 1,
-			"cursor horizontal absolute", (Printer p, Integer i) -> {
-				p.moveTo(i, p.getY());
+			"cursor horizontal absolute", (TextCursor p, Integer i) -> {
+				p.at(i, p.y());
 			});
 	private static final CsiPattern CUP = CsiPattern.compileN("\u001b\\\u005b([0-9;]*)H", 1, 2, "cursor position",
-			(Printer p, List<Integer> i) -> {
-				p.moveTo(i.get(1), i.get(0));
+			(TextCursor p, List<Integer> i) -> {
+				p.at(i.get(1), i.get(0));
 			});
 	private static final CsiPattern ED = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)J", 0, "erase in display",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				if (i == 2)
-					p.clear();
+					p.clearPage();
 				else if(i == 3)
-					p.clear(); // TODO: and clear scrollback
+					p.clearPage(); // TODO: and clear scrollback
 				else
 					logger().warning(() -> "Unimplemented: ED");
 			});
 	private static final CsiPattern EK = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)K", 0, "erase in line",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
+				p.clearLine(i);
 				logger().warning(() -> "Unimplemented: EK");
 			});
 	private static final CsiPattern SU = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)S", 1, "scroll up",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				p.scroll(i);
 			});
 	private static final CsiPattern SD = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)T", 1, "scroll down",
-			(Printer p, Integer i) -> {
+			(TextCursor p, Integer i) -> {
 				p.scroll(-i);
 			});
 	private static final CsiPattern HVP = CsiPattern.compileN("\u001b\\\u005b([0-9;]*)f", 1, 2,
-			"horizontal vertical position", (Printer p, List<Integer> l) -> {
-				p.moveTo(l.get(1), l.get(0));
+			"horizontal vertical position", (TextCursor p, List<Integer> l) -> {
+				p.at(l.get(1), l.get(0));
 			});
-	private static final CsiPattern AUX_ON = CsiPattern.compile0("\u001b\\\u005b5i", "aux port on", (Printer p) -> {
+	private static final CsiPattern AUX_ON = CsiPattern.compile0("\u001b\\\u005b5i", "aux port on", (TextCursor p) -> {
 		logger().warning(() -> "Unimplemented: AUX on");
 	});
-	private static final CsiPattern AUX_OFF = CsiPattern.compile0("\u001b\\\u005b4i", "aux port off", (Printer p) -> {
+	private static final CsiPattern AUX_OFF = CsiPattern.compile0("\u001b\\\u005b4i", "aux port off", (TextCursor p) -> {
 		logger().warning(() -> "Unimplemented: AUX off");
 	});
 	private static final CsiPattern DSR = CsiPattern.compile0("\u001b\\\u005b6n", "device status report",
-			(Printer p) -> {
+			(TextCursor p) -> {
 				if(p.hasInput())
-				p.sendInput("ESC[" + p.getY() + ";" + p.getX() + "R\n");
+				p.sendInput("ESC[" + p.y() + ";" + p.x() + "R\n");
 			});
-	private static final CsiPattern SCP = CsiPattern.compile0("\u001b\\\u005bs", "save cursor position", (Printer p) -> {
-		p.saveCursor();
+	private static final CsiPattern SCP = CsiPattern.compile0("\u001b\\\u005bs", "save cursor position", (TextCursor p) -> {
+		savedX = p.x();
+		savedY = p.y();
 	});
 	private static final CsiPattern RCP = CsiPattern.compile0("\u001b\\\u005bu", "restore cursor position",
-			(Printer p) -> {
-				p.restoreCursor();
+			(TextCursor p) -> {
+				p.at(savedX, savedY);
 			});
 	private static final Map<String,CsiPattern> KEYS = new HashMap<>();
 	private static final int F = 0xFF, H = 0xAA, L = 0x55, OFF = 0x00;
@@ -230,7 +233,7 @@ public class ControlSequences {
 				};
 		
 		CsiPattern vtKeys = new CsiPattern("\u001b\\\u005b([0-9;]*)~", 1, 2, "Keypress", null, null,
-				(Printer p, List<Integer> args) -> {
+				(TextCursor p, List<Integer> args) -> {
 					int k = args.get(0);
 					int i = args.get(1);
 			if(--i < 0)
@@ -269,7 +272,7 @@ public class ControlSequences {
 
 	}
 	private static final CsiPattern SGR = CsiPattern.compileN("\u001b\\\u005b([0-9;]*)m", 0, -1,
-			"select graphics rendition", (Printer p, List<Integer> l) -> {
+			"select graphics rendition", (TextCursor p, List<Integer> l) -> {
 				if (l.size() == 0) {
 					l.add(0);
 				}
@@ -281,33 +284,59 @@ public class ControlSequences {
 				while (it.hasNext()) {
 					int i = it.next();
 					if (i == 0) {
-						p.setVideoAttrs(0);
-						p.setInk(PALETTE_VGA[7]);
-						p.setBackground(PALETTE_VGA[0]);
-					} else if (i < 10) {
-						p.setVideoAttrEnabled(attrs[i]);
-					} else if (i >= 20 && i < 30) {
-						p.setVideoAttrDisabled(attrs[i] - 20);
+						p.resetAttrs();
+//						p.foreground(PALETTE_VGA[7]);
+//						p.background(PALETTE_VGA[0]);
+					} else if (i < 30 && (i < 10 || i >= 20)) {
+						boolean effect = i < 10;
+						switch(i % 10) {
+						case 1:
+							p.attributes().change().bold(effect).done();
+							break;
+						case 2:
+							//p.attributes().change().faint(effect).done();
+							break;
+						case 3:
+							p.attributes().change().italic(effect).done();
+							break;
+						case 4:
+							p.attributes().change().underline(effect).done();
+							break;
+						case 5:
+							p.attributes().change().blink(effect).done();
+							break;
+						case 6:
+							p.attributes().change().blink(effect).done();
+							break;
+						case 7:
+							p.attributes().change().inverse(effect).done();
+							break;
+						case 8: // conceal
+							break;
+						case 9:
+							p.attributes().change().overstrike(effect).done();
+							break;
+						}
 					} else if (i >= 30 && i < 38) {
-						p.setInk(PALETTE_VGA[i - 30]);
+						p.foreground(PALETTE_VGA[i - 30]);
 					} else if (i == 38) {
-						p.setInk(decode256(it));
+						p.foreground(decode256(it));
 					} else if (i == 29) {
-						p.setInk(Colors.WHITE);
+						p.foreground(Colors.WHITE);
 					} else if (i >= 40 && i < 48) {
-						p.setBackground(PALETTE_VGA[i - 40]);
+						p.background(PALETTE_VGA[i - 40]);
 					} else if (i == 48) {
-						p.setInk(decode256(it));
+						p.foreground(decode256(it));
 					} else if (i == 49) {
-						p.setBackground(Colors.BLACK);
+						p.background(Colors.BLACK);
 					} else if (i >= 90 && i < 98) {
-						p.setInk(PALETTE_VGA[8 + i - 90]);
+						p.foreground(PALETTE_VGA[8 + i - 90]);
 					} else if (i >= 100 && i < 108) {
-						p.setBackground(PALETTE_VGA[8 + i - 100]);
+						p.background(PALETTE_VGA[8 + i - 100]);
 					} else if (i == 53) {
-						p.setVideoAttrEnabled(TextFont.ATTR_OVERLINE);
+						p.attributes().change().overline(true).done();
 					} else if (i == 55) {
-						p.setVideoAttrEnabled(TextFont.ATTR_OVERLINE);
+						p.attributes().change().overline(false).done();
 					}
 				}
 			});
@@ -317,7 +346,7 @@ public class ControlSequences {
 	}
 	private static void keyPattern(String ch, String key) {
 		CsiPattern csiPattern = new CsiPattern("\u001b\\\u005b([0-9;]*)" + ch, 1, 1, key + " key", null,
-				(Printer p, Integer i) -> {
+				(TextCursor p, Integer i) -> {
 			if(--i < 0)
 				i = 0;
 			i = i & 0xf;
@@ -351,7 +380,7 @@ public class ControlSequences {
 		return b.toString();
 	}
 
-	public static boolean applyCsi(Printer printer, String csi) {
+	public static boolean applyCsi(TextCursor printer, String csi) {
 		CsiPattern csiPattern = patterns.get(csi.substring(csi.length() - 1));
 		// System.out.println("Applying CSI: " + csi.replaceAll("\u001b", "ESC"));
 

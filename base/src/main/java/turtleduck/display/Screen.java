@@ -6,7 +6,6 @@ import turtleduck.turtle.Pen;
 import turtleduck.colors.Paint;
 import turtleduck.events.KeyEvent;
 import turtleduck.objects.IdentifiedObject;
-import turtleduck.text.Printer;
 import turtleduck.text.TextWindow;
 
 public interface Screen extends IdentifiedObject {

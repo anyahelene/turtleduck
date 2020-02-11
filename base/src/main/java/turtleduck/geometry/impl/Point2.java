@@ -15,8 +15,8 @@ public class Point2 implements Point {
 	}
 
 	@Override
-	public Direction directionTo(PositionVector otherPoint) {
-		return new Direction(otherPoint.x() - x(), otherPoint.y() - y(), otherPoint.z() - z());
+	public Bearing bearingTo(PositionVector otherPoint) {
+		return Bearing.absolute(otherPoint.x() - x(), otherPoint.y() - y());
 	}
 
 	@Override
@@ -44,8 +44,8 @@ public class Point2 implements Point {
 	}
 
 	@Override
-	public Direction asDirection() {
-		return new Direction(x(), y(), z());
+	public Bearing asBearing() {
+		return Bearing.absolute(x(), y());
 	}
 
 	@Override
