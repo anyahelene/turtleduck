@@ -20,6 +20,6 @@ public class Client  {
 		Screen screen = NativeTDisplayInfo.INSTANCE.startPaintScene(null, 0);
 		Layer layer = screen.createPainter();
 		Canvas canvas = layer.canvas();
-		canvas.line(canvas.createPen(), null, Point.point(0, 0), Point.point(300, 100));
+		canvas.line(canvas.createPen(), Point.point(0, 0), Point.point(300, 100));
 	}
 }

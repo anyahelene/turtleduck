@@ -12,7 +12,6 @@ import turtleduck.jfx.internal.JfxApp;
 import turtleduck.jfx.internal.JfxControl;
 import turtleduck.jfx.internal.PointList;
 import turtleduck.turtle.Fill;
-import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
 import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.PathBuilder;
@@ -83,9 +82,6 @@ public class JfxCanvas extends StatefulCanvas {
 		contextOps += 1;
 	}
 
-	@Override
-	protected void changeGeometry(Geometry geom) {
-	}
 
 	@Override
 	protected void changeStroke(Stroke stroke) {
@@ -141,9 +137,9 @@ public class JfxCanvas extends StatefulCanvas {
 		fillOps++;
 	}
 
-	public void fillPolygon(Fill fill, Geometry geom, PointList points) {
+	public void fillPolygon(Fill fill, PointList points) {
 
-		setup(null, fill, geom);
+		setup(null, fill);
 		synchronized (context) {
 			context.fillPolygon(points.xs(), points.ys(), points.size());
 		}
@@ -256,8 +252,8 @@ public class JfxCanvas extends StatefulCanvas {
 		lineSegments += xyLen + 1;
 	}
 
-	public void strokePolygon(Stroke stroke, Geometry geom, PointList points) {
-		setup(stroke, null, geom);
+	public void strokePolygon(Stroke stroke, PointList points) {
+		setup(stroke, null);
 		synchronized (context) {
 			context.strokePolygon(points.xs(), points.ys(), points.size());
 		}
@@ -276,9 +272,9 @@ public class JfxCanvas extends StatefulCanvas {
 		lineSegments += xyLen;
 	}
 
-	public void strokePolyline(Stroke stroke, Geometry geom, PointList points) {
+	public void strokePolyline(Stroke stroke, PointList points) {
 		synchronized (context) {
-			setup(stroke, null, geom);
+			setup(stroke, null);
 			context.strokePolyline(points.xs(), points.ys(), points.size());
 		}
 		totalOps++;

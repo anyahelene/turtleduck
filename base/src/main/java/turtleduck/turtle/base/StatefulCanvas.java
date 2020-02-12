@@ -3,7 +3,6 @@ package turtleduck.turtle.base;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
-import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
 import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Stroke;
@@ -16,39 +15,37 @@ public abstract class StatefulCanvas extends BaseCanvas {
 
 	private Stroke currentStroke;
 	private Fill currentFill;
-	private Geometry currentGeometry;
 
 	public StatefulCanvas(String id) {
 		super(id);
 	}
 
-	protected void setup(Stroke stroke, Fill fill, Geometry geom) {
+	protected void setup(Stroke stroke, Fill fill) {
 		if (stroke != null && stroke != currentStroke)
 			changeStroke(stroke);
 		if (fill != null && fill != currentFill)
 			changeFill(fill);
-		if (geom != null && geom != currentGeometry)
-			changeGeometry(geom);
+		
 	}
 
 	@Override
-	public Canvas dot(Stroke stroke, Geometry geom, Point point) {
-		setup(stroke, null, geom);
+	public Canvas dot(Stroke stroke, Point point) {
+		setup(stroke, null);
 		strokeDot(point);
 		return this;
 	}
 
 	@Override
-	public Canvas line(Stroke stroke, Geometry geom, Point from, Point to) {
-		setup(stroke, null, geom);
+	public Canvas line(Stroke stroke, Point from, Point to) {
+		setup(stroke, null);
 		strokeLine(from, to);
 		return this;
 	}
 
 	@Override
-	public Canvas polyline(Stroke stroke, Fill fill, Geometry geom, Point... points) {
+	public Canvas polyline(Stroke stroke, Fill fill, Point... points) {
 		flush();
-		setup(stroke, fill, geom);
+		setup(stroke, fill);
 		loadArray(points);
 		if (fill != null)
 			fillPolyline();
@@ -58,9 +55,9 @@ public abstract class StatefulCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas polygon(Stroke stroke, Fill fill, Geometry geom, Point... points) {
+	public Canvas polygon(Stroke stroke, Fill fill, Point... points) {
 		flush();
-		setup(stroke, fill, geom);
+		setup(stroke, fill);
 		loadArray(points);
 		if (fill != null)
 			fillPolygon();
@@ -70,9 +67,9 @@ public abstract class StatefulCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas triangles(Stroke stroke, Fill fill, Geometry geom, Point... points) {
+	public Canvas triangles(Stroke stroke, Fill fill, Point... points) {
 		flush();
-		setup(stroke, fill, geom);
+		setup(stroke, fill);
 		loadArray(points);
 		if (fill != null)
 			fillTriangles();
@@ -82,9 +79,9 @@ public abstract class StatefulCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas shape(Stroke stroke, Fill fill, Geometry geom, IShape shape) {
+	public Canvas shape(Stroke stroke, Fill fill, IShape shape) {
 		flush();
-		setup(stroke, fill, geom);
+		setup(stroke, fill);
 		if (fill != null)
 			fillShape(shape);
 		if (stroke != null)
@@ -93,9 +90,9 @@ public abstract class StatefulCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas path(Stroke stroke, Fill fill, Geometry geom, PathBuilder path) {
+	public Canvas path(Stroke stroke, Fill fill, PathBuilder path) {
 		flush();
-		setup(stroke, fill, geom);
+		setup(stroke, fill);
 		if (fill != null)
 			fillPath(path);
 		if (stroke != null)
@@ -112,7 +109,7 @@ public abstract class StatefulCanvas extends BaseCanvas {
 	@Override
 	public Canvas clear(Fill fill) {
 		flush();
-		setup(null, fill, null);
+		setup(null, fill);
 		fillAll();
 		return this;
 	}
@@ -120,8 +117,6 @@ public abstract class StatefulCanvas extends BaseCanvas {
 	protected abstract void changeStroke(Stroke stroke);
 
 	protected abstract void changeFill(Fill fill);
-
-	protected abstract void changeGeometry(Geometry geom);
 
 	protected abstract void strokeDot(Point point);
 

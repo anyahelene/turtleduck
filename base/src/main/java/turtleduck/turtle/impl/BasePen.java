@@ -2,11 +2,8 @@ package turtleduck.turtle.impl;
 
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
-import turtleduck.colors.Paint;
-import turtleduck.geometry.Point;
 import turtleduck.geometry.Projection;
 import turtleduck.geometry.impl.OrthographicProjection;
-import turtleduck.turtle.IShape;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 
@@ -15,7 +12,9 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	protected Projection projection;
 	protected Paint stroke, fill;
 	protected boolean frozen = false;
-
+	protected SmoothType smoothType;
+	protected double smoothAmount;
+	
 	public BasePen() {
 		strokeWidth = 1;
 		projection = new OrthographicProjection(100, 100);
@@ -35,10 +34,6 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 		return strokeWidth;
 	}
 
-	@Override
-	public Projection projection() {
-		return projection;
-	}
 
 	@Override
 	public Paint strokePaint() {
@@ -50,54 +45,6 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 		return fill;
 	}
 
-
-	@Override
-	public Pen dot(Point point) {
-		frozen = true;
-		return this;
-	}
-
-	@Override
-	public Pen line(Point from, Point to) {
-		frozen = true;
-		return this;
-	}
-
-	@Override
-	public Pen polyline(Point... points) {
-		frozen = true;
-		return this;
-	}
-
-	@Override
-	public Pen polygon(Point... points) {
-		frozen = true;
-		return this;
-	}
-
-	@Override
-	public Pen triangles(Point... points) {
-		frozen = true;
-		return this;
-	}
-
-	@Override
-	public Pen stroke(IShape shape) {
-		frozen = true;
-		return this;
-	}
-
-	@Override
-	public Pen fill(IShape shape) {
-		frozen = true;
-		return this;
-	}
-
-	@Override
-	public Pen strokeAndFill(IShape shape) {
-		frozen = true;
-		return this;
-	}
 
 	@Override
 	public PenBuilder<Pen> change() {
@@ -163,6 +110,29 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	public Pen done() {
 		frozen = true;
 		return this;
+	}
+	
+	@Override
+	public PenBuilder<Pen> smooth(SmoothType smooth) {
+		smoothType = smooth;
+		return this;
+	}
+
+	@Override
+	public PenBuilder<Pen> smooth(SmoothType smooth, double amount) {
+		smoothType = smooth;
+		smoothAmount = amount;
+		return this;
+	}
+
+	@Override
+	public SmoothType smoothType() {
+		return smoothType;
+	}
+
+	@Override
+	public double smoothAmount() {
+		return smoothAmount;
 	}
 
 

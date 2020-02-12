@@ -2,9 +2,11 @@ package turtleduck.turtle.impl;
 
 import turtleduck.colors.Paint;
 import turtleduck.geometry.Projection;
+import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.Stroke;
+import turtleduck.turtle.Pen.SmoothType;
 import turtleduck.turtle.SimpleTurtle;
 
 public class TurtlePenBuilder<T extends SimpleTurtle> implements PenBuilder<T> {
@@ -23,10 +25,6 @@ public class TurtlePenBuilder<T extends SimpleTurtle> implements PenBuilder<T> {
 	public PenBuilder<T> strokeWidth(double pixels) {
 		pen.strokeWidth(pixels);
 		return this;
-	}
-
-	public Projection projection() {
-		return pen.projection();
 	}
 
 	public Paint strokePaint() {
@@ -66,6 +64,28 @@ public class TurtlePenBuilder<T extends SimpleTurtle> implements PenBuilder<T> {
 		obj.pen();
 		return obj;
 	}
+	
+	public PenBuilder<T> smooth(SmoothType smooth) {
+		pen.smooth(smooth);
+		return this;
+	}
+
+	public PenBuilder<T> smooth(SmoothType smooth, double amount) {
+		pen.smooth(smooth, amount);
+		return this;
+	}
+
+	@Override
+	public SmoothType smoothType() {
+		return pen.smoothType();
+	}
+
+	@Override
+	public double smoothAmount() {
+		return pen.smoothAmount();
+	}
+
+
 
 
 }

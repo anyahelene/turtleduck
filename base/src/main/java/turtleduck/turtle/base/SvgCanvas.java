@@ -9,14 +9,10 @@ import turtleduck.geometry.Point;
 import turtleduck.objects.IdentifiedObject;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
-import turtleduck.turtle.Geometry;
 import turtleduck.turtle.IShape;
-import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.TurtleControl;
-import turtleduck.turtle.impl.LineBuilderImpl;
-import turtleduck.turtle.impl.SvgLineBuilder;
 
 public class SvgCanvas extends BaseCanvas {
 	private StringBuilder builder = new StringBuilder();
@@ -38,13 +34,13 @@ public class SvgCanvas extends BaseCanvas {
 		}
 	}
 	@Override
-	public Canvas dot(Stroke pen, Geometry geom, Point point) {
+	public Canvas dot(Stroke pen, Point point) {
 		// TODO Auto-generated method stub
 		return this;
 	}
 
 	@Override
-	public Canvas line(Stroke pen, Geometry geom, Point from, Point to) {
+	public Canvas line(Stroke pen, Point from, Point to) {
 		element("line", "x1", String.valueOf(from.x()),//
 				"y1", String.valueOf(from.y()),//
 				"x2", String.valueOf(to.x()),//
@@ -54,33 +50,33 @@ public class SvgCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas polyline(Stroke pen, Fill fill, Geometry geom, Point... points) {
+	public Canvas polyline(Stroke pen, Fill fill, Point... points) {
 		element("polyline", "points", toSvg(points),
 				"style", toSvg(pen)+toSvg(fill));
 		return this;
 	}
 
 	@Override
-	public Canvas polygon(Stroke pen, Fill fill, Geometry geom, Point... points) {
+	public Canvas polygon(Stroke pen, Fill fill, Point... points) {
 		element("polygon", "points", toSvg(points),
 				"style", toSvg(pen)+toSvg(fill));
 		return this;
 	}
 
 	@Override
-	public Canvas triangles(Stroke pen, Fill fill, Geometry geom, Point... points) {
+	public Canvas triangles(Stroke pen, Fill fill, Point... points) {
 		// TODO Auto-generated method stub
 		return this;
 	}
 
 	@Override
-	public Canvas shape(Stroke pen, Fill fill, Geometry geom, IShape shape) {
+	public Canvas shape(Stroke pen, Fill fill, IShape shape) {
 		// TODO Auto-generated method stub
 		return this;
 	}
 
 	@Override
-	public Canvas path(Stroke pen, Fill fill, Geometry geom, PathBuilder path) {
+	public Canvas path(Stroke pen, Fill fill, PathBuilder path) {
 		// TODO Auto-generated method stub
 		return this;
 	}

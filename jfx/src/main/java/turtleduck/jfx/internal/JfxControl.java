@@ -25,7 +25,7 @@ public class JfxControl implements TurtleControl {
 
 		public void drawIt(JfxCanvas canvas) {
 			if (complete) {
-				canvas.fillPolygon(fill, null, points);
+				canvas.fillPolygon(fill, points);
 				done = points.nPoints;
 			}
 		}
@@ -104,7 +104,7 @@ public class JfxControl implements TurtleControl {
 		@Override
 		public void draw(JfxCanvas canvas) {
 			if (from != null && to != null) {
-				canvas.line(stroke, null, from, to);
+				canvas.line(stroke, from, to);
 				done = true;
 			}
 
@@ -230,9 +230,9 @@ public class JfxControl implements TurtleControl {
 
 		public void drawIt(JfxCanvas canvas) {
 			if (closed && complete) {
-				canvas.strokePolygon(stroke, null, points);
+				canvas.strokePolygon(stroke, points);
 			} else {
-				canvas.strokePolyline(stroke, null, points);
+				canvas.strokePolyline(stroke, points);
 			}
 			done = points.nPoints;
 		}

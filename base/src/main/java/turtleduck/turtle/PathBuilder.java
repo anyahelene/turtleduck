@@ -8,10 +8,9 @@ import turtleduck.colors.Paint;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Path.PathImpl;
-import turtleduck.turtle.Path.PathPoint;
 import turtleduck.turtle.Path.PointType;
 import turtleduck.turtle.Path.RelativeTo;
-import turtleduck.turtle.Path.SmoothType;
+import turtleduck.turtle.Pen.SmoothType;
 
 public interface PathBuilder {
 	static PathBuilder beginPath(Point from, Bearing bearing, RelativeTo spec) {
@@ -41,15 +40,15 @@ public interface PathBuilder {
 	 */
 	PathBuilder add(Bearing bearing, Point to, PointType type);
 
-	PathBuilder smooth(SmoothType smooth);
+	PathBuilder smooth(Pen.SmoothType smooth);
 
-	PathBuilder smooth(SmoothType smooth, double amount);
+	PathBuilder smooth(Pen.SmoothType smooth, double amount);
 
 	PathBuilder color(Paint color);
 
 	PathBuilder width(double width);
 
-	SmoothType smoothType();
+	Pen.SmoothType smoothType();
 
 	double smoothAmount();
 
@@ -60,7 +59,7 @@ public interface PathBuilder {
 		private Point firstPoint, currentPoint;
 		private Bearing firstBearing, currentBearing;
 		private RelativeTo rel;
-		private SmoothType smoothType = SmoothType.CORNER;
+		private Pen.SmoothType smoothType = Pen.SmoothType.CORNER;
 		private double smoothAmount = 0.0;
 		private Paint color = Colors.TRANSPARENT;
 		private double width = 1;
@@ -134,20 +133,20 @@ public interface PathBuilder {
 		}
 
 		@Override
-		public PathBuilder smooth(SmoothType smooth) {
+		public PathBuilder smooth(Pen.SmoothType smooth) {
 			this.smoothType = smooth;
 			return this;
 		}
 
 		@Override
-		public PathBuilder smooth(SmoothType smooth, double amount) {
+		public PathBuilder smooth(Pen.SmoothType smooth, double amount) {
 			this.smoothType = smooth;
 			this.smoothAmount = amount;
 			return this;
 		}
 
 		@Override
-		public SmoothType smoothType() {
+		public Pen.SmoothType smoothType() {
 			return smoothType;
 		}
 

@@ -21,7 +21,7 @@ public class Demo implements TurtleDuckApp {
 	public void bigStep(double deltaTime) {
 		for (int i = 0; i < 700; i += 10) {
 			pen = pen.change().strokePaint(Paint.color(i/700.0,(700.0-i)/700.0,0.5)).done();
-			canvas.line(pen, null, Point.point(0, i), Point.point(1000, 100+i));
+			canvas.line(pen, Point.point(0, i), Point.point(1000, 100+i));
 		}
 		turtle.turn(1);
 		for(int i = 0; i < 360; i++) {

@@ -6,7 +6,6 @@ import java.util.List;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
-import turtleduck.turtle.Geometry;
 import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.base.SvgCanvas;
@@ -18,30 +17,27 @@ public class SvgLineBuilder implements LineBuilder {
 	private Segment segment;
 	private Point first, last;
 	private Stroke stroke;
-	private Geometry geom;
 
-	public SvgLineBuilder(Stroke stroke, Geometry geom, Point first, SvgCanvas canvas) {
+	public SvgLineBuilder(Stroke stroke, Point first, SvgCanvas canvas) {
 		this.canvas = canvas;
 		this.first = first;
 		this.last = first;
 		this.stroke = stroke;
-		this.geom = geom;
 		segment = null;
 	}
 
 	@Override
 	public LineBuilder to(Point next) {
 		if (segment == null)
-			newSeg(stroke, geom, last);
+			newSeg(stroke, last);
 		segment.points.add(next);
 		last = next;
 		return null;
 	}
 
-	protected void newSeg(Stroke s, Geometry g, Point p) {
+	protected void newSeg(Stroke s, Point p) {
 		segment = new Segment();
 		segment.stroke = s;
-		segment.geom = g;
 		segment.points = new ArrayList<>();
 		segment.points.add(p);
 		segments.add(segment);
@@ -50,7 +46,7 @@ public class SvgLineBuilder implements LineBuilder {
 	@Override
 	public LineBuilder to(Stroke stroke, Point next) {
 		if (segment == null || stroke != segment.stroke)
-			newSeg(stroke, geom, last);
+			newSeg(stroke,last);
 		segment.points.add(next);
 		last = next;
 		return this;
@@ -68,12 +64,12 @@ public class SvgLineBuilder implements LineBuilder {
 	@Override
 	public Canvas done() {
 		if (polygon && segment != null) {
-			canvas.polygon(segment.stroke, null, geom, segment.points.toArray(new Point[segment.points.size()]));
+			canvas.polygon(segment.stroke, null,segment.points.toArray(new Point[segment.points.size()]));
 		} else if (segments.size() == 1) {
-			canvas.polyline(segment.stroke, null, segment.geom, segment.points.toArray(new Point[segment.points.size()]));
+			canvas.polyline(segment.stroke, null,  segment.points.toArray(new Point[segment.points.size()]));
 		} else {
 				for (Segment s : segments) {
-					canvas.polyline(s.stroke, null, s.geom, s.points.toArray(new Point[s.points.size()]));
+					canvas.polyline(s.stroke, null, s.points.toArray(new Point[s.points.size()]));
 				}
 		}
 		segments.clear();
@@ -84,13 +80,12 @@ public class SvgLineBuilder implements LineBuilder {
 	protected static class Segment {
 		List<Point> points;
 		Stroke stroke;
-		Geometry geom;
 
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
 			builder.append("Segment [points=").append(points).append(", stroke=").append(stroke).append(", geom=")
-					.append(geom).append("]");
+					.append("]");
 			return builder.toString();
 		}
 	}

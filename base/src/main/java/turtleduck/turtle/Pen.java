@@ -1,58 +1,57 @@
 package turtleduck.turtle;
 
-import turtleduck.geometry.Point;
-
-public interface Pen extends Stroke, Fill, Geometry {
+public interface Pen extends Stroke, Fill {
 	/**
-	 * Draw a dot
-	 *
-	 * @param point
-	 *            Center point of the dot
-	 * @return {@code this}, for sending more draw commands
+	 * Describes the smoothness of a path as it passes through a point. When
+	 * building a path, this can be used to create smooth paths without explicitly
+	 * adding control points.
+	 * <p>
+	 * Points on straight-line
+	 * (non-<a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier</a>)
+	 * paths are always {@link #CORNER}.
+	 * <ul>
+	 * <li>A {@link #CORNER} has a sharp break at any angle; the direction of the
+	 * incoming and outgoing line segments are unrelated. This is a
+	 * <em>C<sup>0</sup></em> continuous curve; the curve itself is continuous, but
+	 * the first derivative is not.
+	 * <li>A {@link #SMOOTH} point will have the incoming and outgoing line segments
+	 * form a straight line at that point; the control points will be on a straight
+	 * line on opposite sides of the point itself. This is a <em>C<sup>1</sup></em>
+	 * continuous curve; the curve itself and the first derivative is continuous.
+	 * <li>A {@link #SYMMETRIC} is smooth, but with the same distance to the control
+	 * points on each side.This is a <em>C<sup>2</sup></em> continuous curve; the
+	 * curve itself, the first and the second derivative is continuous.
+	 * <ul>
+	 * 
 	 */
-	Pen dot(Point point);
-	
-	/**
-	 * Draw a line
-	 *
-	 * @param from
-	 *            Start point of the line
-	 * @param to
-	 *            End point of the line
-	 * @return {@code this}, for sending more draw commands
-	 */
-	Pen line(Point from, Point to);
-	/**
-	 * Draw lines
-	 *
-	 * @param points
-	 *            A list of points
-	 * @return {@code this}, for sending more draw commands
-	 */
-	Pen polyline(Point ...points);
-	/**
-	 * Fill a polygon
-	 *
-	 * @param points
-	 *            A list of points
-	 * @return {@code this}, for sending more draw commands
-	 */
-	Pen polygon(Point ...points);
-	/**
-	 * Fill a strip of triangles
-	 *
-	 * @param points
-	 *            A list of points
-	 * @return {@code this}, for sending more draw commands
-	 */
-	Pen triangles(Point ...points);
-
-	Pen stroke(IShape shape);
-	
-	Pen fill(IShape shape);
-	
-	Pen strokeAndFill(IShape shape);
-	
+	enum SmoothType {
+		/**
+		 * <li>A {@link #CORNER} has a sharp break at any angle; the direction of the
+		 * incoming and outgoing line segments are unrelated. This is a <a href=
+		 * "https://en.wikipedia.org/wiki/Smoothness#Parametric_continuity"><em>C<sup>0</sup></em>
+		 * continuous curve</a>; the curve itself is continuous, but the first
+		 * derivative is not.
+		 */
+		CORNER,
+		/**
+		 * <li>A {@link #SMOOTH} point will have the incoming and outgoing line segments
+		 * form a straight line at that point; the control points will be on a straight
+		 * line on opposite sides of the point itself. This is a <a href=
+		 * "https://en.wikipedia.org/wiki/Smoothness#Parametric_continuity"><em>C<sup>1</sup></em>
+		 * continuous curve</a>; the curve itself and the first derivative is
+		 * continuous.
+		 */
+		SMOOTH,
+		/**
+		 * A {@link #SYMMETRIC} point is also {@link #SMOOTH}, but with the same
+		 * distance to the control points on each side.This is a <a href=
+		 * "https://en.wikipedia.org/wiki/Smoothness#Parametric_continuity"><em>C<sup>1</sup></em>
+		 * continuous curve</a>; the curve itself, the first and the second derivative
+		 * is continuous.
+		 * 
+		 */
+		SYMMETRIC
+	}
 
 	PenBuilder<Pen> change();
 }

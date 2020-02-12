@@ -148,7 +148,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 				for (int i = 1; i < path.size(); i++) {
 					Point to = path.point(i);
 					Pen p = pen.change().strokePaint(path.pointColor(i)).strokeWidth(path.pointWidth(i)).done();
-					canvas.line(p, null, from, to);
+					canvas.line(p,from, to);
 					from = to;
 				}
 				builder = null;

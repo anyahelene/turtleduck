@@ -12,7 +12,7 @@ public interface Canvas extends IdentifiedObject {
 	 * @param point Center point of the dot
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas dot(Stroke pen, Geometry geom, Point point);
+	Canvas dot(Stroke pen, Point point);
 
 	/**
 	 * Draw a line
@@ -21,9 +21,9 @@ public interface Canvas extends IdentifiedObject {
 	 * @param to   End point of the line
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas line(Stroke pen, Geometry geom, Point from, Point to);
+	Canvas line(Stroke pen, Point from, Point to);
 
-//	LineBuilder lines(Stroke pen, Geometry geom, Point from);
+//	LineBuilder lines(Stroke pen, Point from);
 
 	/**
 	 * Draw lines
@@ -31,7 +31,7 @@ public interface Canvas extends IdentifiedObject {
 	 * @param points A list of points
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas polyline(Stroke pen, Fill fill, Geometry geom, Point... points);
+	Canvas polyline(Stroke pen, Fill fill, Point... points);
 
 	/**
 	 * Fill a polygon
@@ -39,7 +39,7 @@ public interface Canvas extends IdentifiedObject {
 	 * @param points A list of points
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas polygon(Stroke pen, Fill fill, Geometry geom, Point... points);
+	Canvas polygon(Stroke pen, Fill fill, Point... points);
 
 	/**
 	 * Fill a strip of triangles
@@ -47,11 +47,11 @@ public interface Canvas extends IdentifiedObject {
 	 * @param points A list of points
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas triangles(Stroke pen, Fill fill, Geometry geom, Point... points);
+	Canvas triangles(Stroke pen, Fill fill, Point... points);
 
-	Canvas shape(Stroke pen, Fill fill, Geometry geom, IShape shape);
+	Canvas shape(Stroke pen, Fill fill, IShape shape);
 
-	Canvas path(Stroke pen, Fill fill, Geometry geom, PathBuilder path);
+	Canvas path(Stroke pen, Fill fill, PathBuilder path);
 
 	Canvas clear();
 

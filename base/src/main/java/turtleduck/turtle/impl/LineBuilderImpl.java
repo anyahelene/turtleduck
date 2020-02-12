@@ -6,7 +6,6 @@ import java.util.List;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
-import turtleduck.turtle.Geometry;
 import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
@@ -14,16 +13,14 @@ import turtleduck.turtle.Stroke;
 public class LineBuilderImpl implements LineBuilder {
 
 	private Stroke stroke;
-	private Geometry geom;
 	private Point first;
 	private Canvas canvas;
 	private List<Point> points = new ArrayList<>();
 	private List<Stroke> strokes = new ArrayList<>();
 	private boolean closed = false;
 
-	public LineBuilderImpl(Stroke stroke, Geometry geom, Point first, Canvas canvas) {
+	public LineBuilderImpl(Stroke stroke, Point first, Canvas canvas) {
 		this.stroke = stroke;
-		this.geom = geom;
 		this.first = first;
 		this.canvas = canvas;
 		points.add(first);
@@ -56,7 +53,7 @@ public class LineBuilderImpl implements LineBuilder {
 
 	@Override
 	public Canvas fill(Fill fill, boolean andStroke) {
-		canvas.polygon(null, fill, geom, points.toArray(new Point[points.size()]));
+		canvas.polygon(null, fill, points.toArray(new Point[points.size()]));
 		if (andStroke)
 			return done();
 		else
@@ -67,9 +64,9 @@ public class LineBuilderImpl implements LineBuilder {
 	public Canvas done() {
 		strokes.add(stroke);
 		if (closed)
-			canvas.polygon(stroke, null, geom, points.toArray(new Point[points.size()]));
+			canvas.polygon(stroke, null, points.toArray(new Point[points.size()]));
 		else
-			canvas.polyline(stroke, null, geom, points.toArray(new Point[points.size()]));
+			canvas.polyline(stroke, null, points.toArray(new Point[points.size()]));
 		return canvas;
 	}
 
