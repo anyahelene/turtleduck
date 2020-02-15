@@ -2,6 +2,12 @@ package turtleduck.gl;
 
 import static org.lwjgl.opengl.GL30.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.joml.Vector2f;
+import org.joml.Vector4f;
+
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
 import turtleduck.geometry.Point;
@@ -15,6 +21,7 @@ import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.base.BaseCanvas;
 
 public class GLCanvas extends BaseCanvas {
+	private static Map<Paint, Vector4f> colors = new HashMap<>(); 
 
 	private GLScreen screen;
 	private VertexArrayBuilder vab;
@@ -34,19 +41,42 @@ public class GLCanvas extends BaseCanvas {
 	}
 
 	@Override
-	public Canvas line(Stroke pen, Point from, Point to) {
-//		
+	public Canvas line(Stroke stroke, Point from, Point to) {
+		
 //		vertexArray();
 //		vab.vec2((float) from.x(), (float) from.y());
 //		float w = (float) pen.strokeWidth();
 //		Paint color = pen.strokePaint();
 //		vab.vec4((float) color.red(), (float) color.green(), (float) color.blue(), (float) color.opacity());
-//		vab.add(w);
-//		vab.next();
+////		vab.add(w);
+////		vab.next();
 //		vab.vec2((float) to.x(), (float) to.y());
 //		vab.vec4((float) color.red(), (float) color.green(), (float) color.blue(), (float) color.opacity());
 ////		vab.add(w);
-//		vab.next();
+////		vab.next();
+		if (stroke != null) {
+			Vector4f strokeColor = paintToVec(stroke);
+			Vector2f fromVec = new Vector2f((float) from.x(), (float) from.y());
+			Vector2f toVec = new Vector2f((float) to.x(), (float) to.y());
+			Vector2f off = new Vector2f(toVec).sub(fromVec).normalize().perpendicular();
+//			Vector2f off = new Vector2f((float)bearing.dirX(), (float)bearing.dirY()).normalize().perpendicular();
+			Vector2f tmp = new Vector2f();
+			VertexArrayBuilder vertexArray = vertexArray();
+			float w = (float) stroke.strokeWidth()/2;
+			vertexArray.vec2(tmp.set(fromVec).fma(w, off));
+			vertexArray.vec4(strokeColor);
+			vertexArray.vec2(tmp.set(toVec).fma(-w, off));
+			vertexArray.vec4(strokeColor);
+			vertexArray.vec2(tmp.set(fromVec).fma(-w, off));
+			vertexArray.vec4(strokeColor);
+			vertexArray.vec2(tmp.set(toVec).fma(-w, off));
+			vertexArray.vec4(strokeColor);
+			vertexArray.vec2(tmp.set(fromVec).fma(w, off));
+			vertexArray.vec4(strokeColor);
+			vertexArray.vec2(tmp.set(toVec).fma(w, off));
+			vertexArray.vec4(strokeColor);
+		}
+
 		return this;
 	}
 
@@ -142,6 +172,25 @@ public class GLCanvas extends BaseCanvas {
 		if (vao != 0 && nVertices > 0) {
 			glBindVertexArray(vao);
 			glDrawArrays(GL_TRIANGLES, 0, nVertices);
+		}
+
+	}
+	
+	public static Vector4f paintToVec(Stroke stroke) {
+		if(stroke != null) {
+			Paint color = stroke.strokePaint();
+			Vector4f strokeColor = colors.get(color);
+			if(strokeColor == null) {
+				float r = (float) Colors.Gamma.gammaExpand(color.red());
+				float g = (float) Colors.Gamma.gammaExpand(color.green());
+				float b = (float) Colors.Gamma.gammaExpand(color.blue());
+				float a = (float) color.opacity();
+				strokeColor = new Vector4f(r, g, b, 1f);
+				colors.put(color, strokeColor);
+			}
+			return strokeColor;
+		} else {
+			return null;
 		}
 
 	}

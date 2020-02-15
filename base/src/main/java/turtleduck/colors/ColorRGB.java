@@ -267,6 +267,15 @@ public class ColorRGB implements Paint {
 	}
 
 	@Override
+	public String toString() {
+		if (alpha == 1.0)
+			return String.format("#%02X%02X%02X", Math.round(red * 255), Math.round(green * 255),
+					Math.round(blue * 255));
+		else
+			return String.format("#%02X%02X%02X%02X", Math.round(red * 255), Math.round(green * 255),
+					Math.round(blue * 255), Math.round(blue * 255));
+	}
+	@Override
 	public String toCss() {
 		if (alpha == 1.0)
 			return String.format("rgb(%d,%d,%d)", Math.round(red * 255), Math.round(green * 255),

@@ -42,6 +42,7 @@ import turtleduck.text.TextWindow;
 import turtleduck.turtle.TurtleDuck;
 
 public class TShell {
+	public static final Paint BLUE = Colors.BLUE.brighter().brighter();
 	public static int testValue = 1;
 	private TextCursor printer;
 	private JShell shell;
@@ -233,9 +234,9 @@ public class TShell {
 			}
 			String value = e.value();
 			if (value != null) {
-				printer.print(heading + value + "\n", Colors.BLUE);
+				printer.print(heading + value + "\n", BLUE);
 			} else {
-				printer.print(heading + "\n", Colors.BLUE);
+				printer.print(heading + "\n", BLUE);
 			}
 		}
 
@@ -383,11 +384,15 @@ public class TShell {
 
 	public void enterKey() {
 		completions = null;
+		if(input != "") {
 		CompletionInfo info = sca.analyzeCompletion(input);
 		System.out.println(info.completeness());
 //		printer.println();
 		eval(input, true);
 		input = "";
+		} else {
+			printer.println();
+		}
 		prompt();
 	}
 

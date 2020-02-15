@@ -111,11 +111,7 @@ public interface PathBuilder {
 			PathPoint p = new PathPoint();
 			p.bearing = currentBearing;
 			p.point = currentPoint;
-			p.smoothAmount = smoothAmount;
-			p.smoothType = smoothType;
 			p.type = type;
-			p.color = color;
-			p.width = width;
 			points.add(p);
 			return this;
 		}
@@ -124,11 +120,7 @@ public interface PathBuilder {
 			PathPoint p = new PathPoint();
 			p.bearing = firstBearing;
 			p.point = firstPoint;
-			p.smoothAmount = smoothAmount;
-			p.smoothType = smoothType;
 			p.type = PointType.POINT;
-			p.color = color;
-			p.width = width;
 			points.add(p);
 		}
 

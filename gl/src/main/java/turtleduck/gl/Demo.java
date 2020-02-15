@@ -19,10 +19,10 @@ public class Demo implements TurtleDuckApp {
 
 	@Override
 	public void bigStep(double deltaTime) {
-		for (int i = 0; i < 700; i += 10) {
-			pen = pen.change().strokePaint(Paint.color(i/700.0,(700.0-i)/700.0,0.5)).done();
-			canvas.line(pen, Point.point(0, i), Point.point(1000, 100+i));
-		}
+//		for (int i = 0; i < 700; i += 10) {
+//			pen = pen.change().strokePaint(Paint.color(i/700.0,(700.0-i)/700.0,0.5)).done();
+//			canvas.line(pen, Point.point(0, i), Point.point(1000, 100+i));
+//		}
 		turtle.turn(1);
 		for(int i = 0; i < 360; i++) {
 			turtle.draw(5).turn(1);
@@ -33,6 +33,8 @@ public class Demo implements TurtleDuckApp {
 
 //		turtle.moveTo(500,400);
 		turtle.done();
+		
+		System.out.println(deltaTime);
 	}
 
 	@Override

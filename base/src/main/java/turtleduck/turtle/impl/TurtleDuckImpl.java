@@ -5,7 +5,6 @@ import java.util.List;
 
 import turtleduck.colors.Paint;
 import turtleduck.geometry.Bearing;
-import turtleduck.geometry.Navigator;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.unused.Orientation;
 import turtleduck.objects.IdentifiedObject;
@@ -14,6 +13,7 @@ import turtleduck.turtle.CommandRecorder;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.IShape;
 import turtleduck.turtle.LineBuilder;
+import turtleduck.turtle.Navigator;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Pen;
@@ -30,24 +30,23 @@ public class TurtleDuckImpl implements TurtleDuck {
 	protected Navigator nav;
 	protected Pen pen;
 	protected PenBuilder<Pen> penBuilder;
-	protected TurtleControl journal;
-	protected final TurtleControl mainJournal;
+//	protected TurtleControl journal;
+//	protected final TurtleControl mainJournal;
 	protected final Canvas canvas;
 	protected final TurtleDuckImpl parent;
-	protected PathBuilder builder;
 	protected final List<Path> paths = new ArrayList<>();
 	private boolean drawing = false, moving = false;
 	private String id;
 	private int nSpawns = 0;
 
-	public TurtleDuckImpl(String id, Canvas canvas, TurtleControl journal) {
+	public TurtleDuckImpl(String id, Canvas canvas) {
 		this.canvas = canvas;
 		this.id = id;
 		this.pen = canvas.createPen();
-		this.mainJournal = journal;
-		this.journal = journal;
+//		this.mainJournal = journal;
+//		this.journal = journal;
 		parent = null;
-		this.nav = new Navigator.DefaultNavigator();
+		this.nav = new Navigator.DefaultNavigator(Point.point(0, 0), Bearing.DUE_NORTH, pen);
 	}
 
 	public TurtleDuckImpl(TurtleDuckImpl td) {
@@ -61,8 +60,10 @@ public class TurtleDuckImpl implements TurtleDuck {
 		canvas = c;
 		pen = td.pen();
 		penBuilder = null;
-		mainJournal = td.mainJournal.child();
-		journal = td.journal == td.mainJournal ? mainJournal : td.journal.child();
+		drawing = false;
+		moving = true;
+//		mainJournal = td.mainJournal.child();
+//		journal = td.journal == td.mainJournal ? mainJournal : td.journal.child();
 	}
 
 	@Override
@@ -124,39 +125,35 @@ public class TurtleDuckImpl implements TurtleDuck {
 	protected void penDown() {
 		if (moving) {
 			moving = false;
-			if (builder != null) {
 //				paths.add(nav.endPath());
-//				System.out.println(paths.get(paths.size() - 1));
-				builder = null;
-			}
+		
 		}
 		if (!drawing) {
 			drawing = true;
-			builder = nav.beginPath();
-			builder.color(pen.strokePaint());
-			builder.width(pen.strokeWidth());
+			nav.beginPath();
 		}
+		nav.pen(pen());
 	}
 
 	protected void penUp() {
 		if (drawing) {
 			drawing = false;
-			if (builder != null) {
 				Path path = nav.endPath();
 //				paths.add(path);
 				Point from = path.first();
+				Pen pen = path.pointPen(0);
 				for (int i = 1; i < path.size(); i++) {
 					Point to = path.point(i);
-					Pen p = pen.change().strokePaint(path.pointColor(i)).strokeWidth(path.pointWidth(i)).done();
-					canvas.line(p,from, to);
+					//Pen p = path.pointPen(i); // pen.change().strokePaint(path.pointColor(i)).strokeWidth(path.pointWidth(i)).done();
+					canvas.line(pen,from, to);
 					from = to;
+					pen = path.pointPen(i);
 				}
-				builder = null;
-			}
 		}
 		if (!moving) {
 			moving = true;
-			builder = nav.beginPath();
+			nav.beginPath();
+			nav.pen(null);
 		}
 	}
 
@@ -312,9 +309,9 @@ public class TurtleDuckImpl implements TurtleDuck {
 		if (pen == null) {
 			pen = penBuilder.done();
 			penBuilder = null;
+			
 			if (drawing) {
-				builder.color(pen.strokePaint());
-				builder.width(pen.strokeWidth());
+				nav.pen(pen);
 			}
 		}
 		return pen;
@@ -333,8 +330,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 			throw new IllegalArgumentException("Argument must not be null");
 		pen = newPen;
 		if (drawing) {
-			builder.color(pen.strokePaint());
-			builder.width(pen.strokeWidth());
+			nav.pen(pen);
 		}
 
 		return this;

@@ -44,7 +44,7 @@ public class ShellDemo implements TurtleDuckApp {
 	@Override
 	public void start(Screen screen) {
 		this.screen = screen;
-		screen.setBackground(Colors.WHITE);
+		screen.setBackground(Colors.BLACK);
 		screen.clearBackground();
 		window = screen.createTextWindow();
 		window.textMode(TextMode.MODE_80X30, true);

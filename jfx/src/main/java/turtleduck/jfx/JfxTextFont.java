@@ -49,32 +49,6 @@ import turtleduck.turtle.Canvas;
  *
  */
 public class JfxTextFont implements TextFont {
-	public static TextFont FONT_MONOSPACED = new JfxTextFont("Monospaced", 27.00, TextMode.CHAR_BOX_SIZE, 3.4000,
-			-6.7000, 1.5000, 1.0000, true);
-	public static TextFont FONT_LMMONO = new JfxTextFont("lmmono10-regular.otf", 30.00, TextMode.CHAR_BOX_SIZE, 4.0000,
-			-8.5000, 1.5000, 1.0000, true);
-	public static TextFont FONT_ZXSPECTRUM7 = new JfxTextFont("lmmono10-regular.otf", 22.00, TextMode.CHAR_BOX_SIZE);
-//, 3.1000, -3.8000, 1.0000, 1.0000, true);
-	/**
-	 * ZXSpectrum-7.otf TTF file can be found here: http://users.teilar.gr/~g1951d/
-	 * in this ZIP file: http://users.teilar.gr/~g1951d/Symbola.zip
-	 * <p>
-	 * (Put the extracted Symbola.ttf in src/inf101/v18/gfx/fonts/)
-	 */
-	public static TextFont FONT_SYMBOLA = new JfxTextFont("Symbola.ttf", 26.70, TextMode.CHAR_BOX_SIZE, -0.4000,
-			-7.6000, 1.35000, 1.0000, true);
-	/**
-	 * TTF file can be found here:
-	 * http://www.kreativekorp.com/software/fonts/c64.shtml
-	 */
-	public static TextFont FONT_GIANA = new JfxTextFont("Giana.ttf", 25.00, TextMode.CHAR_BOX_SIZE, 4.6000, -5.0000,
-			1.0000, 1.0000, true);
-	/**
-	 * TTF file can be found here:
-	 * http://www.kreativekorp.com/software/fonts/c64.shtml
-	 */
-	public static TextFont FONT_C64 = new JfxTextFont("PetMe64.ttf", 31.50, TextMode.CHAR_BOX_SIZE, 0.0000, -4.000,
-			1.0000, 1.0000, true);
 
 	private static final String[] searchPath = { "/fonts/", "", "../", "../fonts/", "../../fonts/", "../../../fonts/" };
 	private static final Map<String, String> loadedFonts = new HashMap<>();
@@ -109,6 +83,32 @@ public class JfxTextFont implements TextFont {
 			"-...", "..-.", ".-..", "...-", "*...", "..*.", ".*..", "...*",
 			// thin/thick lines
 			"-*..", "..-*", "*-..", "..*-" };
+	public static TextFont FONT_MONOSPACED = new JfxTextFont("Monospaced", 27.00, TextMode.CHAR_BOX_SIZE, 3.4000,
+			-6.7000, 1.5000, 1.0000, true);
+	public static TextFont FONT_LMMONO = new JfxTextFont("lmmono10-regular.otf", 30.00, TextMode.CHAR_BOX_SIZE, 4.0000,
+			-8.5000, 1.5000, 1.0000, true);
+	public static TextFont FONT_ZXSPECTRUM7 = new JfxTextFont("lmmono10-regular.otf", 22.00, TextMode.CHAR_BOX_SIZE);
+//, 3.1000, -3.8000, 1.0000, 1.0000, true);
+	/**
+	 * ZXSpectrum-7.otf TTF file can be found here: http://users.teilar.gr/~g1951d/
+	 * in this ZIP file: http://users.teilar.gr/~g1951d/Symbola.zip
+	 * <p>
+	 * (Put the extracted Symbola.ttf in src/inf101/v18/gfx/fonts/)
+	 */
+	public static TextFont FONT_SYMBOLA = new JfxTextFont("Symbola.ttf", 26.70, TextMode.CHAR_BOX_SIZE, -0.4000,
+			-7.6000, 1.35000, 1.0000, true);
+	/**
+	 * TTF file can be found here:
+	 * http://www.kreativekorp.com/software/fonts/c64.shtml
+	 */
+	public static TextFont FONT_GIANA = new JfxTextFont("Giana.ttf", 25.00, TextMode.CHAR_BOX_SIZE, 4.6000, -5.0000,
+			1.0000, 1.0000, true);
+	/**
+	 * TTF file can be found here:
+	 * http://www.kreativekorp.com/software/fonts/c64.shtml
+	 */
+	public static TextFont FONT_C64 = new JfxTextFont("PetMe64.ttf", 31.50, TextMode.CHAR_BOX_SIZE, 0.0000, -4.000,
+			1.0000, 1.0000, true);
 
 	protected static void drawMasked(GraphicsContext ctx, Image src, Image mask, double x, double y, boolean invert,
 			boolean blend) {

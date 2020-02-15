@@ -25,12 +25,12 @@ public abstract class BaseCanvas implements Canvas {
 
 	public SimpleTurtle createSimpleTurtle() {
 		String tId = id + "." + nTurtles++;
-		return new TurtleDuckImpl(tId, this, createControl());
+		return new TurtleDuckImpl(tId, this);
 	}
 
 	public TurtleDuck createTurtleDuck() {
 		String tId = id + "." + nTurtles++;
-		return new TurtleDuckImpl(tId, this, createControl());
+		return new TurtleDuckImpl(tId, this);
 	}
 
 }
