@@ -62,6 +62,7 @@ import java.util.Arrays;
 import java.util.function.Predicate;
 
 import turtleduck.colors.Paint;
+import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
@@ -120,7 +121,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	@Override
-	public Layer createPainter() {
+	public Canvas createCanvas() {
 		return addLayer(new GLLayer(newLayerId(), this, dim.fbWidth, dim.fbHeight));
 	}
 
@@ -326,12 +327,6 @@ public class GLScreen extends BaseScreen implements Screen {
 	@Override
 	public void zoomOut() {
 		fov(fov * 1.05);
-	}
-
-	@Override
-	public Layer debugLayer() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

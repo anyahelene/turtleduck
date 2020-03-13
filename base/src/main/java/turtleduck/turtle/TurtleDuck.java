@@ -1,5 +1,6 @@
 package turtleduck.turtle;
 
+import turtleduck.display.Canvas;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
@@ -156,13 +157,6 @@ public interface TurtleDuck extends SimpleTurtle {
 	
 	@Override
 	TurtleDuck parent();
-
-	/**
-	 * Begin constructing a path at the current turtle position.
-	 * 
-	 * @return Path builder
-	 */
-	TurtlePathBuilder path();
 
 	/**
 	 * @return The current position of the turtle.

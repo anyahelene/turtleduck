@@ -38,7 +38,7 @@ public interface TextWindow extends Layer {
 	/**
 	 * Redraw the part of the page that has changed since last redraw.
 	 */
-	void flush();
+	TextWindow flush();
 
 	/**
 	 * With buffered printing, nothing is actually drawn until

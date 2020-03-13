@@ -9,17 +9,13 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.shape.StrokeLineCap;
 import turtleduck.geometry.Point;
 import turtleduck.jfx.internal.JfxApp;
-import turtleduck.jfx.internal.JfxControl;
 import turtleduck.jfx.internal.PointList;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.IShape;
-import turtleduck.turtle.LineBuilder;
-import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Stroke;
-import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.base.StatefulCanvas;
 
-public class JfxCanvas extends StatefulCanvas {
+public class JfxCanvas  {
 	private static int totalOps = 0;
 	private static int lineOps = 0;
 	private static int fillOps = 0;
@@ -44,7 +40,6 @@ public class JfxCanvas extends StatefulCanvas {
 		System.err.printf("  Flushes:      %10d\n", flushN);
 		System.err.printf("    Total time: %10.5f s\n", (flushTime / 1000.0));
 		System.err.printf("    Average:    %10.5f ms\n", (flushTime * 1.0) / flushN);
-		JfxControl.printStats();
 		PointList.printStats();
 		JfxApp.printStats();
 	}
@@ -55,7 +50,6 @@ public class JfxCanvas extends StatefulCanvas {
 
 	private int xyLen;
 
-	private List<JfxControl> controls = new ArrayList<>();
 
 	public JfxCanvas(String canvasId, Canvas canvas) {
 		super(canvasId);
@@ -74,23 +68,6 @@ public class JfxCanvas extends StatefulCanvas {
 		}
 	}
 
-	@Override
-	protected void changeFill(Fill fill) {
-		synchronized (context) {
-			context.setFill(JfxColor.toJfxPaint(fill.fillPaint()));
-		}
-		contextOps += 1;
-	}
-
-
-	@Override
-	protected void changeStroke(Stroke stroke) {
-		synchronized (context) {
-			context.setStroke(JfxColor.toJfxPaint(stroke.strokePaint()));
-			context.setLineWidth(stroke.strokeWidth());
-		}
-		contextOps += 2;
-	}
 
 	@Override
 	protected void clearAll() {
@@ -101,13 +78,7 @@ public class JfxCanvas extends StatefulCanvas {
 		fillOps++;
 	}
 
-	@Override
-	public TurtleControl createControl() {
-		JfxControl journal = new JfxControl(this, null);
-		controls.add(journal);
-		return journal;
-	}
-
+	
 	public void endLines(Object obj) {
 		if (obj instanceof StrokeLineCap)
 			context.setLineCap((StrokeLineCap) obj);
@@ -120,12 +91,6 @@ public class JfxCanvas extends StatefulCanvas {
 		}
 		totalOps++;
 		fillOps++;
-	}
-
-	@Override
-	protected void fillPath(PathBuilder path) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -186,9 +151,7 @@ public class JfxCanvas extends StatefulCanvas {
 		this.context = canvas.getGraphicsContext2D();
 		long t = System.currentTimeMillis();
 
-		for (JfxControl j : controls) {
-			j.flush();
-		}
+	
 		flushTime += System.currentTimeMillis() - t;
 		flushN++;
 //		this.context = null;
@@ -236,11 +199,6 @@ public class JfxCanvas extends StatefulCanvas {
 		lineSegments++;
 	}
 
-	@Override
-	protected void strokePath(PathBuilder path) {
-		// TODO Auto-generated method stub
-
-	}
 
 	@Override
 	protected void strokePolygon() {

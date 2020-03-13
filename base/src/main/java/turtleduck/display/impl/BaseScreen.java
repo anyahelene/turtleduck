@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import turtleduck.Debug;
+import turtleduck.display.Canvas;
 import turtleduck.display.DisplayInfo;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
@@ -21,7 +22,7 @@ public abstract class BaseScreen implements Screen {
 	private int nLayers = 0;
 	protected final Map<String, Layer> layers = new HashMap<>();
 	protected List<Double> aspects;
-	protected Layer debugLayer;
+	protected Canvas debugLayer;
 	protected int aspect = 0;
 	private double scaling = 0;
 	protected Dimensions dim;
@@ -44,9 +45,9 @@ public abstract class BaseScreen implements Screen {
 		return layer;
 	}
 
-	public Layer debugLayer() {
+	public Canvas debugCanvas() {
 		if (debugLayer == null) {
-			debugLayer = createPainter();
+			debugLayer = createCanvas();
 			debugLayer.layerToFront();
 		}
 		return debugLayer;

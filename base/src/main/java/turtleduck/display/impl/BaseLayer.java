@@ -1,8 +1,5 @@
 package turtleduck.display.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 
@@ -29,13 +26,15 @@ public abstract class BaseLayer<S extends Screen> implements Layer {
 	}
 
 	@Override
-	public void layerToBack() {
+	public Layer layerToBack() {
 		screen.moveToBack(this);
+		return this;
 	}
 
 	@Override
-	public void layerToFront() {
+	public Layer layerToFront() {
 		screen.moveToFront(this);
+		return this;
 	}
 
 	@Override

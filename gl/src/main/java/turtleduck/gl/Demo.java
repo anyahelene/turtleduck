@@ -3,10 +3,10 @@ package turtleduck.gl;
 import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Paint;
+import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.TurtleDuck;
 
@@ -45,8 +45,7 @@ public class Demo implements TurtleDuckApp {
 
 	@Override
 	public void start(Screen screen) {
-		painter = screen.createPainter();
-		canvas = painter.canvas();
+		canvas = screen.createCanvas();
 		pen = canvas.createPen();
 		 turtle = canvas.createTurtleDuck();
 			turtle.moveTo(500,500);

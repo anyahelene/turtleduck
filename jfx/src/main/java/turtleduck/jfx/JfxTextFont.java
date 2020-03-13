@@ -24,10 +24,11 @@ import javafx.scene.transform.Affine;
 import javafx.scene.transform.Transform;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
+import turtleduck.display.Canvas;
+import turtleduck.display.Layer;
 import turtleduck.text.BlocksAndBoxes;
 import turtleduck.text.TextFont;
 import turtleduck.text.TextMode;
-import turtleduck.turtle.Canvas;
 
 /**
  * TextFont – for grid-based text / character graphics
@@ -484,9 +485,9 @@ public class JfxTextFont implements TextFont {
 
 	}
 
-	protected GraphicsContext context(Canvas canvas) {
-		if (canvas instanceof JfxCanvas) {
-			return ((JfxCanvas) canvas).context;
+	protected GraphicsContext context(Layer canvas) {
+		if (canvas instanceof JfxTextWindow) {
+			return ((JfxTextWindow) canvas).context;
 		} else {
 			throw new IllegalArgumentException("Expected a JfxCanvas: " + canvas);
 		}
@@ -596,7 +597,7 @@ public class JfxTextFont implements TextFont {
 	 * @param text string to be printed
 	 */
 	@Override
-	public void drawText(Canvas canvas, String text) {
+	public void drawText(Layer canvas, String text) {
 		GraphicsContext ctx = context(canvas);
 		textAt(ctx, 0.0, 0.0, text, 1.0, true, true, JfxColor.fromJfxColor(ctx.getFill()), null, 0, null);
 	}
@@ -617,7 +618,7 @@ public class JfxTextFont implements TextFont {
 	 * @param xScaleFactor a horizontal scaling factor
 	 */
 	@Override
-	public void drawText(Canvas canvas, String text, double xScaleFactor) {
+	public void drawText(Layer canvas, String text, double xScaleFactor) {
 		GraphicsContext ctx = context(canvas);
 		textAt(ctx, 0.0, 0.0, text, xScaleFactor, true, false, JfxColor.fromJfxColor(ctx.getFill()), null, 0, null);
 	}
@@ -636,7 +637,7 @@ public class JfxTextFont implements TextFont {
 	 * @param text string to be printed
 	 */
 	@Override
-	public void drawTextAt(Canvas canvas, double x, double y, String text) {
+	public void drawTextAt(Layer canvas, double x, double y, String text) {
 		GraphicsContext ctx = context(canvas);
 		textAt(ctx, x, y, text, 1.0, true, false, JfxColor.fromJfxColor(ctx.getFill()), null, 0, null);
 	}
@@ -655,7 +656,7 @@ public class JfxTextFont implements TextFont {
 	 * @param xScaleFactor a horizontal scaling factor
 	 */
 	@Override
-	public void drawTextAt(Canvas canvas, double x, double y, String text, double xScaleFactor, int mode, Paint bg) {
+	public void drawTextAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode, Paint bg) {
 		GraphicsContext ctx = context(canvas);
 		textAt(ctx, x, y, text, xScaleFactor, false, false, JfxColor.fromJfxColor(ctx.getFill()), null, mode, bg);
 	}
@@ -674,7 +675,7 @@ public class JfxTextFont implements TextFont {
 	 * @param xScaleFactor a horizontal scaling factor
 	 */
 	@Override
-	public void drawTextNoClearAt(Canvas canvas, double x, double y, String text, double xScaleFactor, int mode,
+	public void drawTextNoClearAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode,
 			Paint bg) {
 		GraphicsContext ctx = context(canvas);
 		textAt(ctx, x, y, text, xScaleFactor, false, false, JfxColor.fromJfxColor(ctx.getFill()), null, mode, bg);
@@ -942,7 +943,7 @@ public class JfxTextFont implements TextFont {
 	 * @param ctx A GraphicsContext
 	 */
 	@Override
-	public void setGraphicsContext(Canvas canvas) {
+	public void setGraphicsContext(Layer canvas) {
 		GraphicsContext ctx = context(canvas);
 		ctx.setFont(getFont());
 		ctx.translate(xTranslate, yTranslate);
@@ -965,7 +966,7 @@ public class JfxTextFont implements TextFont {
 	 *                     half-width characters)
 	 */
 	@Override
-	public void setGraphicsContext(Canvas canvas, double xScaleFactor) {
+	public void setGraphicsContext(Layer canvas, double xScaleFactor) {
 		setGraphicsContext(context(canvas), xScaleFactor);
 	}
 

@@ -29,7 +29,7 @@ public interface Path {
 		CURRENT,
 		/**
 		 * Coordinates are absolute, with points relative to (0,0) in the screen
-		 * coordinate system, and bearings are measured agains
+		 * coordinate system, and bearings are measured against
 		 * {@link Bearing#DUE_NORTH}.
 		 */
 		ORIGIN

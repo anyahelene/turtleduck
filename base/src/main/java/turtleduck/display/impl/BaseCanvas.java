@@ -1,18 +1,18 @@
-package turtleduck.turtle.base;
+package turtleduck.display.impl;
 
-import turtleduck.turtle.Canvas;
+import turtleduck.display.Canvas;
+import turtleduck.display.Screen;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.SimpleTurtle;
 import turtleduck.turtle.TurtleDuck;
 import turtleduck.turtle.impl.BasePen;
 import turtleduck.turtle.impl.TurtleDuckImpl;
 
-public abstract class BaseCanvas implements Canvas {
-	private final String id;
-	private int nTurtles;
+public abstract class BaseCanvas<S extends Screen> extends BaseLayer<S> implements Canvas {
+	private int nTurtles = 0;
 	
-	public BaseCanvas(String id) {
-		this.id = id;
+	public BaseCanvas(String layerId, S screen, double width, double height) {
+		super(layerId, screen, width, height);
 	}
 	
 	@Override

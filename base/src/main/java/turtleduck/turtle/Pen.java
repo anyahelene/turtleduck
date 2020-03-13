@@ -54,4 +54,10 @@ public interface Pen extends Stroke, Fill {
 	}
 
 	PenBuilder<Pen> change();
-}
+
+	@Override
+	int hashCode();
+	
+	@Override
+	boolean equals(Object other);
+	}

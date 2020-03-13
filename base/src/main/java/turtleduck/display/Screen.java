@@ -91,7 +91,7 @@ public interface Screen extends IdentifiedObject {
 
 	void clearBackground();
 
-	Layer createPainter();
+	Canvas createCanvas();
 
 	TextWindow createTextWindow();
 
@@ -179,7 +179,7 @@ public interface Screen extends IdentifiedObject {
 
 	void zoomOut();
 
-	Layer debugLayer();
+	Canvas debugCanvas();
 
 	void flush();
 

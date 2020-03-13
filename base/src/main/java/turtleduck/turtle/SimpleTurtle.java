@@ -1,5 +1,6 @@
 package turtleduck.turtle;
 
+import turtleduck.display.Canvas;
 import turtleduck.geometry.Point;
 import turtleduck.objects.IdentifiedObject;
 

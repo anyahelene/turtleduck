@@ -1,7 +1,7 @@
 package turtleduck.text;
 
 import turtleduck.colors.Paint;
-import turtleduck.turtle.Canvas;
+import turtleduck.display.Layer;
 
 public interface TextFont {
 
@@ -87,7 +87,7 @@ public interface TextFont {
 	 * @param text
 	 *            string to be printed
 	 */
-	void drawText(Canvas canvas, String text);
+	void drawText(Layer canvas, String text);
 
 	/**
 	 * Draw the given text at position (0,0), with horizontal scaling.
@@ -107,7 +107,7 @@ public interface TextFont {
 	 * @param xScaleFactor
 	 *            a horizontal scaling factor
 	 */
-	void drawText(Canvas canvas, String text, double xScaleFactor);
+	void drawText(Layer canvas, String text, double xScaleFactor);
 
 	/**
 	 * Draw the given text at position (x,y).
@@ -126,7 +126,7 @@ public interface TextFont {
 	 * @param text
 	 *            string to be printed
 	 */
-	void drawTextAt(Canvas canvas, double x, double y, String text);
+	void drawTextAt(Layer canvas, double x, double y, String text);
 
 	/**
 	 * Draw the given text at position (x, y), with horizontal scaling.
@@ -146,7 +146,7 @@ public interface TextFont {
 	 * @param xScaleFactor
 	 *            a horizontal scaling factor
 	 */
-	void drawTextAt(Canvas canvas, double x, double y, String text, double xScaleFactor, int mode, Paint bg);
+	void drawTextAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode, Paint bg);
 
 	/**
 	 * Draw the given text at position (x, y), with horizontal scaling.
@@ -166,7 +166,7 @@ public interface TextFont {
 	 * @param xScaleFactor
 	 *            a horizontal scaling factor
 	 */
-	void drawTextNoClearAt(Canvas canvas, double x, double y, String text, double xScaleFactor, int mode,
+	void drawTextNoClearAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode,
 			Paint bg);
 
 	/**
@@ -240,7 +240,7 @@ public interface TextFont {
 	 * @param canvas
 	 *            A Canvas
 	 */
-	void setGraphicsContext(Canvas canvas);
+	void setGraphicsContext(Layer canvas);
 
 	/**
 	 * Set up a canvas for drawing with this font.
@@ -259,7 +259,7 @@ public interface TextFont {
 	 *            Additional horizontal scaling, normally 0.5 (for half-width
 	 *            characters)
 	 */
-	void setGraphicsContext(Canvas canvas, double xScaleFactor);
+	void setGraphicsContext(Layer canvas, double xScaleFactor);
 
 	/**
 	 * Draw text at the given position.

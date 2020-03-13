@@ -76,15 +76,16 @@ public class Point2 implements Point {
 	@Override
 	public Point add(PositionVector deltaPos) {
 		double dz = deltaPos.z();
-		if(dz != 0)
+		if (dz != 0)
 			return new Point3(x() + deltaPos.x(), y() + deltaPos.y(), dz);
 		else
 			return new Point2(x() + deltaPos.x(), y() + deltaPos.y());
 	}
+
 	@Override
 	public Point sub(PositionVector deltaPos) {
 		double dz = deltaPos.z();
-		if(dz != 0)
+		if (dz != 0)
 			return new Point3(x() - deltaPos.x(), y() - deltaPos.y(), -dz);
 		else
 			return new Point2(x() - deltaPos.x(), y() - deltaPos.y());
@@ -109,6 +110,7 @@ public class Point2 implements Point {
 	public Point xyz(double newX, double newY, double newZ) {
 		return new Point3(newX, newY, newZ);
 	}
+
 	@Override
 	public Point diff(PositionVector point) {
 		return new Point2(x() - x, y() - y);
@@ -140,6 +142,39 @@ public class Point2 implements Point {
 					otherPoint.z() * fraction);
 		else
 			return new Point2(x + (otherPoint.x() - x) * fraction, y + (otherPoint.y() - y) * fraction);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		long temp;
+		temp = Double.doubleToLongBits(x);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(y);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Point)) {
+			return false;
+		}
+		Point other = (Point) obj;
+		if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x())) {
+			return false;
+		}
+		if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y())) {
+			return false;
+		}
+		if (Double.doubleToLongBits(z()) != Double.doubleToLongBits(other.z())) {
+			return false;
+		}
+		return true;
 	}
 
 }

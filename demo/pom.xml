@@ -24,6 +24,10 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>turtleduck-gl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-shell</artifactId>
 		</dependency>
 	</dependencies>

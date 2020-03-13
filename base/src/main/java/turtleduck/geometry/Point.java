@@ -65,11 +65,11 @@ public interface Point extends PositionVector {
 	 * @return A new point at x+deltaX, y+deltaY
 	 */
 	Point add(double deltaX, double deltaY);
-	
+
 	/**
 	 * Relative move
 	 *
-	 * @param bearing      Direction
+	 * @param bearing  Direction
 	 * @param distance Distance to move
 	 */
 	Point add(Bearing bearing, double distance);
@@ -80,6 +80,7 @@ public interface Point extends PositionVector {
 	 * @param other
 	 */
 	Point add(PositionVector other);
+
 	Point sub(PositionVector other);
 
 	/**
@@ -90,8 +91,9 @@ public interface Point extends PositionVector {
 	 * @return A new point at newX, newY
 	 */
 	Point xy(double newX, double newY);
-	
+
 	Point xyz(double newX, double newY, double newZ);
+
 	@Override
 	String toString();
 
@@ -114,8 +116,14 @@ public interface Point extends PositionVector {
 	 */
 	Point diff(PositionVector other);
 
+	/**
+	 * @return Bearing from (0,0) to this point
+	 */
 	Bearing asBearing();
 
+	/**
+	 * @return The distance from (0,0) to this point
+	 */
 	double asLength();
 
 	double distanceToSq(PositionVector otherPoint);
@@ -125,5 +133,11 @@ public interface Point extends PositionVector {
 	boolean isAbove(PositionVector otherPoint);
 
 	Point interpolate(Point otherPoint, double fraction);
+
+	@Override
+	int hashCode();
+
+	@Override
+	boolean equals(Object other);
 
 }

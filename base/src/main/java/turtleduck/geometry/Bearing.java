@@ -45,5 +45,12 @@ public interface Bearing {
 	double dirY();
 
 	double dirZ();
+	
+	@Override
+	int hashCode();
+	
+	@Override
+	boolean equals(Object other);
+	
 
 }

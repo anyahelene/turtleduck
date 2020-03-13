@@ -1,18 +1,24 @@
-package turtleduck.turtle;
+package turtleduck.display;
 
+import turtleduck.drawing.Drawing;
 import turtleduck.geometry.Point;
 import turtleduck.objects.IdentifiedObject;
+import turtleduck.turtle.Fill;
+import turtleduck.turtle.Path;
+import turtleduck.turtle.Pen;
+import turtleduck.turtle.SimpleTurtle;
+import turtleduck.turtle.TurtleDuck;
 import turtleduck.turtle.impl.BasePen;
 import turtleduck.turtle.impl.TurtleDuckImpl;
 
-public interface Canvas extends IdentifiedObject {
+public interface Canvas extends Layer {
 	/**
 	 * Draw a dot
 	 *
 	 * @param point Center point of the dot
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas dot(Stroke pen, Point point);
+//	Canvas dot(Stroke pen, Point point);
 
 	/**
 	 * Draw a line
@@ -21,7 +27,7 @@ public interface Canvas extends IdentifiedObject {
 	 * @param to   End point of the line
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas line(Stroke pen, Point from, Point to);
+//	Canvas line(Stroke pen, Point from, Point to);
 
 //	LineBuilder lines(Stroke pen, Point from);
 
@@ -31,7 +37,7 @@ public interface Canvas extends IdentifiedObject {
 	 * @param points A list of points
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas polyline(Stroke pen, Fill fill, Point... points);
+//	Canvas polyline(Stroke pen, Fill fill, Point... points);
 
 	/**
 	 * Fill a polygon
@@ -39,7 +45,7 @@ public interface Canvas extends IdentifiedObject {
 	 * @param points A list of points
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas polygon(Stroke pen, Fill fill, Point... points);
+//	Canvas polygon(Stroke pen, Fill fill, Point... points);
 
 	/**
 	 * Fill a strip of triangles
@@ -47,17 +53,13 @@ public interface Canvas extends IdentifiedObject {
 	 * @param points A list of points
 	 * @return {@code this}, for sending more draw commands
 	 */
-	Canvas triangles(Stroke pen, Fill fill, Point... points);
+//	Canvas triangles(Stroke pen, Fill fill, Point... points);
 
-	Canvas shape(Stroke pen, Fill fill, IShape shape);
-
-	Canvas path(Stroke pen, Fill fill, PathBuilder path);
+//	Canvas shape(Stroke pen, Fill fill, IShape shape);
 
 	Canvas clear();
 
 	Canvas clear(Fill fill);
-
-	TurtleControl createControl();
 	
 	Pen createPen();
 
@@ -65,6 +67,7 @@ public interface Canvas extends IdentifiedObject {
 
 	TurtleDuck createTurtleDuck();
 	
-	void flush();
-
+	Canvas flush();
+	Canvas draw(Path path);
+	Canvas draw(Drawing drawing);
 }

@@ -1,7 +1,7 @@
 package turtleduck.display;
 
 import turtleduck.objects.IdentifiedObject;
-import turtleduck.turtle.Canvas;
+import turtleduck.text.TextWindow;
 
 public interface Layer extends IdentifiedObject {
 	/**
@@ -10,7 +10,7 @@ public interface Layer extends IdentifiedObject {
 	 * <p>
 	 * Everything on the layer is removed, leaving only transparency.
 	 */
-	void clear();
+	Layer clear();
 
 	/**
 	 * Send this layer to the back, so it will be drawn behind any other layers.
@@ -21,12 +21,12 @@ public interface Layer extends IdentifiedObject {
 	 * {@link Screen#setBackground(javafx.scene.paint.Color)} and
 	 * {@link Screen#getBackgroundContext()}.
 	 */
-	void layerToBack();
+	Layer layerToBack();
 
 	/**
 	 * Send this layer to the front, so it will be drawn on top of any other layers.
 	 */
-	void layerToFront();
+	Layer layerToFront();
 
 	/**
 	 * @return Width (in pixels) of graphics layer
@@ -38,14 +38,13 @@ public interface Layer extends IdentifiedObject {
 	 */
 	double height();
 	
-	/**
-	 * @return A canvas for drawing on
-	 */
-	Canvas canvas();
 
-	void show();
+
+	Layer show();
 	
-	void hide();
+	Layer hide();
 
-	void flush();
+	Layer flush();
+	
+
 }

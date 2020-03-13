@@ -3,126 +3,97 @@ package turtleduck.tea;
 import org.teavm.jso.canvas.CanvasRenderingContext2D;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
 
-import turtleduck.display.impl.BaseLayer;
+import turtleduck.display.Canvas;
+import turtleduck.display.impl.BaseCanvas;
+import turtleduck.drawing.Drawing;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Canvas;
 import turtleduck.turtle.Fill;
-import turtleduck.turtle.IShape;
-import turtleduck.turtle.PathBuilder;
+import turtleduck.turtle.Path;
+import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
-import turtleduck.turtle.TurtleControl;
-import turtleduck.turtle.base.BaseCanvas;
 
-public class NativeTLayer extends BaseLayer<NativeTScreen> {
+public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 
 	protected HTMLCanvasElement element;
-	protected NativeTCanvas canvas;
+	protected CanvasRenderingContext2D context;
+	private Pen lastPen = null;
 
 	public NativeTLayer(String layerId, NativeTScreen screen, double width, double height, HTMLCanvasElement element) {
 		super(layerId, screen, width, height);
 		this.element = element;
-		this.canvas = new NativeTCanvas(layerId + ".canvas");
+		context = (CanvasRenderingContext2D) element.getContext("2d");
 	}
 
 	@Override
-	public void clear() {
+	public Canvas clear() {
 		element.clear();
+		return this;
 	}
 
 	@Override
-	public Canvas canvas() {
-		return canvas;
-	}
-
-	@Override
-	public void show() {
+	public Canvas show() {
 		element.setHidden(false);
+		return this;
 	}
 
 	@Override
-	public void hide() {
+	public Canvas hide() {
 		element.setHidden(true);
+		return this;
 	}
 
 	@Override
-	public void flush() {
+	public Canvas flush() {
 		// TODO Auto-generated method stub
-		
+		return this;
+
 	}
 
-	class NativeTCanvas extends BaseCanvas {
-		protected CanvasRenderingContext2D context;
-		public NativeTCanvas(String id) {
-			super(id);
-			context = (CanvasRenderingContext2D) element.getContext("2d");
-		}
+	protected void drawLine(Stroke pen, Point from, Point to) {
 
-		@Override
-		public Canvas dot(Stroke pen, Point point) {
-			return this;
-		}
+	}
 
-		@Override
-		public Canvas line(Stroke pen, Point from, Point to) {
-			context.moveTo(from.x(), from.y());
+	@Override
+	public Canvas clear(Fill fill) {
+		// TODO Auto-generated method stub
+		return this;
+	}
+
+	@Override
+	public Canvas draw(Path path) {
+		Point from = path.first();
+		Pen pen = path.pointPen(0);
+		context.moveTo(from.x(), from.y());
+
+		for (int i = 1; i < path.size(); i++) {
+			Point to = path.point(i);
+			if (pen != lastPen) {
+				context.stroke();
+				changeStroke(pen);
+				lastPen = pen;
+			}
+
 			context.lineTo(to.x(), to.y());
-			context.stroke();
-			return this;
-		}
 
-		@Override
-		public Canvas polyline(Stroke pen, Fill fill, Point... points) {
-			// TODO Auto-generated method stub
-			return this;
+			from = to;
+			pen = path.pointPen(i);
 		}
+		context.stroke();
+		return this;
+	}
 
-		@Override
-		public Canvas polygon(Stroke pen, Fill fill, Point... points) {
-			// TODO Auto-generated method stub
-			return this;
-		}
+	@Override
+	public Canvas draw(Drawing drawing) {
+		// TODO Auto-generated method stub
+		return this;
+	}
 
-		@Override
-		public Canvas triangles(Stroke pen, Fill fill, Point... points) {
-			// TODO Auto-generated method stub
-			return this;
-		}
+	protected void changeFill(Fill fill) {
+		context.setFillStyle(fill.fillPaint().toString());
+	}
 
-		@Override
-		public Canvas shape(Stroke pen, Fill fill, IShape shape) {
-			// TODO Auto-generated method stub
-			return this;
-		}
-
-		@Override
-		public Canvas path(Stroke pen, Fill fill, PathBuilder path) {
-			// TODO Auto-generated method stub
-			return this;
-		}
-
-		@Override
-		public Canvas clear() {
-			// TODO Auto-generated method stub
-			return this;
-		}
-
-		@Override
-		public Canvas clear(Fill fill) {
-			// TODO Auto-generated method stub
-			return this;
-		}
-
-		@Override
-		public TurtleControl createControl() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public void flush() {
-			// TODO Auto-generated method stub
-			
-		}
-		
+	protected void changeStroke(Stroke stroke) {
+		context.setStrokeStyle(stroke.strokePaint().toString());
+		context.setLineWidth(stroke.strokeWidth());
 	}
 }

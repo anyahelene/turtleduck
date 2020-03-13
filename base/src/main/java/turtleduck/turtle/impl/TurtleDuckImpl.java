@@ -4,27 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import turtleduck.colors.Paint;
+import turtleduck.display.Canvas;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.unused.Orientation;
 import turtleduck.objects.IdentifiedObject;
-import turtleduck.turtle.Canvas;
-import turtleduck.turtle.CommandRecorder;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.IShape;
-import turtleduck.turtle.LineBuilder;
 import turtleduck.turtle.Navigator;
 import turtleduck.turtle.Path;
-import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.ShapeImpl;
 import turtleduck.turtle.SimpleTurtle;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.TurtleDuck;
-import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.TurtleMark;
-import turtleduck.turtle.TurtlePathBuilder;
 
 public class TurtleDuckImpl implements TurtleDuck {
 	protected Navigator nav;
@@ -126,7 +121,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 		if (moving) {
 			moving = false;
 //				paths.add(nav.endPath());
-		
+
 		}
 		if (!drawing) {
 			drawing = true;
@@ -138,17 +133,10 @@ public class TurtleDuckImpl implements TurtleDuck {
 	protected void penUp() {
 		if (drawing) {
 			drawing = false;
-				Path path = nav.endPath();
+			Path path = nav.endPath();
+			canvas.draw(path);
 //				paths.add(path);
-				Point from = path.first();
-				Pen pen = path.pointPen(0);
-				for (int i = 1; i < path.size(); i++) {
-					Point to = path.point(i);
-					//Pen p = path.pointPen(i); // pen.change().strokePaint(path.pointColor(i)).strokeWidth(path.pointWidth(i)).done();
-					canvas.line(pen,from, to);
-					from = to;
-					pen = path.pointPen(i);
-				}
+
 		}
 		if (!moving) {
 			moving = true;
@@ -253,12 +241,6 @@ public class TurtleDuckImpl implements TurtleDuck {
 	}
 
 	@Override
-	public TurtlePathBuilder path() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Point position() {
 		return nav.position();
 	}
@@ -309,7 +291,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 		if (pen == null) {
 			pen = penBuilder.done();
 			penBuilder = null;
-			
+
 			if (drawing) {
 				nav.pen(pen);
 			}

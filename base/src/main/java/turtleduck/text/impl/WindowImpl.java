@@ -11,6 +11,7 @@ import java.util.stream.StreamSupport;
 
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
+import turtleduck.display.Canvas;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.text.Attribute;
@@ -24,7 +25,6 @@ import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
 import turtleduck.text.CodePoint.CodePoints;
 import turtleduck.text.Region;
-import turtleduck.turtle.Canvas;
 
 public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implements TextWindow {
 	protected static class Cell {
@@ -443,13 +443,14 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 	 * Redraw the part of the page that has changed since last redraw.
 	 */
 	@Override
-	public void flush() {
+	public TextWindow flush() {
 		if (isDirty()) {
 			if (DEBUG_REDRAW)
 				System.out.printf("flush(): Dirty region is (%d,%d)–(%d,%d)%n", dirtyX0, dirtyY0, dirtyX1, dirtyY1);
 			redraw(dirtyX0, dirtyY0, dirtyX1, dirtyY1, DEFAULT_ATTRS);
 			clean();
 		}
+		return this;
 	}
 
 	/**
@@ -504,16 +505,14 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 	}
 
 	@Override
-	public void clear() {
+	public TextWindow clear() {
 		clearRegion(0, 0, Integer.MAX_VALUE, Integer.MAX_VALUE, CodePoints.NUL, DEFAULT_ATTRS);
+		return this;
 	}
 
 	@Override
-	public abstract Canvas canvas();
+	public abstract TextWindow show();
 
 	@Override
-	public abstract void show();
-
-	@Override
-	public abstract void hide();
+	public abstract TextWindow hide();
 }

@@ -313,4 +313,31 @@ public class BearingImpl implements DirectionVector, Bearing {
 	public double dirZ() {
 		return 0;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (absolute ? 1231 : 1237);
+		result = prime * result + mas;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof BearingImpl)) {
+			return false;
+		}
+		BearingImpl other = (BearingImpl) obj;
+		if (absolute != other.absolute) {
+			return false;
+		}
+		if (mas != other.mas) {
+			return false;
+		}
+		return true;
+	}
 }

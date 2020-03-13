@@ -2,7 +2,7 @@ package turtleduck.drawing;
 
 import turtleduck.geometry.BoundingBox;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Canvas;
+import turtleduck.turtle.Path;
 
 public interface Drawing {
 
@@ -10,5 +10,6 @@ public interface Drawing {
 
 	Point position();
 	
-	void draw(Canvas canvas);
+	Drawing draw(Path path);
+	Drawing draw(Drawing subDrawing);
 }

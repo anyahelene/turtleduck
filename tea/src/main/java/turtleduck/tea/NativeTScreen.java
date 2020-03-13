@@ -10,6 +10,7 @@ import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
 
 import turtleduck.colors.Paint;
+import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
@@ -52,7 +53,7 @@ public class NativeTScreen extends BaseScreen {
 	}
 
 	@Override
-	public Layer createPainter() {
+	public Canvas createCanvas() {
 		HTMLCanvasElement canvas = (HTMLCanvasElement) document.createElement("canvas");
 		String layerId = newLayerId();
 		canvas.setAttribute("id", layerId);

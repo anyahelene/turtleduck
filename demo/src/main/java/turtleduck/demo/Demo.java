@@ -4,17 +4,11 @@ import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
+import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
-import turtleduck.geometry.Point;
-import turtleduck.turtle.Canvas;
-import turtleduck.turtle.CommandRecorder;
 import turtleduck.turtle.Pen;
-import turtleduck.turtle.SimpleTurtle;
-import turtleduck.turtle.TurtleAnimation;
-import turtleduck.turtle.TurtleControl;
 import turtleduck.turtle.TurtleDuck;
-import turtleduck.turtle.base.SvgCanvas;
 
 public class Demo implements TurtleDuckApp {
 
@@ -141,10 +135,6 @@ public class Demo implements TurtleDuckApp {
 		turtle.done();
 	}
 
-	private TurtleControl recorder;
-
-	private TurtleAnimation anim;
-
 	private Canvas canvas, debugCanvas;
 
 	private TurtleDuck turtle;
@@ -160,16 +150,7 @@ public class Demo implements TurtleDuckApp {
 
 		long startMillis = System.currentTimeMillis();
 //		System.out.println(deltaTime);
-		if (anim != null) {
-			boolean more = anim.step(deltaTime);
-			debugCanvas.clear();
-			anim.debug(debugTurtle);
-			if (!more) {
-				turtle.turn(Math.PI / 2);
-				turtle.move(100);
-				anim = ((CommandRecorder) recorder).playbackAnimation(turtle);
-			}
-		}
+
 		if (true) {
 			debugTurtle.moveTo(200 * Math.cos(step / 36.0) + 500, 200 * Math.sin(step / 36.0) + 500).turnTo(step * 10);
 			colorWheel(debugTurtle, -50);
@@ -198,12 +179,10 @@ public class Demo implements TurtleDuckApp {
 	public void start(Screen screen) {
 		screen.setBackground(Paint.color(1, 1, 1));
 		screen.clearBackground();
-		Layer layer = screen.createPainter();
-		canvas = false ? new SvgCanvas() : layer.canvas();
-		debugCanvas = screen.debugLayer().canvas();
+		canvas = screen.createCanvas();
+		debugCanvas = screen.debugCanvas();
 		debugPen = debugCanvas.createPen().change().strokePaint(Colors.GREEN).strokeWidth(1).done();
-		duckLayer = screen.createPainter();
-		duckCanvas = duckLayer.canvas();
+		duckCanvas = screen.createCanvas();
 
 		debugTurtle = debugCanvas.createTurtleDuck().pen(debugPen);
 		long startMillis = System.currentTimeMillis();

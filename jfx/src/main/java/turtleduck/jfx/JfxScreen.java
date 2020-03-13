@@ -178,7 +178,7 @@ public class JfxScreen extends BaseScreen {
 	}
 
 	@Override
-	public Layer createPainter() {
+	public turtleduck.display.Canvas createCanvas() {
 		Canvas canvas = newCanvas();
 		var layer = addLayer(new JfxLayer(newLayerId(), width(), getHeight(), this, canvas));
 		layerCanvases.put(layer, canvas);

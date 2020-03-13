@@ -12,23 +12,27 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
+import turtleduck.display.Canvas;
+import turtleduck.display.Layer;
+import turtleduck.drawing.Drawing;
 import turtleduck.text.TextMode;
+import turtleduck.text.TextWindow;
 import turtleduck.text.impl.WindowImpl;
 import turtleduck.text.Attribute;
 import turtleduck.text.Attributes;
 import turtleduck.text.Region;
 import turtleduck.text.TextFont;
-import turtleduck.turtle.Canvas;
+import turtleduck.turtle.Path;
 
 public class JfxTextWindow extends WindowImpl<JfxScreen> {
 	private final javafx.scene.canvas.Canvas fxCanvas;
-	private final JfxCanvas tdCanvas;
+	protected final GraphicsContext context;
 
 	public JfxTextWindow(String id, TextMode mode, JfxScreen screen, double width, double height,
 			javafx.scene.canvas.Canvas canvas) {
 		super(id, mode, screen, width, height);
 		fxCanvas = canvas;
-		this.tdCanvas = new JfxCanvas(id + ".canvas", canvas);
+		context = canvas.getGraphicsContext2D();
 	}
 
 	@Override
@@ -56,7 +60,7 @@ public class JfxTextWindow extends WindowImpl<JfxScreen> {
 				font = JfxTextFont.FONT_ZXSPECTRUM7;
 			if (!s.equals("")) {
 				context.setFill(JfxColor.toJfxPaint(elt.attributes().get(Attribute.ATTR_FOREGROUND)));
-				font.drawTextAt(tdCanvas, (elt.x() - 1) * getCharWidth(), elt.y() * getCharHeight(), s,
+				font.drawTextAt(this, (elt.x() - 1) * getCharWidth(), elt.y() * getCharHeight(), s,
 						textMode.getCharWidth() / textMode.getCharBoxSize(), 0, null);
 			}
 		});
@@ -163,7 +167,7 @@ public class JfxTextWindow extends WindowImpl<JfxScreen> {
 				font = JfxTextFont.FONT_ZXSPECTRUM7;
 			Font f = font.getFont(Font.class);
 
-			font.drawTextAt(tdCanvas, (x - 1) * getCharWidth(), y * getCharHeight(), c.codePoint().stringValue(),
+			font.drawTextAt(this, (x - 1) * getCharWidth(), y * getCharHeight(), c.codePoint().stringValue(),
 					textMode.getCharWidth() / textMode.getCharBoxSize(), 0, null);
 		} catch (RuntimeException e) {
 			e.printStackTrace();
@@ -203,30 +207,30 @@ public class JfxTextWindow extends WindowImpl<JfxScreen> {
 	}
 
 	@Override
-	public void clear() {
+	public TextWindow clear() {
 		super.clear();
 		fxCanvas.getGraphicsContext2D().clearRect(0, 0, fxCanvas.getWidth(), fxCanvas.getHeight());
+		return this;
 	}
 
-	@Override
-	public Canvas canvas() {
-		return tdCanvas;
-	}
+	
 
 	@Override
-	public void show() {
+	public TextWindow show() {
 		fxCanvas.setVisible(false);
+		return this;
 	}
 
 	@Override
-	public void hide() {
+	public TextWindow hide() {
 		fxCanvas.setVisible(true);
+		return this;
 	}
 
 	@Override
-	public void flush() {
+	public TextWindow flush() {
 		super.flush();
-		tdCanvas.flush();
+		return this;
 	}
 
 }

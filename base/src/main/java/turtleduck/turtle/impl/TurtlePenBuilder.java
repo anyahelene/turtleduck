@@ -2,7 +2,6 @@ package turtleduck.turtle.impl;
 
 import turtleduck.colors.Paint;
 import turtleduck.geometry.Projection;
-import turtleduck.turtle.PathBuilder;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.Stroke;

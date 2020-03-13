@@ -38,9 +38,9 @@ public interface Navigator extends PositionVector, DirectionVector {
 	Navigator goTo(Waypoint dest);
 
 	Navigator goTo(Point dest);
-	
+
 	Navigator pen(Pen pen);
-	
+
 	Pen pen();
 
 	Waypoint waypoint();
@@ -56,8 +56,10 @@ public interface Navigator extends PositionVector, DirectionVector {
 	boolean isAt(PositionVector point);
 
 	static class DefaultNavigator implements Navigator, Cloneable {
-		PathPoint current;
-		List<PathPoint> points = new ArrayList<>();
+		protected boolean recordMoves = false;
+		protected boolean recordTurns = false;
+		protected PathPoint current;
+		protected List<PathPoint> points = new ArrayList<>();
 
 		public DefaultNavigator(Point p, Bearing b, Pen pen) {
 			current = new PathPoint();
@@ -67,6 +69,7 @@ public interface Navigator extends PositionVector, DirectionVector {
 			current.type = Path.PointType.POINT;
 			points.add(current);
 		}
+
 		@Override
 		public Bearing bearing() {
 			return current.bearing;
@@ -103,7 +106,14 @@ public interface Navigator extends PositionVector, DirectionVector {
 		}
 
 		protected void bearing(Bearing b) {
-			current.bearing = current.bearing.add(b);
+			if (recordTurns) {
+				PathPoint pp = current.copy();
+				pp.bearing = current.bearing.add(b);
+				points.add(pp);
+				current = pp;
+			} else {
+				current.bearing = current.bearing.add(b);
+			}
 		}
 
 		@Override
@@ -123,7 +133,8 @@ public interface Navigator extends PositionVector, DirectionVector {
 
 		@Override
 		public Navigator go(double radians, double distance) {
-			bearing(Bearing.relative(radians));
+			if (radians != 0.0)
+				bearing(Bearing.relative(radians));
 			forward(distance);
 			return this;
 		}
@@ -197,6 +208,7 @@ public interface Navigator extends PositionVector, DirectionVector {
 			points = new ArrayList<>();
 			points.add(current);
 		}
+
 		@Override
 		public Path endPath() {
 			Path path = Path.fromList(points);
@@ -210,14 +222,14 @@ public interface Navigator extends PositionVector, DirectionVector {
 
 		@Override
 		public Bearing bearing(int index) {
-			if(index < 0)
+			if (index < 0)
 				index = points.size() + index;
 			return points.get(index).bearing;
 		}
 
 		@Override
 		public Point position(int index) {
-			if(index < 0)
+			if (index < 0)
 				index = points.size() + index;
 			return points.get(index).point;
 		}
