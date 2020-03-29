@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import turtleduck.events.KeyCode;
 import turtleduck.events.KeyEvent;
 import turtleduck.events.impl.KeyEventImpl;
 import turtleduck.text.Graphemizer;

@@ -1,0 +1,269 @@
+key,id,name,js,fx,awt,gl,cat,doc
+Special.UNDEFINED,0x210000,UNDEFINED,Undefined,UNDEFINED,VK_UNDEFINED,,Special,The Undefined key
+Modifier.ALT,0x220000,ALT,Alt,ALT,VK_ALT,,Modifier,The Alt key
+Modifier.ALT_GRAPH,0x220001,ALT_GRAPH,AltGraph,ALT_GRAPH,VK_ALT_GRAPH,,Modifier,The Alt Graph key
+Modifier.CAPS_LOCK,0x220002,CAPS_LOCK,CapsLock,CAPS,VK_CAPS_LOCK,GLFW_KEY_CAPS_LOCK,Modifier,The Caps Lock key
+Modifier.CONTROL,0x220003,CONTROL,Control,CONTROL,VK_CONTROL,,Modifier,The Control key
+Modifier.FN,0x220004,FN,Fn,,,,Modifier,The Fn key
+Modifier.META,0x220005,META,,META,VK_META,,Modifier,The Meta key
+Modifier.OS,0x220006,OS,Meta,WINDOWS,VK_WINDOWS,,Modifier,The Os key
+Modifier.NUM_LOCK,0x220007,NUM_LOCK,NumLock,NUM_LOCK,VK_NUM_LOCK,GLFW_KEY_NUM_LOCK,Modifier,The Num Lock key
+Modifier.SCROLL_LOCK,0x220008,SCROLL_LOCK,ScrollLock,SCROLL_LOCK,VK_SCROLL_LOCK,GLFW_KEY_SCROLL_LOCK,Modifier,The Scroll Lock key
+Modifier.SHIFT,0x220009,SHIFT,Shift,SHIFT,VK_SHIFT,,Modifier,The Shift key
+Modifier.SYMBOL,0x22000a,SYMBOL,Symbol,,,,Modifier,The Symbol key
+Whitespace.ENTER,0x230000,ENTER,Enter,ENTER,VK_ENTER,GLFW_KEY_ENTER,Whitespace,The Enter key
+Whitespace.TAB,0x230001,TAB,Tab,TAB,VK_TAB,GLFW_KEY_TAB,Whitespace,The Tab key
+Navigation.ARROW_DOWN,0x240000,ARROW_DOWN,ArrowDown,DOWN,VK_DOWN,,Navigation,The Arrow Down key
+Navigation.ARROW_LEFT,0x240001,ARROW_LEFT,ArrowLeft,LEFT,VK_LEFT,,Navigation,The Arrow Left key
+Navigation.ARROW_RIGHT,0x240002,ARROW_RIGHT,ArrowRight,RIGHT,VK_RIGHT,,Navigation,The Arrow Right key
+Navigation.ARROW_UP,0x240003,ARROW_UP,ArrowUp,UP,VK_UP,,Navigation,The Arrow Up key
+Navigation.END,0x240004,END,End,END,VK_END,GLFW_KEY_END,Navigation,The End key
+Navigation.HOME,0x240005,HOME,Home,HOME,VK_HOME,GLFW_KEY_HOME,Navigation,The Home key
+Navigation.PAGE_DOWN,0x240006,PAGE_DOWN,PageDown,PAGE_DOWN,VK_PAGE_DOWN,GLFW_KEY_PAGE_DOWN,Navigation,The Page Down key
+Navigation.PAGE_UP,0x240007,PAGE_UP,PageUp,PAGE_UP,VK_PAGE_UP,GLFW_KEY_PAGE_UP,Navigation,The Page Up key
+Editing.BACKSPACE,0x250000,BACKSPACE,Backspace,BACK_SPACE,VK_BACK_SPACE,GLFW_KEY_BACKSPACE,Editing,The Backspace key
+Editing.CLEAR,0x250001,CLEAR,Clear,CLEAR,VK_CLEAR,,Editing,The Clear key
+Editing.COPY,0x250002,COPY,Copy,COPY,VK_COPY,,Editing,The Copy key
+Editing.CR_SEL,0x250003,CR_SEL,CrSel,,,,Editing,The Cr Sel key
+Editing.CUT,0x250004,CUT,Cut,CUT,VK_CUT,,Editing,The Cut key
+Editing.DELETE,0x250005,DELETE,Delete,DELETE,VK_DELETE,GLFW_KEY_DELETE,Editing,The Delete key
+Editing.ERASE_EOF,0x250006,ERASE_EOF,EraseEof,,,,Editing,The Erase Eof key
+Editing.EX_SEL,0x250007,EX_SEL,ExSel,,,,Editing,The Ex Sel key
+Editing.INSERT,0x250008,INSERT,Insert,INSERT,VK_INSERT,GLFW_KEY_INSERT,Editing,The Insert key
+Editing.PASTE,0x250009,PASTE,Paste,PASTE,VK_PASTE,,Editing,The Paste key
+Editing.REDO,0x25000a,REDO,Redo,AGAIN,VK_AGAIN,,Editing,The Redo key
+Editing.UNDO,0x25000b,UNDO,Undo,UNDO,VK_UNDO,,Editing,The Undo key
+UI.ACCEPT,0x260000,ACCEPT,Accept,ACCEPT,VK_ACCEPT,,UI,The Accept key
+UI.ATTN,0x260001,ATTN,Attn,,,,UI,The Attn key
+UI.CANCEL,0x260002,CANCEL,Cancel,CANCEL,VK_CANCEL,,UI,The Cancel key
+UI.CONTEXT_MENU,0x260003,CONTEXT_MENU,ContextMenu,CONTEXT_MENU,VK_CONTEXT_MENU,,UI,The Context Menu key
+UI.ESCAPE,0x260004,ESCAPE,Escape,ESCAPE,VK_ESCAPE,GLFW_KEY_ESCAPE,UI,The Escape key
+UI.EXECUTE,0x260005,EXECUTE,Execute,,,,UI,The Execute key
+UI.FIND,0x260006,FIND,Find,FIND,VK_FIND,,UI,The Find key
+UI.HELP,0x260007,HELP,Help,HELP,VK_HELP,,UI,The Help key
+UI.PAUSE,0x260008,PAUSE,Pause,,,GLFW_KEY_PAUSE,UI,The Pause key
+UI.PLAY,0x260009,PLAY,Play,,,,UI,The Play key
+UI.SELECT,0x26000a,SELECT,Select,,,,UI,The Select key
+UI.ZOOM_IN,0x26000b,ZOOM_IN,ZoomIn,,,,UI,The Zoom In key
+UI.ZOOM_OUT,0x26000c,ZOOM_OUT,ZoomOut,,,,UI,The Zoom Out key
+Device.BRIGHTNESS_DOWN,0x270000,BRIGHTNESS_DOWN,BrightnessDown,,,,Device,The Brightness Down key
+Device.BRIGHTNESS_UP,0x270001,BRIGHTNESS_UP,BrightnessUp,,,,Device,The Brightness Up key
+Device.EJECT,0x270002,EJECT,Eject,EJECT_TOGGLE,,,Device,The Eject key
+Device.LOG_OFF,0x270003,LOG_OFF,LogOff,,,,Device,The Log Off key
+Device.POWER,0x270004,POWER,Power,POWER,,,Device,The Power key
+Device.POWER_OFF,0x270005,POWER_OFF,PowerOff,,,,Device,The Power Off key
+Device.PRINT_SCREEN,0x270006,PRINT_SCREEN,PrintScreen,PRINTSCREEN,VK_PRINTSCREEN,GLFW_KEY_PRINT_SCREEN,Device,The Print Screen key
+Device.HIBERNATE,0x270007,HIBERNATE,Hibernate,,,,Device,The Hibernate key
+Device.STANDBY,0x270008,STANDBY,Standby,,,,Device,The Standby key
+Device.WAKE_UP,0x270009,WAKE_UP,WakeUp,,,,Device,The Wake Up key
+Composition.ALL_CANDIDATES,0x280000,ALL_CANDIDATES,AllCandidates,ALL_CANDIDATES,VK_ALL_CANDIDATES,,Composition,The All Candidates key
+Composition.ALPHANUMERIC,0x280001,ALPHANUMERIC,Alphanumeric,ALPHANUMERIC,VK_ALPHANUMERIC,,Composition,The Alphanumeric key
+Composition.CODE_INPUT,0x280002,CODE_INPUT,CodeInput,CODE_INPUT,VK_CODE_INPUT,,Composition,The Code Input key
+Composition.COMPOSE,0x280003,COMPOSE,Compose,COMPOSE,VK_COMPOSE,,Composition,The Compose key
+Composition.CONVERT,0x280004,CONVERT,Convert,CONVERT,VK_CONVERT,,Composition,The Convert key
+Composition.DEAD,0x280005,DEAD,Dead,,,,Composition,The Dead key
+Composition.FINAL_MODE,0x280006,FINAL_MODE,FinalMode,FINAL,VK_FINAL,,Composition,The Final Mode key
+Composition.GROUP_FIRST,0x280007,GROUP_FIRST,GroupFirst,,,,Composition,The Group First key
+Composition.GROUP_LAST,0x280008,GROUP_LAST,GroupLast,,,,Composition,The Group Last key
+Composition.GROUP_NEXT,0x280009,GROUP_NEXT,GroupNext,,,,Composition,The Group Next key
+Composition.GROUP_PREVIOUS,0x28000a,GROUP_PREVIOUS,GroupPrevious,,,,Composition,The Group Previous key
+Composition.MODE_CHANGE,0x28000b,MODE_CHANGE,ModeChange,MODECHANGE,VK_MODECHANGE,,Composition,The Mode Change key
+Composition.NON_CONVERT,0x28000c,NON_CONVERT,NonConvert,NONCONVERT,VK_NONCONVERT,,Composition,The Non Convert key
+Composition.PREVIOUS_CANDIDATE,0x28000d,PREVIOUS_CANDIDATE,PreviousCandidate,PREVIOUS_CANDIDATE,VK_PREVIOUS_CANDIDATE,,Composition,The Previous Candidate key
+Composition.PROCESS,0x28000e,PROCESS,Process,,,,Composition,The Process key
+Composition.SINGLE_CANDIDATE,0x28000f,SINGLE_CANDIDATE,SingleCandidate,,,,Composition,The Single Candidate key
+Composition.HANGUL_MODE,0x280010,HANGUL_MODE,HangulMode,,,,Composition,The Hangul Mode key
+Composition.HANJA_MODE,0x280011,HANJA_MODE,HanjaMode,,,,Composition,The Hanja Mode key
+Composition.JUNJA_MODE,0x280012,JUNJA_MODE,JunjaMode,,,,Composition,The Junja Mode key
+Composition.EISU,0x280013,EISU,Eisu,,,,Composition,The Eisu key
+Composition.HANKAKU,0x280014,HANKAKU,Hankaku,HALF_WIDTH,VK_HALF_WIDTH,,Composition,The Hankaku key
+Composition.HIRAGANA,0x280015,HIRAGANA,Hiragana,HIRAGANA,VK_HIRAGANA,,Composition,The Hiragana key
+Composition.HIRAGANA_KATAKANA,0x280016,HIRAGANA_KATAKANA,HiraganaKatakana,,,,Composition,The Hiragana Katakana key
+Composition.KANA_MODE,0x280017,KANA_MODE,KanaMode,KANA_LOCK,VK_KANA_LOCK,,Composition,The Kana Mode key
+Composition.KANJI_MODE,0x280018,KANJI_MODE,KanjiMode,KANJI,VK_KANJI,,Composition,The Kanji Mode key
+Composition.KATAKANA,0x280019,KATAKANA,Katakana,KATAKANA,VK_KATAKANA,,Composition,The Katakana key
+Composition.ROMAJI,0x28001a,ROMAJI,Romaji,ROMAN_CHARACTERS,VK_ROMAN_CHARACTERS,,Composition,The Romaji key
+Composition.ZENKAKU,0x28001b,ZENKAKU,Zenkaku,FULL_WIDTH,VK_FULL_WIDTH,,Composition,The Zenkaku key
+Composition.ZENKAKU_HANKAKU,0x28001c,ZENKAKU_HANKAKU,ZenkakuHankaku,,,,Composition,The Zenkaku Hankaku key
+Function.F1,0x290000,F1,F1,F1,VK_F1,GLFW_KEY_F1,Function,The F1 key
+Function.F2,0x290001,F2,F2,F2,VK_F2,GLFW_KEY_F2,Function,The F2 key
+Function.F3,0x290002,F3,F3,F3,VK_F3,GLFW_KEY_F3,Function,The F3 key
+Function.F4,0x290003,F4,F4,F4,VK_F4,GLFW_KEY_F4,Function,The F4 key
+Function.F5,0x290004,F5,F5,F5,VK_F5,GLFW_KEY_F5,Function,The F5 key
+Function.F6,0x290005,F6,F6,F6,VK_F6,GLFW_KEY_F6,Function,The F6 key
+Function.F7,0x290006,F7,F7,F7,VK_F7,GLFW_KEY_F7,Function,The F7 key
+Function.F8,0x290007,F8,F8,F8,VK_F8,GLFW_KEY_F8,Function,The F8 key
+Function.F9,0x290008,F9,F9,F9,VK_F9,GLFW_KEY_F9,Function,The F9 key
+Function.F10,0x290009,F10,F10,F10,VK_F10,GLFW_KEY_F10,Function,The F10 key
+Function.F11,0x29000a,F11,F11,F11,VK_F11,GLFW_KEY_F11,Function,The F11 key
+Function.F12,0x29000b,F12,F12,F12,VK_F12,GLFW_KEY_F12,Function,The F12 key
+Function.F13,0x29000c,F13,F13,F13,VK_F13,GLFW_KEY_F13,Function,The F13 key
+Function.F14,0x29000d,F14,F14,F14,VK_F14,GLFW_KEY_F14,Function,The F14 key
+Function.F15,0x29000e,F15,F15,F15,VK_F15,GLFW_KEY_F15,Function,The F15 key
+Function.F16,0x29000f,F16,F16,F16,VK_F16,GLFW_KEY_F16,Function,The F16 key
+Function.F17,0x290010,F17,F17,F17,VK_F17,GLFW_KEY_F17,Function,The F17 key
+Function.F18,0x290011,F18,F18,F18,VK_F18,GLFW_KEY_F18,Function,The F18 key
+Function.F19,0x290012,F19,F19,F19,VK_F19,GLFW_KEY_F19,Function,The F19 key
+Function.F20,0x290013,F20,F20,F20,VK_F20,GLFW_KEY_F20,Function,The F20 key
+Function.F21,0x290014,F21,F21,F21,VK_F21,GLFW_KEY_F21,Function,The F21 key
+Function.F22,0x290015,F22,F22,F22,VK_F22,GLFW_KEY_F22,Function,The F22 key
+Function.F23,0x290016,F23,F23,F23,VK_F23,GLFW_KEY_F23,Function,The F23 key
+Function.F24,0x290017,F24,F24,F24,VK_F24,GLFW_KEY_F24,Function,The F24 key
+Function.F25,0x290018,F25,F25,,,GLFW_KEY_F25,Function,The F25 key
+Function.F26,0x290019,F26,F26,,,,Function,The F26 key
+Function.F27,0x29001a,F27,F27,,,,Function,The F27 key
+Function.F28,0x29001b,F28,F28,,,,Function,The F28 key
+Function.F29,0x29001c,F29,F29,,,,Function,The F29 key
+Function.F30,0x29001d,F30,F30,,,,Function,The F30 key
+Function.F31,0x29001e,F31,F31,,,,Function,The F31 key
+Function.F32,0x29001f,F32,F32,,,,Function,The F32 key
+Function.F33,0x290020,F33,F33,,,,Function,The F33 key
+Function.F34,0x290021,F34,F34,,,,Function,The F34 key
+Function.F35,0x290022,F35,F35,,,,Function,The F35 key
+Phone.APP_SWITCH,0x2a0000,APP_SWITCH,AppSwitch,,,,Phone,The App Switch key
+Phone.CALL,0x2a0001,CALL,Call,,,,Phone,The Call key
+Phone.CAMERA,0x2a0002,CAMERA,Camera,,,,Phone,The Camera key
+Phone.CAMERA_FOCUS,0x2a0003,CAMERA_FOCUS,CameraFocus,,,,Phone,The Camera Focus key
+Phone.END_CALL,0x2a0004,END_CALL,EndCall,,,,Phone,The End Call key
+Phone.GO_BACK,0x2a0005,GO_BACK,GoBack,,,,Phone,The Go Back key
+Phone.GO_HOME,0x2a0006,GO_HOME,GoHome,,,,Phone,The Go Home key
+Phone.HEADSET_HOOK,0x2a0007,HEADSET_HOOK,HeadsetHook,,,,Phone,The Headset Hook key
+Phone.LAST_NUMBER_REDIAL,0x2a0008,LAST_NUMBER_REDIAL,LastNumberRedial,,,,Phone,The Last Number Redial key
+Phone.NOTIFICATION,0x2a0009,NOTIFICATION,Notification,,,,Phone,The Notification key
+Phone.MANNER_MODE,0x2a000a,MANNER_MODE,MannerMode,,,,Phone,The Manner Mode key
+Phone.VOICE_DIAL,0x2a000b,VOICE_DIAL,VoiceDial,,,,Phone,The Voice Dial key
+Multimedia.CHANNEL_DOWN,0x2b0000,CHANNEL_DOWN,ChannelDown,CHANNEL_DOWN,,,Multimedia,The Channel Down key
+Multimedia.CHANNEL_UP,0x2b0001,CHANNEL_UP,ChannelUp,CHANNEL_UP,,,Multimedia,The Channel Up key
+Multimedia.MEDIA_FAST_FORWARD,0x2b0002,MEDIA_FAST_FORWARD,MediaFastForward,FAST_FWD,,,Multimedia,The Media Fast Forward key
+Multimedia.MEDIA_PAUSE,0x2b0003,MEDIA_PAUSE,MediaPause,PAUSE,VK_PAUSE,,Multimedia,The Media Pause key
+Multimedia.MEDIA_PLAY,0x2b0004,MEDIA_PLAY,MediaPlay,PLAY,,,Multimedia,The Media Play key
+Multimedia.MEDIA_PLAY_PAUSE,0x2b0005,MEDIA_PLAY_PAUSE,MediaPlayPause,,,,Multimedia,The Media Play Pause key
+Multimedia.MEDIA_RECORD,0x2b0006,MEDIA_RECORD,MediaRecord,RECORD,,,Multimedia,The Media Record key
+Multimedia.MEDIA_REWIND,0x2b0007,MEDIA_REWIND,MediaRewind,REWIND,,,Multimedia,The Media Rewind key
+Multimedia.MEDIA_STOP,0x2b0008,MEDIA_STOP,MediaStop,STOP,VK_STOP,,Multimedia,The Media Stop key
+Multimedia.MEDIA_TRACK_NEXT,0x2b0009,MEDIA_TRACK_NEXT,MediaTrackNext,TRACK_NEXT,,,Multimedia,The Media Track Next key
+Multimedia.MEDIA_TRACK_PREVIOUS,0x2b000a,MEDIA_TRACK_PREVIOUS,MediaTrackPrevious,TRACK_PREV,,,Multimedia,The Media Track Previous key
+Audio.AUDIO_BALANCE_LEFT,0x2c0000,AUDIO_BALANCE_LEFT,AudioBalanceLeft,,,,Audio,The Audio Balance Left key
+Audio.AUDIO_BALANCE_RIGHT,0x2c0001,AUDIO_BALANCE_RIGHT,AudioBalanceRight,,,,Audio,The Audio Balance Right key
+Audio.AUDIO_BASS_DOWN,0x2c0002,AUDIO_BASS_DOWN,AudioBassDown,,,,Audio,The Audio Bass Down key
+Audio.AUDIO_BASS_UP,0x2c0003,AUDIO_BASS_UP,AudioBassUp,,,,Audio,The Audio Bass Up key
+Audio.AUDIO_BASS_BOOST_DOWN,0x2c0004,AUDIO_BASS_BOOST_DOWN,AudioBassBoostDown,,,,Audio,The Audio Bass Boost Down key
+Audio.AUDIO_BASS_BOOST_UP,0x2c0005,AUDIO_BASS_BOOST_UP,AudioBassBoostUp,,,,Audio,The Audio Bass Boost Up key
+Audio.AUDIO_BASS_BOOST_TOGGLE,0x2c0006,AUDIO_BASS_BOOST_TOGGLE,AudioBassBoostToggle,,,,Audio,The Audio Bass Boost Toggle key
+Audio.AUDIO_FADER_FRONT,0x2c0007,AUDIO_FADER_FRONT,AudioFaderFront,,,,Audio,The Audio Fader Front key
+Audio.AUDIO_FADER_REAR,0x2c0008,AUDIO_FADER_REAR,AudioFaderRear,,,,Audio,The Audio Fader Rear key
+Audio.AUDIO_SURROUND_MODE_NEXT,0x2c0009,AUDIO_SURROUND_MODE_NEXT,AudioSurroundModeNext,,,,Audio,The Audio Surround Mode Next key
+Audio.AUDIO_TREBLE_DOWN,0x2c000a,AUDIO_TREBLE_DOWN,AudioTrebleDown,,,,Audio,The Audio Treble Down key
+Audio.AUDIO_TREBLE_UP,0x2c000b,AUDIO_TREBLE_UP,AudioTrebleUp,,,,Audio,The Audio Treble Up key
+Audio.AUDIO_VOLUME_DOWN,0x2c000c,AUDIO_VOLUME_DOWN,AudioVolumeDown,VOLUME_DOWN,,,Audio,The Audio Volume Down key
+Audio.AUDIO_VOLUME_UP,0x2c000d,AUDIO_VOLUME_UP,AudioVolumeUp,VOLUME_UP,,,Audio,The Audio Volume Up key
+Audio.AUDIO_VOLUME_MUTE,0x2c000e,AUDIO_VOLUME_MUTE,AudioVolumeMute,MUTE,,,Audio,The Audio Volume Mute key
+Audio.MICROPHONE_VOLUME_MUTE,0x2c000f,MICROPHONE_VOLUME_MUTE,MicrophoneVolumeMute,,,,Audio,The Microphone Volume Mute key
+Audio.MICROPHONE_VOLUME_DOWN,0x2c0010,MICROPHONE_VOLUME_DOWN,MicrophoneVolumeDown,,,,Audio,The Microphone Volume Down key
+Audio.MICROPHONE_VOLUME_UP,0x2c0011,MICROPHONE_VOLUME_UP,MicrophoneVolumeUp,,,,Audio,The Microphone Volume Up key
+Audio.MICROPHONE_TOGGLE,0x2c0012,MICROPHONE_TOGGLE,MicrophoneToggle,,,,Audio,The Microphone Toggle key
+Launch.LAUNCH_CALCULATOR,0x2d0000,LAUNCH_CALCULATOR,LaunchCalculator,,,,Launch,The Launch Calculator key
+Launch.LAUNCH_CALENDAR,0x2d0001,LAUNCH_CALENDAR,LaunchCalendar,,,,Launch,The Launch Calendar key
+Launch.LAUNCH_CONTACTS,0x2d0002,LAUNCH_CONTACTS,LaunchContacts,,,,Launch,The Launch Contacts key
+Launch.LAUNCH_MAIL,0x2d0003,LAUNCH_MAIL,LaunchMail,,,,Launch,The Launch Mail key
+Launch.LAUNCH_MEDIA_PLAYER,0x2d0004,LAUNCH_MEDIA_PLAYER,LaunchMediaPlayer,,,,Launch,The Launch Media Player key
+Launch.LAUNCH_MUSIC_PLAYER,0x2d0005,LAUNCH_MUSIC_PLAYER,LaunchMusicPlayer,,,,Launch,The Launch Music Player key
+Launch.LAUNCH_MY_COMPUTER,0x2d0006,LAUNCH_MY_COMPUTER,LaunchMyComputer,,,,Launch,The Launch My Computer key
+Launch.LAUNCH_SCREEN_SAVER,0x2d0007,LAUNCH_SCREEN_SAVER,LaunchScreenSaver,,,,Launch,The Launch Screen Saver key
+Launch.LAUNCH_SPREADSHEET,0x2d0008,LAUNCH_SPREADSHEET,LaunchSpreadsheet,,,,Launch,The Launch Spreadsheet key
+Launch.LAUNCH_WEB_BROWSER,0x2d0009,LAUNCH_WEB_BROWSER,LaunchWebBrowser,,,,Launch,The Launch Web Browser key
+Launch.LAUNCH_WEB_CAM,0x2d000a,LAUNCH_WEB_CAM,LaunchWebCam,,,,Launch,The Launch Web Cam key
+Launch.LAUNCH_WORD_PROCESSOR,0x2d000b,LAUNCH_WORD_PROCESSOR,LaunchWordProcessor,,,,Launch,The Launch Word Processor key
+Launch.LAUNCH_APPLICATION1,0x2d000c,LAUNCH_APPLICATION1,LaunchApplication1,,,,Launch,The Launch Application1 key
+Launch.LAUNCH_APPLICATION2,0x2d000d,LAUNCH_APPLICATION2,LaunchApplication2,,,,Launch,The Launch Application2 key
+Launch.LAUNCH_APPLICATION3,0x2d000e,LAUNCH_APPLICATION3,LaunchApplication3,,,,Launch,The Launch Application3 key
+Launch.LAUNCH_APPLICATION4,0x2d000f,LAUNCH_APPLICATION4,LaunchApplication4,,,,Launch,The Launch Application4 key
+Launch.LAUNCH_APPLICATION5,0x2d0010,LAUNCH_APPLICATION5,LaunchApplication5,,,,Launch,The Launch Application5 key
+Launch.LAUNCH_APPLICATION6,0x2d0011,LAUNCH_APPLICATION6,LaunchApplication6,,,,Launch,The Launch Application6 key
+Launch.LAUNCH_APPLICATION7,0x2d0012,LAUNCH_APPLICATION7,LaunchApplication7,,,,Launch,The Launch Application7 key
+Launch.LAUNCH_APPLICATION8,0x2d0013,LAUNCH_APPLICATION8,LaunchApplication8,,,,Launch,The Launch Application8 key
+Launch.LAUNCH_APPLICATION9,0x2d0014,LAUNCH_APPLICATION9,LaunchApplication9,,,,Launch,The Launch Application9 key
+Launch.LAUNCH_APPLICATION10,0x2d0015,LAUNCH_APPLICATION10,LaunchApplication10,,,,Launch,The Launch Application10 key
+Launch.LAUNCH_APPLICATION11,0x2d0016,LAUNCH_APPLICATION11,LaunchApplication11,,,,Launch,The Launch Application11 key
+Launch.LAUNCH_APPLICATION12,0x2d0017,LAUNCH_APPLICATION12,LaunchApplication12,,,,Launch,The Launch Application12 key
+Launch.LAUNCH_APPLICATION13,0x2d0018,LAUNCH_APPLICATION13,LaunchApplication13,,,,Launch,The Launch Application13 key
+Launch.LAUNCH_APPLICATION14,0x2d0019,LAUNCH_APPLICATION14,LaunchApplication14,,,,Launch,The Launch Application14 key
+Launch.LAUNCH_APPLICATION15,0x2d001a,LAUNCH_APPLICATION15,LaunchApplication15,,,,Launch,The Launch Application15 key
+Launch.LAUNCH_APPLICATION16,0x2d001b,LAUNCH_APPLICATION16,LaunchApplication16,,,,Launch,The Launch Application16 key
+Launch.BROWSER_BACK,0x2d001c,BROWSER_BACK,BrowserBack,,,,Launch,The Browser Back key
+Launch.BROWSER_FAVORITES,0x2d001d,BROWSER_FAVORITES,BrowserFavorites,,,,Launch,The Browser Favorites key
+Launch.BROWSER_FORWARD,0x2d001e,BROWSER_FORWARD,BrowserForward,,,,Launch,The Browser Forward key
+Launch.BROWSER_HOME,0x2d001f,BROWSER_HOME,BrowserHome,,,,Launch,The Browser Home key
+Launch.BROWSER_REFRESH,0x2d0020,BROWSER_REFRESH,BrowserRefresh,,,,Launch,The Browser Refresh key
+Launch.BROWSER_SEARCH,0x2d0021,BROWSER_SEARCH,BrowserSearch,,,,Launch,The Browser Search key
+Launch.BROWSER_STOP,0x2d0022,BROWSER_STOP,BrowserStop,,,,Launch,The Browser Stop key
+TV.TV,0x2e0000,TV,TV,,,,TV,The Tv key
+TV.TV_3D_MODE,0x2e0001,TV_3D_MODE,TV3DMode,,,,TV,The Tv 3d Mode key
+TV.TV_ANTENNA_CABLE,0x2e0002,TV_ANTENNA_CABLE,TVAntennaCable,,,,TV,The Tv Antenna Cable key
+TV.TV_AUDIO_DESCRIPTION,0x2e0003,TV_AUDIO_DESCRIPTION,TVAudioDescription,,,,TV,The Tv Audio Description key
+TV.TV_AUDIO_DESCRIPTION_MIX_DOWN,0x2e0004,TV_AUDIO_DESCRIPTION_MIX_DOWN,TVAudioDescriptionMixDown,,,,TV,The Tv Audio Description Mix Down key
+TV.TV_AUDIO_DESCRIPTION_MIX_UP,0x2e0005,TV_AUDIO_DESCRIPTION_MIX_UP,TVAudioDescriptionMixUp,,,,TV,The Tv Audio Description Mix Up key
+TV.TV_CONTENTS_MENU,0x2e0006,TV_CONTENTS_MENU,TVContentsMenu,,,,TV,The Tv Contents Menu key
+TV.TV_DATA_SERVICE,0x2e0007,TV_DATA_SERVICE,TVDataService,,,,TV,The Tv Data Service key
+TV.TV_INPUT,0x2e0008,TV_INPUT,TVInput,,,,TV,The Tv Input key
+TV.TV_INPUT_COMPONENT1,0x2e0009,TV_INPUT_COMPONENT1,TVInputComponent1,,,,TV,The Tv Input Component1 key
+TV.TV_INPUT_COMPONENT2,0x2e000a,TV_INPUT_COMPONENT2,TVInputComponent2,,,,TV,The Tv Input Component2 key
+TV.TV_INPUT_COMPOSITE1,0x2e000b,TV_INPUT_COMPOSITE1,TVInputComposite1,,,,TV,The Tv Input Composite1 key
+TV.TV_INPUT_COMPOSITE2,0x2e000c,TV_INPUT_COMPOSITE2,TVInputComposite2,,,,TV,The Tv Input Composite2 key
+TV.TV_INPUT_HDMI1,0x2e000d,TV_INPUT_HDMI1,TVInputHDMI1,,,,TV,The Tv Input Hdmi1 key
+TV.TV_INPUT_HDMI2,0x2e000e,TV_INPUT_HDMI2,TVInputHDMI2,,,,TV,The Tv Input Hdmi2 key
+TV.TV_INPUT_HDMI3,0x2e000f,TV_INPUT_HDMI3,TVInputHDMI3,,,,TV,The Tv Input Hdmi3 key
+TV.TV_INPUT_HDMI4,0x2e0010,TV_INPUT_HDMI4,TVInputHDMI4,,,,TV,The Tv Input Hdmi4 key
+TV.TV_INPUT_VGA1,0x2e0011,TV_INPUT_VGA1,TVInputVGA1,,,,TV,The Tv Input Vga1 key
+TV.TV_NETWORK,0x2e0012,TV_NETWORK,TVNetwork,,,,TV,The Tv Network key
+TV.TV_NUMBER_ENTRY,0x2e0013,TV_NUMBER_ENTRY,TVNumberEntry,,,,TV,The Tv Number Entry key
+TV.TV_POWER,0x2e0014,TV_POWER,TVPower,,,,TV,The Tv Power key
+TV.TV_RADIO_SERVICE,0x2e0015,TV_RADIO_SERVICE,TVRadioService,,,,TV,The Tv Radio Service key
+TV.TV_SATELLITE,0x2e0016,TV_SATELLITE,TVSatellite,,,,TV,The Tv Satellite key
+TV.TV_SATELLITE_BS,0x2e0017,TV_SATELLITE_BS,TVSatelliteBS,,,,TV,The Tv Satellite Bs key
+TV.TV_SATELLITE_CS,0x2e0018,TV_SATELLITE_CS,TVSatelliteCS,,,,TV,The Tv Satellite Cs key
+TV.TV_SATELLITE_TOGGLE,0x2e0019,TV_SATELLITE_TOGGLE,TVSatelliteToggle,,,,TV,The Tv Satellite Toggle key
+TV.TV_TERRESTRIAL_ANALOG,0x2e001a,TV_TERRESTRIAL_ANALOG,TVTerrestrialAnalog,,,,TV,The Tv Terrestrial Analog key
+TV.TV_TERRESTRIAL_DIGITAL,0x2e001b,TV_TERRESTRIAL_DIGITAL,TVTerrestrialDigital,,,,TV,The Tv Terrestrial Digital key
+TV.TV_TIMER,0x2e001c,TV_TIMER,TVTimer,,,,TV,The Tv Timer key
+MediaController.AVR_INPUT,0x2f0000,AVR_INPUT,AVRInput,,,,MediaController,The Avr Input key
+MediaController.AVR_POWER,0x2f0001,AVR_POWER,AVRPower,,,,MediaController,The Avr Power key
+MediaController.COLOR_F0_RED,0x2f0002,COLOR_F0_RED,ColorF0Red,COLORED_KEY_0,,,MediaController,The Color F0 Red key
+MediaController.COLOR_F1_GREEN,0x2f0003,COLOR_F1_GREEN,ColorF1Green,COLORED_KEY_1,,,MediaController,The Color F1 Green key
+MediaController.COLOR_F2_YELLOW,0x2f0004,COLOR_F2_YELLOW,ColorF2Yellow,COLORED_KEY_2,,,MediaController,The Color F2 Yellow key
+MediaController.COLOR_F3_BLUE,0x2f0005,COLOR_F3_BLUE,ColorF3Blue,COLORED_KEY_3,,,MediaController,The Color F3 Blue key
+MediaController.CLOSED_CAPTION_TOGGLE,0x2f0006,CLOSED_CAPTION_TOGGLE,ClosedCaptionToggle,,,,MediaController,The Closed Caption Toggle key
+MediaController.DIMMER,0x2f0007,DIMMER,Dimmer,,,,MediaController,The Dimmer key
+MediaController.DVR,0x2f0008,DVR,DVR,,,,MediaController,The Dvr key
+MediaController.GUIDE,0x2f0009,GUIDE,Guide,,,,MediaController,The Guide key
+MediaController.INFO,0x2f000a,INFO,Info,INFO,,,MediaController,The Info key
+MediaController.MEDIA_AUDIO_TRACK,0x2f000b,MEDIA_AUDIO_TRACK,MediaAudioTrack,,,,MediaController,The Media Audio Track key
+MediaController.MEDIA_LAST,0x2f000c,MEDIA_LAST,MediaLast,,,,MediaController,The Media Last key
+MediaController.MEDIA_TOP_MENU,0x2f000d,MEDIA_TOP_MENU,MediaTopMenu,,,,MediaController,The Media Top Menu key
+MediaController.MEDIA_SKIP_BACKWARD,0x2f000e,MEDIA_SKIP_BACKWARD,MediaSkipBackward,,,,MediaController,The Media Skip Backward key
+MediaController.MEDIA_SKIP_FORWARD,0x2f000f,MEDIA_SKIP_FORWARD,MediaSkipForward,,,,MediaController,The Media Skip Forward key
+MediaController.MEDIA_STEP_BACKWARD,0x2f0010,MEDIA_STEP_BACKWARD,MediaStepBackward,,,,MediaController,The Media Step Backward key
+MediaController.MEDIA_STEP_FORWARD,0x2f0011,MEDIA_STEP_FORWARD,MediaStepForward,,,,MediaController,The Media Step Forward key
+MediaController.NAVIGATE_IN,0x2f0012,NAVIGATE_IN,NavigateIn,,,,MediaController,The Navigate In key
+MediaController.NAVIGATE_NEXT,0x2f0013,NAVIGATE_NEXT,NavigateNext,,,,MediaController,The Navigate Next key
+MediaController.NAVIGATE_OUT,0x2f0014,NAVIGATE_OUT,NavigateOut,,,,MediaController,The Navigate Out key
+MediaController.NAVIGATE_PREVIOUS,0x2f0015,NAVIGATE_PREVIOUS,NavigatePrevious,,,,MediaController,The Navigate Previous key
+MediaController.PAIRING,0x2f0016,PAIRING,Pairing,,,,MediaController,The Pairing key
+MediaController.PIN_P_TOGGLE,0x2f0017,PIN_P_TOGGLE,PinPToggle,,,,MediaController,The Pin P Toggle key
+MediaController.RANDOM_TOGGLE,0x2f0018,RANDOM_TOGGLE,RandomToggle,,,,MediaController,The Random Toggle key
+MediaController.SETTINGS,0x2f0019,SETTINGS,Settings,,,,MediaController,The Settings key
+MediaController.STB_INPUT,0x2f001a,STB_INPUT,STBInput,,,,MediaController,The Stb Input key
+MediaController.STB_POWER,0x2f001b,STB_POWER,STBPower,,,,MediaController,The Stb Power key
+MediaController.SUBTITLE,0x2f001c,SUBTITLE,Subtitle,,,,MediaController,The Subtitle key
+MediaController.TELETEXT,0x2f001d,TELETEXT,Teletext,,,,MediaController,The Teletext key
+MediaController.VIDEO_MODE_NEXT,0x2f001e,VIDEO_MODE_NEXT,VideoModeNext,,,,MediaController,The Video Mode Next key
+MediaController.ZOOM_TOGGLE,0x2f001f,ZOOM_TOGGLE,ZoomToggle,,,,MediaController,The Zoom Toggle key
+Document.CLOSE,0x300000,CLOSE,Close,,,,Document,The Close key
+Document.NEW,0x300001,NEW,New,,,,Document,The New key
+Document.OPEN,0x300002,OPEN,Open,,,,Document,The Open key
+Document.PRINT,0x300003,PRINT,Print,,,,Document,The Print key
+Document.SAVE,0x300004,SAVE,Save,,,,Document,The Save key
+Document.MAIL_FORWARD,0x300005,MAIL_FORWARD,MailForward,,,,Document,The Mail Forward key
+Document.MAIL_REPLY,0x300006,MAIL_REPLY,MailReply,,,,Document,The Mail Reply key
+Document.MAIL_SEND,0x300007,MAIL_SEND,MailSend,,,,Document,The Mail Send key
+Document.SPELL_CHECK,0x300008,SPELL_CHECK,SpellCheck,,,,Document,The Spell Check key

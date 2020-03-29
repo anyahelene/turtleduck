@@ -1,7 +1,6 @@
 package turtleduck.text;
 
 import turtleduck.display.Screen;
-import turtleduck.events.KeyCode;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.Launcher;

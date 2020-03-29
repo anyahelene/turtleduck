@@ -1,0 +1,223 @@
+ENTER,Enter
+BACK_SPACE,Backspace
+TAB,Tab
+CANCEL,Cancel
+CLEAR,Clear
+SHIFT,Shift
+CONTROL,Ctrl
+ALT,Alt
+PAUSE,Pause
+CAPS,Caps Lock
+ESCAPE,Esc
+SPACE,Space
+PAGE_UP,Page Up
+PAGE_DOWN,Page Down
+END,End
+HOME,Home
+LEFT,Left
+UP,Up
+RIGHT,Right
+DOWN,Down
+COMMA,Comma
+MINUS,Minus
+PERIOD,Period
+SLASH,Slash
+DIGIT0,0
+DIGIT1,1
+DIGIT2,2
+DIGIT3,3
+DIGIT4,4
+DIGIT5,5
+DIGIT6,6
+DIGIT7,7
+DIGIT8,8
+DIGIT9,9
+SEMICOLON,Semicolon
+EQUALS,Equals
+A,A
+B,B
+C,C
+D,D
+E,E
+F,F
+G,G
+H,H
+I,I
+J,J
+K,K
+L,L
+M,M
+N,N
+O,O
+P,P
+Q,Q
+R,R
+S,S
+T,T
+U,U
+V,V
+W,W
+X,X
+Y,Y
+Z,Z
+OPEN_BRACKET,Open Bracket
+BACK_SLASH,Back Slash
+CLOSE_BRACKET,Close Bracket
+NUMPAD0,Numpad 0
+NUMPAD1,Numpad 1
+NUMPAD2,Numpad 2
+NUMPAD3,Numpad 3
+NUMPAD4,Numpad 4
+NUMPAD5,Numpad 5
+NUMPAD6,Numpad 6
+NUMPAD7,Numpad 7
+NUMPAD8,Numpad 8
+NUMPAD9,Numpad 9
+MULTIPLY,Multiply
+ADD,Add
+SEPARATOR,Separator
+SUBTRACT,Subtract
+DECIMAL,Decimal
+DIVIDE,Divide
+DELETE,Delete
+NUM_LOCK,Num Lock
+SCROLL_LOCK,Scroll Lock
+F1,F1
+F2,F2
+F3,F3
+F4,F4
+F5,F5
+F6,F6
+F7,F7
+F8,F8
+F9,F9
+F10,F10
+F11,F11
+F12,F12
+F13,F13
+F14,F14
+F15,F15
+F16,F16
+F17,F17
+F18,F18
+F19,F19
+F20,F20
+F21,F21
+F22,F22
+F23,F23
+F24,F24
+PRINTSCREEN,Print Screen
+INSERT,Insert
+HELP,Help
+META,Meta
+BACK_QUOTE,Back Quote
+QUOTE,Quote
+KP_UP,Numpad Up
+KP_DOWN,Numpad Down
+KP_LEFT,Numpad Left
+KP_RIGHT,Numpad Right
+DEAD_GRAVE,Dead Grave
+DEAD_ACUTE,Dead Acute
+DEAD_CIRCUMFLEX,Dead Circumflex
+DEAD_TILDE,Dead Tilde
+DEAD_MACRON,Dead Macron
+DEAD_BREVE,Dead Breve
+DEAD_ABOVEDOT,Dead Abovedot
+DEAD_DIAERESIS,Dead Diaeresis
+DEAD_ABOVERING,Dead Abovering
+DEAD_DOUBLEACUTE,Dead Doubleacute
+DEAD_CARON,Dead Caron
+DEAD_CEDILLA,Dead Cedilla
+DEAD_OGONEK,Dead Ogonek
+DEAD_IOTA,Dead Iota
+DEAD_VOICED_SOUND,Dead Voiced Sound
+DEAD_SEMIVOICED_SOUND,Dead Semivoiced Sound
+AMPERSAND,Ampersand
+ASTERISK,Asterisk
+QUOTEDBL,Double Quote
+LESS,Less
+GREATER,Greater
+BRACELEFT,Left Brace
+BRACERIGHT,Right Brace
+AT,At
+COLON,Colon
+CIRCUMFLEX,Circumflex
+DOLLAR,Dollar
+EURO_SIGN,Euro Sign
+EXCLAMATION_MARK,Exclamation Mark
+INVERTED_EXCLAMATION_MARK,Inverted Exclamation Mark
+LEFT_PARENTHESIS,Left Parenthesis
+NUMBER_SIGN,Number Sign
+PLUS,Plus
+RIGHT_PARENTHESIS,Right Parenthesis
+UNDERSCORE,Underscore
+WINDOWS,Windows
+CONTEXT_MENU,Context Menu
+FINAL,Final
+CONVERT,Convert
+NONCONVERT,Nonconvert
+ACCEPT,Accept
+MODECHANGE,Mode Change
+KANA,Kana
+KANJI,Kanji
+ALPHANUMERIC,Alphanumeric
+KATAKANA,Katakana
+HIRAGANA,Hiragana
+FULL_WIDTH,Full Width
+HALF_WIDTH,Half Width
+ROMAN_CHARACTERS,Roman Characters
+ALL_CANDIDATES,All Candidates
+PREVIOUS_CANDIDATE,Previous Candidate
+CODE_INPUT,Code Input
+JAPANESE_KATAKANA,Japanese Katakana
+JAPANESE_HIRAGANA,Japanese Hiragana
+JAPANESE_ROMAN,Japanese Roman
+KANA_LOCK,Kana Lock
+INPUT_METHOD_ON_OFF,Input Method On/Off
+CUT,Cut
+COPY,Copy
+PASTE,Paste
+UNDO,Undo
+AGAIN,Again
+FIND,Find
+PROPS,Properties
+STOP,Stop
+COMPOSE,Compose
+ALT_GRAPH,Alt Graph
+BEGIN,Begin
+UNDEFINED,Undefined
+SOFTKEY_0,Softkey 0
+SOFTKEY_1,Softkey 1
+SOFTKEY_2,Softkey 2
+SOFTKEY_3,Softkey 3
+SOFTKEY_4,Softkey 4
+SOFTKEY_5,Softkey 5
+SOFTKEY_6,Softkey 6
+SOFTKEY_7,Softkey 7
+SOFTKEY_8,Softkey 8
+SOFTKEY_9,Softkey 9
+GAME_A,Game A
+GAME_B,Game B
+GAME_C,Game C
+GAME_D,Game D
+STAR,Star
+POUND,Pound
+POWER,Power
+INFO,Info
+COLORED_KEY_0,Colored Key 0
+COLORED_KEY_1,Colored Key 1
+COLORED_KEY_2,Colored Key 2
+COLORED_KEY_3,Colored Key 3
+EJECT_TOGGLE,Eject
+PLAY,Play
+RECORD,Record
+FAST_FWD,Fast Forward
+REWIND,Rewind
+TRACK_PREV,Previous Track
+TRACK_NEXT,Next Track
+CHANNEL_UP,Channel Up
+CHANNEL_DOWN,Channel Down
+VOLUME_UP,Volume Up
+VOLUME_DOWN,Volume Down
+MUTE,Mute
+COMMAND,Command
