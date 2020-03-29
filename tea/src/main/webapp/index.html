@@ -20,8 +20,9 @@
 	src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
 	integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
 	crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8" src="app.js"></script>
 <script type="text/javascript" charset="utf-8" src="teavm/classes.js"></script>
-<script type="text/javascript" charset="utf-8" src="http://localhost:9090/classes.js"></script>
+<link rel="stylesheet" href="xterm/css/xterm.css" />
 </head>
 <body onload="main()"
 	class="d-flex flex-column align-items-stretch vh-100">
@@ -86,6 +87,7 @@
 			</form>
 		</div>
 	</nav>
+
 	<div class="container-fluid d-flex flex-row align-items-stretch h-100">
 		<div id="left" class="card col-1 h-100">
 			<ul class="nav nav-tabs card-header-tabs">
@@ -100,7 +102,14 @@
 				<div id="screen0" class="flex-grow-1 bg-primary"></div>
 				<div id="right" class="card col-2">right</div>
 			</div>
-			<textarea id="code" class="bg-light text-body h-25">code</textarea>
+			<div id="code" class="h-25"></div>
+			<script>
+				terminal = new Terminal();
+				const fitAddon = new FitAddon();
+				terminal.loadAddon(fitAddon);
+				terminal.open(document.getElementById('code'));
+				fitAddon.fit();
+			</script>
 		</div>
 	</div>
 	<div id="bottom" class="mt-auto navbar text-light bg-dark p-1">bottom</div>

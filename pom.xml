@@ -141,5 +141,6 @@
 		<module>shell</module>
 		<module>gl</module>
 		<module>tea</module>
+        <module>server</module>
 	</modules>
 </project>

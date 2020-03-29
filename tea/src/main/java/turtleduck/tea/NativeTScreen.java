@@ -2,6 +2,8 @@ package turtleduck.tea;
 
 import java.util.function.Predicate;
 
+import org.teavm.jso.JSBody;
+import org.teavm.jso.JSObject;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.canvas.CanvasRenderingContext2D;
 import org.teavm.jso.dom.css.CSSStyleDeclaration;
@@ -18,6 +20,7 @@ import turtleduck.display.impl.BaseScreen;
 import turtleduck.display.impl.BaseScreen.Dimensions;
 import turtleduck.events.KeyEvent;
 import turtleduck.text.TextWindow;
+import xtermjs.Terminal;
 
 public class NativeTScreen extends BaseScreen {
 	
@@ -31,7 +34,21 @@ public class NativeTScreen extends BaseScreen {
 	private Window window;
 	private HTMLDocument document;
 	private HTMLElement mainElement;
-	public NativeTScreen(Dimensions dim) {
+    @JSBody(params = { "window" }, script = "return window.terminal;")
+    protected static native Terminal getTerminal(Window window);
+
+    @JSBody(params = { "message" }, script = "console.log(message)")
+    protected static native void consoleLog(JSObject message);
+
+    @JSBody(params = { "message" }, script = "console.log(message)")
+	public
+	static native void consoleLog(String string);
+
+    protected Terminal getTerminal() {
+    	return getTerminal(window);
+    }
+    
+    public NativeTScreen(Dimensions dim) {
 		this.dim = dim;
 		window = Window.current();
 		document = window.getDocument();
@@ -237,5 +254,6 @@ public class NativeTScreen extends BaseScreen {
 		// TODO Auto-generated method stub
 		
 	}
+
 
 }

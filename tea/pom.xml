@@ -39,6 +39,24 @@
 			<version>3.1.0</version>
 			<scope>provided</scope>
 		</dependency>
+		<!-- Emulator of Java class library for TeaVM -->
+		<dependency>
+			<groupId>org.teavm</groupId>
+			<artifactId>teavm-cli</artifactId>
+			<version>${teavm.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-web</artifactId>
+			<version>3.8.5</version>
+			<classifier>client</classifier>
+			<type>js</type>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>
@@ -57,28 +75,36 @@
 						<resource>
 							<directory>${project.build.directory}/generated/js</directory>
 						</resource>
+						<!-- resource> <directory>${project.basedir}/src/main/js/node_modules</directory> 
+							</resource -->
 					</webResources>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.teavm</groupId>
 				<artifactId>teavm-maven-plugin</artifactId>
-				<version>${teavm.version}</version>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.6.0</version>
+				<!-- executions> <execution> <goals> <goal>exec</goal> </goals> </execution> 
+					</executions -->
 				<configuration>
-					<includeProjectDependencies>false</includeProjectDependencies>
-					<includePluginDependencies>true</includePluginDependencies>
+					<!-- executable>java</executable -->
 					<executableDependency>
 						<groupId>org.teavm</groupId>
 						<artifactId>teavm-cli</artifactId>
 					</executableDependency>
+					<includeProjectDependencies>true</includeProjectDependencies>
+					<includePluginDependencies>false</includePluginDependencies>
+					<executable>java</executable>
 					<mainClass>org.teavm.cli.TeaVMDevServerRunner</mainClass>
 					<arguments>
 						<argument>turtleduck.tea.Client</argument>
+						<argument>--targetdir</argument>
+						<argument>teavm</argument>
+						<argument>--proxy-url</argument>
+						<argument>http://localhost:9080/</argument>
 						<argument>-ptarget/classes</argument>
 						<argument>-i</argument>
 						<argument>--auto-reload</argument>
@@ -94,6 +120,8 @@
 						<version>${teavm.version}</version>
 						<type>jar</type>
 					</dependency>
+					<!-- dependency> <groupId>org.slf4j</groupId> <artifactId>slf4j-api</artifactId> 
+						<version>1.7.7</version> <type>jar</type> </dependency -->
 				</dependencies>
 			</plugin>
 		</plugins>
