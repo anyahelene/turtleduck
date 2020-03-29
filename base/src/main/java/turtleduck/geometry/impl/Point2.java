@@ -65,7 +65,8 @@ public class Point2 implements Point {
 
 	@Override
 	public Point add(Bearing dir, double distance) {
-		return new Point2(Math.fma(dir.dirX(), distance, x), Math.fma(dir.dirY(), distance, y));
+//	TODO:	return new Point2(Math.fma(dir.dirX(), distance, x), Math.fma(dir.dirY(), distance, y));
+		return new Point2(dir.dirX() * distance + x, dir.dirY() * distance + y);
 	}
 
 	@Override
