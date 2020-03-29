@@ -7,4 +7,5 @@ public enum KeyCode {
 	<T> T as(Class<T> type) {
 		return null;
 	}
+
 }

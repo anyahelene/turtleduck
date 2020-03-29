@@ -1,5 +1,10 @@
 package turtleduck.events;
 
+import java.util.regex.Matcher;
+
+import turtleduck.events.impl.KeyEventImpl;
+import turtleduck.text.ControlSequences;
+
 public interface KeyEvent {
 	int MODIFIER_SHIFT = 0x01;
 	int MODIFIER_ALT = 0x02;
@@ -16,9 +21,10 @@ public interface KeyEvent {
 	 */
 	int MODIFIERS = MODIFIER_CONTROL | MODIFIER_META | MODIFIER_ALT | MODIFIER_SUPER | MODIFIER_HYPER;
 	int SHORTCUT_MASK = System.getProperty("os.name").startsWith("Mac") ? MODIFIER_META : MODIFIER_CONTROL;
-	int SHORTCUT_MASK_ALT = System.getProperty("os.name").startsWith("Mac") ? MODIFIER_META : (MODIFIER_CONTROL|MODIFIER_SHIFT);
+	int SHORTCUT_MASK_ALT = System.getProperty("os.name").startsWith("Mac") ? MODIFIER_META
+			: (MODIFIER_CONTROL | MODIFIER_SHIFT);
 
-	int KEY_TYPE_ARROW = (1 << 0);
+//	int KEY_TYPE_ARROW = (1 << 0);
 	int KEY_TYPE_DIGIT = (1 << 1);
 	int KEY_TYPE_FUNCTION = (1 << 2);
 	int KEY_TYPE_KEYPAD = (1 << 3);
@@ -27,6 +33,10 @@ public interface KeyEvent {
 	int KEY_TYPE_MODIFIER = (1 << 6);
 	int KEY_TYPE_NAVIGATION = (1 << 7);
 	int KEY_TYPE_WHITESPACE = (1 << 8);
+	int KEY_TYPE_LEFT = (1 << 9);
+	int KEY_TYPE_RIGHT = (1 << 10);
+	int KEY_TYPE_COMPOSING = (1 << 11);
+	int KEY_TYPE_REPEAT = (1 << 12);
 
 	String character();
 
@@ -42,18 +52,76 @@ public interface KeyEvent {
 
 	boolean isShiftDown();
 
-	KeyCode getCode();
+	int getCode();
 
 	<T> T as(Class<T> type);
 
 	String modifierString();
 
 	int modifiers();
+
 	int shortcutModifiers();
-	
+
 	boolean isSuperDown();
 
 	int keyType();
 
 	boolean isModified();
+
+	static KeyEvent decodeSequence(String csiString) {
+		String vtKeys[] = { "", "Home", "Insert", "Delete", "End", "PgUp", "PgDn", "Home", "End", "", //
+				"F0", "F1", "F2", "F3", "F4", "F5", "", "F6", "F7", "F8", "F9", "F10", "", //
+				"F11", "F12", "F13", "F14", "", "F15", "F16", "", "F17", "F18", "F19", "F20", "" //
+		};
+		String xKeys[] = { "Up", "Down", "Right", "Left", "", "End", "KP_5", "Home", "", "", "", //
+				"", "", "", "", "F1", "F2", "F3", "F4", "", "", "", "", "", "", "", };
+
+		int mods = 0;
+		try {
+			if (csiString.startsWith("\u001b")) {
+				Matcher matcher = ControlSequences.PATTERN_KEY.matcher(csiString);
+				if (matcher.matches()) {
+					String[] params = matcher.group(1).split(";");
+					String code = matcher.group(2);
+					mods = 1;
+					int key = 0;
+					int kc = KeyCodes.Special.UNDEFINED;
+					if (code.equals("~")) {
+						if (params[0].length() > 0)
+							key = Integer.parseInt(params[0]);
+						if (params.length > 1 && params[0].length() > 0)
+							mods = Integer.parseInt(params[1]);
+						if (key > 0 && key <= vtKeys.length)
+							kc = KeyCodes.Mappings.NAME_MAP.get(vtKeys[key - 1]);
+					} else {
+						key = code.charAt(0) - 'A';
+						if (params[0].length() > 0)
+							mods = Integer.parseInt(params[0]);
+						kc = KeyCodes.Mappings.NAME_MAP.get(xKeys[key]);
+					}
+					if (--mods < 0)
+						mods = 0;
+					else
+						mods = mods & 0xf;
+					return new KeyEventImpl(kc, "", mods);
+				} else {
+					csiString = csiString.substring(1);
+					mods = MODIFIER_ALT;
+				}
+			}
+
+			if (csiString.equals("\u007f")) {
+				return new KeyEventImpl(KeyCodes.Editing.BACKSPACE, "\b", mods);
+			} else {
+				return makeKeyEvent(csiString.substring(1), mods);
+			}
+		} catch (IllegalArgumentException e) {// TODO: no keycode found
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	static KeyEvent makeKeyEvent(String string, int mods) {
+		return new KeyEventImpl(KeyCodes.Mappings.NAME_MAP.get(string.toUpperCase()), string, mods);
+	}
 }

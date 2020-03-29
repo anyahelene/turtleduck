@@ -41,7 +41,7 @@ public class TurtleDuckImpl implements TurtleDuck {
 //		this.mainJournal = journal;
 //		this.journal = journal;
 		parent = null;
-		this.nav = new Navigator.DefaultNavigator(Point.point(0, 0), Bearing.DUE_NORTH, pen);
+		this.nav = new DefaultNavigator(Point.point(0, 0), Bearing.DUE_NORTH, pen);
 	}
 
 	public TurtleDuckImpl(TurtleDuckImpl td) {

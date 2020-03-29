@@ -5,6 +5,7 @@ import java.util.List;
 import turtleduck.colors.Paint;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
+import turtleduck.turtle.impl.PathPoint;
 
 public interface Path {
 	/**
@@ -93,38 +94,38 @@ public interface Path {
 
 		@Override
 		public Point first() {
-			return points.get(0).point;
+			return points.get(0).point();
 		}
 
 		@Override
 		public Point last() {
-			return points.get(points.size() - 1).point;
+			return points.get(points.size() - 1).point();
 		}
 
 		@Override
 		public Point point(int i) {
-			return points.get(i).point;
+			return points.get(i).point();
 		}
 
 		@Override
 		public PointType pointType(int i) {
-			return points.get(i).type;
+			return points.get(i).type();
 		}
 		@Override
 		public Pen pointPen(int i) {
-			return points.get(i).pen;
+			return points.get(i).pen();
 		}
 		@Override
 		public Paint pointColor(int i) {
-			return points.get(i).pen.strokePaint();
+			return points.get(i).pen().strokePaint();
 		}
 		@Override
 		public double pointWidth(int i) {
-			return points.get(i).pen.strokeWidth();
+			return points.get(i).pen().strokeWidth();
 		}
 		@Override
 		public Pen.SmoothType pointSmooth(int i) {
-			return points.get(i).pen.smoothType();
+			return points.get(i).pen().smoothType();
 		}
 		@Override
 		public Iterable<PathPoint> points() {
