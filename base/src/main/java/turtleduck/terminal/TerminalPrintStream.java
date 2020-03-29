@@ -1,10 +1,8 @@
 package turtleduck.terminal;
 
-import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 

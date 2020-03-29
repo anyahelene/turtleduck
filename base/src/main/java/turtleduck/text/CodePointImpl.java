@@ -16,7 +16,10 @@ public class CodePointImpl implements CodePoint {
 		if (!Character.isValidCodePoint(codePoint))
 			throw new IllegalArgumentException("Invalid code point: " + codePoint);
 		value = codePoint;
-		string = Character.toString(value());
+		if (codePoint < 65536)
+			string = Character.toString((char) value);
+		else
+			string = "";
 	}
 
 	@Override
@@ -41,19 +44,23 @@ public class CodePointImpl implements CodePoint {
 	}
 
 	protected static CodePoint[] makeBlock(int first) {
-		return IntStream.range(first, first + 255)//
-				.mapToObj(i -> new CodePointImpl(i)).toArray(l -> new CodePoint[l]);
+		CodePoint[] block = new CodePoint[256];
+		for (int i = 0; i < 256; i++)
+			block[i] = new CodePointImpl(i);
+		return block;
+//		return IntStream.range(first, first + 255)//
+//				.mapToObj(i -> new CodePointImpl(i)).toArray(l -> new CodePoint[l]);
 	}
 
 	@Override
 	public String toHtml() {
-		if(value == '&')
+		if (value == '&')
 			return "&amp;";
-		else if(value == '<')
+		else if (value == '<')
 			return "&lt;";
-		else if(value == '>')
+		else if (value == '>')
 			return "&gt;";
-		else if(Character.isWhitespace(value) || !Character.isISOControl(value)) {
+		else if (Character.isWhitespace(value) || !Character.isISOControl(value)) {
 			return string;
 		} else {
 			return String.format("&#%x;", value);

@@ -7,9 +7,11 @@ module turtleduck.base {
 	exports turtleduck.events;
 	exports turtleduck.drawing;
 	exports turtleduck.geometry;
+	exports turtleduck.terminal;
 	exports turtleduck.text;
 	exports turtleduck.text.impl;
 	exports turtleduck.turtle;
+	exports turtleduck.util;
 	uses turtleduck.display.DisplayInfo;
 	uses turtleduck.display.MouseCursor;
 	uses turtleduck.events.KeyEvent;

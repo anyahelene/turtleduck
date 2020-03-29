@@ -20,7 +20,7 @@ import turtleduck.colors.Paint;
 public class ControlSequences {
 	private static final boolean DEBUG = false;
 	private static int savedX = 1, savedY = 1;
-	
+	public static final Pattern PATTERN_KEY = Pattern.compile("^\u001b\\[([0-9;]*)([A-Z~])$");
 	static class CsiPattern {
 		public static CsiPattern compile0(String pat, String desc, Consumer<TextCursor> handler) {
 			CsiPattern csiPattern = new CsiPattern(pat, 0, 0, desc, handler, null, null);
@@ -192,15 +192,15 @@ public class ControlSequences {
 	private static final Map<String,CsiPattern> KEYS = new HashMap<>();
 	private static final int F = 0xFF, H = 0xAA, L = 0x55, OFF = 0x00;
 	public static final Paint[] PALETTE_CGA = { //
-			Paint.color(0, 0, 0), Paint.color(0, 0, H), Paint.color(0, H, 0), Paint.color(0, H, H), //
-			Paint.color(H, 0, 0), Paint.color(H, 0, H), Paint.color(H, L, 0), Paint.color(H, H, H), //
-			Paint.color(L, L, L), Paint.color(L, L, F), Paint.color(L, F, L), Paint.color(L, F, F), //
-			Paint.color(F, L, L), Paint.color(F, L, F), Paint.color(F, F, L), Paint.color(F, F, F), };
+			Paint.fromRGB(0, 0, 0), Paint.fromRGB(0, 0, H), Paint.fromRGB(0, H, 0), Paint.fromRGB(0, H, H), //
+			Paint.fromRGB(H, 0, 0), Paint.fromRGB(H, 0, H), Paint.fromRGB(H, L, 0), Paint.fromRGB(H, H, H), //
+			Paint.fromRGB(L, L, L), Paint.fromRGB(L, L, F), Paint.fromRGB(L, F, L), Paint.fromRGB(L, F, F), //
+			Paint.fromRGB(F, L, L), Paint.fromRGB(F, L, F), Paint.fromRGB(F, F, L), Paint.fromRGB(F, F, F), };
 	public static final Paint[] PALETTE_VGA = { //
-			Paint.color(0, 0, 0), Paint.color(H, 0, 0), Paint.color(0, H, 0), Paint.color(H, H, 0), //
-			Paint.color(0, 0, H), Paint.color(H, 0, H), Paint.color(0, H, H), Paint.color(H, H, H), //
-			Paint.color(L, L, L), Paint.color(F, L, L), Paint.color(L, F, L), Paint.color(F, F, L), //
-			Paint.color(L, L, F), Paint.color(F, L, F), Paint.color(L, F, F), Paint.color(F, F, F), };
+			Paint.fromRGB(0, 0, 0), Paint.fromRGB(H, 0, 0), Paint.fromRGB(0, H, 0), Paint.fromRGB(H, H, 0), //
+			Paint.fromRGB(0, 0, H), Paint.fromRGB(H, 0, H), Paint.fromRGB(0, H, H), Paint.fromRGB(H, H, H), //
+			Paint.fromRGB(L, L, L), Paint.fromRGB(F, L, L), Paint.fromRGB(L, F, L), Paint.fromRGB(F, F, L), //
+			Paint.fromRGB(L, L, F), Paint.fromRGB(F, L, F), Paint.fromRGB(L, F, F), Paint.fromRGB(F, F, F), };
 	public static final int COLOR_BLACK = 0;
 	public static final int COLOR_RED = 1;
 	public static final int COLOR_GREEN = 2;

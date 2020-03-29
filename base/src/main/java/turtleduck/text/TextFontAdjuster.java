@@ -2,6 +2,7 @@ package turtleduck.text;
 
 import turtleduck.display.Screen;
 import turtleduck.events.KeyCode;
+import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
@@ -29,22 +30,22 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 	private double adjustAmount = 0.1;
 	private TextWindow window;
 
-	private double adjustX(KeyCode code) {
+	private double adjustX(int code) {
 		switch (code) {
-		case LEFT:
+		case KeyCodes.Navigation.ARROW_LEFT:
 			return -1 * adjustAmount;
-		case RIGHT:
+		case KeyCodes.Navigation.ARROW_RIGHT:
 			return 1 * adjustAmount;
 		default:
 			return 0;
 		}
 	}
 
-	private double adjustY(KeyCode code) {
+	private double adjustY(int code) {
 		switch (code) {
-		case UP:
+		case KeyCodes.Navigation.ARROW_UP:
 			return 1 * adjustAmount;
-		case DOWN:
+		case KeyCodes.Navigation.ARROW_DOWN:
 			return -1 * adjustAmount;
 		default:
 			return 0;
@@ -129,84 +130,85 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 //		printer.setFont(textFont);
 		textFont = null; // TODO printer.getFont();
 		screen.setKeyOverride((KeyEvent event) -> {
-			KeyCode code = event.getCode();
+			int code = event.getCode();
 			 System.out.println(event);
 			if (event.isControlDown() || event.isShortcutDown()) {
-				if (code == KeyCode.Q) {
+				if (code == 'Q') {
 					System.exit(0);
-				} else if (code == KeyCode.P) {
+				} else if (code == 'P') {
 					paused = !paused;
 					return true;
-				} else if (code == KeyCode.R) {
+				} else if (code == 'R') {
 					window.cycleMode(true);
 					drawBackgroundGrid();
 					return true;
-				} else if (code == KeyCode.S) {
+				} else if (code == 'S') {
 					if (event.isAltDown())
 						screen.fitScaling();
 					else
 						screen.zoomCycle();
 					drawBackgroundGrid();
 					return true;
-				} else if (code == KeyCode.A) {
+				} else if (code == 'A') {
 					screen.cycleAspect();
 					return true;
-				} else if (code == KeyCode.G) {
+				} else if (code == 'G') {
 					grid = !grid;
 					drawBackgroundGrid();
 					return true;
-				} else if (code == KeyCode.H) {
+				} else if (code == 'H') {
 					printHelp();
 					printInfo();
 					return true;
-				} else if (code == KeyCode.F) {
+				} else if (code == 'F') {
 					screen.setFullScreen(!screen.isFullScreen());
 					return true;
-				} else if (code == KeyCode.M) {
+				} else if (code == 'M') {
 					printer.print("\r");
 					return true;
-				} else if (code == KeyCode.L) {
+				} else if (code == 'L') {
 					printer.redrawTextPage();
 					return true;
-				} else if (code == KeyCode.DIGIT1) {
+				} else if (code == '1') {
 					DemoPages.printBoxDrawing(printer);
 					System.out.println("demo1");
 					return true;
-				} else if (code == KeyCode.DIGIT2) {
+				} else if (code == '2') {
 					DemoPages.printZX(printer);
 					return true;
-				} else if (code == KeyCode.DIGIT3) {
+				} else if (code == '3') {
 					DemoPages.printBlockPlotting(printer);
 					return true;
-				} else if (code == KeyCode.DIGIT4) {
+				} else if (code == '4') {
 					DemoPages.printVideoAttributes(printer);
 					return true;
-				} else if (code == KeyCode.DIGIT5) {
+				} else if (code == '5') {
 					DemoPages.printAnsiArt(printer);
 					return true;
-				} else if (code == KeyCode.PLUS) {
+				} else if (code == '+') {
 					textFont = textFont.adjust(adjustAmount, 0.0, 0.0, 0.0, 0.0);
 					printer.setFont(textFont);
 					printInfo();
 					return true;
-				} else if (code == KeyCode.MINUS) {
+				} else if (code == '-') {
 					textFont = textFont.adjust(-adjustAmount, 0.0, 0.0, 0.0, 0.0);
 					printer.setFont(textFont);
 					printInfo();
 					return true;
-				} else if (code == KeyCode.LEFT || code == KeyCode.RIGHT || code == KeyCode.UP
-						|| code == KeyCode.DOWN) {
+				} else if (code == KeyCodes.Navigation.ARROW_LEFT || code == KeyCodes.Navigation.ARROW_RIGHT || code == KeyCodes.Navigation.ARROW_UP
+						|| code == KeyCodes.Navigation.ARROW_DOWN) {
 					textFont = textFont.adjust(0.0, 0.0, 0.0, adjustX(code), adjustY(code));
 					printer.setFont(textFont);
 					printInfo();
 					return true;
 				}
-			} else if (code == KeyCode.LEFT || code == KeyCode.RIGHT || code == KeyCode.UP || code == KeyCode.DOWN) {
+			} else if (code == KeyCodes.Navigation.ARROW_LEFT || code == KeyCodes.Navigation.ARROW_RIGHT || code == KeyCodes.Navigation.ARROW_UP
+					|| code == KeyCodes.Navigation.ARROW_DOWN) {
 				textFont = textFont.adjust(0.0, adjustX(code), adjustY(code), 0.0, 0.0);
 				printer.setFont(textFont);
 				printInfo();
 				return true;
-			} else if (code == KeyCode.ENTER) {
+			} else if (code == KeyCodes.Whitespace.ENTER) {
 
 				printer.print("\n");
 				return true;
