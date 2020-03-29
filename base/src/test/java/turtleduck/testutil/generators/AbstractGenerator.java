@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import turtleduck.testutil.IGenerator;
+import turtleduck.testutil.Generator;
 
-public abstract class AbstractGenerator<T> implements IGenerator<T> {
+public abstract class AbstractGenerator<T> implements Generator<T> {
 	protected static final Random commonRandom = new Random();
 
 	@Override

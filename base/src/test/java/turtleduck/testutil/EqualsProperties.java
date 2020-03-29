@@ -1,9 +1,9 @@
 package turtleduck.testutil;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * A bunch of standard properties for Java objects, mostly related to equality.
@@ -13,21 +13,21 @@ import java.util.List;
  * <p>
  * Relevant test methods are:
  * <ul>
- * <li>{@link #allEqualsTests(IGenerator, int)} – checks that
+ * <li>{@link #allEqualsTests(Generator, int)} – checks that
  * {@link #equals(Object)} is an equivalence relation and that it corresponds to
  * {@link #hashCode()}. This will run:
  * <ul>
- * <li>{@link #equalsIsReflexiveTest(IGenerator, int)} – check that a.equals(a)
- * <li>{@link #equalsIsSymmetricTest(IGenerator, int)} – check that a.equals(b)
+ * <li>{@link #equalsIsReflexiveTest(Generator, int)} – check that a.equals(a)
+ * <li>{@link #equalsIsSymmetricTest(Generator, int)} – check that a.equals(b)
  * iff b.equals(a)
- * <li>{@link #equalsIsTransitiveTest(IGenerator, int)} – check that a.equals(b)
+ * <li>{@link #equalsIsTransitiveTest(Generator, int)} – check that a.equals(b)
  * && b.equals(c) implies a.equals(c)
- * <li>{@link #hashCodeEqualsTest(IGenerator, int)} – check that a.equals(b)
+ * <li>{@link #hashCodeEqualsTest(Generator, int)} – check that a.equals(b)
  * implies a.hashCode() == b.hashCode()
  * </ul>
- * <li>{@link #toStringEqualStrongTest(IGenerator, int)} – check that
+ * <li>{@link #toStringEqualsStrongTest(Generator, int)} – check that
  * a.equals(b) iff a.toString().equals(b.toString())
- * <li>{@link #toStringEqualsWeakTest(IGenerator, int)} – check that a.equals(b)
+ * <li>{@link #toStringEqualsWeakTest(Generator, int)} – check that a.equals(b)
  * implies a.toString().equals(b.toString())
  * <ul>
  * <p>
@@ -53,20 +53,18 @@ public class EqualsProperties {
 	 * <p>
 	 * Includes checks for {@link #reflexiveProperty(Object)},
 	 * {@link #symmetricProperty(Object, Object)},
-	 * {@link #equalsIsTransitiveTest(IGenerator, int)},
+	 * {@link #equalsIsTransitiveTest(Generator, int)},
 	 * {@link #hashCodeProperty(Object, Object)}.
 	 * <p>
 	 * Does not include test for the relationship between {@link #equals(Object)}
 	 * and {@link #toString()}. Use either
-	 * {@link #toStringEqualStrongTest(IGenerator, int)} or
-	 * {@link #toStringEqualsWeakTest(IGenerator, int)} for this.
+	 * {@link #toStringEqualsStrongTest(Generator, int)} or
+	 * {@link #toStringEqualsWeakTest(Generator, int)} for this.
 	 * 
-	 * @param gen
-	 *            A data generator
-	 * @param n
-	 *            The number of times to run the tests
+	 * @param gen A data generator
+	 * @param n   The number of times to run the tests
 	 */
-	public static <T> void allEqualsTests(IGenerator<T> gen, int n) {
+	public static <T> void allEqualsTests(Generator<T> gen, int n) {
 		equalsIsReflexiveTest(gen, n);
 		equalsIsSymmetricTest(gen, n);
 		equalsIsTransitiveTest(gen, n);
@@ -79,13 +77,11 @@ public class EqualsProperties {
 	 * Will generate n sets of objects with the generator, and check the property
 	 * with them.
 	 *
-	 * @param gen
-	 *            A data generator
-	 * @param n
-	 *            The number of times to run the test
+	 * @param gen A data generator
+	 * @param n   The number of times to run the test
 	 * @see #reflexiveProperty(Object)
 	 */
-	public static <T> void equalsIsReflexiveTest(IGenerator<T> gen, int n) {
+	public static <T> void equalsIsReflexiveTest(Generator<T> gen, int n) {
 		for (int i = 0; i < n; i++) {
 			EqualsProperties.reflexiveProperty(gen.generate());
 		}
@@ -97,13 +93,11 @@ public class EqualsProperties {
 	 * Will generate n sets of objects with the generator, and check the property
 	 * with them.
 	 *
-	 * @param gen
-	 *            A data generator
-	 * @param n
-	 *            The number of times to run the test
+	 * @param gen A data generator
+	 * @param n   The number of times to run the test
 	 * @see #symmetricProperty(Object, Object)
 	 */
-	public static <T> void equalsIsSymmetricTest(IGenerator<T> gen, int n) {
+	public static <T> void equalsIsSymmetricTest(Generator<T> gen, int n) {
 		for (int i = 0; i < n; i++) {
 			symmetricProperty(gen.generate(), gen.generate());
 
@@ -121,13 +115,11 @@ public class EqualsProperties {
 	 * Will generate n sets of objects with the generator, and check the property
 	 * with them.
 	 *
-	 * @param gen
-	 *            A data generator
-	 * @param n
-	 *            The number of times to run the test
+	 * @param gen A data generator
+	 * @param n   The number of times to run the test
 	 * @see #transitiveProperty(Object, Object, Object)
 	 */
-	public static <T> void equalsIsTransitiveTest(IGenerator<T> gen, int n) {
+	public static <T> void equalsIsTransitiveTest(Generator<T> gen, int n) {
 		for (int i = 0; i < n; i++) {
 			transitiveProperty(gen.generate(), gen.generate(), gen.generate());
 
@@ -142,13 +134,11 @@ public class EqualsProperties {
 	/**
 	 * A generic test for the hashcode property.
 	 *
-	 * @param gen
-	 *            A data generator
-	 * @param n
-	 *            The number of times to run the test.
+	 * @param gen A data generator
+	 * @param n   The number of times to run the test.
 	 * @see #hashCodeProperty(Object, Object)
 	 */
-	public static <T> void hashCodeEqualsTest(IGenerator<T> gen, int n) {
+	public static <T> void hashCodeEqualsTest(Generator<T> gen, int n) {
 		for (int i = 0; i < n; i++) {
 			hashCodeProperty(gen.generate(), gen.generate());
 
@@ -169,7 +159,7 @@ public class EqualsProperties {
 	 */
 	public static <T> void hashCodeProperty(T s1, T s2) {
 		if (s1.equals(s2)) {
-			assertEquals(s1.hashCode(), s2.hashCode());
+			assertEquals(s1.hashCode(), s2.hashCode(), failed("a.equals(b) => a.hashCode() == b.hashCode", s1, s2));
 		}
 	}
 
@@ -179,7 +169,7 @@ public class EqualsProperties {
 	 * @param s
 	 */
 	public static <T> void reflexiveProperty(T s) {
-		assertEquals(s, s);
+		assertEquals(s, s, failed("a.equals(a)", s));
 	}
 
 	/**
@@ -191,7 +181,8 @@ public class EqualsProperties {
 	 */
 	public static <T> void strongToStringProperty(T s1, T s2) {
 		if (s2 != null) {
-			assertEquals(s1.equals(s2), s1.toString().equals(s2.toString()));
+			assertEquals(s1.equals(s2), s1.toString().equals(s2.toString()),
+					failed("a.equals(b) <=> a.toString().equals(b.toString())", s1, s2));
 		}
 	}
 
@@ -203,22 +194,18 @@ public class EqualsProperties {
 	 * @param s2
 	 */
 	public static <T> void symmetricProperty(T s1, T s2) {
-		if (s1.equals(s2)) {
-			assertEquals(s2, s1);
-		}
+		assertEquals(s1.equals(s2), s2.equals(s1), failed("a.equals(b) <=> b.equals(a)", s1, s2));
 	}
 
 	/**
 	 * A generic test for the toString property (strong version) – that toStrings
 	 * are equal if and only if objects are equal.
 	 *
-	 * @param gen
-	 *            A data generator
-	 * @param n
-	 *            The number of times to run the test.
+	 * @param gen A data generator
+	 * @param n   The number of times to run the test.
 	 * @see #weakToStringProperty(Object, Object)
 	 */
-	public static <T> void toStringEqualStrongTest(IGenerator<T> gen, int n) {
+	public static <T> void toStringEqualsStrongTest(Generator<T> gen, int n) {
 		for (int i = 0; i < n; i++) {
 			strongToStringProperty(gen.generate(), gen.generate());
 
@@ -232,13 +219,11 @@ public class EqualsProperties {
 	 * A generic test for the toString property (weak version) – that equal objects
 	 * have equal toStrings.
 	 *
-	 * @param gen
-	 *            A data generator
-	 * @param n
-	 *            The number of times to run the test.
+	 * @param gen A data generator
+	 * @param n   The number of times to run the test.
 	 * @see #weakToStringProperty(Object, Object)
 	 */
-	public static <T> void toStringEqualsWeakTest(IGenerator<T> gen, int n) {
+	public static <T> void toStringEqualsWeakTest(Generator<T> gen, int n) {
 		for (int i = 0; i < n; i++) {
 			weakToStringProperty(gen.generate(), gen.generate());
 
@@ -258,7 +243,8 @@ public class EqualsProperties {
 	 */
 	public static <T> void transitiveProperty(T s1, T s2, T s3) {
 		if (s1.equals(s2) && s2.equals(s3)) {
-			assertEquals(s1, s3);
+			assertEquals(s1, s3, failed("a.equals(b) && b.equals(c) => a.equals(c)", s1, s2, s3));
+
 		}
 	}
 
@@ -271,8 +257,20 @@ public class EqualsProperties {
 	 */
 	public static <T> void weakToStringProperty(T s1, T s2) {
 		if (s2 != null && s1.equals(s2)) {
-			assertEquals(s1.toString(), s2.toString());
+			assertEquals(s1.toString(), s2.toString(), failed("a.equals(b) => a.toString().equals(b.toString())", s1, s2));
 		}
+	}
+
+	private static <T> Supplier<String> failed(String s, T a) {
+		return () -> String.format("failed: %s (a=%s)", s, a);
+	}
+
+	private static <T> Supplier<String> failed(String s, T a, T b) {
+		return () -> String.format("failed: %s (a=%s, b=%s)", s, a, b);
+	}
+
+	private static <T> Supplier<String> failed(String s, T a, T b, T c) {
+		return () -> String.format("failed: %s (a=%s, b=%s, c=%s)", s, a, b, c);
 	}
 
 }

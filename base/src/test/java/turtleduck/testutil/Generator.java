@@ -9,7 +9,7 @@ import java.util.Random;
  * @param <T>
  *            The type of data generated.
  */
-public interface IGenerator<T> {
+public interface Generator<T> {
 
 	/**
 	 * Generate a random object.

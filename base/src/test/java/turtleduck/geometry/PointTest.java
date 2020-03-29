@@ -1,12 +1,12 @@
 package turtleduck.geometry;
 
 import turtleduck.AbstractEqualsTest;
-import turtleduck.testutil.generators.Point2Generator;
+import turtleduck.testutil.Generator;
 
-public class PointTest extends AbstractEqualsTest<Point> {
+public abstract class PointTest extends AbstractEqualsTest<Point> {
 
-	public PointTest() {
-		super(new Point2Generator(), ToStringEqualsProperty.STRONG);
+	public PointTest(Generator<Point> gen) {
+		super(gen, ToStringEqualsProperty.STRONG);
 	}
 
 }

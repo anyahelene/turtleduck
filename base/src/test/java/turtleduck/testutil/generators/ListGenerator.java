@@ -4,26 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import turtleduck.testutil.IGenerator;
+import turtleduck.testutil.Generator;
 
 public class ListGenerator<T> extends AbstractGenerator<List<T>>
-	implements IGenerator<List<T>> {
+	implements Generator<List<T>> {
 	/**
 	 * Generator for the length of the list
 	 */
-	private final IGenerator<Integer> lengthGenerator;
+	private final Generator<Integer> lengthGenerator;
 
 	/**
 	 * Generator for one element of a random grid
 	 */
-	private final IGenerator<T> elementGenerator;
+	private final Generator<T> elementGenerator;
 
-	public ListGenerator(IGenerator<T> elementGenerator) {
+	public ListGenerator(Generator<T> elementGenerator) {
 		this.elementGenerator = elementGenerator;
 		this.lengthGenerator = new IntGenerator(0, 100);
 	}
 
-	public ListGenerator(IGenerator<T> elementGenerator, int maxLength) {
+	public ListGenerator(Generator<T> elementGenerator, int maxLength) {
 		if (maxLength < 0) {
 			throw new IllegalArgumentException("Length must be 1 or greater");
 		}
@@ -32,7 +32,7 @@ public class ListGenerator<T> extends AbstractGenerator<List<T>>
 		this.lengthGenerator = new IntGenerator(0, maxLength);
 	}
 
-	public ListGenerator(IGenerator<T> elementGenerator, int minLength, int maxLength) {
+	public ListGenerator(Generator<T> elementGenerator, int minLength, int maxLength) {
 		if (maxLength < 0 || minLength < 0) {
 			throw new IllegalArgumentException("Length must be 1 or greater");
 		}
