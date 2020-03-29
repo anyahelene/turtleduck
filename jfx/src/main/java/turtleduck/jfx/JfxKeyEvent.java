@@ -1,6 +1,6 @@
 package turtleduck.jfx;
 
-import turtleduck.events.KeyCode;
+import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 
 public class JfxKeyEvent implements KeyEvent {
@@ -39,7 +39,7 @@ public class JfxKeyEvent implements KeyEvent {
 		shortcutMods = smod;
 		modString = modS;
 		javafx.scene.input.KeyCode code = event.getCode();
-		keyType = (code.isArrowKey() ? KEY_TYPE_ARROW : 0) | (code.isDigitKey() ? KEY_TYPE_DIGIT : 0)
+		keyType = (code.isArrowKey() ? KEY_TYPE_NAVIGATION : 0) | (code.isDigitKey() ? KEY_TYPE_DIGIT : 0)
 				| (code.isFunctionKey() ? KEY_TYPE_FUNCTION : 0) | (code.isKeypadKey() ? KEY_TYPE_KEYPAD : 0)
 				| (code.isLetterKey() ? KEY_TYPE_LETTER : 0) | (code.isMediaKey() ? KEY_TYPE_MEDIA : 0)
 				| (code.isModifierKey() ? KEY_TYPE_MODIFIER : 0) | (code.isNavigationKey() ? KEY_TYPE_NAVIGATION : 0)
@@ -81,14 +81,9 @@ public class JfxKeyEvent implements KeyEvent {
 	}
 
 	@Override
-	public KeyCode getCode() {
+	public int getCode() {
 		String name = ev.getCode().name();
-		try {
-			KeyCode code = KeyCode.valueOf(name);
-			return code;
-		} catch (Throwable t) {
-			return KeyCode.UNDEFINED;
-		}
+			return KeyCodes.Mappings.FX_MAP.getOrDefault(name, KeyCodes.Special.UNDEFINED);
 	}
 
 	@Override

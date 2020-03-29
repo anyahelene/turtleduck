@@ -4,7 +4,6 @@ import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 import turtleduck.display.Screen;
-import turtleduck.events.KeyCode;
 import turtleduck.events.KeyEvent;
 import turtleduck.shell.TShell;
 import turtleduck.text.TextCursor;
@@ -55,7 +54,7 @@ public class ShellDemo implements TurtleDuckApp {
 		screen.useAlternateShortcut(true);
 		tshell = new TShell(screen, window, printer);
 		screen.setKeyPressedHandler((KeyEvent event) -> {
-			KeyCode code = event.getCode();
+		int code = event.getCode();
 			if ((event.keyType() & KeyEvent.KEY_TYPE_MODIFIER) != 0) {
 				return true;
 			}
@@ -71,7 +70,7 @@ public class ShellDemo implements TurtleDuckApp {
 			if (event.isModified()) {
 				return handleModifiedKeypress(event);
 			}
-			if ((event.keyType() & (KeyEvent.KEY_TYPE_ARROW | KeyEvent.KEY_TYPE_FUNCTION | KeyEvent.KEY_TYPE_MEDIA
+			if ((event.keyType() & (KeyEvent.KEY_TYPE_FUNCTION | KeyEvent.KEY_TYPE_MEDIA
 					| KeyEvent.KEY_TYPE_NAVIGATION)) != 0) {
 				return handleCommandKeypress(event);
 			}
@@ -99,49 +98,49 @@ public class ShellDemo implements TurtleDuckApp {
 	}
 
 	private boolean handleBuiltinShortcut(KeyEvent event) {
-		KeyCode code = event.getCode();
+		int code = event.getCode();
 		String ch = event.character().toLowerCase();
 		int mods = event.shortcutModifiers();
 		if (mods == 0) {
-			if (code == KeyCode.Q || ch.equals("q")) {
+			if (code == 'Q' || ch.equals("q")) {
 				System.exit(0);
-			} else if (code == KeyCode.R || ch.equals("r")) {
+			} else if (code == 'R' || ch.equals("r")) {
 				window.cycleMode(true);
 //				window.flush();
 				return true;
-			} else if (code == KeyCode.S || ch.equals("s")) {
+			} else if (code == 'S' || ch.equals("s")) {
 				if (event.isAltDown())
 					screen.fitScaling();
 				else
 					screen.zoomCycle();
 				return true;
-			} else if (code == KeyCode.A || ch.equals("a")) {
+			} else if (code == 'A'|| ch.equals("a")) {
 				screen.cycleAspect();
 				return true;
-			} else if (code == KeyCode.D || ch.equals("d")) {
+			} else if (code == 'D' || ch.equals("d")) {
 				tshell.charKey("D");
 //				window.flush();
 				return true;
-			} else if (code == KeyCode.H || ch.equals("h")) {
+			} else if (code == 'H' || ch.equals("h")) {
 				printHelp();
 				printInfo();
 				return true;
-			} else if (code == KeyCode.F || ch.equals("f")) {
+			} else if (code == 'F' || ch.equals("f")) {
 				screen.setFullScreen(!screen.isFullScreen());
 				return true;
-			} else if (code == KeyCode.M || ch.equals("m")) {
+			} else if (code == 'M' || ch.equals("m")) {
 				printer.print("\r");
 				return true;
-			} else if (code == KeyCode.L || ch.equals("l")) {
+			} else if (code == 'L' || ch.equals("l")) {
 				printer.redrawTextPage();
 				return true;
-			} else if (code == KeyCode.X || ch.equals("x")) {
+			} else if (code == 'X' || ch.equals("x")) {
 				printer.redrawTextPage();
 				return true;
-			} else if (code == KeyCode.C || ch.equals("c")) {
+			} else if (code == 'C' || ch.equals("c")) {
 				printer.redrawTextPage();
 				return true;
-			} else if (code == KeyCode.V || ch.equals("v")) {
+			} else if (code == 'V'|| ch.equals("v")) {
 				printer.redrawTextPage();
 				return true;
 			}

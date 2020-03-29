@@ -36,7 +36,6 @@ import jdk.jshell.spi.ExecutionEnv;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
 import turtleduck.display.Screen;
-import turtleduck.events.KeyCode;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
 import turtleduck.turtle.TurtleDuck;

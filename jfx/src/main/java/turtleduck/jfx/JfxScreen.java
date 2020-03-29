@@ -29,7 +29,7 @@ import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.display.MouseCursor;
 import turtleduck.events.KeyEvent;
-import turtleduck.events.KeyCode;
+import turtleduck.events.KeyCodes;
 import turtleduck.turtle.Pen;
 import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
@@ -265,23 +265,23 @@ public class JfxScreen extends BaseScreen {
 
 	@Override
 	public boolean minimalKeyHandler(KeyEvent event) {
-		KeyCode code = event.getCode();
+		int code = event.getCode();
 		if (event.isShortcutDown() && event.shortcutModifiers() == 0) {
-			if (code == KeyCode.Q) {
+			if (code == 'Q') {
 				Platform.exit();
-			} else if (code == KeyCode.PLUS) {
+			} else if (code == '+') {
 				zoomIn();
 				return true;
-			} else if (code == KeyCode.MINUS) {
+			} else if (code == '-') {
 				zoomOut();
 				return true;
-			} else if (code == KeyCode.V && pasteHandler != null) {
+			} else if (code == 'V' && pasteHandler != null) {
 				if (clipboard.hasString())
 					pasteHandler.test(clipboard.getString());
 				return true;
 			}
 		} else if (!event.isModified()) {
-			if (code == KeyCode.F11) {
+			if (code == KeyCodes.Function.F11) {
 				setFullScreen(!isFullScreen());
 				return true;
 			}

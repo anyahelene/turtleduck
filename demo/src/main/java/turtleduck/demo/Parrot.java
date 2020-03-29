@@ -7,7 +7,6 @@ import java.util.Map;
 
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
-import turtleduck.events.KeyCode;
 import turtleduck.geometry.Gravity;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.TurtleMark;
@@ -235,7 +234,7 @@ public class Parrot {
 			DEBUG--;
 	}
 
-	public void keyPressed(KeyCode code, boolean shift) {
+	public void keyPressed(int code, boolean shift) {
 		/*
 		 * if(code.equals(KeyCode.B)) { if(shift) beakAngle = Math.max(0, beakAngle-5);
 		 * else beakAngle = Math.min(120, beakAngle+5); } else
