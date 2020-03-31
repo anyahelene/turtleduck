@@ -96,4 +96,6 @@ public interface Attributes {
 
 	String toCss();
 
+	<T> String toCSI(Attribute<T> attr);
+
 }

@@ -27,14 +27,14 @@ public interface KeyEvent {
 //	int KEY_TYPE_ARROW = (1 << 0);
 	int KEY_TYPE_DIGIT = (1 << 1);
 	int KEY_TYPE_FUNCTION = (1 << 2);
-	int KEY_TYPE_KEYPAD = (1 << 3);
+	int KEY_TYPE_KEYPAD = 0x01000000; // (1 << 3);
 	int KEY_TYPE_LETTER = (1 << 4);
 	int KEY_TYPE_MEDIA = (1 << 5);
 	int KEY_TYPE_MODIFIER = (1 << 6);
 	int KEY_TYPE_NAVIGATION = (1 << 7);
 	int KEY_TYPE_WHITESPACE = (1 << 8);
-	int KEY_TYPE_LEFT = (1 << 9);
-	int KEY_TYPE_RIGHT = (1 << 10);
+	int KEY_TYPE_LEFT = 0x02000000; // (1 << 9);
+	int KEY_TYPE_RIGHT = 0x04000000; //(1 << 10);
 	int KEY_TYPE_COMPOSING = (1 << 11);
 	int KEY_TYPE_REPEAT = (1 << 12);
 
@@ -103,7 +103,7 @@ public interface KeyEvent {
 						mods = 0;
 					else
 						mods = mods & 0xf;
-					return new KeyEventImpl(kc, "", mods);
+					return new KeyEventImpl(kc, "", mods, 0);
 				} else {
 					csiString = csiString.substring(1);
 					mods = MODIFIER_ALT;
@@ -111,7 +111,7 @@ public interface KeyEvent {
 			}
 
 			if (csiString.equals("\u007f")) {
-				return new KeyEventImpl(KeyCodes.Editing.BACKSPACE, "\b", mods);
+				return new KeyEventImpl(KeyCodes.Editing.BACKSPACE, "\b", mods, 0);
 			} else {
 				return makeKeyEvent(csiString.substring(1), mods);
 			}
@@ -122,6 +122,10 @@ public interface KeyEvent {
 	}
 
 	static KeyEvent makeKeyEvent(String string, int mods) {
-		return new KeyEventImpl(KeyCodes.Mappings.NAME_MAP.get(string.toUpperCase()), string, mods);
+		return new KeyEventImpl(KeyCodes.Mappings.NAME_MAP.get(string.toUpperCase()), string, mods,  0);
+	}
+	
+	static KeyEvent create(int code, String data, int modifiers, int flags) {
+		return new KeyEventImpl(code, data, modifiers, flags);
 	}
 }

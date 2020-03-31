@@ -11,8 +11,8 @@ import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.dom.html.HTMLTextAreaElement;
 
 public interface Terminal extends JSObject, IDisposable {
-	static Terminal create(ITerminalOptions options) {
-		return null;
+	public static Terminal create(ITerminalOptions options) {
+		return Util.createTerminal(options);
 	}
 
     /**

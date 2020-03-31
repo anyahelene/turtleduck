@@ -1,9 +1,12 @@
 package turtleduck.events;
 
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class KeyCodes {
 	public static class Special {
@@ -170,14 +173,14 @@ public class KeyCodes {
 		public static final int DEAD = 0x280005;
 		/** The Final Mode key. */
 		public static final int FINAL_MODE = 0x280006;
-//		missingkey();
-//		missingkey();
-//		missingkey();
-//		missingkey("JAPANESE_KATAKANA", "VK_JAPANESE_KATAKANA");
-//		missingkey("JAPANESE_HIRAGANA", "VK_JAPANESE_HIRAGANA");
-//		missingkey("JAPANESE_ROMAN", "VK_JAPANESE_ROMAN");
-//		missingkey("KANA", "VK_KANA");
-//		missingkey("INPUT_METHOD_ON_OFF", "VK_INPUT_METHOD_ON_OFF");
+		//		missingkey();
+		//		missingkey();
+		//		missingkey();
+		//		missingkey("JAPANESE_KATAKANA", "VK_JAPANESE_KATAKANA");
+		//		missingkey("JAPANESE_HIRAGANA", "VK_JAPANESE_HIRAGANA");
+		//		missingkey("JAPANESE_ROMAN", "VK_JAPANESE_ROMAN");
+		//		missingkey("KANA", "VK_KANA");
+		//		missingkey("INPUT_METHOD_ON_OFF", "VK_INPUT_METHOD_ON_OFF");
 		/** The Group First key. */
 		public static final int GROUP_FIRST = 0x280007;
 		/** The Group Last key. */
@@ -631,26 +634,26 @@ public class KeyCodes {
 		protected static final int FIRST_ID = 0x300000, LAST_ID = 0x300008;
 	}
 
-		protected static final int FIRST_ID = 0x200000, LAST_ID = 0x300008;
-		static {
-		defineKey(Special.UNDEFINED, "UNDEFINED",  "Undefined",  "UNDEFINED",  "VK_UNDEFINED", null,  "Special");
-		defineKey(Modifier.ALT, "ALT",  "Alt",  "ALT",  "VK_ALT", null,  "Modifier");
+	protected static final int FIRST_ID = 0x200000, LAST_ID = 0x300008;
+	public static void initialize() {
+		defineKey(Special.UNDEFINED, "UNDEFINED",  "Undefined",  "UNDEFINED",  "VK_UNDEFINED", "GLFW_KEY_UNKNOWN",  "Special");
+		defineKey(Modifier.ALT, "ALT",  "Alt",  "ALT",  "VK_ALT", "GLFW_KEY_LEFT_ALT",  "Modifier");
 		defineKey(Modifier.ALT_GRAPH, "ALT_GRAPH",  "AltGraph",  "ALT_GRAPH",  "VK_ALT_GRAPH", null,  "Modifier");
 		defineKey(Modifier.CAPS_LOCK, "CAPS_LOCK",  "CapsLock",  "CAPS",  "VK_CAPS_LOCK", "GLFW_KEY_CAPS_LOCK",  "Modifier");
-		defineKey(Modifier.CONTROL, "CONTROL",  "Control",  "CONTROL",  "VK_CONTROL", null,  "Modifier");
+		defineKey(Modifier.CONTROL, "CONTROL",  "Control",  "CONTROL",  "VK_CONTROL", "GLFW_KEY_LEFT_CONTROL",  "Modifier");
 		defineKey(Modifier.FN, "FN",  "Fn",  null,  null, null,  "Modifier");
 		defineKey(Modifier.META, "META",  null,  "META",  "VK_META", null,  "Modifier");
-		defineKey(Modifier.OS, "OS",  "Meta",  "WINDOWS",  "VK_WINDOWS", null,  "Modifier");
+		defineKey(Modifier.OS, "OS",  "Meta",  "WINDOWS",  "VK_WINDOWS", "GLFW_KEY_LEFT_SUPER",  "Modifier");
 		defineKey(Modifier.NUM_LOCK, "NUM_LOCK",  "NumLock",  "NUM_LOCK",  "VK_NUM_LOCK", "GLFW_KEY_NUM_LOCK",  "Modifier");
 		defineKey(Modifier.SCROLL_LOCK, "SCROLL_LOCK",  "ScrollLock",  "SCROLL_LOCK",  "VK_SCROLL_LOCK", "GLFW_KEY_SCROLL_LOCK",  "Modifier");
-		defineKey(Modifier.SHIFT, "SHIFT",  "Shift",  "SHIFT",  "VK_SHIFT", null,  "Modifier");
+		defineKey(Modifier.SHIFT, "SHIFT",  "Shift",  "SHIFT",  "VK_SHIFT", "GLFW_KEY_LEFT_SHIFT",  "Modifier");
 		defineKey(Modifier.SYMBOL, "SYMBOL",  "Symbol",  null,  null, null,  "Modifier");
 		defineKey(Whitespace.ENTER, "ENTER",  "Enter",  "ENTER",  "VK_ENTER", "GLFW_KEY_ENTER",  "Whitespace");
 		defineKey(Whitespace.TAB, "TAB",  "Tab",  "TAB",  "VK_TAB", "GLFW_KEY_TAB",  "Whitespace");
-		defineKey(Navigation.ARROW_DOWN, "ARROW_DOWN",  "ArrowDown",  "DOWN",  "VK_DOWN", null,  "Navigation");
-		defineKey(Navigation.ARROW_LEFT, "ARROW_LEFT",  "ArrowLeft",  "LEFT",  "VK_LEFT", null,  "Navigation");
-		defineKey(Navigation.ARROW_RIGHT, "ARROW_RIGHT",  "ArrowRight",  "RIGHT",  "VK_RIGHT", null,  "Navigation");
-		defineKey(Navigation.ARROW_UP, "ARROW_UP",  "ArrowUp",  "UP",  "VK_UP", null,  "Navigation");
+		defineKey(Navigation.ARROW_DOWN, "ARROW_DOWN",  "ArrowDown",  "DOWN",  "VK_DOWN", "GLFW_KEY_DOWN",  "Navigation");
+		defineKey(Navigation.ARROW_LEFT, "ARROW_LEFT",  "ArrowLeft",  "LEFT",  "VK_LEFT", "GLFW_KEY_LEFT",  "Navigation");
+		defineKey(Navigation.ARROW_RIGHT, "ARROW_RIGHT",  "ArrowRight",  "RIGHT",  "VK_RIGHT", "GLFW_KEY_RIGHT",  "Navigation");
+		defineKey(Navigation.ARROW_UP, "ARROW_UP",  "ArrowUp",  "UP",  "VK_UP", "GLFW_KEY_UP",  "Navigation");
 		defineKey(Navigation.END, "END",  "End",  "END",  "VK_END", "GLFW_KEY_END",  "Navigation");
 		defineKey(Navigation.HOME, "HOME",  "Home",  "HOME",  "VK_HOME", "GLFW_KEY_HOME",  "Navigation");
 		defineKey(Navigation.PAGE_DOWN, "PAGE_DOWN",  "PageDown",  "PAGE_DOWN",  "VK_PAGE_DOWN", "GLFW_KEY_PAGE_DOWN",  "Navigation");
@@ -670,7 +673,7 @@ public class KeyCodes {
 		defineKey(UI.ACCEPT, "ACCEPT",  "Accept",  "ACCEPT",  "VK_ACCEPT", null,  "UI");
 		defineKey(UI.ATTN, "ATTN",  "Attn",  null,  null, null,  "UI");
 		defineKey(UI.CANCEL, "CANCEL",  "Cancel",  "CANCEL",  "VK_CANCEL", null,  "UI");
-		defineKey(UI.CONTEXT_MENU, "CONTEXT_MENU",  "ContextMenu",  "CONTEXT_MENU",  "VK_CONTEXT_MENU", null,  "UI");
+		defineKey(UI.CONTEXT_MENU, "CONTEXT_MENU",  "ContextMenu",  "CONTEXT_MENU",  "VK_CONTEXT_MENU", "GLFW_KEY_MENU",  "UI");
 		defineKey(UI.ESCAPE, "ESCAPE",  "Escape",  "ESCAPE",  "VK_ESCAPE", "GLFW_KEY_ESCAPE",  "UI");
 		defineKey(UI.EXECUTE, "EXECUTE",  "Execute",  null,  null, null,  "UI");
 		defineKey(UI.FIND, "FIND",  "Find",  "FIND",  "VK_FIND", null,  "UI");
@@ -902,134 +905,147 @@ public class KeyCodes {
 		defineKey(Document.MAIL_SEND, "MAIL_SEND",  "MailSend",  null,  null, null,  "Document");
 		defineKey(Document.SPELL_CHECK, "SPELL_CHECK",  "SpellCheck",  null,  null, null,  "Document");
 
-			plainKey(' ', "SPACE", "VK_SPACE");
-			plainKey(',', "COMMA", "VK_COMMA");
-			plainKey('-', "MINUS", "VK_MINUS");
-			plainKey('.', "PERIOD", "VK_PERIOD");
-			plainKey('/', "SLASH", "VK_SLASH");
-			plainKey('0', "DIGIT0", "VK_9");
-			plainKey('1', "DIGIT1", "VK_1");
-			plainKey('2', "DIGIT2", "VK_2");
-			plainKey('3', "DIGIT3", "VK_3");
-			plainKey('4', "DIGIT4", "VK_4");
-			plainKey('5', "DIGIT5", "VK_5");
-			plainKey('6', "DIGIT6", "VK_6");
-			plainKey('7', "DIGIT7", "VK_7");
-			plainKey('8', "DIGIT8", "VK_8");
-			plainKey('9', "DIGIT9", "VK_9");
-			plainKey(';', "SEMICOLON", "VK_SEMICOLON");
-			plainKey('=', "EQUALS", "VK_EQUALS");
-			plainKey('A', "A", "VK_A");
-			plainKey('B', "B", "VK_B");
-			plainKey('C', "C", "VK_C");
-			plainKey('D', "D", "VK_D");
-			plainKey('E', "E", "VK_E");
-			plainKey('F', "F", "VK_F");
-			plainKey('G', "G", "VK_G");
-			plainKey('H', "H", "VK_H");
-			plainKey('I', "I", "VK_I");
-			plainKey('J', "J", "VK_J");
-			plainKey('K', "K", "VK_K");
-			plainKey('L', "L", "VK_L");
-			plainKey('M', "M", "VK_M");
-			plainKey('N', "N", "VK_N");
-			plainKey('O', "O", "VK_O");
-			plainKey('P', "P", "VK_P");
-			plainKey('Q', "Q", "VK_Q");
-			plainKey('R', "R", "VK_R");
-			plainKey('S', "S", "VK_S");
-			plainKey('T', "T", "VK_T");
-			plainKey('U', "U", "VK_U");
-			plainKey('V', "V", "VK_V");
-			plainKey('W', "W", "VK_W");
-			plainKey('X', "X", "VK_X");
-			plainKey('Y', "Y", "VK_Y");
-			plainKey('Z', "Z", "VK_Z");
-			plainKey('[', "OPEN_BRACKET", "VK_OPEN_BRACKET");
-			plainKey('\\', "BACK_SLASH", "VK_BACK_SLASH");
-			plainKey(']', "CLOSE_BRACKET", "VK_CLOSE_BRACKET");
-			plainKey('0', "NUMPAD0", "VK_NUMPAD0", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('1', "NUMPAD1", "VK_NUMPAD1", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('2', "NUMPAD2", "VK_NUMPAD2", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('3', "NUMPAD3", "VK_NUMPAD3", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('4', "NUMPAD4", "VK_NUMPAD4", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('5', "NUMPAD5", "VK_NUMPAD5", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('6', "NUMPAD6", "VK_NUMPAD6", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('7', "NUMPAD7", "VK_NUMPAD7", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('8', "NUMPAD8", "VK_NUMPAD8", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('9', "NUMPAD9", "VK_NUMPAD9", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('*', "MULTIPLY", "VK_MULTIPLY", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('+', "ADD", "VK_ADD", KeyEvent.KEY_TYPE_KEYPAD);
-//			plainKey("SEPARATOR", "VK_SEPARATOR", KeyEvent.KEY_TYPE_KEYPAD); // , or .
-			plainKey('-', "SUBTRACT", "VK_SUBTRACT", KeyEvent.KEY_TYPE_KEYPAD);
-//			plainKey("DECIMAL", "VK_DECIMAL", KeyEvent.KEY_TYPE_KEYPAD); // . or ,
-			plainKey('/', "DIVIDE", "VK_DIVIDE", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('`', "BACK_QUOTE", "VK_BACK_QUOTE", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey('\'', "QUOTE", "VK_QUOTE", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey(Navigation.ARROW_UP, "KP_UP", "VK_KP_UP", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey(Navigation.ARROW_DOWN, "KP_DOWN", "VK_KP_DOWN", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey(Navigation.ARROW_LEFT, "KP_LEFT", "VK_KP_LEFT", KeyEvent.KEY_TYPE_KEYPAD);
-			plainKey(Navigation.ARROW_RIGHT, "KP_RIGHT", "VK_KP_RIGHT", KeyEvent.KEY_TYPE_KEYPAD);
-//			plainKey("DEAD_GRAVE", "VK_DEAD_GRAVE", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_ACUTE", "VK_DEAD_ACUTE", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_CIRCUMFLEX", "VK_DEAD_CIRCUMFLEX", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_TILDE", "VK_DEAD_TILDE", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_MACRON", "VK_DEAD_MACRON", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_BREVE", "VK_DEAD_BREVE", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_ABOVEDOT", "VK_DEAD_ABOVEDOT", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_DIAERESIS", "VK_DEAD_DIAERESIS", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_ABOVERING", "VK_DEAD_ABOVERING", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_DOUBLEACUTE", "VK_DEAD_DOUBLEACUTE", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_CARON", "VK_DEAD_CARON", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_CEDILLA", "VK_DEAD_CEDILLA", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_OGONEK", "VK_DEAD_OGONEK", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_IOTA", "VK_DEAD_IOTA", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_VOICED_SOUND", "VK_DEAD_VOICED_SOUND", KeyEvent.KEY_TYPE_DEAD);
-//			plainKey("DEAD_SEMIVOICED_SOUND", "VK_DEAD_SEMIVOICED_SOUND", KeyEvent.KEY_TYPE_DEAD);
-			plainKey('&',"AMPERSAND", "VK_AMPERSAND");
-			plainKey('*', "ASTERISK", "VK_ASTERISK");
-			plainKey('"', "QUOTEDBL", "VK_QUOTEDBL");
-			plainKey('<', "LESS", "VK_LESS");
-			plainKey('>', "GREATER", "VK_GREATER");
-			plainKey('{', "BRACELEFT", "VK_BRACELEFT");
-			plainKey('}', "BRACERIGHT", "VK_BRACERIGHT");
-			plainKey('@', "AT", "VK_AT");
-			plainKey(':', "COLON", "VK_COLON");
-			plainKey('^', "CIRCUMFLEX", "VK_CIRCUMFLEX");
-			plainKey('$', "DOLLAR", "VK_DOLLAR");
-			plainKey('€', "EURO_SIGN", "VK_EURO_SIGN");
-			plainKey('!', "EXCLAMATION_MARK", "VK_EXCLAMATION_MARK");
-			plainKey('¡', "INVERTED_EXCLAMATION_MARK", "VK_INVERTED_EXCLAMATION_MARK");
-			plainKey('(', "LEFT_PARENTHESIS", "VK_LEFT_PARENTHESIS");
-			plainKey('#', "NUMBER_SIGN", "VK_NUMBER_SIGN");
-			plainKey('+', "PLUS", "VK_PLUS");
-			plainKey(')', "RIGHT_PARENTHESIS", "VK_RIGHT_PARENTHESIS");
-			plainKey('_', "UNDERSCORE", "VK_UNDERSCORE");
-//			missingkey("PROPS", "VK_PROPS");
-//			missingkey("BEGIN", "VK_BEGIN");
-//			missingkey("SOFTKEY_0", "None");
-//			missingkey("SOFTKEY_1", "None");
-//			missingkey("SOFTKEY_2", "None");
-//			missingkey("SOFTKEY_3", "None");
-//			missingkey("SOFTKEY_4", "None");
-//			missingkey("SOFTKEY_5", "None");
-//			missingkey("SOFTKEY_6", "None");
-//			missingkey("SOFTKEY_7", "None");
-//			missingkey("SOFTKEY_8", "None");
-//			missingkey("SOFTKEY_9", "None");
-//			missingkey("GAME_A", "None");
-//			missingkey("GAME_B", "None");
-//			missingkey("GAME_C", "None");
-//			missingkey("GAME_D", "None");
-//			missingkey("STAR", "None");
-//			missingkey("POUND", "None");
-//			missingkey("COMMAND", "None");
-//			missingkey("None", "VK_SEPARATER");
-			jsAlias("OS", "Meta");
-			jsAlias("Spacebar", " ");
-			jsAlias("VolumeUp", "AudioVolumeUp");
-			jsAlias("VolumeDown", "AudioVolumeDown");
-			jsAlias("VolumeMute", "AudioVolumeMute");
+
+
+		//		GLFW_KEY_WORLD_1
+		//		GLFW_KEY_WORLD_2
+
+		plainKey(Modifier.SHIFT, null, null, "GLFW_KEY_RIGHT_SHIFT"); 
+		plainKey(Modifier.CONTROL, null, null, "GLFW_KEY_RIGHT_CONTROL");
+		plainKey(Modifier.ALT, null, null, "GLFW_KEY_RIGHT_ALT");
+		plainKey(Modifier.OS, null, null, "GLFW_KEY_RIGHT_SUPER");
+
+
+		plainKey(' ', "SPACE", "VK_SPACE" , "GLFW_KEY_SPACE");
+		plainKey(',', "COMMA", "VK_COMMA", "GLFW_KEY_COMMA");
+		plainKey('-', "MINUS", "VK_MINUS", "GLFW_KEY_MINUS");
+		plainKey('.', "PERIOD", "VK_PERIOD", "GLFW_KEY_PERIOD");
+		plainKey('/', "SLASH", "VK_SLASH", "GLFW_KEY_SLASH");
+		plainKey('0', "DIGIT0", "VK_0", "GLFW_KEY_0");
+		plainKey('1', "DIGIT1", "VK_1", "GLFW_KEY_1");
+		plainKey('2', "DIGIT2", "VK_2", "GLFW_KEY_2");
+		plainKey('3', "DIGIT3", "VK_3", "GLFW_KEY_3");
+		plainKey('4', "DIGIT4", "VK_4", "GLFW_KEY_4");
+		plainKey('5', "DIGIT5", "VK_5", "GLFW_KEY_5");
+		plainKey('6', "DIGIT6", "VK_6", "GLFW_KEY_6");
+		plainKey('7', "DIGIT7", "VK_7", "GLFW_KEY_7");
+		plainKey('8', "DIGIT8", "VK_8", "GLFW_KEY_8");
+		plainKey('9', "DIGIT9", "VK_9", "GLFW_KEY_9");
+		plainKey(';', "SEMICOLON", "VK_SEMICOLON", "GLFW_KEY_SEMICOLON");
+		plainKey('=', "EQUALS", "VK_EQUALS", "GLFW_KEY_EQUAL");
+		plainKey('A', "A", "VK_A", "GLFW_KEY_A");
+		plainKey('B', "B", "VK_B", "GLFW_KEY_B");
+		plainKey('C', "C", "VK_C", "GLFW_KEY_C");
+		plainKey('D', "D", "VK_D", "GLFW_KEY_D");
+		plainKey('E', "E", "VK_E", "GLFW_KEY_E");
+		plainKey('F', "F", "VK_F", "GLFW_KEY_F");
+		plainKey('G', "G", "VK_G", "GLFW_KEY_G");
+		plainKey('H', "H", "VK_H", "GLFW_KEY_H");
+		plainKey('I', "I", "VK_I", "GLFW_KEY_I");
+		plainKey('J', "J", "VK_J", "GLFW_KEY_J");
+		plainKey('K', "K", "VK_K", "GLFW_KEY_K");
+		plainKey('L', "L", "VK_L", "GLFW_KEY_L");
+		plainKey('M', "M", "VK_M", "GLFW_KEY_M");
+		plainKey('N', "N", "VK_N", "GLFW_KEY_N");
+		plainKey('O', "O", "VK_O", "GLFW_KEY_O");
+		plainKey('P', "P", "VK_P", "GLFW_KEY_P");
+		plainKey('Q', "Q", "VK_Q", "GLFW_KEY_Q");
+		plainKey('R', "R", "VK_R", "GLFW_KEY_R");
+		plainKey('S', "S", "VK_S", "GLFW_KEY_S");
+		plainKey('T', "T", "VK_T", "GLFW_KEY_T");
+		plainKey('U', "U", "VK_U", "GLFW_KEY_U");
+		plainKey('V', "V", "VK_V", "GLFW_KEY_V");
+		plainKey('W', "W", "VK_W", "GLFW_KEY_W");
+		plainKey('X', "X", "VK_X", "GLFW_KEY_X");
+		plainKey('Y', "Y", "VK_Y", "GLFW_KEY_Y");
+		plainKey('Z', "Z", "VK_Z", "GLFW_KEY_Z");
+		plainKey('[', "OPEN_BRACKET", "VK_OPEN_BRACKET", "GLFW_KEY_LEFT_BRACKET");
+		plainKey('\\', "BACK_SLASH", "VK_BACK_SLASH", "GLFW_KEY_BACKSLASH");
+		plainKey(']', "CLOSE_BRACKET", "VK_CLOSE_BRACKET", "GLFW_KEY_RIGHT_BRACKET");
+		plainKey('0', "NUMPAD0", "VK_NUMPAD0", "GLFW_KEY_KP_0",  KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('1', "NUMPAD1", "VK_NUMPAD1", "GLFW_KEY_KP_1", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('2', "NUMPAD2", "VK_NUMPAD2", "GLFW_KEY_KP_2", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('3', "NUMPAD3", "VK_NUMPAD3", "GLFW_KEY_KP_3", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('4', "NUMPAD4", "VK_NUMPAD4", "GLFW_KEY_KP_4", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('5', "NUMPAD5", "VK_NUMPAD5", "GLFW_KEY_KP_5", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('6', "NUMPAD6", "VK_NUMPAD6", "GLFW_KEY_KP_6", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('7', "NUMPAD7", "VK_NUMPAD7", "GLFW_KEY_KP_7", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('8', "NUMPAD8", "VK_NUMPAD8", "GLFW_KEY_KP_8", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('9', "NUMPAD9", "VK_NUMPAD9", "GLFW_KEY_KP_9", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey(Whitespace.ENTER, null, null, "GLFW_KEY_KP_ENTER", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('=', null, null, "GLFW_KEY_KP_EQUAL", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('*', "MULTIPLY", "VK_MULTIPLY", "GLFW_KEY_KP_MULTIPLY", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('+', "ADD", "VK_ADD", "GLFW_KEY_KP_ADD",KeyEvent.KEY_TYPE_KEYPAD);
+		//			plainKey("SEPARATOR", "VK_SEPARATOR", KeyEvent.KEY_TYPE_KEYPAD); // , or .
+		plainKey('-', "SUBTRACT", "VK_SUBTRACT", "GLFW_KEY_KP_SUBTRACT", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('.', null, "VK_DECIMAL", "GLFW_KEY_KP_DECIMAL", KeyEvent.KEY_TYPE_KEYPAD); // . or ,
+		plainKey('/', "DIVIDE", "VK_DIVIDE", "GLFW_KEY_KP_DIVIDE", KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey('`', "BACK_QUOTE", "VK_BACK_QUOTE", "GLFW_KEY_GRAVE_ACCENT");
+		plainKey('\'', "QUOTE", "VK_QUOTE", "GLFW_KEY_APOSTROPHE");
+		plainKey(Navigation.ARROW_UP, "KP_UP", "VK_KP_UP", null, KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey(Navigation.ARROW_DOWN, "KP_DOWN", "VK_KP_DOWN", null, KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey(Navigation.ARROW_LEFT, "KP_LEFT", "VK_KP_LEFT", null, KeyEvent.KEY_TYPE_KEYPAD);
+		plainKey(Navigation.ARROW_RIGHT, "KP_RIGHT", "VK_KP_RIGHT", null, KeyEvent.KEY_TYPE_KEYPAD);
+		//			plainKey("DEAD_GRAVE", "VK_DEAD_GRAVE", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_ACUTE", "VK_DEAD_ACUTE", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_CIRCUMFLEX", "VK_DEAD_CIRCUMFLEX", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_TILDE", "VK_DEAD_TILDE", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_MACRON", "VK_DEAD_MACRON", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_BREVE", "VK_DEAD_BREVE", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_ABOVEDOT", "VK_DEAD_ABOVEDOT", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_DIAERESIS", "VK_DEAD_DIAERESIS", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_ABOVERING", "VK_DEAD_ABOVERING", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_DOUBLEACUTE", "VK_DEAD_DOUBLEACUTE", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_CARON", "VK_DEAD_CARON", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_CEDILLA", "VK_DEAD_CEDILLA", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_OGONEK", "VK_DEAD_OGONEK", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_IOTA", "VK_DEAD_IOTA", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_VOICED_SOUND", "VK_DEAD_VOICED_SOUND", KeyEvent.KEY_TYPE_DEAD);
+		//			plainKey("DEAD_SEMIVOICED_SOUND", "VK_DEAD_SEMIVOICED_SOUND", KeyEvent.KEY_TYPE_DEAD);
+		plainKey('&',"AMPERSAND", "VK_AMPERSAND", null);
+		plainKey('*', "ASTERISK", "VK_ASTERISK", null);
+		plainKey('"', "QUOTEDBL", "VK_QUOTEDBL", null);
+		plainKey('<', "LESS", "VK_LESS", null);
+		plainKey('>', "GREATER", "VK_GREATER", null);
+		plainKey('{', "BRACELEFT", "VK_BRACELEFT", null);
+		plainKey('}', "BRACERIGHT", "VK_BRACERIGHT", null);
+		plainKey('@', "AT", "VK_AT", null);
+		plainKey(':', "COLON", "VK_COLON", null);
+		plainKey('^', "CIRCUMFLEX", "VK_CIRCUMFLEX", null);
+		plainKey('$', "DOLLAR", "VK_DOLLAR", null);
+		plainKey('€', "EURO_SIGN", "VK_EURO_SIGN", null);
+		plainKey('!', "EXCLAMATION_MARK", "VK_EXCLAMATION_MARK", null);
+		plainKey('¡', "INVERTED_EXCLAMATION_MARK", "VK_INVERTED_EXCLAMATION_MARK", null);
+		plainKey('(', "LEFT_PARENTHESIS", "VK_LEFT_PARENTHESIS", null);
+		plainKey('#', "NUMBER_SIGN", "VK_NUMBER_SIGN", null);
+		plainKey('+', "PLUS", "VK_PLUS", null);
+		plainKey(')', "RIGHT_PARENTHESIS", "VK_RIGHT_PARENTHESIS", null);
+		plainKey('_', "UNDERSCORE", "VK_UNDERSCORE", null);
+		//			missingkey("PROPS", "VK_PROPS");
+		//			missingkey("BEGIN", "VK_BEGIN");
+		//			missingkey("SOFTKEY_0", "None");
+		//			missingkey("SOFTKEY_1", "None");
+		//			missingkey("SOFTKEY_2", "None");
+		//			missingkey("SOFTKEY_3", "None");
+		//			missingkey("SOFTKEY_4", "None");
+		//			missingkey("SOFTKEY_5", "None");
+		//			missingkey("SOFTKEY_6", "None");
+		//			missingkey("SOFTKEY_7", "None");
+		//			missingkey("SOFTKEY_8", "None");
+		//			missingkey("SOFTKEY_9", "None");
+		//			missingkey("GAME_A", "None");
+		//			missingkey("GAME_B", "None");
+		//			missingkey("GAME_C", "None");
+		//			missingkey("GAME_D", "None");
+		//			missingkey("STAR", "None");
+		//			missingkey("POUND", "None");
+		//			missingkey("COMMAND", "None");
+		//			missingkey("None", "VK_SEPARATER");
+		jsAlias("OS", "Meta");
+		jsAlias("Spacebar", " ");
+		jsAlias("VolumeUp", "AudioVolumeUp");
+		jsAlias("VolumeDown", "AudioVolumeDown");
+		jsAlias("VolumeMute", "AudioVolumeMute");
 	}
 
 	public static class Mappings {
@@ -1039,24 +1055,51 @@ public class KeyCodes {
 		public static final Map<String,Integer> GLFW_MAP = new HashMap<>(); 
 		public static final Map<String,Integer> NAME_MAP = new HashMap<>(); 
 		public static final Map<Integer,String> CODE_MAP = new HashMap<>(); 
-		public static final List<String> CATEGORIES = new ArrayList<>(); 
+		public static final Map<Integer,String> CATEGORIES = new HashMap<>(); 
 	}
 	
+	public static void main(String[] args) {
+		initialize();
+		
+		writeMapping("JSKeyCodes", Mappings.JS_MAP);
+	}
+
+	private static void writeMapping(String classname, Map<String, Integer> jsMap) {
+		try(PrintStream out = new PrintStream("src/main/java/turtleduck/events/" + classname + ".java")) {
+			out.print("package turtleduck.events;\n");
+			out.printf("public class %s {\n", classname);
+			out.print("\tpublic static int toKeyCode(String name) {\n");
+			out.print("\t\tswitch(name) {\n");
+			for(Entry<String, Integer> entry : jsMap.entrySet()) {
+				out.printf("\t\tcase \"%s\": return 0x%06x;\n", entry.getKey(), entry.getValue());
+			}
+			out.printf("\t\tdefault: return 0x%06x;\n", Special.UNDEFINED);
+			out.print("\t\t}\n\t}\n}\n");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	private static int nextKey = -1;
 	protected static void jsAlias(String altJsName, String jsName) {
-		Mappings.JS_MAP.put(altJsName, Mappings.JS_MAP.get(jsName));
+		Mappings.JS_MAP.put(altJsName, Mappings.JS_MAP.getOrDefault(jsName, jsName.codePointAt(0)));
 	}
-	protected static void plainKey(int code, String fxName, String awtName) {
+	protected static void plainKey(int code, String fxName, String awtName, String glName) {
 		if(fxName != null)
 			Mappings.FX_MAP.put(fxName, code);
 		if(awtName != null)
 			Mappings.AWT_MAP.put(awtName, code);
+		if(glName != null)
+			Mappings.AWT_MAP.put(glName, code);
 	}
-	protected static void plainKey(int code, String fxName, String awtName, int flags) {
+	protected static void plainKey(int code, String fxName, String awtName, String glName, int flags) {
 		if(fxName != null)
-			Mappings.FX_MAP.put(fxName, code);
+			Mappings.FX_MAP.put(fxName, code|flags);
 		if(awtName != null)
-			Mappings.AWT_MAP.put(awtName, code);
+			Mappings.AWT_MAP.put(awtName, code|flags);
+		if(glName != null)
+			Mappings.AWT_MAP.put(glName, code|flags);
 	}
 	protected static int defineKey(int code, String name, String jsName, String fxName, String awtName, String glName, String category) {
 		Mappings.NAME_MAP.put(name, code);
@@ -1069,7 +1112,17 @@ public class KeyCodes {
 			Mappings.GLFW_MAP.put(glName, code);
 		if(awtName != null)
 			Mappings.AWT_MAP.put(awtName, code);
-		Mappings.CATEGORIES.add(-code-1, name);
+		Mappings.CATEGORIES.put(code, category);
 		return code;
+	}
+	
+	public static String keyName(int code) {
+		return keyName(code, null);
+	}
+	
+	public static String keyName(int code, String defaultValue) {
+		if(Mappings.CODE_MAP.isEmpty())
+			initialize();
+		return Mappings.CODE_MAP.getOrDefault(code, defaultValue);
 	}
 }

@@ -1,5 +1,6 @@
 package turtleduck.events.impl;
 
+import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 
 public class KeyEventImpl implements KeyEvent {
@@ -11,11 +12,11 @@ public class KeyEventImpl implements KeyEvent {
 	private int code;
 	private String character;
 
-	public KeyEventImpl(int code, String character, int modifiers) {
+	public KeyEventImpl(int code, String character, int modifiers, int flags) {
 		this.code = code;
 		this.modifiers = modifiers;
 		this.character = character;
-		this.keyType = KeyEvent.KEY_TYPE_LETTER;
+		this.keyType = flags;
 	}
 
 	@Override
@@ -89,7 +90,7 @@ public class KeyEventImpl implements KeyEvent {
 	}
 
 	public String toString() {
-		return "key (" + modifierString() + code + ", mods='" + modString + "', type=" + keyTypeString + ")";
+		return "key (" + KeyCodes.keyName(code, "'" + character + "'") + ", code="+ code + ", mods=" + modifiers + ", type=" + keyType + ")";
 	}
 
 	@Override

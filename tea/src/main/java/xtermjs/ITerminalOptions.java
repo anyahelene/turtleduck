@@ -2,12 +2,15 @@ package xtermjs;
 
 import org.teavm.jso.JSObject;
 import org.teavm.jso.JSProperty;
+import org.teavm.jso.core.JSObjects;
 
 /**
  * An object containing start up options for the terminal.
  */
 public interface ITerminalOptions extends JSObject {
-
+	public static ITerminalOptions create() {
+		return JSObjects.create();
+	}
 	/**
 	 * Whether background should support non-opaque color. It must be set before
 	 * executing the `Terminal.open()` method and can't be changed later without

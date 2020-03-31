@@ -46,17 +46,6 @@
 			<version>${teavm.version}</version>
 			<scope>runtime</scope>
 		</dependency>
-
-
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-web</artifactId>
-			<version>3.8.5</version>
-			<classifier>client</classifier>
-			<type>js</type>
-		</dependency>
-
-
 	</dependencies>
 
 	<build>

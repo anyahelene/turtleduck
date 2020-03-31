@@ -99,16 +99,18 @@
 		</div>
 		<div class="d-flex flex-grow-1 flex-column align-items-stretch">
 			<div class="d-flex h-75 flex-row align-items-stretch">
-				<div id="screen0" class="flex-grow-1 bg-primary"></div>
+				<div id="screen0" class="flex-grow-1 bg-white border border-dark" style="overflow:hidden;resize:both">
+					<svg id="svg0" viewbox="0 0 1280 720" preserveAspectRatio="xMinYMin meet"></svg>
+				</div>
 				<div id="right" class="card col-2">right</div>
 			</div>
-			<div id="code" class="h-25"></div>
+			<div id="code" class="h-25 bg-dark border border-light" style="overflow:hidden;resize:both"></div>
 			<script>
-				terminal = new Terminal();
-				const fitAddon = new FitAddon();
-				terminal.loadAddon(fitAddon);
-				terminal.open(document.getElementById('code'));
-				fitAddon.fit();
+				//terminal = new Terminal();
+				//const fitAddon = new FitAddon();
+				//terminal.loadAddon(fitAddon);
+				
+				//fitAddon.fit();
 			</script>
 		</div>
 	</div>

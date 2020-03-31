@@ -74,4 +74,5 @@ public interface Paint  {
 	
 	<T> T as(Class<T> type);
 	String toCss();
+	String toSGRParam(int i);
 }

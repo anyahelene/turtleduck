@@ -284,4 +284,27 @@ public class ColorRGB implements Paint {
 			return String.format("rgba(%d,%d,%d,%d)", Math.round(red * 255), Math.round(green * 255),
 					Math.round(blue * 255), Math.round(blue * 255));
 	}
+
+	@Override
+	public String toSGRParam(int i) {
+		if(this == Colors.TRANSPARENT)
+			return (i + 8) + ";2";
+		else if(this == Colors.BLACK)
+			return String.valueOf(i + 0);
+		else if(this == Colors.RED)
+			return String.valueOf(i + 1);
+		else if(this == Colors.GREEN)
+			return String.valueOf(i + 2);
+		else if(this == Colors.YELLOW)
+			return String.valueOf(i + 3);
+		else if(this == Colors.BLUE)
+			return String.valueOf(i + 4);
+		else if(this == Colors.MAGENTA)
+			return String.valueOf(i + 5);
+		else if(this == Colors.CYAN)
+			return String.valueOf(i + 6);
+		else if(this == Colors.WHITE)
+			return String.valueOf(i + 7);
+		return String.valueOf(i+9);
+	}
 }

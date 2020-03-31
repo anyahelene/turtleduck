@@ -61,7 +61,7 @@ public class TShell {
 		this.screen = screen;
 		this.printer = printer2;
 		executor = Executors.newSingleThreadExecutor();
-		
+
 		printer2.autoScroll(true);
 		LocalLoaderDelegate delegate = new LocalLoaderDelegate(TShell.class.getClassLoader());
 		try {
@@ -103,10 +103,11 @@ public class TShell {
 				"import turtleduck.shell.TShell;", //
 				"Screen screen = turtleduck.objects.IdentifiedObject.Registry\n.findObject(Screen.class, \""
 						+ screen.id() + "\");", //
-				"Canvas canvas = screen.createPainter().canvas();", //
-				"TurtleDuck turtle = canvas.createTurtleDuck();",
+				"var canvas = screen.createCanvas();", //
+				"var turtle = canvas.createTurtleDuck();",
 				"turtle.changePen().strokePaint(Colors.BLACK).done();", //
-				"turtle.moveTo(640, 400);", "turtleduck.shell.TShell.testValue = 5;")) {
+				"turtle.moveTo(10, 10);", "turtleduck.shell.TShell.testValue = 5;"
+		)) {
 			printer2.print("> ");
 			inputX = printer2.x();
 			inputY = printer2.y();
@@ -114,7 +115,8 @@ public class TShell {
 			eval(s, true);
 		}
 
-		screen.setPasteHandler(this::paste);
+		if (screen != null)
+			screen.setPasteHandler(this::paste);
 		sca = shell.sourceCodeAnalysis();
 		printer2.println("testValue = " + testValue);
 		System.out.println(System.getProperties());
@@ -144,7 +146,7 @@ public class TShell {
 		List<SnippetEvent> eval = shell.eval(code);
 		for (SnippetEvent e : eval) {
 			Snippet snip = e.snippet();
-			if(println) {
+			if (println) {
 				printer.println(" [" + snip.id() + "]", Colors.FORESTGREEN);
 			}
 			shell.diagnostics(e.snippet()).forEach((diag) -> {
@@ -156,8 +158,8 @@ public class TShell {
 				else
 					printer.foreground(Colors.YELLOW.darker());
 				if (pos != Diag.NOPOS) {
-					var errToken = code.substring((int)start, (int)end);
-					printer.begin().at(inputX+start, inputY-1).print(errToken, Colors.BLACK, Colors.RED).end();
+					var errToken = code.substring((int) start, (int) end);
+					printer.begin().at(inputX + start, inputY - 1).print(errToken, Colors.BLACK, Colors.RED).end();
 					printer.moveHoriz((int) (inputX + pos));
 					printer.println("^");
 				}
@@ -241,16 +243,11 @@ public class TShell {
 
 	}
 
-	/*public void arrowKey(KeyCode code) {
-		if (code == KeyCode.BACK_SPACE) {
-			if (input.length() > 0) {
-				input = input.substring(0, input.length() - 1);
-				printer.print("\b \b");
-			}
-		}
-		completions = null;
-	}
-*/
+	/*
+	 * public void arrowKey(KeyCode code) { if (code == KeyCode.BACK_SPACE) { if
+	 * (input.length() > 0) { input = input.substring(0, input.length() - 1);
+	 * printer.print("\b \b"); } } completions = null; }
+	 */
 	public boolean doCompletion() {
 		if (completions != null) {
 			CodeSuggestion remove = completions.remove(0);
@@ -324,8 +321,11 @@ public class TShell {
 	}
 
 	public void charKey(String character) {
-		executor.execute(() -> {keypress(character);});
+		executor.execute(() -> {
+			keypress(character);
+		});
 	}
+
 	public void keypress(String character) {
 		if (character.equals("\t")) {
 			doCompletion();
@@ -381,14 +381,19 @@ public class TShell {
 		}
 	}
 
+	public void enter(String s) {
+		input += s;
+		enterKey();
+	}
+
 	public void enterKey() {
 		completions = null;
-		if(input != "") {
-		CompletionInfo info = sca.analyzeCompletion(input);
-		System.out.println(info.completeness());
+		if (input != "") {
+			CompletionInfo info = sca.analyzeCompletion(input);
+			System.out.println(info.completeness());
 //		printer.println();
-		eval(input, true);
-		input = "";
+			eval(input, true);
+			input = "";
 		} else {
 			printer.println();
 		}

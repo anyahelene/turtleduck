@@ -1,17 +1,9 @@
-package turtleduck.tea;
+package turtleduck.server;
 
 import java.util.function.Predicate;
 
-import org.teavm.jso.JSBody;
-import org.teavm.jso.JSObject;
-import org.teavm.jso.browser.Window;
-import org.teavm.jso.canvas.CanvasRenderingContext2D;
-import org.teavm.jso.dom.css.CSSStyleDeclaration;
-import org.teavm.jso.dom.html.HTMLCanvasElement;
-import org.teavm.jso.dom.html.HTMLDocument;
-import org.teavm.jso.dom.html.HTMLElement;
-
 import turtleduck.colors.Paint;
+import turtleduck.comms.Message;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
@@ -19,43 +11,25 @@ import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.display.impl.BaseScreen.Dimensions;
 import turtleduck.events.KeyEvent;
+import turtleduck.server.TurtleDuckSession.Channel;
 import turtleduck.text.TextWindow;
-import xtermjs.Terminal;
 
-public class NativeTScreen extends BaseScreen {
+public class ServerScreen extends BaseScreen implements Channel {
 	
 
-	public static NativeTScreen create(int config) {
-		Dimensions dim = computeDimensions(NativeTDisplayInfo.INSTANCE, config);
+	public static ServerScreen create(TurtleDuckSession session, int config) {
+		Dimensions dim = computeDimensions(ServerDisplayInfo.INSTANCE, config);
 
-		return new NativeTScreen(dim);
+		return new ServerScreen(session, dim);
 	}
 
-	private Window window;
-	private HTMLDocument document;
-	private HTMLElement mainElement;
-    @JSBody(params = { "window" }, script = "return window.terminal;")
-    protected static native Terminal getTerminal(Window window);
+	private TurtleDuckSession session;
+private int channel;
 
-    @JSBody(params = { "message" }, script = "console.log(message)")
-    protected static native void consoleLog(JSObject message);
-
-    @JSBody(params = { "message" }, script = "console.log(message)")
-	public static native void consoleLog(String string);
-    @JSBody(params = { "message" }, script = "console.log(message)")
-	public static native void consoleLog(Object message);
-
-    protected Terminal getTerminal() {
-    	return getTerminal(window);
-    }
-    
-    public NativeTScreen(Dimensions dim) {
+    public ServerScreen(TurtleDuckSession session, Dimensions dim) {
 		this.dim = dim;
-		window = Window.current();
-		document = window.getDocument();
-		mainElement = document.getElementById("screen0");
 		int height = (int) Math.floor(dim.winHeight);
-		this.dim = dim;
+		this.session = session;
 		setupAspects(dim);
 	}
 	@Override
@@ -72,19 +46,8 @@ public class NativeTScreen extends BaseScreen {
 
 	@Override
 	public Canvas createCanvas() {
-		HTMLCanvasElement canvas = (HTMLCanvasElement) document.createElement("canvas");
 		String layerId = newLayerId();
-		canvas.setAttribute("id", layerId);
-//		canvas.setAttribute("width", "1280");
-//		canvas.setAttribute("height", "960");
-		CSSStyleDeclaration style = canvas.getStyle();
-		style.setProperty("position", "relative");
-		style.setProperty("top", "0");
-		style.setProperty("left", "0");
-		CanvasRenderingContext2D context = (CanvasRenderingContext2D) canvas.getContext("2d");
-		context.strokeText("Hello, world!", 10, 10);
-		mainElement.appendChild(canvas);
-		NativeTLayer layer = addLayer(new NativeTLayer(layerId, this, dim.fbWidth, dim.fbHeight, canvas));
+		ServerLayer layer = addLayer(new ServerLayer(layerId, this, dim.fbWidth, dim.fbHeight, session));
 		return layer;
 	}
 
@@ -252,6 +215,39 @@ public class NativeTScreen extends BaseScreen {
 
 	@Override
 	public void clipboardPut(String copied) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void receive(Message obj) {
+		if (obj.type().equals("Data")) {
+		}
+	}
+
+	@Override
+	public void initialize() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public String name() {
+		return id;
+	}
+
+	@Override
+	public String service() {
+		return "draw";
+	}
+
+	@Override
+	public int channelId() {
+		return channel;
+	}
+
+	@Override
+	public void close() {
 		// TODO Auto-generated method stub
 		
 	}

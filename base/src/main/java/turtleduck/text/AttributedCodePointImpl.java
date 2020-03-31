@@ -47,4 +47,10 @@ public class AttributedCodePointImpl implements AttributedCodePoint {
 		return null;
 	}
 
+	@Override
+	public <T> String toCSI(Attribute<T> attr) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

@@ -217,4 +217,9 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 		// TODO Auto-generated method stub
 		return sb.toString();
 	}
+
+	@Override
+	public <T> String toCSI(Attribute<T> attr) {
+		return attr.encode(get(attr));
+	}
 }

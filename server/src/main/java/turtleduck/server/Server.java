@@ -1,45 +1,61 @@
 package turtleduck.server;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.ServerWebSocket;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.streams.Pipe;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.LoggerHandler;
+import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
+import io.vertx.ext.web.handler.sockjs.SockJSSocket;
+import io.vertx.ext.web.sstore.LocalSessionStore;
+import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.ext.bridge.PermittedOptions;
+import turtleduck.comms.MessageData;
+import turtleduck.shell.TShell;
 import turtleduck.terminal.PseudoTerminal;
 import turtleduck.terminal.Readline;
 import turtleduck.text.Graphemizer;
 import turtleduck.util.Strings;
+import com.julienviet.childprocess.Process;
+import com.julienviet.childprocess.ProcessOptions;
 
 public class Server extends AbstractVerticle {
-	final Vertx vertx;
+	protected SessionStore sessionStore;
+	static Vertx vertx;
+	protected TShell shell;
 	private HttpServer server;
 	ServerWebSocket webSocket;
 	PseudoTerminal pty;
 	Path[] serverRoot = { Path.of("/home/anya/git/turtleduck/tea/target/generated/js"),
 			Path.of("/home/anya/git/turtleduck/tea/src/main/webapp/"),
 			Path.of("/home/anya/git/turtleduck/tea/node_modules"), };
-	private Readline readline;
+	protected Readline readline;
+	private SessionHandler sessionHandler;
 
 	public static void main(String[] args) {
 		Server server = new Server();
-
 		server.vertx.deployVerticle(server, res -> {
 			if (res.succeeded()) {
 				System.out.println("Deployment id is: " + res.result());
 			} else {
 				System.out.println("Deployment failed!");
 				res.cause().printStackTrace();
+				server.vertx.close();
 			}
 		});
 	}
@@ -56,14 +72,15 @@ public class Server extends AbstractVerticle {
 	}
 
 	public void start(Promise<Void> startPromise) {
-		pty = new PseudoTerminal(null);
-		pty.termListener(this::send);
-		readline = new Readline();
-		readline.attach(pty);
+		sessionStore = LocalSessionStore.create(vertx);
+		sessionHandler = SessionHandler.create(sessionStore);
+
+		MessageData.setDataConstructor(() -> new MessageRepr());
+
 		Graphemizer splitter = new Graphemizer();
 		server = vertx.createHttpServer();
 		Router router = Router.router(vertx);
-		router.route().handler(LoggerHandler.create());
+		router.route().handler(sessionHandler).handler(LoggerHandler.create());
 		Route statics = router.get();
 		for (Path p : serverRoot)
 			statics.handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(p.toString()));
@@ -93,18 +110,21 @@ public class Server extends AbstractVerticle {
 		opts.addOutboundPermitted(new PermittedOptions().setAddressRegex(".*"));
 		// .addInboundPermitted();// new PermittedOptions().setAddressRegex(".*"))
 		// .addOutboundPermitted(new PermittedOptions().setAddressRegex(".*"));
-
 		SockJSHandler sockJSHandler = SockJSHandler.create(vertx, options);
-		Router sjsRouter = sockJSHandler.socketHandler((sockjs) -> {
-			sockjs.handler((buf) -> {
-				System.out.println(buf.toString());
-			});
+		sockJSHandler.socketHandler((sockjs) -> {
+			Session session = sockjs.webSession();
+			TurtleDuckSession tds = session.get("TurtleDuckSession");
+			if(tds == null) {
+				tds = new TurtleDuckSession();
+				session.put("TurtleDuckSession", tds);
+			}
+			tds.connect(sockjs);
 		});
 		router.route("/terminal").handler(sockJSHandler);
 		router.route("/terminal/*").handler(sockJSHandler);
 
 		server.requestHandler(router);
-		
+
 		/*
 		 * .webSocketHandler(ws -> { System.out.println("WebSocket connection on " +
 		 * ws.path()); ws.textMessageHandler(string -> { System.err.println("Received <"
@@ -133,6 +153,34 @@ public class Server extends AbstractVerticle {
 			return "text/css";
 		else
 			return "text/plain";
+	}
+
+	public void spawn(SockJSSocket sockjs) {
+		ProcessOptions popts = new ProcessOptions();
+		popts.getEnv().put("TERM", "xterm-256color");
+
+		Process process = Process.create(vertx, "/usr/bin/ipython", List.of("-i"), popts);
+		process.stderr().handler((buf) -> {
+			System.out.println("stderr: " + buf);
+			sockjs.write(buf);
+		});
+		process.stdout().handler((buf) -> {
+			System.out.println("stdout: " + buf);
+			sockjs.write(buf);
+		});
+//	sockjs.pipeTo(process.stdin());	
+		process.exitHandler((result) -> {
+			sockjs.close();
+		});
+		process.stdin().write(Buffer.buffer("print('hello')\n"));
+		process.start();
+		sockjs.handler((buf) -> {
+			System.out.println("stdin: " + buf);
+			if (buf.getByte(0) == 4) {
+				process.stdin().close();
+			} else
+				process.stdin().write(buf);
+		});
 	}
 
 	public void stop() {

@@ -7,6 +7,7 @@ module turtleduck.base {
 	exports turtleduck.events;
 	exports turtleduck.drawing;
 	exports turtleduck.geometry;
+	exports turtleduck.comms;
 	exports turtleduck.terminal;
 	exports turtleduck.text;
 	exports turtleduck.text.impl;
@@ -16,6 +17,7 @@ module turtleduck.base {
 	uses turtleduck.display.MouseCursor;
 	uses turtleduck.events.KeyEvent;
 	uses turtleduck.Launcher;
+	uses turtleduck.comms.MessageData;
 	requires java.logging;
 	requires java.xml;
 	requires org.joml;

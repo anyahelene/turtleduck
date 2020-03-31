@@ -1,23 +1,27 @@
 package turtleduck.tea.terminal;
 
-import org.teavm.jso.JSObject;
-import org.teavm.jso.core.JSBoolean;
-import org.teavm.jso.core.JSMapLike;
-import org.teavm.jso.core.JSNumber;
-import org.teavm.jso.core.JSObjects;
-import org.teavm.jso.core.JSString;
 import org.teavm.jso.dom.events.KeyboardEvent;
+import org.teavm.jso.json.JSON;
 
+import turtleduck.comms.Message;
+import turtleduck.comms.Message.*;
+import turtleduck.events.JSKeyCodes;
+import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
+import turtleduck.tea.Channel;
 import turtleduck.tea.NativeTScreen;
 import turtleduck.tea.net.SockJS;
+import turtleduck.tea.teavm.Dict;
+import xtermjs.IDisposable;
 import xtermjs.Terminal;
 
 public class KeyHandler {
 	protected String data = null;
+	private IDisposable onKey;
+	private IDisposable onData;
 
-	public KeyHandler(Terminal terminal, SockJS sock) {
-		terminal.onKey((ke) -> {
+	public KeyHandler(Terminal terminal, Channel channel) {
+		onKey = terminal.onKey((ke) -> {
 			KeyboardEvent ev = ke.getDomEvent();
 			int mods = 0;
 			if (ev.isShiftKey())
@@ -65,17 +69,40 @@ public class KeyHandler {
 				NativeTScreen.consoleLog("KeyHandler.onKey: leftover data: '" + data + "'");
 			}
 			data = ke.getKey();
-			sock.send(String.format("E%s:%d:%d:%s:%s", type, mods, flags, ev.getKey(), ke.getKey()));
+			String jsKey = ev.getKey();
+			int code = JSKeyCodes.toKeyCode(jsKey);
+			if(code == KeyCodes.Special.UNDEFINED) {
+				if(jsKey.length() == 1) {
+					char c = jsKey.charAt(0);
+					if(Character.isLowerCase(c) && Character.toLowerCase(Character.toUpperCase(c)) == c) {
+						c = Character.toUpperCase(c);
+					}
+					code = c;
+				}
+			}
+			KeyEventMessage msg = Message.createKeyEvent(0, code, ke.getKey());
+			if(mods != 0)
+			msg.modifiers(mods);
+			if(flags != 0)
+			msg.flags(flags);
+			channel.send(msg); // String.format("E%s:%d:%d:%s:%s", type, mods, flags, ev.getKey(), ke.getKey()));
 		});
-		terminal.onData((String s) -> {
+		onData = terminal.onData((String s) -> {
 			if (data != null) {
 				if (!data.equals(s))
 					NativeTScreen.consoleLog("KeyHandler.onData: mismatch with onKey: '" + data + "' != '" + s + "'");
 				data = null;
 			} else {
-				sock.send(String.format("EDi:%s", s));
+				channel.send(Message.createStringData(0, s));
 			}
 		});
 
+	}
+
+	public void destroy() {
+		onKey.dispose();
+		onData.dispose();
+		onKey = null;
+		onData = null;
 	}
 }

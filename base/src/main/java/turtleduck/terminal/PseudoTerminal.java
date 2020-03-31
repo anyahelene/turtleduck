@@ -8,10 +8,10 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import turtleduck.events.KeyEvent;
-import turtleduck.events.impl.KeyEventImpl;
 import turtleduck.text.Graphemizer;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
+import turtleduck.text.impl.TermWindowImpl;
 
 public class PseudoTerminal {
 
@@ -26,6 +26,10 @@ public class PseudoTerminal {
 	private Graphemizer graphemizer;
 	private Consumer<String> termListener;
 
+	public PseudoTerminal() {
+		this(new TermWindowImpl());
+		((TermWindowImpl) window).setTerminal(this);
+	}
 	public PseudoTerminal(TextWindow window) {
 		this.window = window;
 		if (window != null) {
@@ -97,17 +101,25 @@ public class PseudoTerminal {
 		keyListeners.add(listener);
 	}
 
-	public void termListener(Consumer<String> listener) {
+	public void terminalListener(Consumer<String> listener) {
 		termListener = listener;
 	}
 
 	public void writeToTerminal(String s) {
+		s = s.replace("\n", "\r\n");
 		if (termListener != null)
 			termListener.accept(s);
 		else if (stdout != null)
 			stdout.print(s);
 	}
 
+	public void disconnectTerminal() {
+		termListener = null;
+		stdout = null;
+		stderr = null;
+		out = null;
+		err = null;
+	}
 	/**
 	 * @return A cursor to which the host can write its output (going to the
 	 *         terminal)
@@ -138,5 +150,20 @@ public class PseudoTerminal {
 	 */
 	public PrintStream hostErr() {
 		return err;
+	}
+
+	public void sendToHost(KeyEvent event) {
+		if (!keyListeners.isEmpty()) {
+				for (Predicate<KeyEvent> l : keyListeners) {
+					if (l.test(event))
+						return;
+				}
+		}
+		for (Predicate<String> l : inputListeners) {
+			if (l.test(event.character()))
+				return;
+		}
+
+		in.write(event.character());		
 	}
 }
