@@ -14,8 +14,7 @@ public class Readline {
 	private List<Line> history = new ArrayList<>();
 	private Line line = new Line();
 	private Line lastLine = line;
-	private int histPos = 0;
-	private TextCursor cursor;
+	private int histPos = 0, xPos = 0;
 	private PseudoTerminal pty;
 	private Graphemizer graphemizer;
 	private Consumer<String> lineHandler;
@@ -43,19 +42,22 @@ public class Readline {
 			if (!line.isAtBeginning()) {
 				line.pos--;
 				pty.writeToTerminal("\u001b[" + line.get().len + "D");
+				xPos -= line.get().len;
 //				cursor.moveHoriz(-1);
 			}
 		} else if (code == KeyCodes.Navigation.ARROW_RIGHT) {
 			if (!line.isAtEnd()) {
 				pty.writeToTerminal("\u001b[" + line.get().len + "C");
+				xPos += line.get().len;
 				line.pos++;
+				xPos++;
 //				cursor.moveHoriz(1);pty.writeToTerminal("\u0007");
 			}
 		} else if (code == KeyCodes.Navigation.ARROW_UP) {
 			if (histPos > 0) {
 				line = history.get(--histPos);
-				redraw();				
-				System.out.println(debugHist());
+				redraw();
+				System.out.println("UP: " + debugHist());
 			} else {
 				bell();
 			}
@@ -68,7 +70,7 @@ public class Readline {
 					line = history.get(histPos);
 				}
 				redraw();
-				System.out.println(debugHist());
+				System.out.println("DOWN: " + debugHist());
 			} else {
 				bell();
 			}
@@ -77,6 +79,7 @@ public class Readline {
 				line.pos--;
 				Cell removed = line.remove();
 				pty.writeToTerminal("\u001b[" + removed.len + "D\u001b[" + removed.len + "P");
+				xPos -= removed.len;
 //				cursor.moveHoriz(-1);
 //				cursor.print(" ");
 //				cursor.moveHoriz(-1);
@@ -85,7 +88,6 @@ public class Readline {
 			bell();
 		} else if (code == KeyCodes.Whitespace.ENTER) {
 			histPos = history.size();
-			history.add(line);
 			StringBuilder b = new StringBuilder();
 			for (Cell c : line.cells) {
 				b.append(c.data);
@@ -94,16 +96,28 @@ public class Readline {
 			String s = b.toString();
 			if (line.id >= 0) { // already in history
 				lastLine = new Line();
-				lastLine.cells.addAll(line.cells);
+				if (line.oldCells != null) {
+					lastLine.cells = line.cells;
+					line.cells = line.oldCells;
+					line.oldCells = null;
+				}
 				lastLine.atEnd();
 			}
-			lastLine.line = s;
-			lastLine.edited = false;
-			lastLine.id = history.size();
-			history.add(lastLine);
+			if (!s.isBlank()) {
+				lastLine.line = s;
+				lastLine.id = histPos;
+				if (histPos > 0 && history.get(histPos - 1).line.equals(lastLine.line)) {
+					System.out.println("ignored: " + lastLine.toString());
+				} else {
+					System.out.println("added: " + lastLine.toString());
+					history.add(lastLine);
+					histPos++;
+				}
+			}
 			line = lastLine = new Line();
 			pty.writeToTerminal("\r\n");
-			System.out.println(debugHist());
+			xPos = 0;
+			System.out.println("ENTER: " + debugHist());
 
 			if (lineHandler != null)
 				lineHandler.accept(b.toString());
@@ -115,11 +129,36 @@ public class Readline {
 
 	private void redraw() {
 		StringBuilder b = new StringBuilder();
-		b.append("\u001b[2K\r");
-		System.out.print("Redraw: <");
-		line.toString(b);
+		if (xPos > 0) {
+			b.append("\u001b[");
+			b.append(xPos);
+			b.append("D");
+		}
+		b.append("\u001b[0K");
+		System.out.println("Redraw: ");
+		System.out.println("  line=" + line.toString());
+		System.out.println("  xPos=" + xPos);
+		xPos = 0;
+		int i = 0, back = 0;
+		for (Cell c : line.cells) {
+			xPos += c.len;
+			if (i++ > line.pos) {
+				back += c.len;
+			}
+			b.append(Strings.escape(c.data));
+		}
+		System.out.println("  xPos_end=" + xPos);
+		System.out.println("  back=" + back);
+
+		if (back > 0) {
+			b.append("\u001b[");
+			b.append(back);
+			b.append("D");
+			xPos -= back;
+		}
+		System.out.println("  xPos_fin=" + xPos);
+
 		pty.writeToTerminal(b.toString());
-		System.out.println(">");
 	}
 
 	protected void acceptGrapheme(String g, int flags) {
@@ -155,7 +194,7 @@ public class Readline {
 				b.append("* ");
 			else
 				b.append("  ");
-			history.get(i).toString(b);
+			b.append(history.get(i).toString());
 			b.append("\n");
 		}
 		if (histPos == history.size())
@@ -169,7 +208,7 @@ public class Readline {
 	}
 
 	static class Cell {
-		protected String data;
+		protected final String data;
 		protected int len;
 
 		public Cell(String data, int len) {
@@ -181,7 +220,7 @@ public class Readline {
 	static class Line {
 		protected String line = "";
 		protected List<Cell> cells = new ArrayList<>();
-		protected boolean edited = false;
+		protected List<Cell> oldCells = null;
 		protected int pos;
 		protected int id = -1;
 
@@ -189,12 +228,22 @@ public class Readline {
 			return pos == 0;
 		}
 
+		protected void edit() {
+			if (id >= 0 && oldCells == null) {
+				System.out.println("editing");
+				oldCells = cells;
+				cells = new ArrayList<>(oldCells);
+			}
+		}
+
 		public void add(Cell cell) {
+			edit();
 			cells.add(pos++, cell);
 		}
 
 		public Cell remove() {
 			assert !isAtEnd();
+			edit();
 			return cells.remove(pos);
 		}
 
@@ -215,6 +264,14 @@ public class Readline {
 			for (Cell c : cells) {
 				b.append(c.data);
 			}
+		}
+
+		public String toString() {
+			StringBuilder b = new StringBuilder();
+			b.append(String.format("line(id=%2d, pos=%3d, '", id, pos));
+			toString(b);
+			b.append("')");
+			return Strings.escape(b.toString());
 		}
 	}
 }

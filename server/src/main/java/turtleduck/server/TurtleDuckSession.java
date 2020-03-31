@@ -152,7 +152,7 @@ public class TurtleDuckSession {
 
 	void send(Message msg) {
 		if (socket != null) {
-			System.out.println("SEND: " + msg);
+//			System.out.println("SEND: " + msg);
 			socket.write(msg.encodeAs(Buffer.class));
 		}
 	}
