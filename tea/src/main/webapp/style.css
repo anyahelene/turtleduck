@@ -1,0 +1,49 @@
+
+.subwindow-header .nav-link,
+.subwindow-header .btn {
+	padding: .15rem .3rem;
+}
+
+.subwindow-header .card-header-tabs,
+.subwindow-header .btn-toolbar {
+	margin-top: -.25rem
+}
+
+body {
+}
+header {
+	background: green;
+}
+main {
+	
+}
+footer {
+	background: green;
+}
+#middle-column {
+	flex: 1 1 auto;
+	display: flex;
+	flex-flow: column;
+} 
+#middle-row {
+	flex: 2 1 auto;
+	display: flex;
+	flex-flow: row;
+} 
+#middle-bottom {
+	flex: 1 1 auto;
+	display: flex;
+	flex-flow: row;
+}
+
+.explorer {
+	padding: 0.5rem;
+} 
+
+.explorer h1 {
+	border-top: 1px solid black;
+	border-bottom: 1px solid black;
+	font-size: 1rem;
+	margin: .5rem -0.5rem;
+	padding: 0 .5rem;
+}

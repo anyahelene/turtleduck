@@ -15,7 +15,7 @@ public class Readline {
 	private Line line = new Line();
 	private Line lastLine = line;
 	private int histPos = 0, xPos = 0;
-	private PseudoTerminal pty;
+	private PtyWriter pty;
 	private Graphemizer graphemizer;
 	private Consumer<String> lineHandler;
 
@@ -24,15 +24,22 @@ public class Readline {
 		graphemizer.csiEnabled(false);
 	}
 
-	public void attach(PseudoTerminal pty) {
+	public void attach(PtyWriter writer) {
+		pty = writer;
+	}
+	public void attach(PtyHostSide pty) {
 		this.pty = pty;
 		pty.hostKeyListener(this::keyHandler);
 		pty.hostInputListener(this::inputHandler);
+		pty.resizeListener(this::resizeHandler);
 //		cursor = pty.createCursor();
 	}
 
 	public void handler(Consumer<String> lineHandler) {
 		this.lineHandler = lineHandler;
+	}
+	public void resizeHandler(int cols, int rows) {
+		
 	}
 
 	public boolean keyHandler(KeyEvent ev) {
@@ -103,7 +110,7 @@ public class Readline {
 				}
 				lastLine.atEnd();
 			}
-			if (!s.isBlank()) {
+			if (!s.replaceAll("\\s", "").isEmpty()) {
 				lastLine.line = s;
 				lastLine.id = histPos;
 				if (histPos > 0 && history.get(histPos - 1).line.equals(lastLine.line)) {

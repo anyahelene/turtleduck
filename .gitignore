@@ -2,3 +2,4 @@ target
 crap
 hs_err*.log
 node_modules
+base/src/main/resources/events/missing-gl

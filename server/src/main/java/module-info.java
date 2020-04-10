@@ -6,4 +6,5 @@ module turtleduck.server {
 	requires vertx.web;
 	requires vertx.bridge.common;
 	requires childprocess.vertx.ext;
+	requires vertx.auth.common;
 }

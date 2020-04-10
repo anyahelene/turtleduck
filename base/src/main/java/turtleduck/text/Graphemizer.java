@@ -61,7 +61,7 @@ public class Graphemizer {
 						shift(codePoint);
 					} else {
 						int type = Character.getType(codePoint);
-						System.out.printf("Format: %d, %x%n", type, codePoint);
+//						System.out.printf("Format: %d, %x%n", type, codePoint);
 						switch (type) {
 						case Character.MODIFIER_SYMBOL:
 						case Character.COMBINING_SPACING_MARK:
@@ -75,7 +75,7 @@ public class Graphemizer {
 							emit();
 							break;
 						case Character.FORMAT:
-							System.out.printf("Format: %x%n", codePoint);
+//							System.out.printf("Format: %x%n", codePoint);
 							if (codePoint == 0x200d) { // zero-width joiner
 								shift(codePoint);
 								mode = '+';

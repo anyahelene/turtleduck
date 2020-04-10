@@ -14,7 +14,7 @@ import turtleduck.turtle.Path;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
-public class NativeTLayer extends BaseCanvas<NativeTScreen> implements Channel {
+public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 
 	protected HTMLCanvasElement element;
 	protected CanvasRenderingContext2D context;
@@ -101,49 +101,9 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> implements Channel {
 		context.setLineWidth(stroke.strokeWidth());
 	}
 
-	@Override
 	public void receive(Message obj) {
 		if (obj.type().equals("Data")) {
 			context.fillText(((Message.StringDataMessage) obj).data(), 50, 50);
 		}
-	}
-
-	@Override
-	public void send(Message obj) {
-		obj.channel(channel);
-		socket.send(obj.toJson());
-	}
-
-	@Override
-	public void close(String reason) {
-		channel = 0;
-		socket = null;
-	}
-
-	@Override
-	public void opened(int chNum, SockJS sock) {
-		channel = chNum;
-		socket = sock;
-	}
-
-	@Override
-	public void initialize() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public String name() {
-		return id();
-	}
-
-	@Override
-	public String service() {
-		return "draw";
-	}
-
-	@Override
-	public int channelId() {
-		return channel;
 	}
 }

@@ -1,5 +1,8 @@
 package turtleduck.display.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import turtleduck.display.Canvas;
 import turtleduck.display.Screen;
 import turtleduck.turtle.Pen;
@@ -10,7 +13,7 @@ import turtleduck.turtle.impl.TurtleDuckImpl;
 
 public abstract class BaseCanvas<S extends Screen> extends BaseLayer<S> implements Canvas {
 	private int nTurtles = 0;
-	
+	private List<SimpleTurtle> turtles = new ArrayList<>();
 	public BaseCanvas(String layerId, S screen, double width, double height) {
 		super(layerId, screen, width, height);
 	}
@@ -25,12 +28,25 @@ public abstract class BaseCanvas<S extends Screen> extends BaseLayer<S> implemen
 
 	public SimpleTurtle createSimpleTurtle() {
 		String tId = id + "." + nTurtles++;
-		return new TurtleDuckImpl(tId, this);
+		TurtleDuckImpl t = new TurtleDuckImpl(tId, this);
+		turtles.add(t);
+		return t;
 	}
 
 	public TurtleDuck createTurtleDuck() {
 		String tId = id + "." + nTurtles++;
-		return new TurtleDuckImpl(tId, this);
+		TurtleDuckImpl t = new TurtleDuckImpl(tId, this);
+		turtles.add(t);
+		return t;
 	}
+	
+	@Override
+	public Canvas flush() {
+		for(SimpleTurtle t : turtles) {
+			t.move(0);
+		}
+		return this;
+	}
+
 
 }

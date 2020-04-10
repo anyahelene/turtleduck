@@ -1,33 +1,58 @@
 package turtleduck.server;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import io.vertx.core.Promise;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
+import turtleduck.comms.Channel;
+import turtleduck.comms.EndPoint;
 import turtleduck.comms.Message;
 import turtleduck.comms.Message.ConnectMessage;
 import turtleduck.comms.Message.OpenMessage;
-import turtleduck.display.DisplayInfo;
 import turtleduck.display.Screen;
-import turtleduck.events.KeyEvent;
+import turtleduck.server.channels.EditorChannel;
+import turtleduck.server.channels.PtyChannel;
 import turtleduck.shell.TShell;
 import turtleduck.terminal.PseudoTerminal;
-import turtleduck.terminal.Readline;
+import io.vertx.core.Handler;
 
-public class TurtleDuckSession {
+public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 	private SockJSSocket socket;
-	private UUID uuid;
 	private Map<Integer, Channel> channels = new HashMap<>();
 	private Map<String, Channel> names = new HashMap<>();
 	private int nextChannelId = 1;
+	private final List<Handler<Void>> todo = new ArrayList<>();
+	private String user;
 
-	public TurtleDuckSession() {
-		uuid = UUID.randomUUID();
+	public TurtleDuckSession(String user) {
+		this.user = user;
+	}
+
+	public void start() {
+		context.put("verticle", "session-"+ user);
+
+		System.out.println("Starting TurtleDuck " + context.deploymentID() + " for user " + user);
+		synchronized (todo) {
+			for(Handler<Void> h : todo) {
+				System.out.println("running delayed startup job: " + h);
+				context.runOnContext(h);
+			}
+			todo.clear();
+		}
+	}
+
+	public void runOnContext(Handler<Void> action) {
+		if (context != null)
+			context.runOnContext(action);
+		else
+			synchronized (todo) {
+				todo.add(action);
+			}
 	}
 
 	public void connect(SockJSSocket sockjs) {
@@ -65,6 +90,7 @@ public class TurtleDuckSession {
 
 	public void receive(Buffer buf) {
 		try {
+			System.out.println("recv context: " + vertx.getOrCreateContext().get("verticle"));
 			System.out.println("RECV: " + buf);
 			JsonObject obj = buf.toJsonObject();
 			MessageRepr repr = new MessageRepr(obj);
@@ -103,14 +129,14 @@ public class TurtleDuckSession {
 					} else if (service.equals("jshell")) {
 						PseudoTerminal pty = new PseudoTerminal();
 						// TODO: do async
-						Server.vertx.executeBlocking((promise) -> {
+						context.executeBlocking((promise) -> {
 							try {
-								Readline readline = new Readline();
-								readline.attach(pty);
+//								Readline readline = new Readline();
+//								readline.attach(pty);
 								Screen screen = ServerDisplayInfo.provider().startPaintScene(TurtleDuckSession.this);
 								TShell shell = new TShell(screen, null, pty.createCursor());
-								readline.handler((line) -> {
-									Server.vertx.executeBlocking((linePromise) -> {
+								pty.hostInputListener((line) -> {
+									context.executeBlocking((linePromise) -> {
 										try {
 											shell.enter(line);
 											linePromise.complete("ok");
@@ -120,7 +146,9 @@ public class TurtleDuckSession {
 									}, (r) -> {
 										System.out.println(r);
 									});
+									return true;
 								});
+								shell.editorFactory((n, callback) -> {EditorChannel ch = new EditorChannel(n, "editor", callback);open(ch);return ch;});
 								promise.complete("ok");
 							} catch (Throwable t) {
 								t.printStackTrace();
@@ -129,13 +157,25 @@ public class TurtleDuckSession {
 						}, (result) -> {
 							System.out.print("Shell started: " + result);
 						});
-						int id = nextChannelId++;
-						Channel ch = new PtyChannel(id, name, service, pty);
+						int id = nextChannelId();
+						Channel ch = new PtyChannel(name, service, pty);
 						ch.initialize();
+						ch.opened(id, this);
 						channels.put(id, ch);
 						names.put(service + ":" + name, ch);
 						OpenMessage reply = Message.createOpened(id, name, service);
 						send(reply);
+					}
+				} else if (type.equals("Opened")) {
+					OpenMessage omsg = (OpenMessage) msg;
+					int newch = omsg.chNum();
+					String tag = omsg.name() + ":" + omsg.service();
+					System.out.println("Opened: " + tag);
+					Channel ch = names.get(tag);
+					System.out.println("Channel: " + ch.hashCode());
+					if (newch != 0 && ch != null) {
+						channels.put(newch, ch);
+						ch.opened(newch, this);
 					}
 				}
 			}
@@ -150,77 +190,23 @@ public class TurtleDuckSession {
 		}
 	}
 
-	void send(Message msg) {
+	public void send(Message msg) {
 		if (socket != null) {
-//			System.out.println("SEND: " + msg);
+			System.out.println("send context: " + vertx.getOrCreateContext().get("verticle"));
+			System.out.println("SEND: " + msg);
 			socket.write(msg.encodeAs(Buffer.class));
 		}
 	}
 
-	interface Channel {
-		void receive(Message msg);
-
-		void close();
-
-		void initialize();
-
-		String name();
-
-		int channelId();
-
-		String service();
+	public void open(Channel channel) {
+		names.put(channel.name() + ":" + channel.service(), channel);
+		Message.OpenMessage msg = Message.createOpen(channel.name(), channel.service());
+		send(msg);
 	}
 
-	class PtyChannel implements Channel {
-		PseudoTerminal pty;
-		int id;
-		String name;
-		private String service;
-
-		public PtyChannel(int id, String name, String service, PseudoTerminal pty) {
-			this.id = id;
-			this.name = name;
-			this.pty = pty;
-			this.service = service;
-		}
-
-		public void initialize() {
-			pty.terminalListener((s) -> {
-				send(Message.createStringData(id, s));
-			});
-		}
-
-		public void close() {
-			pty.disconnectTerminal();
-		}
-
-		public void receive(Message obj) {
-			switch (obj.type()) {
-			case "Data":
-				pty.writeToHost(((Message.StringDataMessage) obj).data());
-				break;
-			case "KeyEvent":
-				pty.sendToHost(((Message.KeyEventMessage) obj).keyEvent());
-				break;
-			default:
-				System.out.println("Unknown message type: " + obj.type());
-			}
-		}
-
-		@Override
-		public String name() {
-			return name;
-		}
-
-		@Override
-		public int channelId() {
-			return id;
-		}
-
-		@Override
-		public String service() {
-			return service;
-		}
-
+	protected int nextChannelId() {
+		int id = nextChannelId;
+		nextChannelId += 2;
+		return id;
 	}
 }

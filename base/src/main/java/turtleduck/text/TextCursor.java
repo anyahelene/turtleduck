@@ -288,7 +288,7 @@ public interface TextCursor {
 	 * @return <code>this</code>, for further calls
 	 */
 	default TextCursor print(String s, Paint foreColor) {
-		return print(s + "\n", foreColor, null);
+		return print(s, foreColor, null);
 	}
 
 	/**

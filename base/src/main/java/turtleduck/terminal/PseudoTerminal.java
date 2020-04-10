@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -13,7 +14,7 @@ import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
 import turtleduck.text.impl.TermWindowImpl;
 
-public class PseudoTerminal {
+public class PseudoTerminal implements PtyHostSide {
 
 	private TerminalInputStream in;
 	private TerminalPrintStream out;
@@ -23,16 +24,19 @@ public class PseudoTerminal {
 	private TextWindow window;
 	private List<Predicate<String>> inputListeners = new ArrayList<>();
 	private List<Predicate<KeyEvent>> keyListeners = new ArrayList<>();
+	private List<BiConsumer<Integer, Integer>> resizeListeners = new ArrayList<>();
 	private Graphemizer graphemizer;
 	private Consumer<String> termListener;
+	private int cols = 80, rows = 10;
 
 	public PseudoTerminal() {
 		this(new TermWindowImpl());
-		((TermWindowImpl) window).setTerminal(this);
 	}
+
 	public PseudoTerminal(TextWindow window) {
 		this.window = window;
 		if (window != null) {
+			((TermWindowImpl) window).setTerminal(this);
 			stdout = window.cursor();
 			stderr = window.cursor();
 			out = new TerminalPrintStream(stdout);
@@ -72,7 +76,11 @@ public class PseudoTerminal {
 	}
 
 	public void writeToHost(String input) {
-		graphemizer.put(input);
+		for (Predicate<String> l : inputListeners) {
+			if (l.test(input))
+				return;
+		}
+//		graphemizer.put(input);
 	}
 
 	/**
@@ -120,6 +128,7 @@ public class PseudoTerminal {
 		out = null;
 		err = null;
 	}
+
 	/**
 	 * @return A cursor to which the host can write its output (going to the
 	 *         terminal)
@@ -154,16 +163,22 @@ public class PseudoTerminal {
 
 	public void sendToHost(KeyEvent event) {
 		if (!keyListeners.isEmpty()) {
-				for (Predicate<KeyEvent> l : keyListeners) {
-					if (l.test(event))
-						return;
-				}
+			for (Predicate<KeyEvent> l : keyListeners) {
+				if (l.test(event))
+					return;
+			}
 		}
 		for (Predicate<String> l : inputListeners) {
 			if (l.test(event.character()))
 				return;
 		}
 
-		in.write(event.character());		
+		in.write(event.character());
+	}
+
+	@Override
+	public void resizeListener(BiConsumer<Integer, Integer> listener) {
+		resizeListeners.add(listener);
+		listener.accept(cols, rows);
 	}
 }

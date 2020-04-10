@@ -49,6 +49,12 @@ public interface Message {
 	static OpenMessage createOpen(String name, String service) {
 		return new MessageImpl.OpenMsgImpl("Open", 0, name, service);
 	}
+	static OpenMessage createClosed(int ch, String name, String service) {
+		return new MessageImpl.OpenMsgImpl("Closed", ch, name, service);
+	}
+	static OpenMessage createClose(String name, String service) {
+		return new MessageImpl.OpenMsgImpl("Close", 0, name, service);
+	}
 	
 	
 	static Message create(MessageData data) {

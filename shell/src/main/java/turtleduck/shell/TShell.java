@@ -3,26 +3,36 @@ package turtleduck.shell;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import jdk.jshell.Diag;
 import jdk.jshell.ErroneousSnippet;
+import jdk.jshell.EvalException;
 import jdk.jshell.JShell;
 import jdk.jshell.JShell.Builder;
 import jdk.jshell.JShellException;
 import jdk.jshell.MethodSnippet;
+import jdk.jshell.PersistentSnippet;
 import jdk.jshell.Snippet;
 import jdk.jshell.ExpressionSnippet;
 import jdk.jshell.ImportSnippet;
 import jdk.jshell.Snippet.Status;
 import jdk.jshell.SnippetEvent;
 import jdk.jshell.SourceCodeAnalysis;
+import jdk.jshell.SourceCodeAnalysis.Completeness;
 import jdk.jshell.SourceCodeAnalysis.CompletionInfo;
 import jdk.jshell.SourceCodeAnalysis.Documentation;
 import jdk.jshell.SourceCodeAnalysis.Suggestion;
@@ -36,11 +46,16 @@ import jdk.jshell.spi.ExecutionEnv;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Paint;
 import turtleduck.display.Screen;
+import turtleduck.terminal.Editor;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
 import turtleduck.turtle.TurtleDuck;
 
 public class TShell {
+	private final String startupNS = "s";
+	private final String errorNS = "e";
+	private final String mainNS = "";
+	private String currentNS = startupNS;
 	public static final Paint BLUE = Colors.BLUE.brighter().brighter();
 	public static int testValue = 1;
 	private TextCursor printer;
@@ -51,10 +66,11 @@ public class TShell {
 	private int completionAnchor = -1, compX = 0, compY = 0;
 	private List<CodeSuggestion> completions = null;
 	private TextWindow window;
-	private Map<String, Snippet> snippets = new HashMap<>();
+	private Map<String, Snippet> snippets = new LinkedHashMap<>();
 	private int inputX;
 	private int inputY;
 	private final ExecutorService executor;
+	private BiFunction<String, BiConsumer<Boolean, String>, Editor> editorFactory;
 
 	public TShell(Screen screen, TextWindow window, TextCursor printer2) {
 		this.window = window;
@@ -88,10 +104,12 @@ public class TShell {
 //		builder.fileManager(fm -> new FileManager(fm));
 		builder.compilerOptions("--module-path", System.getProperty("jdk.module.path", ""), "--add-modules",
 				"turtleduck.shell");
+		builder.idGenerator((sn, i) -> currentNS + i);
 		shell = builder.build();
 		Screen findObject = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, screen.id());
 		System.out.println("" + Screen.class.getClassLoader() + ", " + findObject);
 		System.out.println(getClass().getClassLoader());
+
 		for (String s : Arrays.asList(//
 				"import turtleduck.display.Screen;", //
 				"import turtleduck.geometry.Point;", //
@@ -104,17 +122,18 @@ public class TShell {
 				"Screen screen = turtleduck.objects.IdentifiedObject.Registry\n.findObject(Screen.class, \""
 						+ screen.id() + "\");", //
 				"var canvas = screen.createCanvas();", //
-				"var turtle = canvas.createTurtleDuck();",
-				"turtle.changePen().strokePaint(Colors.BLACK).done();", //
-				"turtle.moveTo(10, 10);", "turtleduck.shell.TShell.testValue = 5;"
-		)) {
-			printer2.print("> ");
-			inputX = printer2.x();
-			inputY = printer2.y();
-			printer2.print(s, Colors.GREY);
+				"var turtle = canvas.createTurtleDuck();", "turtle.changePen().strokePaint(Colors.BLACK).done();", //
+				"turtle.moveTo(10, 10);", "turtleduck.shell.TShell.testValue = 5;",
+				"void head() {\n\tturtle.child().turn(-170).move(2.5).turn(90).draw(5)\n\t.turn(30).draw(10).turn(45).draw(5)\n\t.turn(60).draw(5).turn(45).draw(10)\n\t.turn(30).draw(5).done();\n}",
+				"void foot() {\n\tturtle.child().turn(-120).draw(5).turn(45).draw(7)\n\t.turn(45).draw(5).turn(45).draw(3)\n\t.turn(45).draw(5).turn(45).draw(7)\n\t.turn(45).draw(5).done();\n}",
+				"void turtle() {\n\tturtle.move(50);\n\tfor(int i = 0; i < 12; i++) {\n\t\tturtle.turn(30).draw(10 + (i==3||i==9 ?5 : 0));\n\t\tif(i==1||i==3||i==7|i==9) {\n\t\t\tfoot();\n\t\t}\n\t\tif(i==5) {\n\t\t\thead();\n\t\t}\n\t}\n}")) {
+//			printer2.print("> ");
+//			inputX = printer2.x();
+//			inputY = printer2.y();
+//			printer2.print(s, Colors.GREY);
 			eval(s, true);
 		}
-
+		currentNS = mainNS;
 		if (screen != null)
 			screen.setPasteHandler(this::paste);
 		sca = shell.sourceCodeAnalysis();
@@ -132,21 +151,38 @@ public class TShell {
 		eval(code, false);
 	}
 
-	public void eval(String code, boolean println) {
+	public void eval(String code, boolean quiet) {
 		if (code.startsWith("/")) {
-			if (println)
-				printer.println();
-			if (code.equals("/list")) {
+			String[] split = code.split("\\s+", 2);
+			String cmd = split[0];
+			String args = split.length == 2 ? split[1] : "";
+
+			if (cmd.equals("/list")) {
 				snippets.entrySet().stream().forEach(e -> {
-					printer.print(String.format("%5s → %s\n", e.getKey(), e.getValue().source()));
+					Snippet snip = e.getValue();
+					String name = snip.id();
+					if (snip instanceof PersistentSnippet) {
+						PersistentSnippet psnip = (PersistentSnippet) snip;
+						name = psnip.name();
+					}
+					if (snip instanceof MethodSnippet) {
+						MethodSnippet msnip = (MethodSnippet) snip;
+						name = name + "(" + msnip.parameterTypes() + ")";
+					}
+					if (!isStartupSnippet(snip))
+						printer.print(String.format("%5s → %s %s %s = %s\n", e.getKey(), name, snip.kind(),
+								snip.subKind(), snip.source()));
 				});
+			} else if (cmd.equals("/edit")) {
+				edit(args);
 			}
 			return;
 		}
+
 		List<SnippetEvent> eval = shell.eval(code);
 		for (SnippetEvent e : eval) {
 			Snippet snip = e.snippet();
-			if (println) {
+			if (!quiet) {
 				printer.println(" [" + snip.id() + "]", Colors.FORESTGREEN);
 			}
 			shell.diagnostics(e.snippet()).forEach((diag) -> {
@@ -168,33 +204,48 @@ public class TShell {
 //				for(int i = 0; i < 300; i++) TShell.colorWheel(turtle.turn(15), -i);
 			});
 			Status status = e.status();
+			String source = snip.source();
+			String shortSource = source.replaceAll("\r?\n.*$", "").replaceAll("\\s\\s+", " ");
+			shortSource = shortSource.substring(0, Math.min(shortSource.length(), 40));
+			if (shortSource.length() < source.length())
+				shortSource += "…";
+
 			switch (status) {
 			case DROPPED:
-				printer.println("Dropped: " + snip.id() + " → " + snip.source());
+				if (!quiet)
+					printer.println("Dropped: [" + snip.id() + "] → " + shortSource);
 				snippets.remove(snip.id());
 				break;
 			case NONEXISTENT:
-				printer.println("New: " + snip.id());
+				if (!quiet)
+					printer.println("New: [" + snip.id() + "]");
 				snippets.put(snip.id(), snip);
 				break;
 			case OVERWRITTEN:
-				printer.println("Replaced: " + snip.id() + " → " + snip.source());
+				if (!quiet)
+					printer.println("Replaced: [" + snip.id() + "] → " + shortSource);
 //				snippets.put(snip.id(), snip);
 				break;
 			case RECOVERABLE_DEFINED:
-				printer.println("Missing refs: " + snip.id() + " → " + snip.source());
+				if (!quiet)
+					printer.println("Missing refs: [" + snip.id() + "] → " + shortSource);
 				snippets.put(snip.id(), snip);
 				break;
 			case RECOVERABLE_NOT_DEFINED:
-				printer.println("Missing refs (failed): " + snip.id());
+				if (!quiet) {
+					printer.println("Missing refs (failed): " + shortSource);
+					if (snip instanceof MethodSnippet)
+						printer.println(((MethodSnippet) snip).signature());
+				}
 				snippets.put(snip.id(), snip);
 				break;
 			case VALID:
-				printer.println("Valid: " + snip.id() + " → " + snip.source());
+//				if(!quiet)
+//				printer.println("Valid: " + snip.id() + " → " + shortSource);
 				snippets.put(snip.id(), snip);
 				break;
 			case REJECTED:
-				printer.println("Rejected: " + snip.id());
+				printer.println("Rejected: [" + snip.id() + "]");
 				printer.println("" + e.snippet().source());
 				printer.println("" + e.snippet().kind());
 				printer.println("" + e.snippet().subKind());
@@ -211,10 +262,10 @@ public class TShell {
 				heading = ((ExpressionSnippet) snip).name() + " = ";
 				break;
 			case IMPORT:
-				heading = "Imported" + ((ImportSnippet) snip).name();
+				heading = "Imported " + ((ImportSnippet) snip).name();
 				break;
 			case METHOD:
-				heading = "Defined" + ((MethodSnippet) snip).name();
+				heading = "Defined " + ((MethodSnippet) snip).name();
 				break;
 			case STATEMENT:
 				// heading = ((StatementSnippet)snip) + " = ";
@@ -231,16 +282,97 @@ public class TShell {
 			}
 			JShellException exception = e.exception();
 			if (exception != null) {
+				exception.printStackTrace();
+				Throwable cause = exception.getCause();
+				if (cause != null) {
+					cause.printStackTrace();
+				}
 				printer.print(exception.getLocalizedMessage() + "\n", Colors.RED);
 			}
+			if (exception instanceof EvalException) {
+				printer.println(
+						((EvalException) exception).getExceptionClassName() + ": " + exception.getLocalizedMessage(),
+						Colors.RED);
+				for (StackTraceElement elt : exception.getStackTrace()) {
+					printer.println("\tat " + elt.toString(), Colors.RED);
+				}
+			}
 			String value = e.value();
-			if (value != null) {
-				printer.print(heading + value + "\n", BLUE);
-			} else {
-				printer.print(heading + "\n", BLUE);
+			if (!quiet) {
+				if (value != null) {
+					printer.print(heading + value + "\n", BLUE);
+				} else {
+					printer.print(heading + "\n", BLUE);
+				}
 			}
 		}
 
+	}
+
+	private void edit(String args) {
+		String[] argList = args.split("\\s+");
+		Pattern pat = Pattern.compile("(\\d+)[–-](\\d+)");
+		List<Snippet> snips = new ArrayList<>();
+		for (String arg : argList) {
+			Matcher matcher = pat.matcher(arg);
+			if (matcher.matches()) {
+				String from = matcher.group(1);
+				String to = matcher.group(2);
+				for (Entry<String, Snippet> e : snippets.entrySet()) {
+					if (from == null) {
+						snips.add(e.getValue());
+						if (to.equals(e.getKey()))
+							break;
+					} else if (from.equals(e.getKey())) {
+						snips.add(e.getValue());
+						from = null;
+					}
+				}
+			} else if (snippets.containsKey(arg)) {
+				snips.add(snippets.get(arg));
+			}
+		}
+		String source = snips.stream().map((s) -> s.source()).collect(Collectors.joining("\n\n"));
+		Editor[] editor = new Editor[1];
+		editor[0] = editorFactory.apply("Code.java", (status, msg) -> {
+			if (status)
+				editor[0].content(source);
+		});
+		editor[0].onSave((content) -> {
+			printer.println();
+			while (!content.isEmpty()) {
+				CompletionInfo compInfo = sca.analyzeCompletion(content);
+				Completeness completeness = compInfo.completeness();
+				switch (completeness) {
+				case COMPLETE:
+					content = compInfo.source();
+					break;
+				case COMPLETE_WITH_SEMI:
+					printer.println("Inserted missing ';'", Colors.RED);
+					content = compInfo.source() + ";";
+					break;
+				case CONSIDERED_INCOMPLETE:
+				case DEFINITELY_INCOMPLETE:
+					printer.println("Incomplete statements", Colors.RED);
+					// fall-through
+				case EMPTY:
+					content = "";
+					continue;
+				case UNKNOWN:
+				default:
+					content = compInfo.source();
+					break;
+				}
+				eval(content);
+
+				content = compInfo.remaining();
+
+			}
+			prompt();
+		});
+	
+		System.out.println("Editing: " + snips);
+		System.out.println("Source: " + source);
 	}
 
 	/*
@@ -393,6 +525,7 @@ public class TShell {
 			System.out.println(info.completeness());
 //		printer.println();
 			eval(input, true);
+			screen.flush();
 			input = "";
 		} else {
 			printer.println();
@@ -401,13 +534,14 @@ public class TShell {
 	}
 
 	public void prompt() {
-		printer.print("  java> ", Colors.PINK);
+		printer.print("  java> ", Colors.YELLOW);
 		inputX = printer.x();
 		inputY = printer.y();
+		printer.foreground(Colors.GREEN);
 		printer.print(input);
-		printer.print(" ", Colors.WHITE, Colors.BLACK);
+//		printer.print(" ", Colors.WHITE, Colors.BLACK);
 		printer.clearToEndOfLine();
-		printer.print("\b");
+//		printer.print("\b");
 	}
 
 	public boolean paste(String pasted) {
@@ -453,6 +587,18 @@ public class TShell {
 			turtle.turn(1);
 		}
 		turtle.done();
+	}
+
+	public void editorFactory(BiFunction<String,BiConsumer<Boolean,String>,Editor> factory) {
+		editorFactory = factory;
+	}
+
+	public boolean isStartupSnippet(Snippet s) {
+		return s.id().startsWith(startupNS);
+	}
+
+	public boolean isBadSnippet(Snippet s) {
+		return s.id().startsWith(errorNS);
 	}
 
 }

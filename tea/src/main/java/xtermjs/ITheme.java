@@ -11,10 +11,35 @@ public interface ITheme extends JSObject {
 	static class Constructor {
 		@JSBody(params = {}, script = "return {};")
 		protected static native ITheme create();
+
+		@JSBody(params = {}, script = "return {" + //
+				"'black':'#000', 'red':'#a00', 'green':'#0a0', 'yellow':'#a50'," + //
+				"blue:'#00a', magenta:'#a0a', cyan:'#0aa', white:'#aaa', " + //
+				"brightBlack:'#555', brightRed:'#f55', brightGreen:'#5f5', brightYellow:'#ff5', " + //
+				"brightBlue:'#55f', brightMagenta:'#f5f', brightCyan:'#5ff', brightWhite:'#fff'" + //
+				"};")
+		protected static native ITheme createVGA();
+
+		@JSBody(params = {}, script = "return {" + //
+				"'black':'#000', 'red':'#E00', 'green':'#0E0', 'yellow':'#EA0'," + //
+				"blue:'#00E', magenta:'#E0E', cyan:'#0EE', white:'#EEE', " + //
+				"brightBlack:'#AAA', brightRed:'#FAA', brightGreen:'#AFA', brightYellow:'#FFA', " + //
+				"brightBlue:'#AAF', brightMagenta:'#FAF', brightCyan:'#AFF', brightWhite:'#FFF'" + //
+				"};")
+		protected static native ITheme createBrightVGA();
+
+		protected static native ITheme createAlt();
 	}
-	
+
 	static ITheme create() {
 		return Constructor.create();
+	}
+
+	static ITheme createVGA() {
+		return Constructor.createVGA();
+	}
+	static ITheme createBrightVGA() {
+		return Constructor.createBrightVGA();
 	}
 
 	/** The default foreground color */

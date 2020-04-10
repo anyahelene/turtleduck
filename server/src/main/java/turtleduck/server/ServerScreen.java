@@ -2,7 +2,9 @@ package turtleduck.server;
 
 import java.util.function.Predicate;
 
+import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 import turtleduck.colors.Paint;
+import turtleduck.comms.Channel;
 import turtleduck.comms.Message;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
@@ -11,11 +13,9 @@ import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.display.impl.BaseScreen.Dimensions;
 import turtleduck.events.KeyEvent;
-import turtleduck.server.TurtleDuckSession.Channel;
 import turtleduck.text.TextWindow;
 
-public class ServerScreen extends BaseScreen implements Channel {
-	
+public class ServerScreen extends BaseScreen {
 
 	public static ServerScreen create(TurtleDuckSession session, int config) {
 		Dimensions dim = computeDimensions(ServerDisplayInfo.INSTANCE, config);
@@ -24,24 +24,25 @@ public class ServerScreen extends BaseScreen implements Channel {
 	}
 
 	private TurtleDuckSession session;
-private int channel;
+	private int channel;
 
-    public ServerScreen(TurtleDuckSession session, Dimensions dim) {
+	public ServerScreen(TurtleDuckSession session, Dimensions dim) {
 		this.dim = dim;
 		int height = (int) Math.floor(dim.winHeight);
 		this.session = session;
 		setupAspects(dim);
 	}
+
 	@Override
 	protected void recomputeLayout(boolean b) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void clearBackground() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -114,7 +115,7 @@ private int channel;
 	@Override
 	public void hideMouseCursor() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -132,125 +133,92 @@ private int channel;
 	@Override
 	public void moveToBack(Layer layer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void moveToFront(Layer layer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setBackground(Paint bgColor) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setFullScreen(boolean fullScreen) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setHideFullScreenMouseCursor(boolean hideIt) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setKeyOverride(Predicate<KeyEvent> keyOverride) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setKeyPressedHandler(Predicate<KeyEvent> keyHandler) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setKeyReleasedHandler(Predicate<KeyEvent> keyReleasedHandler) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setKeyTypedHandler(Predicate<KeyEvent> keyTypedHandler) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setMouseCursor(MouseCursor cursor) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void showMouseCursor() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
-		
+		for (Layer l : layers.values()) {
+			l.flush();
+		}
 	}
 
 	@Override
 	public void useAlternateShortcut(boolean useAlternate) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setPasteHandler(Predicate<String> pasteHandler) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void clipboardPut(String copied) {
 		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void receive(Message obj) {
-		if (obj.type().equals("Data")) {
-		}
-	}
-
-	@Override
-	public void initialize() {
-		// TODO Auto-generated method stub
 
 	}
-
-	@Override
-	public String name() {
-		return id;
-	}
-
-	@Override
-	public String service() {
-		return "draw";
-	}
-
-	@Override
-	public int channelId() {
-		return channel;
-	}
-
-	@Override
-	public void close() {
-		// TODO Auto-generated method stub
-		
-	}
-
 
 }

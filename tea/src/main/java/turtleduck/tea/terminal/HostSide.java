@@ -1,26 +1,37 @@
 package turtleduck.tea.terminal;
 
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
+
 import org.teavm.jso.dom.events.KeyboardEvent;
 import org.teavm.jso.json.JSON;
 
-import turtleduck.comms.Channel;
 import turtleduck.comms.Message;
 import turtleduck.comms.Message.*;
 import turtleduck.events.JSKeyCodes;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.tea.NativeTScreen;
-import turtleduck.tea.net.SockJS;
-import turtleduck.tea.teavm.Dict;
+import turtleduck.terminal.PtyHostSide;
 import xtermjs.IDisposable;
 import xtermjs.Terminal;
 
-public class KeyHandler {
+public class HostSide implements PtyHostSide {
 	protected String data = null;
 	private IDisposable onKey;
 	private IDisposable onData;
+	private IDisposable onResize;
+	private Predicate<String> inputListener;
+	private BiConsumer<Integer, Integer> resizeListener;
+	private Predicate<KeyEvent> keyListener;
+	private Terminal terminal;
 
-	public KeyHandler(Terminal terminal, Channel channel) {
+	public HostSide(Terminal terminal) {
+		this.terminal = terminal;
+		onResize = terminal.onResize((cr) -> {
+			if (resizeListener != null)
+				resizeListener.accept(cr.getCols(), cr.getRows());
+		});
 		onKey = terminal.onKey((ke) -> {
 			KeyboardEvent ev = ke.getDomEvent();
 			int mods = 0;
@@ -48,20 +59,7 @@ public class KeyHandler {
 				flags |= KeyEvent.KEY_TYPE_RIGHT;
 				break;
 			}
-			String type;
-			switch (ev.getType()) {
-			case "keydown":
-				type = "Kd";
-				break;
-			case "keyup":
-				type = "Ku";
-				break;
-			case "keypress":
-				type = "Kp";
-				break;
-			default:
-				return;
-			}
+
 			if (ev.isRepeat())
 				flags |= KeyEvent.KEY_TYPE_REPEAT;
 
@@ -71,38 +69,60 @@ public class KeyHandler {
 			data = ke.getKey();
 			String jsKey = ev.getKey();
 			int code = JSKeyCodes.toKeyCode(jsKey);
-			if(code == KeyCodes.Special.UNDEFINED) {
-				if(jsKey.length() == 1) {
+			if (code == KeyCodes.Special.UNDEFINED) {
+				if (jsKey.length() == 1) {
 					char c = jsKey.charAt(0);
-					if(Character.isLowerCase(c) && Character.toLowerCase(Character.toUpperCase(c)) == c) {
+					if (Character.isLowerCase(c) && Character.toLowerCase(Character.toUpperCase(c)) == c) {
 						c = Character.toUpperCase(c);
 					}
 					code = c;
 				}
 			}
-			KeyEventMessage msg = Message.createKeyEvent(0, code, ke.getKey());
-			if(mods != 0)
-			msg.modifiers(mods);
-			if(flags != 0)
-			msg.flags(flags);
-			channel.send(msg); // String.format("E%s:%d:%d:%s:%s", type, mods, flags, ev.getKey(), ke.getKey()));
+			KeyEvent keyEvent = KeyEvent.create(code, ke.getKey(), mods, flags);
+			if (keyListener != null)
+				keyListener.test(keyEvent);
 		});
 		onData = terminal.onData((String s) -> {
 			if (data != null) {
 				if (!data.equals(s))
 					NativeTScreen.consoleLog("KeyHandler.onData: mismatch with onKey: '" + data + "' != '" + s + "'");
 				data = null;
-			} else {
-				channel.send(Message.createStringData(0, s));
+			} else if (inputListener != null) {
+				inputListener.test(s);
 			}
 		});
 
 	}
 
 	public void destroy() {
-		onKey.dispose();
-		onData.dispose();
+		if (onKey != null)
+			onKey.dispose();
+		if (onData != null)
+			onData.dispose();
+		if (onResize != null)
+			onResize.dispose();
 		onKey = null;
 		onData = null;
+		onResize = null;
+	}
+
+	@Override
+	public void writeToTerminal(String s) {
+		terminal.write(s);
+	}
+
+	@Override
+	public void hostInputListener(Predicate<String> listener) {
+		inputListener = listener;
+	}
+
+	@Override
+	public void hostKeyListener(Predicate<KeyEvent> listener) {
+		keyListener = listener;
+	}
+
+	@Override
+	public void resizeListener(BiConsumer<Integer, Integer> listener) {
+		resizeListener = listener;
 	}
 }
