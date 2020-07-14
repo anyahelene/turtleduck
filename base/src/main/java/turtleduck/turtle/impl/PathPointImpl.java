@@ -2,11 +2,11 @@ package turtleduck.turtle.impl;
 
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Path;
-import turtleduck.turtle.Pen;
 import turtleduck.turtle.Path.PointType;
+import turtleduck.turtle.PathPoint;
+import turtleduck.turtle.Pen;
 
-public class PathPoint implements Cloneable {
+public class PathPointImpl implements PathPoint, Cloneable {
 	protected Point point;
 	protected Bearing bearing;
 	protected Pen pen;
@@ -16,9 +16,9 @@ public class PathPoint implements Cloneable {
 		return point.toString();
 	}
 
-	public PathPoint copy() {
+	public PathPointImpl copy() {
 		try {
-			return (PathPoint) super.clone();
+			return (PathPointImpl) super.clone();
 		} catch (CloneNotSupportedException e) {
 			throw new RuntimeException(e);
 		}

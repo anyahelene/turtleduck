@@ -97,7 +97,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	}
 
 	protected void drawLine(Stroke stroke, Point from, Point to) {
-		
+//		System.out.println("Draw from " + from + " to " + to + ", stroke " + stroke);
 //		vertexArray();
 //		vab.vec2((float) from.x(), (float) from.y());
 //		float w = (float) pen.strokeWidth();

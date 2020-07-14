@@ -8,33 +8,35 @@ import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Pen;
-import turtleduck.turtle.TurtleDuck;
+import turtleduck.turtle.Turtle;
 
 public class Demo implements TurtleDuckApp {
 
 	private Layer painter;
 	private Canvas canvas;
 	private Pen pen;
-	private TurtleDuck turtle;
+	private Turtle turtle;
 
 	@Override
 	public void bigStep(double deltaTime) {
+		turtle.beginPath();
 //		for (int i = 0; i < 700; i += 10) {
 //			pen = pen.change().strokePaint(Paint.color(i/700.0,(700.0-i)/700.0,0.5)).done();
 //			canvas.line(pen, Point.point(0, i), Point.point(1000, 100+i));
 //		}
 		turtle.turn(1);
-		for(int i = 0; i < 360; i++) {
+		for (int i = 0; i < 360; i++) {
 			turtle.draw(5).turn(1);
 		}
+//		turtle.jump(0);
 //		turtle.moveTo(600,200);
 		colorWheel(turtle, -100);
 		colorWheel(turtle, 100);
 
 //		turtle.moveTo(500,400);
 		turtle.done();
-		
-		System.out.println(deltaTime);
+
+//		System.out.println(deltaTime);
 	}
 
 	@Override
@@ -47,22 +49,28 @@ public class Demo implements TurtleDuckApp {
 	public void start(Screen screen) {
 		canvas = screen.createCanvas();
 		pen = canvas.createPen();
-		 turtle = canvas.createTurtleDuck();
-			turtle.moveTo(500,500);
+		turtle = canvas.createTurtle();
+		System.out.println(turtle);
+		turtle.jumpTo(500, 500);
+		System.out.println(turtle);
+		turtle.turn(1);
+		for (int i = 0; i < 36; i++) {
+			turtle.draw(5).turn(1);
+		}
 
 	}
 
 	public static void main(String[] args) {
 		new GLLauncher().app(new Demo()).launch(args);
 	}
-	
-	public static void colorWheel(TurtleDuck turtle, double radius) {
+
+	public static void colorWheel(Turtle turtle, double radius) {
 		Paint red = Paint.color(1, 0, 0);
 		Paint green = Paint.color(0, 1, 0);
 		Paint blue = Paint.color(0, 0, 1);
 		Paint ink = red;
 		double step = (2 * Math.PI * radius) / 360.0;
-		turtle.move(radius);
+		turtle.jump(radius);
 
 //		for (int k = 0; k < 360; k++)
 		for (int i = 0; i < 360; i++) {
@@ -72,11 +80,11 @@ public class Demo implements TurtleDuckApp {
 				ink = green.mix(blue, (i - 120) / 119.0);
 			else
 				ink = blue.mix(red, (i - 240) / 119.0);
-			turtle.changePen().strokePaint(ink).done();
+			turtle.penChange().strokePaint(ink).done();
 			turtle.draw(step);
-			TurtleDuck sub = turtle.child().turn(90);
+			Turtle sub = turtle.child().turn(90);
 			for (int j = 20; j > 0; j--) {
-				sub.changePen().strokeWidth(j / 3.5).strokePaint(ink).done();
+				sub.penChange().strokeWidth(j / 3.5).strokePaint(ink).done();
 				sub.draw(radius / 20.0);
 				ink = ink.brighter();
 			}
@@ -93,8 +101,8 @@ public class Demo implements TurtleDuckApp {
 				}
 				turtle.turn(10);
 				if (i % 2 == 0) {
-					double a = turtle.angle();
-					turtle.turnTo(i).move(10).turnTo(a);
+					double a = turtle.bearing().azimuth();
+					turtle.turnTo(i).jump(10).turnTo(a);
 				}
 				turtle.draw(-step / 2);
 
@@ -104,9 +112,9 @@ public class Demo implements TurtleDuckApp {
 		turtle.done();
 	}
 
-	private static void footprint(TurtleDuck turn, int i) {
+	private static void footprint(Turtle turn, int i) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

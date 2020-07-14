@@ -6,9 +6,9 @@ import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.Stroke;
 import turtleduck.turtle.Pen.SmoothType;
-import turtleduck.turtle.SimpleTurtle;
+import turtleduck.turtle.Chelonian;
 
-public class TurtlePenBuilder<T extends SimpleTurtle> implements PenBuilder<T> {
+public class TurtlePenBuilder<T extends Chelonian<T,C>, C> implements PenBuilder<T> {
 	protected PenBuilder<Pen> pen;
 	protected T obj;
 	
@@ -83,8 +83,4 @@ public class TurtlePenBuilder<T extends SimpleTurtle> implements PenBuilder<T> {
 	public double smoothAmount() {
 		return pen.smoothAmount();
 	}
-
-
-
-
 }

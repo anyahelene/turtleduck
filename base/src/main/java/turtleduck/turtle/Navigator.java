@@ -6,48 +6,107 @@ import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
 import turtleduck.geometry.Waypoint;
 
-public interface Navigator extends PositionVector, DirectionVector {
+public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 
-	Bearing bearing();
-
-	Bearing bearing(int index);
-
-	Point position();
-
-	Point position(int index);
-
-	Navigator left(double degrees);
-
-	Navigator right(double degrees);
-
-	Navigator forward(double distance);
-
-	Navigator copy();
-
-	Navigator face(PositionVector dest);
-
-	Navigator face(Bearing dest);
-
-	Navigator go(double radians, double distance);
-
-	Navigator goTo(Waypoint dest);
-
-	Navigator goTo(Point dest);
-
-	Navigator pen(Pen pen);
-
-	Pen pen();
-
-	Waypoint waypoint();
-
-	default double distanceTo(PositionVector dest) {
-		return position().distanceTo(dest);
+	/**
+	 * Set the current position
+	 * 
+	 * @param x the new X position
+	 * @param y the new Y position
+	 * @return {@code this}, for sending more draw commands
+	 */
+	default T at(double x, double y) {
+		return at(Point.point(x, y));
 	}
 
-	void beginPath();
+	/**
+	 * Set the current position
+	 * 
+	 * @param p the new position
+	 * @return {@code this}, for sending more draw commands
+	 */
+	default T at(Point p) {
+		return go(p, RelativeTo.WORLD);
+	}
 
-	Path endPath();
+	/**
+	 * Turn to face the given point.
+	 *
+	 * <p>
+	 * Afterwards, <code>turtle.forward(turtle.distanceTo(to))</code> should leave
+	 * the turtle position at point <code>to</code>.
+	 * 
+	 * @param to the Point to turn towards
+	 * @return {@code this}, for sending more draw commands
+	 */
+	default T turnTo(PositionVector to, RelativeTo rel) {
+		Point p = findPoint(to, rel);
+		at().bearingTo(p);
+		return bearing(at().bearingTo(p));
+	}
 
-	boolean isAt(PositionVector point);
+	/**
+	 * Adjust bearing by turning left given number of degrees
+	 *
+	 * <p>
+	 * Positive angles turn <em>left</em> while negative angles turn <em>right</em>.
+	 * Same as <code>right(-degrees)</code>.
+	 *
+	 * <p>
+	 * This method will rotate the turtle around its own <em>up</em> (yaw, intrinsic
+	 * Z) axis. E.g., imagine a turtle standing on four legs and turning left or
+	 * right.
+	 * 
+	 * @param angle Adjustment
+	 * @return {@code this}, for sending more commands
+	 */
+	default T left(double degrees) {
+		return bearing(Bearing.relative(-degrees));
+	}
 
+	/**
+	 * Adjust bearing by turning right given number of degrees
+	 *
+	 * <p>
+	 * Positive angles turn <em>right</em> while negative angles turn <em>left</em>.
+	 * Same as <code>left(-degrees)</code>.
+	 *
+	 * <p>
+	 * This method will rotate the turtle around its own <em>up</em> (yaw, intrinsic
+	 * Z) axis. E.g., imagine a turtle standing on four legs and turning left or
+	 * right.
+	 * 
+	 * @param angle Adjustment
+	 * @return {@code this}, for sending more commands
+	 */
+	default T right(double degrees) {
+		return bearing(Bearing.relative(degrees));
+	}
+
+	/**
+	 * Move forward.
+	 *
+	 * <p>
+	 * Negative distances will move backwards.
+	 * 
+	 * @param dist Distance to move
+	 * @return {@code this}, for sending more commands
+	 */
+	default T forward(double distance) {
+		return go(Point.point(0, distance), RelativeTo.SELF);
+	}
+
+	/**
+	 * Move a distance in the given direction
+	 *
+	 * <p>
+	 * Negative distances will move backwards.
+	 * 
+	 * @param bearing A direction
+	 * @param dist    Distance to move
+	 * @return {@code this}, for sending more draw commands
+	 */
+	default T go(Bearing bearing, double dist) {
+		return go(Point.ZERO.add(bearing, dist), RelativeTo.POSITION);
+	}
 }

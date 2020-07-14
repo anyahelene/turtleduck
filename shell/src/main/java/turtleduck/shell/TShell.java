@@ -49,7 +49,7 @@ import turtleduck.display.Screen;
 import turtleduck.terminal.Editor;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
-import turtleduck.turtle.TurtleDuck;
+import turtleduck.turtle.Turtle;
 
 public class TShell {
 	private final String startupNS = "s";
@@ -550,13 +550,13 @@ public class TShell {
 		return true;
 	}
 
-	public static void colorWheel(TurtleDuck turtle, double radius) {
+	public static void colorWheel(Turtle turtle, double radius) {
 		Paint red = Paint.color(1, 0, 0);
 		Paint green = Paint.color(0, 1, 0);
 		Paint blue = Paint.color(0, 0, 1);
 		Paint ink = red;
 		double step = (2 * Math.PI * radius) / 360.0;
-		turtle.move(radius);
+		turtle.jump(radius);
 
 //		for (int k = 0; k < 360; k++)
 		for (int i = 0; i < 360; i++) {
@@ -566,11 +566,11 @@ public class TShell {
 				ink = green.mix(blue, (i - 120) / 119.0);
 			else
 				ink = blue.mix(red, (i - 240) / 119.0);
-			turtle.changePen().strokePaint(ink).done();
+			turtle.penChange().strokePaint(ink).done();
 			turtle.draw(step);
-			TurtleDuck sub = turtle.child().turn(90);
+			Turtle sub = turtle.child().turn(90);
 			for (int j = 20; j > 0; j--) {
-				sub.changePen().strokeWidth(j / 3.5).strokePaint(ink).done();
+				sub.penChange().strokeWidth(j / 3.5).strokePaint(ink).done();
 				sub.draw(radius / 20.0);
 				ink = ink.brighter();
 			}
@@ -579,7 +579,7 @@ public class TShell {
 				turtle.turn(10);
 				if (i % 2 == 0) {
 					double a = turtle.angle();
-					turtle.turnTo(i).move(10).turnTo(a);
+					turtle.turnTo(i).jump(10).turnTo(a);
 				}
 				turtle.draw(-step / 2);
 

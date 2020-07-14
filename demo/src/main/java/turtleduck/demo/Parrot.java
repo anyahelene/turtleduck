@@ -10,7 +10,7 @@ import turtleduck.colors.Paint;
 import turtleduck.geometry.Gravity;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.TurtleMark;
-import turtleduck.turtle.TurtleDuck;
+import turtleduck.turtle.Turtle;
 
 public class Parrot {
 	public static int values[] = { 0, 0, 45, 35, 20, 30, 10, 10, 10, 15 }, valNum = 0;
@@ -42,33 +42,33 @@ public class Parrot {
 	private TurtleMark lowerBeakD;
 	private Map<String, TurtleMark> marks = new HashMap<>();
 
-	private void debug(TurtleDuck turtle) {
+	private void debug(Turtle turtle) {
 		debug(turtle, 30);
 	}
 
-	private void debug(TurtleDuck turtle, double len) {
+	private void debug(Turtle turtle, double len) {
 		if (DEBUG > 0) {
-			TurtleDuck sub = turtle.child();
-			sub.changePen().strokeWidth(1).strokeOpacity(0.5).done();
+			Turtle sub = turtle.child();
+			sub.penChange().strokeWidth(1).strokeOpacity(0.5).done();
 			sub.draw(len);
 			sub.child().turn(160).draw(3);
 			sub.child().turn(-160).draw(3);
 		}
 	}
 
-	public boolean draw(TurtleDuck turtle) {
+	public boolean draw(Turtle turtle) {
 		double w = 160, h = 160, f = Math.sin(Math.toRadians(count * 2));
 
 		turtle.turn(30);
 		register(turtle.mark("anchor"));
-		register(turtle.child().changePen().strokePaint(Colors.FORESTGREEN).strokeWidth(5).done().turn(180).draw(.8 * w)
+		register(turtle.child().penChange().strokePaint(Colors.FORESTGREEN).strokeWidth(5).done().turn(180).draw(.8 * w)
 				.mark("tail"));
-		TurtleDuck t = trunk(turtle.child());
+		Turtle t = trunk(turtle.child());
 		shoulders = t.position();
 		t = neck(t);
 		head(t);
 
-		turtle.move(.1 * w);
+		turtle.jump(.1 * w);
 		hip = turtle.position();
 		leg(turtle.child());
 
@@ -83,13 +83,13 @@ public class Parrot {
 		return true;
 	}
 
-	private void head(TurtleDuck turtle) {
+	private void head(Turtle turtle) {
 		double w = 70, h = 70, f = Math.sin(Math.toRadians(count * 2));
-		turtle.changePen().strokeWidth(1).done();
+		turtle.penChange().strokeWidth(1).done();
 		turtle.turn(-50);
 		backHead = turtle.mark("head.back");
-		TurtleDuck downTurtle = turtle.child().turn(-26 + values[1]);
-		turtle.move(.6 * w);
+		Turtle downTurtle = turtle.child().turn(-26 + values[1]);
+		turtle.jump(.6 * w);
 		double headAngle = turtle.angle();
 		midHead = turtle.mark("head.mid");
 		topHead = turtle.mark("head.top").turn(75).move(.6 * h);
@@ -100,7 +100,7 @@ public class Parrot {
 
 		double beakW = .8 * w, beakH = .4 * h;
 		Paint beakColor = Paint.color(.15, .15, .15);
-		TurtleDuck upTurtle = turtle.child().turn(32).move(.5 * w);
+		Turtle upTurtle = turtle.child().turn(32).jump(.5 * w);
 		upperBeak = register(upTurtle.mark("beak.upper"));
 		lowerBeak = register(downTurtle.mark("beak.lower"));
 		upperBeakB2 = register(upTurtle.mark("beak.upper.B2").turn(-110).move(.8 * beakH));
@@ -115,7 +115,7 @@ public class Parrot {
 
 		downTurtle.turn(10 - beakAngle / 4);
 		DEBUG = 1;
-		downTurtle.move(.6 * w);
+		downTurtle.jump(.6 * w);
 		lowerBeakD = register(downTurtle.mark("beak.lower.D"));
 		debug(downTurtle, 100);
 		lowerBeakA = register(downTurtle.mark("beak.lower.A").turn(-10).move(.35 * w));
@@ -128,7 +128,7 @@ public class Parrot {
 //				.strokeAndFillPath(Color.PINK, Color.PINK);
 
 		double dnA = downTurtle.angle();
-		downTurtle.moveTo(lowerBeakA.getPoint());
+		downTurtle.jumpTo(lowerBeakA.getPoint());
 //		downTurtle.beginPath();
 		debug(downTurtle, values[6]);
 		downTurtle.curveTo(lowerBeakC.getPoint(), values[6], dnA + 80, values[7]);
@@ -140,7 +140,7 @@ public class Parrot {
 //		downTurtle.strokeAndFillPath(beakColor.brighter(), beakColor);
 
 		double upA = upTurtle.angle();
-		upTurtle.moveTo(upperBeakA.getPoint());
+		upTurtle.jumpTo(upperBeakA.getPoint());
 //		upTurtle.beginPath();
 		upTurtle.turn(-30);
 		debug(upTurtle, values[2]);
@@ -152,7 +152,7 @@ public class Parrot {
 		debug(upTurtle, -values[5]);
 //		upTurtle.strokeAndFillPath(beakColor.brighter(), beakColor);
 
-		upTurtle.moveTo(upperBeakA.getPoint());
+		upTurtle.jumpTo(upperBeakA.getPoint());
 		upTurtle.turnTo(upA);
 //		upTurtle.beginPath();
 		upTurtle.turn(-30);
@@ -168,8 +168,8 @@ public class Parrot {
 //		turtle.shape().at(nares.getPoint()).fillPaint(Color.BLACK).size(3, 3).ellipse().fill();
 		if (DEBUG_BEAK)
 			DEBUG--;
-		TurtleDuck neckTurtle = turtle.child();
-		neckTurtle.moveTo(topHead.getPoint());
+		Turtle neckTurtle = turtle.child();
+		neckTurtle.jumpTo(topHead.getPoint());
 		neckTurtle.turnTo(headAngle + 180);
 //		neckTurtle.beginPath();
 		if (DEBUG_NECK)
@@ -188,14 +188,14 @@ public class Parrot {
 		neckTurtle.curveTo(bottomHead.getPoint(), .1 * w, headAngle, .1 * w);
 		debug(neckTurtle, .1 * w);
 //		neckTurtle.strokeAndFillPath(Color.FORESTGREEN.darker(), Color.FORESTGREEN);
-		face = turtle.child().move(.45 * w).mark("face");
+		face = turtle.child().jump(.45 * w).mark("face");
 
 		if (DEBUG_NECK)
 			DEBUG--;
 		if (DEBUG_FACE)
 			DEBUG++;
 
-		upTurtle.moveTo(upperBeak.getPoint());
+		upTurtle.jumpTo(upperBeak.getPoint());
 		upTurtle.turnTo(headAngle);
 		upTurtle.turn(85);
 //		upTurtle.beginPath();
@@ -222,12 +222,12 @@ public class Parrot {
 //		upTurtle.closePath();
 //		upTurtle.strokeAndFillPath(Colors.GRAY.darker(), Colors.GRAY.opacity(0.5));
 
-		TurtleDuck sub = turtle.child().turn(60).move(.25 * w).turn(-60);
+		Turtle sub = turtle.child().turn(60).jump(.25 * w).turn(-60);
 		eye = sub.mark("eye");
 		sub.turn(-25);
 		sub.shape().width(.35 * w).height(.25 * h).fillPaint(Colors.YELLOW).ellipse().fill();
 		sub.shape().width(.2 * w).height(.2 * w).fillPaint(Colors.BLACK).ellipse().fill();
-		sub.changePen().strokeWidth(3).done().shape().width(.35 * w).height(.25 * h).strokePaint(Colors.GREY).ellipse()
+		sub.penChange().strokeWidth(3).done().shape().width(.35 * w).height(.25 * h).strokePaint(Colors.GREY).ellipse()
 				.draw();
 
 		if (DEBUG_FACE)
@@ -246,37 +246,37 @@ public class Parrot {
 		 */
 	}
 
-	private void leg(TurtleDuck turtle) {
+	private void leg(Turtle turtle) {
 		double w = 180, f = Math.sin(Math.toRadians(count * 2));
 		Paint bodyColor = Colors.YELLOW;
 		// femur
 		turtle.turn(-30 - f * 5);
-		turtle.changePen().strokeWidth(3).strokePaint(Colors.FORESTGREEN);
+		turtle.penChange().strokeWidth(3).strokePaint(Colors.FORESTGREEN);
 		turtle.shape().gravity(Gravity.WEST).width(.5 * w).height(.3 * w).fillPaint(bodyColor.darker()).ellipse()
 				.fill();
 		turtle.draw(0.4 * w);
 		// tibiotarsus
 		turtle.turn(-110 + f * 5);
-		turtle.changePen().strokeWidth(3).strokePaint(Colors.PINK);
+		turtle.penChange().strokeWidth(3).strokePaint(Colors.PINK);
 		turtle.shape().gravity(Gravity.WEST).width(.6 * w).height(.3 * w).fillPaint(bodyColor.darker().darker())
 				.ellipse().fill();
 		turtle.draw(0.5 * w);
 		// tarsometatarsus
 		turtle.turn(80 - f * 5);
-		turtle.changePen().strokeWidth(3).strokePaint(Colors.PINK);
+		turtle.penChange().strokeWidth(3).strokePaint(Colors.PINK);
 		turtle.draw(0.2 * w);
 
 		toe(turtle.child(), false);
 		toe(turtle.child(), true);
 	}
 
-	private TurtleDuck neck(TurtleDuck turtle) {
+	private Turtle neck(Turtle turtle) {
 		double w = 120, f = Math.sin(Math.toRadians(count * 2));
 		// neck
 		neck.clear();
-		neck.add(turtle.child().turn(120).move(.15 * w).position());
+		neck.add(turtle.child().turn(120).jump(.15 * w).position());
 		neck.add(turtle.position());
-		neck.add(turtle.child().turn(-120).move(.15 * w).position());
+		neck.add(turtle.child().turn(-120).jump(.15 * w).position());
 		neckAngle.clear();
 		neckAngle.add(turtle.angle());
 		turtle.turn(-25 + f * 5);
@@ -286,9 +286,9 @@ public class Parrot {
 //			turtle.shape().gravity(Gravity.WEST).width(.07 * w).height(.3 * w).fillPaint(Color.FORESTGREEN).ellipse()
 //					.fill();
 			turtle.draw(.035 * w);
-			neck.add(turtle.child().turn(90).move(.15 * w).position());
+			neck.add(turtle.child().turn(90).jump(.15 * w).position());
 			neck.add(turtle.position());
-			neck.add(turtle.child().turn(-90).move(.15 * w).position());
+			neck.add(turtle.child().turn(-90).jump(.15 * w).position());
 			neckAngle.add(turtle.angle());
 			turtle.draw(.035 * w);
 			turtle.turn(25 + neckAngleStep1);
@@ -299,9 +299,9 @@ public class Parrot {
 //			turtle.shape().gravity(Gravity.WEST).width(.07 * w).height(.3 * w).fillPaint(Color.FORESTGREEN).ellipse()
 //					.fill();
 			turtle.draw(.035 * w);
-			neck.add(turtle.child().turn(90).move(.15 * w).position());
+			neck.add(turtle.child().turn(90).jump(.15 * w).position());
 			neck.add(turtle.position());
-			neck.add(turtle.child().turn(-90).move(.15 * w).position());
+			neck.add(turtle.child().turn(-90).jump(.15 * w).position());
 			neckAngle.add(turtle.angle());
 			turtle.draw(.035 * w);
 			turtle.turn(-25 + neckAngleStep2);
@@ -314,27 +314,27 @@ public class Parrot {
 		return mark;
 	}
 
-	private void toe(TurtleDuck turtle, boolean mirror) {
+	private void toe(Turtle turtle, boolean mirror) {
 		double w = 160, h = 160, f = Math.sin(Math.toRadians(count * 2));
 		// toe
 		double a = -25 - f * 2;
 		if (mirror)
 			a = 360 - a;
 		turtle.turn(a);
-		turtle.changePen().strokeWidth(2).strokePaint(Colors.PINK).done();
+		turtle.penChange().strokeWidth(2).strokePaint(Colors.PINK).done();
 		turtle.draw(0.3 * w);
 		// claw
 		turtle.shape().width(5).height(5).fillPaint(Colors.BLACK).ellipse().fill();
 	}
 
-	private TurtleDuck trunk(TurtleDuck turtle) {
+	private Turtle trunk(Turtle turtle) {
 		double w = 200, f = Math.sin(Math.toRadians(count * 2));
 		register(turtle.mark("vent").turn(-110).move(.25 * w));
-		turtle.turn(10).move(.5 * w);
+		turtle.turn(10).jump(.5 * w);
 		register(turtle.mark("spine.B"));
 		register(turtle.mark("body.top.B").turn(90).move(.05 * w));
 		register(turtle.mark("keel.B").turn(-90).move(.5 * w));
-		turtle.turn(-10).move(.5 * w);
+		turtle.turn(-10).jump(.5 * w);
 		register(turtle.mark("spine.A"));
 		register(turtle.mark("body.top.A").turn(90).move(.05 * w));
 		register(turtle.mark("keel.A").turn(-90).move(.25 * w));

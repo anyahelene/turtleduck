@@ -161,7 +161,7 @@ boolean DEBUG = false;
 	private void check(int n) {
 		if(pos + n > floats.capacity()) {
 			System.out.println("Realloc at " + pos);
-			FloatBuffer newBuf = BufferUtils.createFloatBuffer((int) (floats.capacity()*1.5));
+			FloatBuffer newBuf = BufferUtils.createFloatBuffer((int) (floats.capacity()*1.85));
 			floats.rewind();
 			newBuf.put(floats);
 			floats = newBuf;

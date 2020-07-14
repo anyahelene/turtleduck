@@ -36,7 +36,7 @@ import turtleduck.events.KeyEvent;
 import turtleduck.tea.net.SockJS;
 import turtleduck.terminal.PtyHostSide;
 import turtleduck.text.TextWindow;
-import turtleduck.turtle.TurtleDuck;
+import turtleduck.turtle.Turtle;
 import xtermjs.Terminal;
 
 public class Client implements EndPoint {
@@ -127,6 +127,18 @@ public class Client implements EndPoint {
 		receive(msg);
 	}
 
+	// scope blir (til dels) definert av krøllparenteser
+	int a = 6;
+
+	void foo() {
+		int b = a;
+		
+//		int a = 0;
+		
+		if(this.a == a) {			
+		}
+	}
+	
 	public void receive(Message msg) {
 		int ch = msg.channel();
 		if (ch == 0) {

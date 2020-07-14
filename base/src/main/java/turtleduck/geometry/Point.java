@@ -140,4 +140,13 @@ public interface Point extends PositionVector {
 	@Override
 	boolean equals(Object other);
 
+	static Point point(PositionVector point) {
+		if (point instanceof Point)
+			return (Point) point;
+		else if (point.z() == 0)
+			return point(point.x(), point.y());
+		else
+			return point(point.x(), point.y(), point.z());
+	}
+
 }

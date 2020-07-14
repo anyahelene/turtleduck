@@ -1,11 +1,12 @@
 package turtleduck.turtle;
 
+import java.util.Iterator;
 import java.util.List;
 
 import turtleduck.colors.Paint;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.impl.PathPoint;
+import turtleduck.turtle.impl.PathPointImpl;
 
 public interface Path {
 	/**
@@ -86,10 +87,10 @@ public interface Path {
 	Iterable<PathNode> nodes(PathNode dest);
 
 	public class PathImpl implements Path {
-		private List<PathPoint> points;
+		private List<PathPointImpl> points;
 
-		protected PathImpl(List<PathPoint> points) {
-			this.points = points;
+		protected PathImpl(List<PathPointImpl> points2) {
+			this.points = points2;
 		}
 
 		@Override
@@ -111,25 +112,44 @@ public interface Path {
 		public PointType pointType(int i) {
 			return points.get(i).type();
 		}
+
 		@Override
 		public Pen pointPen(int i) {
 			return points.get(i).pen();
 		}
+
 		@Override
 		public Paint pointColor(int i) {
 			return points.get(i).pen().strokePaint();
 		}
+
 		@Override
 		public double pointWidth(int i) {
 			return points.get(i).pen().strokeWidth();
 		}
+
 		@Override
 		public Pen.SmoothType pointSmooth(int i) {
 			return points.get(i).pen().smoothType();
 		}
+
 		@Override
 		public Iterable<PathPoint> points() {
-			return points;
+			return () -> {
+				var it = points.iterator();
+				return new Iterator<PathPoint>() {
+
+					@Override
+					public boolean hasNext() {
+						return it.hasNext();
+					}
+
+					@Override
+					public PathPoint next() {
+						return it.next();
+					}
+				};
+			};
 		}
 
 		@Override
@@ -147,13 +167,14 @@ public interface Path {
 		public String toString() {
 			return points.toString();
 		}
+
 		@Override
 		public int size() {
 			return points.size();
 		}
 	}
 
-	static Path fromList(List<PathPoint> points) {
+	static Path fromList(List<PathPointImpl> points) {
 		return new PathImpl(points);
 	}
 

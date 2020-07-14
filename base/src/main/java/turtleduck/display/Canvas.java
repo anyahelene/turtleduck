@@ -1,15 +1,10 @@
 package turtleduck.display;
 
 import turtleduck.drawing.Drawing;
-import turtleduck.geometry.Point;
-import turtleduck.objects.IdentifiedObject;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Pen;
-import turtleduck.turtle.SimpleTurtle;
-import turtleduck.turtle.TurtleDuck;
-import turtleduck.turtle.impl.BasePen;
-import turtleduck.turtle.impl.TurtleDuckImpl;
+import turtleduck.turtle.Turtle;
 
 public interface Canvas extends Layer {
 	/**
@@ -63,9 +58,7 @@ public interface Canvas extends Layer {
 	
 	Pen createPen();
 
-	SimpleTurtle createSimpleTurtle();
-
-	TurtleDuck createTurtleDuck();
+	Turtle createTurtle();
 	
 	Canvas flush();
 	Canvas draw(Path path);

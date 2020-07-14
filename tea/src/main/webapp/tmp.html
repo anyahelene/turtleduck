@@ -1,0 +1,123 @@
+<body onload="main()">
+		<!-- class="d-flex flex-column align-items-stretch vh-100" -->
+		<header>
+			<nav id="top"
+				class="navbar navbar-expand-lg navbar-light bg-light p-2">
+				<a href="#" class="navbar-brand">TurtleDuck</a>
+				<button class="navbar-toggler" type="button" data-toggle="collapse"
+					data-target="#navbarSupportedContent"
+					aria-controls="navbarSupportedContent" aria-expanded="false"
+					aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarSupportedContent">
+					<ul class="navbar-nav mr-auto">
+						<li class="nav-item dropdown"><a
+							class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+							role="button" data-toggle="dropdown" aria-haspopup="true"
+							aria-expanded="false"> File </a>
+							<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+								<a class="dropdown-item" href="#">Action</a> <a
+									class="dropdown-item" href="#">Another action</a>
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item" href="#">Something else here</a>
+							</div></li>
+						<li class="nav-item dropdown"><a
+							class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+							role="button" data-toggle="dropdown" aria-haspopup="true"
+							aria-expanded="false"> Edit </a>
+							<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+								<a class="dropdown-item" href="#">Action</a> <a
+									class="dropdown-item" href="#">Another action</a>
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item" href="#">Something else here</a>
+							</div></li>
+						<li class="nav-item dropdown"><a
+							class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+							role="button" data-toggle="dropdown" aria-haspopup="true"
+							aria-expanded="false"> Demos </a>
+							<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+								<a class="dropdown-item" href="#">Action</a> <a
+									class="dropdown-item" href="#">Another action</a>
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item" href="#">Something else here</a>
+							</div></li>
+						<li class="nav-item dropdown"><a
+							class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+							role="button" data-toggle="dropdown" aria-haspopup="true"
+							aria-expanded="false"> Help </a>
+							<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+								<a class="dropdown-item" href="#">Action</a> <a
+									class="dropdown-item" href="#">Another action</a>
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item" href="#">Something else here</a>
+							</div></li>
+						<li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+						<li class="nav-item"><a class="nav-link disabled" href="#"
+							tabindex="-1" aria-disabled="true">Disabled</a></li>
+					</ul>
+					<form class="form-inline my-2 my-lg-0">
+						<input class="form-control mr-sm-2" type="search"
+							placeholder="Search" aria-label="Search">
+						<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+					</form>
+				</div>
+			</nav>
+		</header>
+
+		<main class="h-100">
+			<!-- class="container-fluid d-flex flex-row align-items-stretch h-100">-->
+			<!-- aside id="left" class="card col-1">
+				<ul class="nav nav-tabs card-header-tabs">
+					<li class="nav-item"><a class="nav-link active" href="#">Active</a>
+					</li>
+					<li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+				</ul>
+				<div class="card-body">...</div>
+			</aside-->
+			<div id="middle" class="d-flex">
+				<div id="middle-column">
+					<div id="middle-row">
+						<div id="middle-left" class="" style="display:flex;flex 1 1 auto;flex-flow:column">
+							<!-- INCLUDE: _screen.html -->
+<!-- section id="screen0" class="bg-white border border-dark"
+	style="overflow: hidden; resize: both"-->
+	<svg id="svg0" style="overflow:hidden;resize:both" viewbox="0 0 1280 720"
+		preserveAspectRatio="xMinYMin slice" style=""></svg>
+<!-- /section-->
+						</div>
+						<!-- div id="middle-right" class="col-3">
+							<!-- INCLUDE: _editor.html --
+<section id="editor-section" class="card">
+	<div class="subwindow-header d-flex">
+		<ul id="editor-tabs" class="nav nav-tabs card-header-tabs">
+		</ul>
+		<div class="btn-toolbar ml-auto" role="toolbar"
+			aria-label="Toolbar with button groups">
+			<div class="btn-group" role="group" aria-label="First group">
+				<button id="editor-save" type="button"
+					class="btn btn-outline-success btn-light">Save</button>
+				<button id="editor-close" type="button"
+					class="btn btn-outline-danger btn-light">Close</button>
+			</div>
+		</div>
+	</div>
+	<div class="card-body p-0"
+		style="position: relative; margin-right: -.625rem; margin-left: -.625rem">
+		<div id="editor"
+			style="position: absolute; top: 0; right: 0; bottom: 0; left: 0;">
+			int foo = bar;</div>
+	</div>
+</section>
+						</div-->
+					</div>
+					<div id="middle-bottom">
+						<div id="code" class="bg-dark border border-light"
+							style="overflow: hidden; resize: both"></div>
+					</div>
+				</div>
+			</div>
+		</main>
+		<footer id="bottom"> <  class="mt-auto navbar text-light bg-dark p-1">
+		bottom </footer>
+</body>
