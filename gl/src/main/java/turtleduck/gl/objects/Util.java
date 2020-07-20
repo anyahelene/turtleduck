@@ -26,7 +26,7 @@ public class Util {
 	 * Reads the specified resource and returns the raw data as a ByteBuffer.
 	 *
 	 * 
-	 * @param resource   the resource to read
+	 * @param url   the url to read
 	 * @param bufferSize the initial buffer size
 	 *
 	 * @return the resource data
@@ -34,12 +34,8 @@ public class Util {
 	 * @throws IOException if an IO error occurs
 	 * 
 	 */
-	public static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
+	public static ByteBuffer urlToByteBuffer(URL url, int bufferSize) throws IOException {
 		ByteBuffer buffer;
-		URL url = Util.class.getResource(resource);
-		if (url == null) {
-			throw new FileNotFoundException(resource);
-		}
 		File file = new File(url.getFile());
 		if (file.isFile() && file.length() > bufferSize) {
 			try (FileInputStream fis = new FileInputStream(file)) {
@@ -51,7 +47,7 @@ public class Util {
 			buffer = BufferUtils.createByteBuffer(bufferSize);
 			try (InputStream source = url.openStream()) {
 				if (source == null) {
-					throw new FileNotFoundException(resource);
+					throw new FileNotFoundException(url.toString());
 				}
 				byte[] buf = new byte[8192];
 				while (true) {
@@ -68,6 +64,27 @@ public class Util {
 			}
 		}
 		return buffer;
+	}
+	/**
+	 * Reads the specified resource and returns the raw data as a ByteBuffer.
+	 *
+	 * 
+	 * @param resource   the resource to read
+	 * @param bufferSize the initial buffer size
+	 *
+	 * @return the resource data
+	 *
+	 * @throws IOException if an IO error occurs
+	 * 
+	 */
+	public static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
+		URL url = Util.class.getResource(resource);
+		if (url == null) {
+			throw new FileNotFoundException(resource);
+		} else {
+			return urlToByteBuffer(url, bufferSize);
+		}
+		
 	}
 
 	private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {

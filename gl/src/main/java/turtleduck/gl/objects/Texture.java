@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL11;
 
 public class Texture extends DataHandle<Texture, Texture.TextureData> {
 	private static final Map<String, TextureData> textures = new HashMap<>();
@@ -32,6 +34,19 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 		return loadWithParams(pathName, null);
 	}
 
+	/**
+	 * @return {@link GL11#GL_MAX_TEXTURE_SIZE}
+	 */
+	public static int maxTextureSize() {
+		return glGetInteger(GL_MAX_TEXTURE_SIZE);
+	}
+	
+	/**
+	 * @return {@link GL20#GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS}
+	 */
+	public static int maxTextures() {
+		return glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+	}
 	public static Texture loadWithParams(String pathName, TextureParams params) throws IOException {
 		if (textures.containsKey(pathName)) {
 			TextureData td = textures.get(pathName);
@@ -64,6 +79,8 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 				throw new IOException("Failed to read image information: " + stbi_failure_reason());
 			}
 			int channels = ((IntBuffer) comp.rewind()).get();
+			if(channels > 1)
+				channels = 4;
 			comp.rewind();
 			image = stbi_load_from_memory(imageBuffer, w, h, comp, channels);
 			imageBuffer = null;
@@ -73,6 +90,7 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 			int intformat = GL_RGB8, format = GL_RGB;
 			if (channels == 4) {
 				intformat = GL_RGBA8;
+				intformat = GL_SRGB_ALPHA;
 				format = GL_RGBA;
 			} else if (channels == 1) {
 				intformat = GL_R8;
@@ -282,7 +300,7 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 
 	}
 
-	static class TextureParams {
+	public static class TextureParams {
 		int magFilter = GL_LINEAR;
 		int minFilter = GL_NEAREST_MIPMAP_LINEAR;
 		int wrapS = GL_REPEAT;

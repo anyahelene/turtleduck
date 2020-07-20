@@ -1,6 +1,8 @@
 package turtleduck.display;
 
 import turtleduck.drawing.Drawing;
+import turtleduck.drawing.Image;
+import turtleduck.geometry.Point;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Pen;
@@ -63,4 +65,6 @@ public interface Canvas extends Layer {
 	Canvas flush();
 	Canvas draw(Path path);
 	Canvas draw(Drawing drawing);
+
+	void drawImage(Point at, Image img);
 }

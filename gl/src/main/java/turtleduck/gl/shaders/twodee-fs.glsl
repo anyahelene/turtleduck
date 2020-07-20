@@ -5,6 +5,7 @@ in vec4 fColor;
 in vec4 fPos;
 in vec4 fNormal;
 in vec2 fTexCoord;
+in flat int fTexNum;
 
 out vec4 FragColor;
 
@@ -34,8 +35,12 @@ float LinearizeDepth(float depth)
 */
 void main()
 {
-	FragColor = fColor;
-    if(FragColor.a <= 0.1)
+	if(fTexNum > 0) {
+		FragColor = texture(texture0, fTexCoord);
+	} else {
+		FragColor = fColor;
+	}
+    if(FragColor.a <= 0.01)
          discard;
 }
 

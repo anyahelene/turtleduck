@@ -21,4 +21,5 @@ module turtleduck.base {
 	requires java.logging;
 	requires java.xml;
 	requires org.joml;
+	requires java.desktop;
 }

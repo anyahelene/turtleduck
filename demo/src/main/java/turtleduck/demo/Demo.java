@@ -44,7 +44,7 @@ public class Demo implements TurtleDuckApp {
 			sub.done();
 			if (radius < 0) {
 				if (i % 3 == 0) {
-					Turtle child = turtle.child().jumpTo(turtle.position()).turnTo(i).draw(20);
+					Turtle child = turtle.child().jumpTo(turtle.at()).turnTo(i).draw(20);
 					// child./*draw(step/2).*/turn(180).move(20).turn(-180);//.draw(20);
 					if (i % 6 == 0)
 						footprint(child.turn(90).jump(2.5).turn(-80), 1);

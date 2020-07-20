@@ -141,7 +141,14 @@ boolean DEBUG = false;
 		next();
 		return this;
 	}
-
+	public VertexArrayBuilder vec3(Vector2f vec, float z) {
+		check(3);
+		vec.get(pos,floats);
+		pos += 2;
+		floats.put(pos++, z);
+		next();
+		return this;
+	}
 	public VertexArrayBuilder vec3(Vector3f vec) {
 		check(3);
 		vec.get(pos,floats);

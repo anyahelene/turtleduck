@@ -33,6 +33,7 @@ import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11.GL_FILL;
 import static org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK;
 import static org.lwjgl.opengl.GL11.GL_LINE;
+import static org.lwjgl.opengl.GL11.GL_MAX_TEXTURE_SIZE;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glClear;
@@ -374,7 +375,7 @@ public class GLScreen extends BaseScreen implements Screen {
 //						recomputeLayout(false);
 //					});
 
-		init(width, height);
+		init(1920, 1440);
 	}
 
 	protected void init(int width, int height) {
@@ -430,7 +431,6 @@ public class GLScreen extends BaseScreen implements Screen {
 			width = framebufferSize.get(0);
 			height = framebufferSize.get(1);
 		}
-
 		caps = GL.createCapabilities();
 		if (!caps.GL_ARB_shader_objects) {
 			throw new AssertionError("Required OpenGL extension missing: ARB_shader_objects");
@@ -444,7 +444,7 @@ public class GLScreen extends BaseScreen implements Screen {
 
 		debugProc = GLUtil.setupDebugMessageCallback();
 
-		glEnable(GL_MULTISAMPLE);
+//		glEnable(GL_MULTISAMPLE);
 
 		System.err.println("Creating buffers");
 
@@ -464,6 +464,9 @@ public class GLScreen extends BaseScreen implements Screen {
 			uProjection = shader2d.uniform("uProjection", Matrix4f.class);
 			uView = shader2d.uniform("uView", Matrix4f.class);
 			uProjView = shader2d.uniform("uProjView", Matrix4f.class);
+			shader2d.setUniform("texture0", 0);
+			shader2d.setUniform("texture1", 1);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 //			throw new RuntimeException("Error loading shaders", e);
