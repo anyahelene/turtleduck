@@ -205,18 +205,13 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 			Vector2f tmp = new Vector2f();
 			VertexArrayBuilder vertexArray = vertexArray();
 			float w = (float) stroke.strokeWidth() / 2;
-			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0);
-			vertexArray.vec4(strokeColor);
-			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0);
-			vertexArray.vec4(strokeColor);
-			vertexArray.vec3(tmp.set(fromVec).fma(-w, off), 0);
-			vertexArray.vec4(strokeColor);
-			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0);
-			vertexArray.vec4(strokeColor);
-			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0);
-			vertexArray.vec4(strokeColor);
-			vertexArray.vec3(tmp.set(toVec).fma(w, off), 0);
-			vertexArray.vec4(strokeColor);
+			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0).vec4(strokeColor);
+			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0).vec4(strokeColor);
+			vertexArray.vec3(tmp.set(fromVec).fma(-w, off), 0).vec4(strokeColor);
+			
+			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0).vec4(strokeColor);
+			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0).vec4(strokeColor);
+			vertexArray.vec3(tmp.set(toVec).fma(w, off), 0).vec4(strokeColor);
 		}
 
 	}
