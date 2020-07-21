@@ -1,6 +1,6 @@
 package turtleduck.turtle;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.geometry.Gravity;
 import turtleduck.geometry.Point;
 
@@ -44,7 +44,7 @@ public interface IShape {
 	 * <li>{@link #length(double)}
 	 * <li>{@link #angle(double)}
 	 * <li>{@link #gravity(Gravity)}
-	 * <li>{@link #stroke(Paint)}, {@link #fill(Paint)}
+	 * <li>{@link #stroke(Color)}, {@link #fill(Color)}
 	 * <li>{@link #rotation(double)}
 	 *
 	 * @return <code>this</code>, for adding more drawing parameters or issuing the
@@ -88,7 +88,7 @@ public interface IShape {
 	 * <li>{@link #at(Point)}, {@link #x(double)}, {@link #gravity(double)}
 	 * <li>{@link #width(double)}, {@link #height(double)}
 	 * <li>{@link #gravity(Gravity)}
-	 * <li>{@link #stroke(Paint)}, {@link #fill(Paint)}
+	 * <li>{@link #stroke(Color)}, {@link #fill(Color)}
 	 * <li>{@link #rotation(double)}
 	 *
 	 * @return <code>this</code>, for adding more drawing parameters or issuing the
@@ -110,7 +110,7 @@ public interface IShape {
 	 * @return <code>this</code>, for adding more drawing parameters or issuing the
 	 *         draw command
 	 */
-	IShape fillPaint(Paint p);
+	IShape fillPaint(Color p);
 
 	/**
 	 * Set gravity for the subsequent draw commands
@@ -157,7 +157,7 @@ public interface IShape {
 	 * <li>{@link #angle(double)}
 	 * <li>{@link #gravity(Gravity)} (flattened to the horizontal axis, so, e.g.,
 	 * {@link Gravity#NORTH} = {@link Gravity#SOUTH} = {@link Gravity#CENTER})
-	 * <li>{@link #stroke(Paint)}
+	 * <li>{@link #stroke(Color)}
 	 * <li>{@link #rotation(double)}
 	 *
 	 * @return <code>this</code>, for adding more drawing parameters or issuing the
@@ -173,7 +173,7 @@ public interface IShape {
 	 * <li>{@link #at(Point)}, {@link #x(double)}, {@link #gravity(double)}
 	 * <li>{@link #width(double)}, {@link #height(double)}
 	 * <li>{@link #gravity(Gravity)}
-	 * <li>{@link #stroke(Paint)}, {@link #fill(Paint)}
+	 * <li>{@link #stroke(Color)}, {@link #fill(Color)}
 	 * <li>{@link #rotation(double)}
 	 *
 	 * @return <code>this</code>, for adding more drawing parameters or issuing the
@@ -207,7 +207,7 @@ public interface IShape {
 	 * @return <code>this</code>, for adding more drawing parameters or issuing the
 	 *         draw command
 	 */
-	IShape strokePaint(Paint p);
+	IShape strokePaint(Color p);
 
 	String toSvg();
 

@@ -1,6 +1,6 @@
 package turtleduck.drawing;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.drawing.impl.CroppedImage;
 import turtleduck.drawing.impl.ScaledImage;
 import turtleduck.drawing.impl.TransposedImage;
@@ -61,7 +61,7 @@ public abstract class AbstractImage implements Image {
 	}
 
 	@Override
-	public Paint readPixel(double x, double y) {
+	public Color readPixel(double x, double y) {
 		return readPixel((int) Math.round(x), (int) Math.round(y));
 	}
 

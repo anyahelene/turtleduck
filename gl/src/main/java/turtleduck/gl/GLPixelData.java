@@ -7,7 +7,7 @@ import turtleduck.gl.objects.Texture;
 import java.io.IOException;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.drawing.AbstractImage;
 
 public class GLPixelData extends AbstractImage implements Image {
@@ -23,7 +23,7 @@ public class GLPixelData extends AbstractImage implements Image {
 	}
 
 	@Override
-	public Paint readPixel(int x, int y) {
+	public Color readPixel(int x, int y) {
 		return Colors.TRANSPARENT;
 	}
 

@@ -3,7 +3,7 @@ package turtleduck.turtle;
 import java.util.Iterator;
 import java.util.List;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.impl.PathPointImpl;
@@ -65,7 +65,7 @@ public interface Path {
 
 	double pointWidth(int i);
 
-	Paint pointColor(int i);
+	Color pointColor(int i);
 
 	int size();
 
@@ -119,7 +119,7 @@ public interface Path {
 		}
 
 		@Override
-		public Paint pointColor(int i) {
+		public Color pointColor(int i) {
 			return points.get(i).pen().strokePaint();
 		}
 

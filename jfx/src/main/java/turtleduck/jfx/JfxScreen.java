@@ -23,7 +23,7 @@ import javafx.scene.input.DataFormat;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
@@ -124,7 +124,7 @@ public class JfxScreen extends BaseScreen {
 	private final Map<Layer, Canvas> layerCanvases = new IdentityHashMap<>();
 	protected final Canvas background;
 	private final Group root;
-	private Paint bgColor = Paint.color(0, 0, 0);
+	private Color bgColor = Color.color(0, 0, 0);
 //	private double currentScale = 1.0;
 //	private double currentFit = 1.0;
 //	private double resolutionScale = 1.0;
@@ -366,7 +366,7 @@ public class JfxScreen extends BaseScreen {
 	}
 
 	@Override
-	public void setBackground(Paint bgColor) {
+	public void setBackground(Color bgColor) {
 		this.bgColor = bgColor;
 		subScene.setFill(JfxColor.toJfxColor(bgColor.darker()));
 	}

@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 
 @SuppressWarnings("unused")
 public class ControlSequences {
@@ -191,16 +191,16 @@ public class ControlSequences {
 			});
 	private static final Map<String,CsiPattern> KEYS = new HashMap<>();
 	private static final int F = 0xFF, H = 0xAA, L = 0x55, OFF = 0x00;
-	public static final Paint[] PALETTE_CGA = { //
-			Paint.fromRGB(0, 0, 0), Paint.fromRGB(0, 0, H), Paint.fromRGB(0, H, 0), Paint.fromRGB(0, H, H), //
-			Paint.fromRGB(H, 0, 0), Paint.fromRGB(H, 0, H), Paint.fromRGB(H, L, 0), Paint.fromRGB(H, H, H), //
-			Paint.fromRGB(L, L, L), Paint.fromRGB(L, L, F), Paint.fromRGB(L, F, L), Paint.fromRGB(L, F, F), //
-			Paint.fromRGB(F, L, L), Paint.fromRGB(F, L, F), Paint.fromRGB(F, F, L), Paint.fromRGB(F, F, F), };
-	public static final Paint[] PALETTE_VGA = { //
-			Paint.fromRGB(0, 0, 0), Paint.fromRGB(H, 0, 0), Paint.fromRGB(0, H, 0), Paint.fromRGB(H, H, 0), //
-			Paint.fromRGB(0, 0, H), Paint.fromRGB(H, 0, H), Paint.fromRGB(0, H, H), Paint.fromRGB(H, H, H), //
-			Paint.fromRGB(L, L, L), Paint.fromRGB(F, L, L), Paint.fromRGB(L, F, L), Paint.fromRGB(F, F, L), //
-			Paint.fromRGB(L, L, F), Paint.fromRGB(F, L, F), Paint.fromRGB(L, F, F), Paint.fromRGB(F, F, F), };
+	public static final Color[] PALETTE_CGA = { //
+			Color.fromRGB(0, 0, 0), Color.fromRGB(0, 0, H), Color.fromRGB(0, H, 0), Color.fromRGB(0, H, H), //
+			Color.fromRGB(H, 0, 0), Color.fromRGB(H, 0, H), Color.fromRGB(H, L, 0), Color.fromRGB(H, H, H), //
+			Color.fromRGB(L, L, L), Color.fromRGB(L, L, F), Color.fromRGB(L, F, L), Color.fromRGB(L, F, F), //
+			Color.fromRGB(F, L, L), Color.fromRGB(F, L, F), Color.fromRGB(F, F, L), Color.fromRGB(F, F, F), };
+	public static final Color[] PALETTE_VGA = { //
+			Color.fromRGB(0, 0, 0), Color.fromRGB(H, 0, 0), Color.fromRGB(0, H, 0), Color.fromRGB(H, H, 0), //
+			Color.fromRGB(0, 0, H), Color.fromRGB(H, 0, H), Color.fromRGB(0, H, H), Color.fromRGB(H, H, H), //
+			Color.fromRGB(L, L, L), Color.fromRGB(F, L, L), Color.fromRGB(L, F, L), Color.fromRGB(F, F, L), //
+			Color.fromRGB(L, L, F), Color.fromRGB(F, L, F), Color.fromRGB(L, F, F), Color.fromRGB(F, F, F), };
 	public static final int COLOR_BLACK = 0;
 	public static final int COLOR_RED = 1;
 	public static final int COLOR_GREEN = 2;
@@ -396,7 +396,7 @@ public class ControlSequences {
 		return false;
 	}
 
-	private static Paint decode256(Iterator<Integer> it) {
+	private static Color decode256(Iterator<Integer> it) {
 		int i;
 		try {
 			i = it.next();
@@ -405,14 +405,14 @@ public class ControlSequences {
 				if (i < 16)
 					return PALETTE_VGA[i];
 				else if (i < 232)
-					return Paint.color(i / 36, (i / 6) % 6, i % 6);
+					return Color.color(i / 36, (i / 6) % 6, i % 6);
 				else
-					return Paint.grey((i - 232) / 23.0);
+					return Color.grey((i - 232) / 23.0);
 			} else if (i == 2) {
 				int r = it.next();
 				int g = it.next();
 				int b = it.next();
-				return Paint.color(r, g, b);
+				return Color.color(r, g, b);
 			}
 		} catch (NoSuchElementException e) {
 		}

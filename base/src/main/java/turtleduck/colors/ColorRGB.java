@@ -1,6 +1,6 @@
 package turtleduck.colors;
 
-public class ColorRGB implements Paint {
+public class ColorRGB implements Color {
 	private final short r, g, b;
 	private final float red;
 	private final float green;
@@ -46,35 +46,35 @@ public class ColorRGB implements Paint {
 	}
 
 	@Override
-	public Paint red(double r) {
+	public Color red(double r) {
 		if (r < 0 || r > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + r + ")");
 		return new ColorRGB((float) r, green, blue, alpha);
 	}
 
 	@Override
-	public Paint green(double g) {
+	public Color green(double g) {
 		if (g < 0 || g > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + g + ")");
 		return new ColorRGB(red, (float) g, blue, alpha);
 	}
 
 	@Override
-	public Paint blue(double b) {
+	public Color blue(double b) {
 		if (b < 0 || b > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + b + ")");
 		return new ColorRGB(red, green, (float) b, alpha);
 	}
 
 	@Override
-	public Paint opacity(double a) {
+	public Color opacity(double a) {
 		if (a < 0 || a > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + a + ")");
 		return new ColorRGB(red, green, blue, (float) a);
 	}
 
 	@Override
-	public Paint mix(Paint other, double proportion) {
+	public Color mix(Color other, double proportion) {
 		if (proportion <= 0)
 			return this;
 		else if (proportion >= 1.0)
@@ -130,7 +130,7 @@ public class ColorRGB implements Paint {
 	}
 
 	@Override
-	public Paint brighter() {
+	public Color brighter() {
 		if (true)
 			return new ColorRGB(.1f + .9f * red, .1f + .9f * green, .1f + .9f * blue, alpha);
 		else {
@@ -141,7 +141,7 @@ public class ColorRGB implements Paint {
 	}
 
 	@Override
-	public Paint darker() {
+	public Color darker() {
 		if (true)
 			return new ColorRGB(.9f * red, .9f * green, .9f * blue, alpha);
 		else {
@@ -152,12 +152,12 @@ public class ColorRGB implements Paint {
 	}
 
 	@Override
-	public Paint asRGBA() {
+	public Color asRGBA() {
 		return this;
 	}
 
 	@Override
-	public Paint asCMYK() {
+	public Color asCMYK() {
 		throw new UnsupportedOperationException();
 	}
 

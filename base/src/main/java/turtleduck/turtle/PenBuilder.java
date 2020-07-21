@@ -1,6 +1,6 @@
 package turtleduck.turtle;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.geometry.Projection;
 import turtleduck.turtle.Pen.SmoothType;
 
@@ -20,7 +20,7 @@ public interface PenBuilder<T> extends Stroke, Fill {
 	 * @param ink A colour or paint
 	 * @return {@code this}, for sending more draw commands
 	 */
-	PenBuilder<T> strokePaint(Paint ink);
+	PenBuilder<T> strokePaint(Color ink);
 
 	PenBuilder<T> strokeOpacity(double opacity);
 
@@ -30,7 +30,7 @@ public interface PenBuilder<T> extends Stroke, Fill {
 	 * @param ink A colour or paint
 	 * @return {@code this}, for sending more draw commands
 	 */
-	PenBuilder<T> fillPaint(Paint ink);
+	PenBuilder<T> fillPaint(Color ink);
 
 	PenBuilder<T> fillOpacity(double opacity);
 

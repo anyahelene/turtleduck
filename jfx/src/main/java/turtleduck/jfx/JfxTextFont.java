@@ -15,7 +15,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -23,7 +22,7 @@ import javafx.scene.text.TextBoundsType;
 import javafx.scene.transform.Affine;
 import javafx.scene.transform.Transform;
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.text.BlocksAndBoxes;
@@ -147,7 +146,7 @@ public class JfxTextFont implements TextFont {
 		Affine transform = ctx.getTransform();
 		Point2D point = transform.transform(x, y);
 		int dx = (int) point.getX(), dy = (int) point.getY();
-		Color c = ctx.getFill() instanceof Color ? (Color) ctx.getFill() : Color.BLACK;
+		javafx.scene.paint.Color c = ctx.getFill() instanceof javafx.scene.paint.Color ? (javafx.scene.paint.Color) ctx.getFill() : javafx.scene.paint.Color.BLACK;
 		int rgb = ((int) (c.getRed() * 255)) << 16 | ((int) (c.getGreen() * 255)) << 8 | ((int) (c.getBlue() * 255));
 
 		for (int px = 0; px < w; px++) {
@@ -303,7 +302,7 @@ public class JfxTextFont implements TextFont {
 	SnapshotParameters snapshotParameters = new SnapshotParameters();
 
 	{
-		snapshotParameters.setFill(Color.TRANSPARENT);
+		snapshotParameters.setFill(javafx.scene.paint.Color.TRANSPARENT);
 	}
 
 	/**
@@ -493,7 +492,7 @@ public class JfxTextFont implements TextFont {
 		}
 	}
 
-	private void doDraw(String text, double xScaleFactor, Paint fill, Paint stroke, int mode, GraphicsContext target,
+	private void doDraw(String text, double xScaleFactor, Color fill, Color stroke, int mode, GraphicsContext target,
 			int width) {
 		if ((mode & ATTR_BRIGHT) != 0) {
 			fill = fill.brighter();
@@ -553,7 +552,7 @@ public class JfxTextFont implements TextFont {
 	 * {@link Image}.
 	 *
 	 * The contents of the returned {@link Image} is valid until then next call to
-	 * {@link #drawCharacter(String, int, Paint, Paint)} or one of the other text
+	 * {@link #drawCharacter(String, int, Color, Color)} or one of the other text
 	 * drawing commands.
 	 *
 	 * @param c      A string containing the single character to be drawn.
@@ -563,7 +562,7 @@ public class JfxTextFont implements TextFont {
 	 * @param stroke Stroke paint, normally null for no stroke.
 	 * @return An image, where pixels can be read by {@link Image#getPixelReader()}
 	 */
-	protected Image drawCharacter(String c, int mode, Paint fill, Paint stroke) {
+	protected Image drawCharacter(String c, int mode, Color fill, Color stroke) {
 		if (c.codePointCount(0, c.length()) != 1) {
 			throw new IllegalArgumentException("String argument should have exactly 1 codepoint: '" + c + "'");
 		}
@@ -656,7 +655,7 @@ public class JfxTextFont implements TextFont {
 	 * @param xScaleFactor a horizontal scaling factor
 	 */
 	@Override
-	public void drawTextAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode, Paint bg) {
+	public void drawTextAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode, Color bg) {
 		GraphicsContext ctx = context(canvas);
 		textAt(ctx, x, y, text, xScaleFactor, false, false, JfxColor.fromJfxColor(ctx.getFill()), null, mode, bg);
 	}
@@ -676,7 +675,7 @@ public class JfxTextFont implements TextFont {
 	 */
 	@Override
 	public void drawTextNoClearAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode,
-			Paint bg) {
+			Color bg) {
 		GraphicsContext ctx = context(canvas);
 		textAt(ctx, x, y, text, xScaleFactor, false, false, JfxColor.fromJfxColor(ctx.getFill()), null, mode, bg);
 	}
@@ -1060,7 +1059,7 @@ public class JfxTextFont implements TextFont {
 	 */
 
 	protected void textAt(GraphicsContext ctx, double x, double y, String text, double xScaleFactor, boolean clear,
-			boolean clip, Paint fill, Paint stroke, int mode, Paint bg) {
+			boolean clip, Color fill, Color stroke, int mode, Color bg) {
 //		GraphicsContext ctx = context(canvas);
 		GraphicsContext target = ctx;
 		int width = text.codePointCount(0, text.length());

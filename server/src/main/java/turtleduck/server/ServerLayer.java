@@ -11,6 +11,7 @@ import turtleduck.comms.Message;
 import turtleduck.display.Canvas;
 import turtleduck.display.impl.BaseCanvas;
 import turtleduck.drawing.Drawing;
+import turtleduck.drawing.Image;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
@@ -83,5 +84,11 @@ public class ServerLayer extends BaseCanvas<ServerScreen> {
 	public Canvas draw(Drawing drawing) {
 		// TODO Auto-generated method stub
 		return this;
+	}
+
+	@Override
+	public void drawImage(Point at, Image img) {
+		// TODO Auto-generated method stub
+		
 	}
 }

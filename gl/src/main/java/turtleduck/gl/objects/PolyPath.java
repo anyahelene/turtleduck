@@ -11,7 +11,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 
 public class PolyPath {
 	List<Vector2f> verts = new ArrayList<>();
@@ -31,7 +31,7 @@ public class PolyPath {
 	class PolyPathWriter {
 		Edge firstEdge = null, lastEdge = null, currentEdge = null;
 		int last = -1, current = -1, first = -1;
-		Paint c = Colors.RED;
+		Color c = Colors.RED;
 
 		public PolyPathWriter lineTo(float x, float y) {
 			last = current;
@@ -277,7 +277,7 @@ public class PolyPath {
 		for(Edge e: triEdges) {
 			e.color = null;
 		}
-		Paint col = Colors.YELLOW;
+		Color col = Colors.YELLOW;
 		for(Edge e: triEdges) {
 			if(e.color == null) {
 				col = col.mix(Colors.BLUE, 0.1);

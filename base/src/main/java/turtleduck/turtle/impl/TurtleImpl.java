@@ -3,7 +3,7 @@ package turtleduck.turtle.impl;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
@@ -203,7 +203,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	}
 
 	@Override
-	public THIS penColor(Paint color) {
+	public THIS penColor(Color color) {
 		pen = pen.change().strokePaint(color).done();
 		return (THIS) this;
 	}

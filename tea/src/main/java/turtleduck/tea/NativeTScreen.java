@@ -11,7 +11,7 @@ import org.teavm.jso.dom.html.HTMLCanvasElement;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
@@ -179,7 +179,7 @@ public class NativeTScreen extends BaseScreen {
 	}
 
 	@Override
-	public void setBackground(Paint bgColor) {
+	public void setBackground(Color bgColor) {
 		// TODO Auto-generated method stub
 		
 	}

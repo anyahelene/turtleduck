@@ -1,7 +1,7 @@
 package turtleduck.turtle.impl;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.geometry.Projection;
 import turtleduck.geometry.impl.OrthographicProjection;
 import turtleduck.turtle.Fill;
@@ -12,7 +12,7 @@ import turtleduck.turtle.Stroke;
 public class BasePen implements Pen, PenBuilder<Pen> {
 	protected double strokeWidth;
 	protected Projection projection;
-	protected Paint stroke, fill;
+	protected Color stroke, fill;
 	protected boolean frozen = false;
 	protected SmoothType smoothType;
 	protected double smoothAmount;
@@ -20,7 +20,7 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	public BasePen() {
 		strokeWidth = 1;
 		projection = new OrthographicProjection(100, 100);
-		stroke = Paint.color(1, 1, 1);
+		stroke = Color.color(1, 1, 1);
 		fill = Colors.TRANSPARENT;
 	}
 
@@ -37,12 +37,12 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public Paint strokePaint() {
+	public Color strokePaint() {
 		return stroke;
 	}
 
 	@Override
-	public Paint fillPaint() {
+	public Color fillPaint() {
 		return fill;
 	}
 
@@ -62,7 +62,7 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public PenBuilder<Pen> strokePaint(Paint ink) {
+	public PenBuilder<Pen> strokePaint(Color ink) {
 		if (frozen)
 			throw new IllegalStateException("Changing pen properties after done()");
 		if (ink == null)
@@ -81,7 +81,7 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public PenBuilder<Pen> fillPaint(Paint ink) {
+	public PenBuilder<Pen> fillPaint(Color ink) {
 		if (ink == null)
 			fill = Colors.TRANSPARENT;
 		else

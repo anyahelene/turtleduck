@@ -3,7 +3,7 @@ package turtleduck.display;
 import java.util.function.Predicate;
 
 import turtleduck.turtle.Pen;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.events.KeyEvent;
 import turtleduck.objects.IdentifiedObject;
 import turtleduck.text.TextWindow;
@@ -135,7 +135,7 @@ public interface Screen extends IdentifiedObject {
 
 	void setAspect(int aspect);
 
-	void setBackground(Paint bgColor);
+	void setBackground(Color bgColor);
 
 	void setFullScreen(boolean fullScreen);
 

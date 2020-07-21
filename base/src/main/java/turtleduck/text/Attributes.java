@@ -2,7 +2,7 @@ package turtleduck.text;
 
 import java.util.function.Function;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 
 public interface Attributes {
 	<T> T get(Attribute<T> attr);
@@ -80,13 +80,13 @@ public interface Attributes {
 			return italic(enabled);
 		}
 
-		default AttributeBuilder foreground(Paint foreColor) {
+		default AttributeBuilder foreground(Color foreColor) {
 			if(foreColor != null)
 				return set(Attribute.ATTR_FOREGROUND, foreColor);
 			else
 				return this;
 		}
-		default AttributeBuilder background(Paint backColor) {
+		default AttributeBuilder background(Color backColor) {
 			if(backColor != null)
 				return set(Attribute.ATTR_BACKGROUND, backColor);
 			else

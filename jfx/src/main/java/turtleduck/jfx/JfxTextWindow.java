@@ -7,11 +7,10 @@ import java.io.PrintStream;
 import javafx.geometry.Bounds;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.BlendMode;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.drawing.Drawing;
@@ -43,7 +42,7 @@ public class JfxTextWindow extends WindowImpl<JfxScreen> {
 		cells.forEachElement(region, elt -> {
 			double px0 = (elt.x() - 1) * getCharWidth(), py0 = (elt.y() - 1) * getCharHeight();
 			double px1 = (elt.x() + elt.width() - 1) * getCharWidth(), py1 = (elt.y()) * getCharHeight();
-			Paint regionBg = elt.attributes().get(Attribute.ATTR_BACKGROUND);
+			Color regionBg = elt.attributes().get(Attribute.ATTR_BACKGROUND);
 			String s = elt.toString();
 			System.out.printf("%d,%d+%d+%d [%s]\n", elt.x(), elt.y(), elt.width(), elt.height(), elt.toString());
 			if (true)
@@ -86,12 +85,12 @@ public class JfxTextWindow extends WindowImpl<JfxScreen> {
 				Line line = cells.line(tmpY);
 				double py0 = (tmpY - 1) * getCharHeight();
 				double py1 = tmpY * getCharHeight();
-				Paint regionBg = null;
+				Color regionBg = null;
 				double px0 = (x0 - 1) * getCharWidth();
 				double px1 = x0 * getCharWidth();
 				String s = "";
 				for (int tmpX = x0; tmpX <= x1 + 1; tmpX++) {
-					Paint cellBg = null;
+					Color cellBg = null;
 					if (tmpX <= x1) {
 						Cell c = line.col(tmpX);
 						s += c.toString();
@@ -187,7 +186,7 @@ public class JfxTextWindow extends WindowImpl<JfxScreen> {
 //			context.setFill(Color.BLUE);
 //			context.fillRect(0, 0, width(), height());
 			context.setGlobalBlendMode(BlendMode.EXCLUSION);
-			context.setFill(Color.WHITE.deriveColor(0.0, 1.0, 1.0, 0.1));
+			context.setFill(javafx.scene.paint.Color.WHITE.deriveColor(0.0, 1.0, 1.0, 0.1));
 			for (int x = 0; x < pageWidth(); x++) {
 				for (int y = 0; y < pageHeight(); y++) {
 					if ((x + y) % 2 == 0)

@@ -3,7 +3,7 @@ package turtleduck.demo;
 import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
@@ -18,10 +18,10 @@ public class Demo implements TurtleDuckApp {
 	private static Turtle debugTurtle;
 
 	public static void colorWheel(Turtle turtle, double radius) {
-		Paint red = Paint.color(1, 0, 0);
-		Paint green = Paint.color(0, 1, 0);
-		Paint blue = Paint.color(0, 0, 1);
-		Paint ink = red;
+		Color red = Color.color(1, 0, 0);
+		Color green = Color.color(0, 1, 0);
+		Color blue = Color.color(0, 0, 1);
+		Color ink = red;
 		double step = (2 * Math.PI * radius) / 360.0;
 		turtle.jump(radius);
 
@@ -66,10 +66,10 @@ public class Demo implements TurtleDuckApp {
 
 	public static void feather(Turtle turtle, double radius) {
 		double w = 5;
-		Paint grey = Paint.color(.5, .5, .5);
-		Paint green = Paint.color(.5, 1, .5);
-		Paint stem = grey.brighter().opacity(.7);
-		Paint leaf = grey.opacity(.9);
+		Color grey = Color.color(.5, .5, .5);
+		Color green = Color.color(.5, 1, .5);
+		Color stem = grey.brighter().opacity(.7);
+		Color leaf = grey.opacity(.9);
 		turtle.penChange().strokeWidth(w).strokePaint(stem).done();
 		turtle.turn(-10);
 		turtle.draw(35);
@@ -122,9 +122,9 @@ public class Demo implements TurtleDuckApp {
 
 	public static void stem(Turtle turtle, double len) {
 		double w = 5;
-		Paint grey = Paint.color(.5, .5, .5);
-		Paint stem = grey.brighter().opacity(.7);
-		Paint leaf = grey.opacity(.9);
+		Color grey = Color.color(.5, .5, .5);
+		Color stem = grey.brighter().opacity(.7);
+		Color leaf = grey.opacity(.9);
 		turtle.penChange().strokeWidth(w).strokePaint(stem).done();
 		turtle.turn(-10);
 		turtle.draw(35);
@@ -177,7 +177,7 @@ public class Demo implements TurtleDuckApp {
 
 	@Override
 	public void start(Screen screen) {
-		screen.setBackground(Paint.color(1, 1, 1));
+		screen.setBackground(Color.color(1, 1, 1));
 		screen.clearBackground();
 		canvas = screen.createCanvas();
 		debugCanvas = screen.debugCanvas();
@@ -190,9 +190,9 @@ public class Demo implements TurtleDuckApp {
 		double t = System.currentTimeMillis();
 
 		turtle.jumpTo(300, 350).turnTo(0);//.draw(50).turn(90).draw(50).turn(90).draw(50).move(0);
-		Paint red = Paint.color(1, 0, 0);
-		Paint green = Paint.color(0, 1, 0);
-		Paint blue = Paint.color(0, 0, 1);
+		Color red = Color.color(1, 0, 0);
+		Color green = Color.color(0, 1, 0);
+		Color blue = Color.color(0, 0, 1);
 		Turtle turt = turtle;
 		for(int i = 0; i < 100; i++) {
 			turtle.child().penChange().strokePaint(red.mix(green, i / 100.0)).done().turn(10).draw(200).done();

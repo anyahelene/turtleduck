@@ -3,21 +3,21 @@ package turtleduck.drawing.impl;
 import java.awt.image.BufferedImage;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.drawing.AbstractImage;
 import turtleduck.drawing.Image;
 import turtleduck.drawing.ImageMode;
 
 public class AwtPixelData extends AbstractImage implements Image {
 	private final BufferedImage data;
-	private final Paint background, border;
+	private final Color background, border;
 	private final WrapMode wrapMode;
 
 	public AwtPixelData(BufferedImage data) {
 		this(null, null, data);
 	}
 
-	public AwtPixelData(Paint background, Paint border, BufferedImage data) {
+	public AwtPixelData(Color background, Color border, BufferedImage data) {
 		super(data.getWidth(), data.getHeight(), ImageMode.RGBA);
 		this.wrapMode = Image.WrapMode.MIRROR;
 		this.data = data;
@@ -26,14 +26,14 @@ public class AwtPixelData extends AbstractImage implements Image {
 	}
 
 	@Override
-	public Paint readPixel(int x, int y) {
+	public Color readPixel(int x, int y) {
 		x = wrapMode.clamp(x, width);
 		y = wrapMode.clamp(y, height);
 		if (x < 0 || y < 0)
 			return border;
 		if (data != null) {
 			int pixel = data.getRGB(x, y);
-			return Paint.fromARGB(pixel);
+			return Color.fromARGB(pixel);
 		} else {
 			return background;
 		}

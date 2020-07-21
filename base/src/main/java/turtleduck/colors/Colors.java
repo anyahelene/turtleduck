@@ -3,19 +3,19 @@ package turtleduck.colors;
 import java.util.stream.IntStream;
 
 public class Colors {
-	public static final Paint TRANSPARENT = Paint.color(0, 0, 0, 0);
-	public static final Paint RED = Paint.color(1, 0, 0, 1);
+	public static final Color TRANSPARENT = Color.color(0, 0, 0, 0);
+	public static final Color RED = Color.color(1, 0, 0, 1);
 
-	public static final Paint GREEN = Paint.color(0, 1, 0, 1);
-	public static final Paint BLUE = Paint.color(0, 0, 1, 1);
-	public static final Paint YELLOW = Paint.color(1, 1, 0, 1);
-	public static final Paint MAGENTA = Paint.color(1, 0, 1, 1);
-	public static final Paint CYAN = Paint.color(0, 1, 1, 1);
-	public static final Paint GREY = Paint.color(.5, .5, .5, 1);
-	public static final Paint WHITE = Paint.color(1, 1, 1, 1);
-	public static final Paint BLACK = Paint.color(0, 0, 0, 1);
-	public static final Paint PINK = Paint.color(1, .5, .5, 1);
-	public static final Paint FORESTGREEN = Paint.color(.3, 1, 0, 1);
+	public static final Color GREEN = Color.color(0, 1, 0, 1);
+	public static final Color BLUE = Color.color(0, 0, 1, 1);
+	public static final Color YELLOW = Color.color(1, 1, 0, 1);
+	public static final Color MAGENTA = Color.color(1, 0, 1, 1);
+	public static final Color CYAN = Color.color(0, 1, 1, 1);
+	public static final Color GREY = Color.color(.5, .5, .5, 1);
+	public static final Color WHITE = Color.color(1, 1, 1, 1);
+	public static final Color BLACK = Color.color(0, 0, 0, 1);
+	public static final Color PINK = Color.color(1, .5, .5, 1);
+	public static final Color FORESTGREEN = Color.color(.3, 1, 0, 1);
 
 	public static class Gamma {
 		public static final short LINEAR_MAX = 4095, COMPRESSED_MAX = 255;

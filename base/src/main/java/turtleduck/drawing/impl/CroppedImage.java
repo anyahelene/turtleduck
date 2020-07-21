@@ -1,6 +1,6 @@
 package turtleduck.drawing.impl;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.drawing.AbstractImage;
 import turtleduck.drawing.Image;
 import turtleduck.drawing.ImageMode;
@@ -21,7 +21,7 @@ public class CroppedImage extends AbstractImage {
 	}
 
 	@Override
-	public Paint readPixel(int x, int y) {
+	public Color readPixel(int x, int y) {
 		return source.readPixel(x+translateX, y+translateY);
 	}
 

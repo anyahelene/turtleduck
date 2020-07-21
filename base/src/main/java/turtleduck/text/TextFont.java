@@ -1,6 +1,6 @@
 package turtleduck.text;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Layer;
 
 public interface TextFont {
@@ -146,7 +146,7 @@ public interface TextFont {
 	 * @param xScaleFactor
 	 *            a horizontal scaling factor
 	 */
-	void drawTextAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode, Paint bg);
+	void drawTextAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode, Color bg);
 
 	/**
 	 * Draw the given text at position (x, y), with horizontal scaling.
@@ -167,7 +167,7 @@ public interface TextFont {
 	 *            a horizontal scaling factor
 	 */
 	void drawTextNoClearAt(Layer canvas, double x, double y, String text, double xScaleFactor, int mode,
-			Paint bg);
+			Color bg);
 
 	/**
 	 * @return the font

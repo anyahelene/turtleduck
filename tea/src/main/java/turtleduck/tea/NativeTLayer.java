@@ -7,6 +7,7 @@ import turtleduck.comms.Message;
 import turtleduck.display.Canvas;
 import turtleduck.display.impl.BaseCanvas;
 import turtleduck.drawing.Drawing;
+import turtleduck.drawing.Image;
 import turtleduck.geometry.Point;
 import turtleduck.tea.net.SockJS;
 import turtleduck.turtle.Fill;
@@ -105,5 +106,11 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 		if (obj.type().equals("Data")) {
 			context.fillText(((Message.StringDataMessage) obj).data(), 50, 50);
 		}
+	}
+
+	@Override
+	public void drawImage(Point at, Image img) {
+		// TODO Auto-generated method stub
+		
 	}
 }

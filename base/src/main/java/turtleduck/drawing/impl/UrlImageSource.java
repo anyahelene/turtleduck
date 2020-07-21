@@ -3,7 +3,7 @@ package turtleduck.drawing.impl;
 import java.net.URL;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.drawing.AbstractImage;
 import turtleduck.drawing.ImageMode;
 
@@ -17,7 +17,7 @@ public class UrlImageSource extends AbstractImage {
 	}
 
 	@Override
-	public Paint readPixel(int x, int y) {
+	public Color readPixel(int x, int y) {
 		return Colors.TRANSPARENT;
 	}
 

@@ -3,7 +3,7 @@ package turtleduck.server;
 import java.util.function.Predicate;
 
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.comms.Channel;
 import turtleduck.comms.Message;
 import turtleduck.display.Canvas;
@@ -143,7 +143,7 @@ public class ServerScreen extends BaseScreen {
 	}
 
 	@Override
-	public void setBackground(Paint bgColor) {
+	public void setBackground(Color bgColor) {
 		// TODO Auto-generated method stub
 
 	}

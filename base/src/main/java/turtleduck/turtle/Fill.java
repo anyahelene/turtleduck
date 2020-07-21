@@ -1,7 +1,7 @@
 package turtleduck.turtle;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 
 public interface Fill {
-	Paint fillPaint();
+	Color fillPaint();
 }

@@ -2,7 +2,7 @@ package turtleduck.text;
 
 import java.util.function.BiFunction;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 
 public interface SubTextCursor extends TextCursor, AutoCloseable {
 
@@ -37,27 +37,27 @@ public interface SubTextCursor extends TextCursor, AutoCloseable {
 		return clearRegion(x(), y(), Integer.MAX_VALUE, y());
 	}
 
-	default Paint backgroundAt(int x, int y) {
+	default Color backgroundAt(int x, int y) {
 		return attributesAt(x, y).get(Attribute.ATTR_BACKGROUND);
 	}
 
-	default Paint foregroundAt(int x, int y) {
+	default Color foregroundAt(int x, int y) {
 		return attributesAt(x, y).get(Attribute.ATTR_FOREGROUND);
 	}
 
-	default Paint background() {
+	default Color background() {
 		return attributes().get(Attribute.ATTR_BACKGROUND);
 	}
 
-	default Paint foreground() {
+	default Color foreground() {
 		return attributes().get(Attribute.ATTR_FOREGROUND);
 	}
 
-	default SubTextCursor background(Paint backColor) {
+	default SubTextCursor background(Color backColor) {
 		return attributes(attributes().change().background(backColor).done());
 	}
 
-	default SubTextCursor foreground(Paint foreColor) {
+	default SubTextCursor foreground(Color foreColor) {
 		return attributes(attributes().change().foreground(foreColor).done());
 	}
 
@@ -65,11 +65,11 @@ public interface SubTextCursor extends TextCursor, AutoCloseable {
 		return print(s, attributes());
 	}
 
-	default SubTextCursor print(String s, Paint foreColor) {
+	default SubTextCursor print(String s, Color foreColor) {
 		return print(s, foreColor, null);
 	}
 
-	default SubTextCursor print(String s, Paint foreColor, Paint backColor) {
+	default SubTextCursor print(String s, Color foreColor, Color backColor) {
 		return print(s, attributes().change().foreground(foreColor).background(backColor).done());
 	}
 
@@ -81,11 +81,11 @@ public interface SubTextCursor extends TextCursor, AutoCloseable {
 		return print(s + "\n");
 	}
 
-	default SubTextCursor println(String s, Paint foreColor) {
+	default SubTextCursor println(String s, Color foreColor) {
 		return print(s + "\n", foreColor, null);
 	}
 
-	default SubTextCursor println(String s, Paint foreColor, Paint backColor) {
+	default SubTextCursor println(String s, Color foreColor, Color backColor) {
 		return print(s + "\n", foreColor, backColor);
 	}
 

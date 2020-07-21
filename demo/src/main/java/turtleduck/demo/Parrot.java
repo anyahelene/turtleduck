@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.geometry.Gravity;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.TurtleMark;
@@ -21,7 +21,7 @@ public class Parrot {
 	private int DEBUG = 0;
 	private int count = 0;
 	private Point hip;
-	Paint bodyColor = Paint.color(1, 1, 0);
+	Color bodyColor = Color.color(1, 1, 0);
 	private double beakAngle = 0, tailAngle = 0;
 	private Point shoulders;
 	private List<Point> neck = new ArrayList<>();
@@ -99,7 +99,7 @@ public class Parrot {
 			DEBUG++;
 
 		double beakW = .8 * w, beakH = .4 * h;
-		Paint beakColor = Paint.color(.15, .15, .15);
+		Color beakColor = Color.color(.15, .15, .15);
 		Turtle upTurtle = turtle.child().turn(32).jump(.5 * w);
 		upperBeak = register(upTurtle.mark("beak.upper"));
 		lowerBeak = register(downTurtle.mark("beak.lower"));
@@ -248,7 +248,7 @@ public class Parrot {
 
 	private void leg(Turtle turtle) {
 		double w = 180, f = Math.sin(Math.toRadians(count * 2));
-		Paint bodyColor = Colors.YELLOW;
+		Color bodyColor = Colors.YELLOW;
 		// femur
 		turtle.turn(-30 - f * 5);
 		turtle.penChange().strokeWidth(3).strokePaint(Colors.FORESTGREEN);

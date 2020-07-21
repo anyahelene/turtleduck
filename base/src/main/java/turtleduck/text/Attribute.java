@@ -3,7 +3,7 @@ package turtleduck.text;
 import java.util.function.Function;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 
 public interface Attribute<T> {
 	/**
@@ -67,11 +67,11 @@ public interface Attribute<T> {
 	/**
 	 * Foreground colour
 	 */
-	Attribute<Paint> ATTR_FOREGROUND = new AttributeImpl<>("foreground", Colors.BLUE, 0x00, (c) -> m(c.toSGRParam(30)));
+	Attribute<Color> ATTR_FOREGROUND = new AttributeImpl<>("foreground", Colors.BLUE, 0x00, (c) -> m(c.toSGRParam(30)));
 	/**
 	 * Background colour
 	 */
-	Attribute<Paint> ATTR_BACKGROUND = new AttributeImpl<>("background", Colors.TRANSPARENT, 0x00,
+	Attribute<Color> ATTR_BACKGROUND = new AttributeImpl<>("background", Colors.TRANSPARENT, 0x00,
 			(c) -> m(c.toSGRParam(40)));
 	/**
 	 * Font

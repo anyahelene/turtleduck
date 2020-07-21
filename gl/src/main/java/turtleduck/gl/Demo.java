@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
@@ -115,10 +115,10 @@ public class Demo implements TurtleDuckApp {
 	}
 
 	public static void colorWheel(Turtle turtle, double radius) {
-		Paint red = Paint.color(1, 0, 0);
-		Paint green = Paint.color(0, 1, 0);
-		Paint blue = Paint.color(0, 0, 1);
-		Paint ink = red;
+		Color red = Color.color(1, 0, 0);
+		Color green = Color.color(0, 1, 0);
+		Color blue = Color.color(0, 0, 1);
+		Color ink = red;
 		double step = (2 * Math.PI * radius) / 360.0;
 		turtle.jump(radius);
 

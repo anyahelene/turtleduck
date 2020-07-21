@@ -8,7 +8,7 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.drawing.impl.AwtPixelData;
 import turtleduck.drawing.impl.PixelData;
 
@@ -94,7 +94,7 @@ public interface Image {
 		return null;
 	}
 
-	static Image create(int width, int height, Paint fill) {
+	static Image create(int width, int height, Color fill) {
 		return null;
 	}
 
@@ -116,9 +116,9 @@ public interface Image {
 
 	int height();
 
-	Paint readPixel(int x, int y);
+	Color readPixel(int x, int y);
 
-	Paint readPixel(double x, double y);
+	Color readPixel(double x, double y);
 
 	Image crop(int x, int y, int newWidth, int newHeight);
 

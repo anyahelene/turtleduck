@@ -2,7 +2,7 @@ package turtleduck.text;
 
 import java.util.function.BiFunction;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.text.Attributes.AttributeBuilder;
 
 /**
@@ -128,7 +128,7 @@ public interface TextCursor {
 	 * @param y vertical position (counting from 1)
 	 * @return <code>this</code>, for further calls
 	 */
-	default Paint backgroundAt(int x, int y) {
+	default Color backgroundAt(int x, int y) {
 		return attributesAt(x, y).get(Attribute.ATTR_BACKGROUND);
 	}
 
@@ -137,7 +137,7 @@ public interface TextCursor {
 	 * @param y vertical position (counting from 1)
 	 * @return <code>this</code>, for further calls
 	 */
-	default Paint foregroundAt(int x, int y) {
+	default Color foregroundAt(int x, int y) {
 		return attributesAt(x, y).get(Attribute.ATTR_FOREGROUND);
 	}
 
@@ -148,21 +148,21 @@ public interface TextCursor {
 	 */
 	Attributes attributesAt(int x, int y);
 
-	default Paint background() {
+	default Color background() {
 		return attributes().get(Attribute.ATTR_BACKGROUND);
 	}
 
-	default Paint foreground() {
+	default Color foreground() {
 		return attributes().get(Attribute.ATTR_FOREGROUND);
 	}
 
 	Attributes attributes();
 
-	default TextCursor background(Paint backColor) {
+	default TextCursor background(Color backColor) {
 		return attributes(attributes().change().background(backColor).done());
 	}
 
-	default TextCursor foreground(Paint foreColor) {
+	default TextCursor foreground(Color foreColor) {
 		return attributes(attributes().change().foreground(foreColor).done());
 	}
 
@@ -287,7 +287,7 @@ public interface TextCursor {
 	 *                  foreground)
 	 * @return <code>this</code>, for further calls
 	 */
-	default TextCursor print(String s, Paint foreColor) {
+	default TextCursor print(String s, Color foreColor) {
 		return print(s, foreColor, null);
 	}
 
@@ -308,7 +308,7 @@ public interface TextCursor {
 	 *                  background)
 	 * @return <code>this</code>, for further calls
 	 */
-	default TextCursor print(String s, Paint foreColor, Paint backColor) {
+	default TextCursor print(String s, Color foreColor, Color backColor) {
 		if (foreColor == null && backColor == null)
 			return print(s);
 		return print(s, attributes().change().foreground(foreColor).background(backColor).done());
@@ -329,7 +329,7 @@ public interface TextCursor {
 	 * 
 	 * @param s A string
 	 * @return <code>this</code>, for further calls
-	 * @see #print(String, Paint, Paint)
+	 * @see #print(String, Color, Color)
 	 */
 	default TextCursor println(String s) {
 		return print(s + "\n");
@@ -342,9 +342,9 @@ public interface TextCursor {
 	 * @param foreColor A colour to use for the characters (null for current
 	 *                  foreground)
 	 * @return <code>this</code>, for further calls
-	 * @see #print(String, Paint, Paint)
+	 * @see #print(String, Color, Color)
 	 */
-	default TextCursor println(String s, Paint foreColor) {
+	default TextCursor println(String s, Color foreColor) {
 		return print(s + "\n", foreColor, null);
 	}
 
@@ -357,9 +357,9 @@ public interface TextCursor {
 	 * @param backColor A colour to use for the background (null for current
 	 *                  background)
 	 * @return <code>this</code>, for further calls
-	 * @see #print(String, Paint, Paint)
+	 * @see #print(String, Color, Color)
 	 */
-	default TextCursor println(String s, Paint foreColor, Paint backColor) {
+	default TextCursor println(String s, Color foreColor, Color backColor) {
 		return print(s + "\n", foreColor, backColor);
 	}
 

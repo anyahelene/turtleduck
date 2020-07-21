@@ -17,7 +17,7 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
@@ -36,7 +36,7 @@ import turtleduck.turtle.Stroke;
 
 public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	public static double angle = 0;
-	private static Map<Paint, Vector4f> colors = new HashMap<>();
+	private static Map<Color, Vector4f> colors = new HashMap<>();
 	private final List<Texture> textures = new ArrayList<>();
 	private int vao;
 	private int vbo;
@@ -240,7 +240,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 
 	protected static Vector4f paintToVec(Stroke stroke) {
 		if (stroke != null) {
-			Paint color = stroke.strokePaint();
+			Color color = stroke.strokePaint();
 			Vector4f strokeColor = colors.get(color);
 			if (strokeColor == null) {
 				float r = (float) Colors.Gamma.gammaExpand(color.red());

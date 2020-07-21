@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseLayer;
@@ -75,11 +75,11 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 			return attrs.get(Attribute.ATTR_FONT);
 		}
 
-		public Paint background() {
+		public Color background() {
 			return attrs.get(Attribute.ATTR_BACKGROUND);
 		}
 
-		public Paint foreground() {
+		public Color foreground() {
 			return attrs.get(Attribute.ATTR_FOREGROUND);
 		}
 	}

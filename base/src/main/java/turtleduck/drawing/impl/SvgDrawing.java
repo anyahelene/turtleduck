@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.impl.BaseCanvas;
 import turtleduck.drawing.Drawing;
@@ -92,7 +92,7 @@ public class SvgDrawing implements Drawing {
 			return "stroke:" + toSvg(stroke.strokePaint()) + ";stroke-width:" + stroke.strokeWidth() + ";";
 	}
 
-	public String toSvg(Paint paint) {
+	public String toSvg(Color paint) {
 		return String.format("rgb(%d,%d,%d)", Math.round(paint.red() * 255), Math.round(paint.green() * 255),
 				Math.round(paint.blue() * 255));
 	}

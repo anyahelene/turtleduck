@@ -9,6 +9,7 @@ import turtleduck.display.Canvas;
 import turtleduck.display.impl.BaseCanvas;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.drawing.Drawing;
+import turtleduck.drawing.Image;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
@@ -104,6 +105,18 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 	protected void changeStroke(Stroke stroke) {
 		context.setStroke(JfxColor.toJfxPaint(stroke.strokePaint()));
 		context.setLineWidth(stroke.strokeWidth());
+	}
+
+	@Override
+	public void drawImage(Point at, Image img) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void drawLine(Stroke stroke, Point from, Point to) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

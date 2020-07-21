@@ -44,7 +44,7 @@ import jdk.jshell.spi.ExecutionControl;
 import jdk.jshell.spi.ExecutionControlProvider;
 import jdk.jshell.spi.ExecutionEnv;
 import turtleduck.colors.Colors;
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Screen;
 import turtleduck.terminal.Editor;
 import turtleduck.text.TextCursor;
@@ -56,7 +56,7 @@ public class TShell {
 	private final String errorNS = "e";
 	private final String mainNS = "";
 	private String currentNS = startupNS;
-	public static final Paint BLUE = Colors.BLUE.brighter().brighter();
+	public static final Color BLUE = Colors.BLUE.brighter().brighter();
 	public static int testValue = 1;
 	private TextCursor printer;
 	private JShell shell;
@@ -551,10 +551,10 @@ public class TShell {
 	}
 
 	public static void colorWheel(Turtle turtle, double radius) {
-		Paint red = Paint.color(1, 0, 0);
-		Paint green = Paint.color(0, 1, 0);
-		Paint blue = Paint.color(0, 0, 1);
-		Paint ink = red;
+		Color red = Color.color(1, 0, 0);
+		Color green = Color.color(0, 1, 0);
+		Color blue = Color.color(0, 0, 1);
+		Color ink = red;
 		double step = (2 * Math.PI * radius) / 360.0;
 		turtle.jump(radius);
 
@@ -578,7 +578,7 @@ public class TShell {
 			if (radius < 0) {
 				turtle.turn(10);
 				if (i % 2 == 0) {
-					double a = turtle.angle();
+					double a = turtle.bearing().azimuth();
 					turtle.turnTo(i).jump(10).turnTo(a);
 				}
 				turtle.draw(-step / 2);

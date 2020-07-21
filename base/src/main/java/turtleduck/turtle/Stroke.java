@@ -1,12 +1,12 @@
 package turtleduck.turtle;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.turtle.Pen.SmoothType;
 
 public interface Stroke {
 	double strokeWidth();
 
-	Paint strokePaint();
+	Color strokePaint();
 	
 	SmoothType smoothType();
 

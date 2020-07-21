@@ -3,7 +3,7 @@ package turtleduck.turtle;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
@@ -149,7 +149,7 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Navigator<T>, I
 
 	T pen(Fill newPen);
 
-	T penColor(Paint color);
+	T penColor(Color color);
 
 	T penWidth(double width);
 

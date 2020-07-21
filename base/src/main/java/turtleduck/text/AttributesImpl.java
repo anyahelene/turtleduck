@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.text.Attribute.AttributeImpl;
 
 public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
@@ -14,7 +14,7 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 	private FontWeight weight = null;
 	private int attrs = 0;
 	private double brightness = DEFAULT_BRIGHTNESS, opacity = DEFAULT_OPACITY;
-	private Paint fore, back;
+	private Color fore, back;
 	private Map<Attribute<?>, Object> map;
 	private boolean frozen = false;
 	private TextFont font = null;
@@ -121,10 +121,10 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 			weight = (FontWeight) value;
 			break;
 		case "foreground":
-			fore = (Paint) value;
+			fore = (Color) value;
 			break;
 		case "background":
-			back = (Paint) value;
+			back = (Color) value;
 			break;
 		case "opacity":
 			opacity = (Double) value;

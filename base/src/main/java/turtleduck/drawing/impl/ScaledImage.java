@@ -1,6 +1,6 @@
 package turtleduck.drawing.impl;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.drawing.AbstractImage;
 import turtleduck.drawing.Image;
 import turtleduck.drawing.ImageMode;
@@ -23,7 +23,7 @@ public class ScaledImage extends AbstractImage implements Image {
 	}
 	
 	@Override
-	public Paint readPixel(int x, int y) {
+	public Color readPixel(int x, int y) {
 		return source.readPixel((int)Math.round(x*scaleX), (int)Math.round(y*scaleY));
 	}
 	

@@ -1,6 +1,6 @@
 package turtleduck.turtle.impl;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.geometry.Projection;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
@@ -26,15 +26,15 @@ public class TurtlePenBuilder<T extends Chelonian<T,C>, C> implements PenBuilder
 		return this;
 	}
 
-	public Paint strokePaint() {
+	public Color strokePaint() {
 		return pen.strokePaint();
 	}
 
-	public Paint fillPaint() {
+	public Color fillPaint() {
 		return pen.fillPaint();
 	}
 
-	public PenBuilder<T> strokePaint(Paint ink) {
+	public PenBuilder<T> strokePaint(Color ink) {
 		pen.strokePaint(ink);
 		return this;
 	}
@@ -44,7 +44,7 @@ public class TurtlePenBuilder<T extends Chelonian<T,C>, C> implements PenBuilder
 		return this;
 	}
 
-	public PenBuilder<T> fillPaint(Paint ink) {
+	public PenBuilder<T> fillPaint(Color ink) {
 		pen.fillPaint(ink);
 		return this;
 	}

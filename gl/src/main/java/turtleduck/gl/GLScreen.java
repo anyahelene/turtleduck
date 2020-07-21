@@ -62,7 +62,7 @@ import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import java.util.Arrays;
 import java.util.function.Predicate;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
@@ -241,7 +241,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	@Override
-	public void setBackground(Paint bgColor) {
+	public void setBackground(Color bgColor) {
 		// TODO Auto-generated method stub
 
 	}

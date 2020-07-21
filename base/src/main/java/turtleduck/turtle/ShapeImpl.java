@@ -1,6 +1,6 @@
 package turtleduck.turtle;
 
-import turtleduck.colors.Paint;
+import turtleduck.colors.Color;
 import turtleduck.geometry.Gravity;
 import turtleduck.geometry.Point;
 
@@ -67,7 +67,7 @@ public class ShapeImpl implements IShape {
 	}
 
 	@Override
-	public IShape fillPaint(Paint p) {
+	public IShape fillPaint(Color p) {
 		// TODO Auto-generated method stub
 		return this;
 	}
@@ -115,7 +115,7 @@ public class ShapeImpl implements IShape {
 	}
 
 	@Override
-	public IShape strokePaint(Paint p) {
+	public IShape strokePaint(Color p) {
 		// TODO Auto-generated method stub
 		return this;
 	}
