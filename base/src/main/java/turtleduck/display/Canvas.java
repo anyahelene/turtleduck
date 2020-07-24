@@ -1,8 +1,8 @@
 package turtleduck.display;
 
 import turtleduck.drawing.Drawing;
-import turtleduck.drawing.Image;
 import turtleduck.geometry.Point;
+import turtleduck.image.Image;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Pen;

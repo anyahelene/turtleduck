@@ -1,12 +1,13 @@
-package turtleduck.drawing.impl;
+package turtleduck.image.impl;
 
 import java.awt.image.BufferedImage;
 
 import turtleduck.colors.Colors;
+import turtleduck.image.AbstractImage;
+import turtleduck.image.Image;
+import turtleduck.image.ImageFactory;
+import turtleduck.image.ImageMode;
 import turtleduck.colors.Color;
-import turtleduck.drawing.AbstractImage;
-import turtleduck.drawing.Image;
-import turtleduck.drawing.ImageMode;
 
 public class AwtPixelData extends AbstractImage implements Image {
 	private final BufferedImage data;
@@ -23,6 +24,7 @@ public class AwtPixelData extends AbstractImage implements Image {
 		this.data = data;
 		this.background = background != null ? background : Colors.TRANSPARENT;
 		this.border = border != null ? border : Colors.TRANSPARENT;
+		this.loadAttempted = true;
 	}
 
 	@Override
@@ -45,5 +47,14 @@ public class AwtPixelData extends AbstractImage implements Image {
 
 	public <T> T visit(Visitor<T> visitor) {
 		return visitor.visitData(data.getRGB(0, 0, width, height, null, 0, width));
+	}
+	
+	@Override
+	public Image convert(ImageFactory factory) {
+		return factory.imageFromPixels(width, height, border, mode, data.getRGB(0, 0, width, height, null, 0, width));
+	}
+
+	@Override
+	protected void load() {
 	}
 }

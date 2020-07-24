@@ -1,4 +1,4 @@
-package turtleduck.drawing;
+package turtleduck.image;
 
 public enum ImageMode {
 	MONO, GREY, RGB, RGBA, RGBa, CMYK, YCbCr, LAB, HSV;

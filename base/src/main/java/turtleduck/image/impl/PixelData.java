@@ -1,26 +1,27 @@
-package turtleduck.drawing.impl;
+package turtleduck.image.impl;
 
 import turtleduck.colors.Colors;
+import turtleduck.image.AbstractImage;
+import turtleduck.image.Image;
+import turtleduck.image.ImageFactory;
+import turtleduck.image.ImageMode;
 import turtleduck.colors.Color;
-import turtleduck.drawing.AbstractImage;
-import turtleduck.drawing.Image;
-import turtleduck.drawing.ImageMode;
 
 public class PixelData extends AbstractImage implements Image {
 	private final int[] data;
-	private final Color background, border;
+	private final Color border;
 	private final WrapMode wrapMode;
 
-	public PixelData(int width, int height, Color background, Color border, ImageMode mode) {
-		this(width, height, background, border, mode, null);
+	public PixelData(int width, int height, Color border, ImageMode mode) {
+		this(width, height, border, mode, null);
 	}
 
-	public PixelData(int width, int height, Color background, Color border, ImageMode mode, int[] data) {
+	public PixelData(int width, int height, Color border, ImageMode mode, int[] data) {
 		super(width, height, mode);
 		this.wrapMode = Image.WrapMode.MIRROR;
 		this.data = data;
-		this.background = background != null ? background : Colors.TRANSPARENT;
 		this.border = border != null ? border : Colors.TRANSPARENT;
+		this.loadAttempted = true;
 	}
 
 	@Override
@@ -33,7 +34,7 @@ public class PixelData extends AbstractImage implements Image {
 			int pixel = data[y * width + x];
 			return Color.fromARGB(pixel);
 		} else {
-			return background;
+			return Colors.TRANSPARENT;
 		}
 	}
 
@@ -43,5 +44,14 @@ public class PixelData extends AbstractImage implements Image {
 
 	public <T> T visit(Visitor<T> visitor) {
 		return visitor.visitData(data);
+	}
+
+	@Override
+	public Image convert(ImageFactory factory) {
+		return factory.imageFromPixels(width, height, border, mode, data);
+	}
+
+	@Override
+	protected void load() {
 	}
 }

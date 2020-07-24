@@ -10,4 +10,6 @@ module turtleduck.gl {
 	provides turtleduck.display.MouseCursor with turtleduck.gl.GLCursor;
 	provides turtleduck.Launcher with turtleduck.gl.GLLauncher;
 	provides turtleduck.display.DisplayInfo with turtleduck.gl.GLDisplayInfo;
+	provides turtleduck.image.ImageFactory with turtleduck.gl.GLImageFactory;
+
 }

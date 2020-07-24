@@ -1,4 +1,4 @@
-package turtleduck.drawing;
+package turtleduck.image;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
@@ -9,8 +9,8 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 
 import turtleduck.colors.Color;
-import turtleduck.drawing.impl.AwtPixelData;
-import turtleduck.drawing.impl.PixelData;
+import turtleduck.image.impl.AwtPixelData;
+import turtleduck.image.impl.PixelData;
 
 public interface Image {
 	enum Transpose {
@@ -99,7 +99,7 @@ public interface Image {
 	}
 
 	static Image create(URL url) throws IOException {
-		return new AwtPixelData(ImageIO.read(url));
+		return ImageFactory.defaultFactory().imageFromUrl(url, -1, -1, null);
 	}
 
 	static Image create(InputStream data) throws IOException {
@@ -129,4 +129,8 @@ public interface Image {
 	Image transpose(Transpose method);
 
 	<T> T visit(Visitor<T> visitor);
+	
+	Image convert(ImageFactory factory);
+	
+	Tiles tiles(int width, int height);
 }

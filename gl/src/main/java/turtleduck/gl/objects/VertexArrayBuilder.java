@@ -294,7 +294,7 @@ public class VertexArrayBuilder {
 
 	public void trim() {
 		if (pos != data.capacity()) {
-			System.out.printf("Realloc at %d to %d (%sB)%n", pos, pos, TextUtil.humanFriendlyBinary(pos));
+			System.out.printf("Realloc at %d to %d (%sB)%n", data.capacity(), pos, TextUtil.humanFriendlyBinary(pos));
 			ByteBuffer newBuf = BufferUtils.createByteBuffer(pos);
 			data.rewind();
 			newBuf.put(data);

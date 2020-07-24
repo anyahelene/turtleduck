@@ -9,9 +9,12 @@ import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
-import turtleduck.drawing.Image;
 import turtleduck.geometry.Bearing;
 import turtleduck.geometry.Point;
+import turtleduck.image.AbstractImage;
+import turtleduck.image.Image;
+import turtleduck.image.ImageFactory;
+import turtleduck.image.Tiles;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Turtle;
 
@@ -24,6 +27,7 @@ public class Demo implements TurtleDuckApp {
 	private GLPixelData image;
 	private int count = 0;
 	private Image image2;
+	private Tiles tiles;
 
 	@Override
 	public void bigStep(double deltaTime) {
@@ -37,13 +41,20 @@ public class Demo implements TurtleDuckApp {
 						image.crop(offX, offY, 32, 32).crop(s, s, 32 - s * 2, 32 - s * 2));
 			}
 
-		for (int y = 0; y < image2.height(); y++) {
-			turtle.jumpTo(300, 0 + y);
-			turtle.bearing(Bearing.DUE_EAST);
-			for (int x = 0; x < image2.width(); x++) {
-				Color p = image2.readPixel(x, y);
-				turtle.penColor(p);
-				turtle.draw(1);
+		for(int row = 0, y = 0; row < tiles.rows(); row++, y += 32+s)
+			for(int col = 0, x = 0; col < tiles.columns(); col++, x+= 32+s) {
+				canvas.drawImage(Point.point(300+x, 0+y), tiles.get(col, row));
+			}
+		if (false) {
+
+			for (int y = 0; y < image2.height(); y++) {
+				turtle.jumpTo(300, 0 + y);
+				turtle.bearing(Bearing.DUE_EAST);
+				for (int x = 0; x < image2.width(); x++) {
+					Color p = image2.readPixel(x, y);
+					turtle.penColor(p);
+					turtle.draw(1);
+				}
 			}
 		}
 
@@ -93,6 +104,7 @@ public class Demo implements TurtleDuckApp {
 
 	@Override
 	public void start(Screen screen) {
+		System.out.println(ImageFactory.get("turtleduck.gl"));
 		canvas = screen.createCanvas();
 		pen = canvas.createPen();
 		turtle = canvas.createTurtle();
@@ -110,6 +122,7 @@ public class Demo implements TurtleDuckApp {
 			image2 = Image.create(getClass().getResourceAsStream("/yeti-juno.jpg"));
 			System.out.println(image2);
 			image = new GLPixelData("/yeti-juno.jpg");
+			tiles = image.tiles(32, 32);
 //			img = img.crop(50, 50, 200, 200);
 			System.out.println(image);
 

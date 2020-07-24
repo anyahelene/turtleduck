@@ -8,4 +8,5 @@ module turtleduck.jfx {
 	provides turtleduck.display.MouseCursor with turtleduck.jfx.JfxCursor;
 	provides turtleduck.Launcher with turtleduck.jfx.JfxLauncher;
 	provides turtleduck.display.DisplayInfo with turtleduck.jfx.JfxDisplayInfo;
+	provides turtleduck.image.ImageFactory with turtleduck.jfx.JfxImageFactory;
 }
