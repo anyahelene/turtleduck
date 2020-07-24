@@ -29,10 +29,10 @@ public class MeshModel extends AbstractModel {
 	public MeshModel(String pathName) {
 		try {
 			VertexArrayBuilder builder = buildVertexArray();
-			builder.layout("aPos", 0, 3);
-			builder.layout("aColor", 1, 3);
-			builder.layout("aNormal", 2, 3);
-			builder.layout("aTexCoord", 3, 2);
+			builder.layoutFloat("aPos", 0, 3);
+			builder.layoutFloat("aColor", 1, 3);
+			builder.layoutFloat("aNormal", 2, 3);
+			builder.layoutFloat("aTexCoord", 3, 2);
 			ByteBuffer buf = ioResourceToByteBuffer(pathName, 8 * 1024);
 			ByteBuffer b2 = BufferUtils.createByteBuffer(buf.limit()+1);
 			b2.put(buf);

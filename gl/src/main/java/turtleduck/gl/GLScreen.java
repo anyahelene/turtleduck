@@ -676,6 +676,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glEnable(GL_DEPTH_TEST);
 		// update();
 		glEnable(GL_FRAMEBUFFER_SRGB); 
+//		glDisable(GL_FRAMEBUFFER_SRGB); 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

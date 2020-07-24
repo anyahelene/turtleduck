@@ -1,47 +1,45 @@
 package turtleduck.colors;
 
 public class ColorRGB implements Color {
-	private final short r, g, b;
+//	private final short r, g, b, a;
 	private final float red;
 	private final float green;
 	private final float blue;
 	private final float alpha;
+	/*
+	 * protected ColorRGB(int r, int g, int b, int a) { this(r/255f, g/255f, b/255f,
+	 * a/255f, false); }
+	 */
 
-	protected ColorRGB(float r, float g, float b, float a) {
+	protected ColorRGB(float r, float g, float b, float a, boolean linear) {
 		assert r >= 0.0 && r <= 1.0;
 		assert g >= 0.0 && g <= 1.0;
 		assert b >= 0.0 && b <= 1.0;
 		assert a >= 0.0 && a <= 1.0;
-		this.red = r;
-		this.green = g;
-		this.blue = b;
+//		linear = true;
+		this.red = linear ? r : Colors.Gamma.gammaExpand(r);
+		this.green = linear ? g : Colors.Gamma.gammaExpand(g);
+		this.blue = linear ? b : Colors.Gamma.gammaExpand(b);
 		this.alpha = a;
-		this.r = Colors.Gamma.gammaExpand((int) (r * 255), 255);
-		this.g = Colors.Gamma.gammaExpand((int) (g * 255), 255);
-		this.b = Colors.Gamma.gammaExpand((int) (b * 255), 255);
-		r = Math.round(Colors.Gamma.gammaExpand(r) * 4095);
-		g = Math.round(Colors.Gamma.gammaExpand(g) * 4095);
-		b = Math.round(Colors.Gamma.gammaExpand(b) * 4095);
-//		System.out.printf("(%.5f,%.5f,%.5f) = (%5d,%5d,%5d) = (%5.0f,%5.0f,%5.0f)\n", red, green, blue, this.r, this.g, this.b, r, g, b);
 	}
 
 	@Override
-	public double red() {
+	public float red() {
 		return red;
 	}
 
 	@Override
-	public double green() {
+	public float green() {
 		return green;
 	}
 
 	@Override
-	public double blue() {
+	public float blue() {
 		return blue;
 	}
 
 	@Override
-	public double opacity() {
+	public float opacity() {
 		return alpha;
 	}
 
@@ -49,28 +47,28 @@ public class ColorRGB implements Color {
 	public Color red(double r) {
 		if (r < 0 || r > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + r + ")");
-		return new ColorRGB((float) r, green, blue, alpha);
+		return new ColorRGB((float) r, green, blue, alpha, true);
 	}
 
 	@Override
 	public Color green(double g) {
 		if (g < 0 || g > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + g + ")");
-		return new ColorRGB(red, (float) g, blue, alpha);
+		return new ColorRGB(red, (float) g, blue, alpha, true);
 	}
 
 	@Override
 	public Color blue(double b) {
 		if (b < 0 || b > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + b + ")");
-		return new ColorRGB(red, green, (float) b, alpha);
+		return new ColorRGB(red, green, (float) b, alpha, true);
 	}
 
 	@Override
 	public Color opacity(double a) {
 		if (a < 0 || a > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + a + ")");
-		return new ColorRGB(red, green, blue, (float) a);
+		return new ColorRGB(red, green, blue, (float) a, true);
 	}
 
 	@Override
@@ -85,12 +83,12 @@ public class ColorRGB implements Color {
 			return new ColorRGB(red + (o.red - red) * f, //
 					green + (o.green - green) * f, //
 					blue + (o.blue - blue) * f, //
-					alpha + (o.alpha - alpha) * f);
+					alpha + (o.alpha - alpha) * f, true);
 		} else {
 			return new ColorRGB((float) (red + (other.red() - red) * proportion), //
 					(float) (green + (other.green() - green) * proportion), //
 					(float) (blue + (other.blue() - blue) * proportion), //
-					(float) (alpha + (other.opacity() - alpha) * proportion));
+					(float) (alpha + (other.opacity() - alpha) * proportion), true);
 		}
 	}
 
@@ -132,7 +130,7 @@ public class ColorRGB implements Color {
 	@Override
 	public Color brighter() {
 		if (true)
-			return new ColorRGB(.1f + .9f * red, .1f + .9f * green, .1f + .9f * blue, alpha);
+			return new ColorRGB(.1f + .9f * red, .1f + .9f * green, .1f + .9f * blue, alpha, true);
 		else {
 			YCC ycc = new YCC(red, green, blue, alpha);
 			ycc.Y = (1 + 9 * ycc.Y) / 10;
@@ -143,7 +141,7 @@ public class ColorRGB implements Color {
 	@Override
 	public Color darker() {
 		if (true)
-			return new ColorRGB(.9f * red, .9f * green, .9f * blue, alpha);
+			return new ColorRGB(.9f * red, .9f * green, .9f * blue, alpha, true);
 		else {
 			YCC ycc = new YCC(red, green, blue, alpha);
 			ycc.Y = (0 + 9 * ycc.Y) / 10;
@@ -187,7 +185,7 @@ public class ColorRGB implements Color {
 			float B = tmp - Co / 2;
 			if (Cg + tmp < 0)
 				System.out.println("oops!");
-			return new ColorRGB(Math.max(0, B + Co), Math.max(0, Cg + tmp), Math.max(0, tmp - Co / 2), A);
+			return new ColorRGB(Math.max(0, B + Co), Math.max(0, Cg + tmp), Math.max(0, tmp - Co / 2), A, true);
 		}
 	}
 
@@ -273,8 +271,9 @@ public class ColorRGB implements Color {
 					Math.round(blue * 255));
 		else
 			return String.format("#%02X%02X%02X%02X", Math.round(red * 255), Math.round(green * 255),
-					Math.round(blue * 255), Math.round(blue * 255));
+					Math.round(blue * 255), Math.round(alpha * 255));
 	}
+
 	@Override
 	public String toCss() {
 		if (alpha == 1.0)
@@ -287,24 +286,24 @@ public class ColorRGB implements Color {
 
 	@Override
 	public String toSGRParam(int i) {
-		if(this == Colors.TRANSPARENT)
+		if (this == Colors.TRANSPARENT)
 			return (i + 8) + ";2";
-		else if(this == Colors.BLACK)
+		else if (this == Colors.BLACK)
 			return String.valueOf(i + 0);
-		else if(this == Colors.RED)
+		else if (this == Colors.RED)
 			return String.valueOf(i + 1);
-		else if(this == Colors.GREEN)
+		else if (this == Colors.GREEN)
 			return String.valueOf(i + 2);
-		else if(this == Colors.YELLOW)
+		else if (this == Colors.YELLOW)
 			return String.valueOf(i + 3);
-		else if(this == Colors.BLUE)
+		else if (this == Colors.BLUE)
 			return String.valueOf(i + 4);
-		else if(this == Colors.MAGENTA)
+		else if (this == Colors.MAGENTA)
 			return String.valueOf(i + 5);
-		else if(this == Colors.CYAN)
+		else if (this == Colors.CYAN)
 			return String.valueOf(i + 6);
-		else if(this == Colors.WHITE)
+		else if (this == Colors.WHITE)
 			return String.valueOf(i + 7);
-		return String.valueOf(i+9);
+		return String.valueOf(i + 9);
 	}
 }

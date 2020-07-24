@@ -23,6 +23,7 @@ public class Demo implements TurtleDuckApp {
 	private Turtle turtle;
 	private GLPixelData image;
 	private int count = 0;
+	private Image image2;
 
 	@Override
 	public void bigStep(double deltaTime) {
@@ -30,12 +31,24 @@ public class Demo implements TurtleDuckApp {
 //		GLLayer.angle += deltaTime;
 		count = (count + 1) % 256;
 		int s = count / 16;
-		for(int offY = 0; offY < 256; offY += 32)
-		for(int offX = 0; offX < 256; offX += 32) {
-			canvas.drawImage(Point.point(offX+s, offY+s), image.crop(offX, offY, 32, 32).crop(s, s, 32-s*2, 32-s*2));
+		for (int offY = 0; offY < 256; offY += 32)
+			for (int offX = 0; offX < 256; offX += 32) {
+				canvas.drawImage(Point.point(offX + s, offY + s),
+						image.crop(offX, offY, 32, 32).crop(s, s, 32 - s * 2, 32 - s * 2));
 			}
-		canvas.drawImage(Point.point(300,0), image);
-		canvas.drawImage(Point.point(300, 0), image.transpose(Image.Transpose.FLIP_LEFT_RIGHT).scale(400, 200));
+
+		for (int y = 0; y < image2.height(); y++) {
+			turtle.jumpTo(300, 0 + y);
+			turtle.bearing(Bearing.DUE_EAST);
+			for (int x = 0; x < image2.width(); x++) {
+				Color p = image2.readPixel(x, y);
+				turtle.penColor(p);
+				turtle.draw(1);
+			}
+		}
+
+//		canvas.drawImage(Point.point(300, 0), image);
+//		canvas.drawImage(Point.point(300, 0), image.transpose(Image.Transpose.FLIP_LEFT_RIGHT).scale(400, 200));
 
 		canvas.drawImage(Point.point(600, 0), image.transpose(Image.Transpose.FLIP_TOP_BOTTOM));
 		canvas.drawImage(Point.point(900, 0),
@@ -90,19 +103,16 @@ public class Demo implements TurtleDuckApp {
 		for (int i = 0; i < 360; i++) {
 			turtle.draw(5).turn(1);
 		}
+		System.out.println(Color.fromARGB(0xffffffff));
+		System.out.println(Color.fromARGB(0xff7f7f7f));
+
 		try {
+			image2 = Image.create(getClass().getResourceAsStream("/yeti-juno.jpg"));
+			System.out.println(image2);
 			image = new GLPixelData("/yeti-juno.jpg");
-			System.out.println(image);
 //			img = img.crop(50, 50, 200, 200);
 			System.out.println(image);
 
-
-			/*
-			 * System.out.println(img); for(int y = 0; y < img.height(); y++) {
-			 * turtle.jumpTo(700, 100+y); turtle.bearing(Bearing.DUE_EAST); for(int x = 0; x
-			 * < img.width(); x++) { Paint p = img.readPixel(x, y); turtle.penColor(p);
-			 * turtle.draw(1); } }
-			 */
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

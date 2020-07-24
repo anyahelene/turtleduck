@@ -205,13 +205,13 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 			Vector2f tmp = new Vector2f();
 			VertexArrayBuilder vertexArray = vertexArray();
 			float w = (float) stroke.strokeWidth() / 2;
-			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0).vec4(strokeColor);
-			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0).vec4(strokeColor);
-			vertexArray.vec3(tmp.set(fromVec).fma(-w, off), 0).vec4(strokeColor);
+			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vertexArray.vec3(tmp.set(fromVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
 			
-			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0).vec4(strokeColor);
-			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0).vec4(strokeColor);
-			vertexArray.vec3(tmp.set(toVec).fma(w, off), 0).vec4(strokeColor);
+			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vertexArray.vec3(tmp.set(toVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
 		}
 
 	}
@@ -225,8 +225,8 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 				vbo = glGenBuffers();
 			}
 			vab = new VertexArrayBuilder(vao, vbo, GL_STATIC_DRAW);
-			vab.layout("aPos", 0, 3);
-			vab.layout("aColor", 1, 4);
+			vab.layoutFloat("aPos", 0, 3);
+			vab.layoutNormShort("aColor", 1, 4);
 //			vab.layout("aLineWidth", 2, 1);
 		}
 		return vab;
@@ -243,9 +243,9 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 			Color color = stroke.strokePaint();
 			Vector4f strokeColor = colors.get(color);
 			if (strokeColor == null) {
-				float r = (float) Colors.Gamma.gammaExpand(color.red());
-				float g = (float) Colors.Gamma.gammaExpand(color.green());
-				float b = (float) Colors.Gamma.gammaExpand(color.blue());
+				float r = (float) (color.red());
+				float g = (float) (color.green());
+				float b = (float) (color.blue());
 				float a = (float) color.opacity();
 				strokeColor = new Vector4f(r, g, b, 1f);
 				colors.put(color, strokeColor);
@@ -261,6 +261,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		if (vab != null && vab.nVertices() > 0) {
 			vab.bindArrayBuffer();
 			nVertices = vab.nVertices();
+			vab.trim();
 			vab.clear();
 		}
 		if (vao != 0 && nVertices > 0) {

@@ -36,6 +36,17 @@ public class Colors {
 			else
 				return Math.pow((srgbComponent + 0.055) / 1.055, 2.4);
 		}
+		public static float gammaExpand(float srgbComponent) {
+			srgbComponent = Math.max(0, Math.min(srgbComponent, 1.0f));
+			return srgbExpand(srgbComponent);
+		}
+
+		protected static float srgbExpand(float srgbComponent) {
+			if (srgbComponent <= 0.04045f)
+				return srgbComponent / 12.92f;
+			else
+				return (float)Math.pow((srgbComponent + 0.055) / 1.055, 2.4);
+		}
 
 		public static double gammaCompress(double linearComponent) {
 			return Math.max(0, Math.min(1.0, srgbCompress(linearComponent)));

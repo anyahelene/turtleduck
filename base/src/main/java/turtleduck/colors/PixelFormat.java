@@ -35,7 +35,7 @@ public enum PixelFormat {
 			b = Byte.toUnsignedInt(pixels[offset+indexes[2]]) / 255f;
 			break;
 		}
-		return new ColorRGB(r, g, b, a);
+		return new ColorRGB(r, g, b, a, false);
 	}
 
 	public Color decode(ByteBuffer pixels, int offset) {
@@ -43,7 +43,7 @@ public enum PixelFormat {
 //			throw new IllegalArgumentException(); // TODO
 		if(nBytes == 1) {
 			float g = Byte.toUnsignedInt(pixels.get()) / 255f;
-			return new ColorRGB(g, g, g, 1f);
+			return new ColorRGB(g, g, g, 1f, false);
 		} else {
 			byte[] dst = new byte[nBytes];
 			pixels.get(dst, 0, nBytes);
@@ -51,9 +51,9 @@ public enum PixelFormat {
 			float g = Byte.toUnsignedInt(dst[offset + indexes[1]]) / 255f;
 			float b = Byte.toUnsignedInt(dst[offset + indexes[2]]) / 255f;
 			if(nBytes == 3)
-				return new ColorRGB(r, g, b, 1f);
+				return new ColorRGB(r, g, b, 1f, false);
 			else
-				return new ColorRGB(r, g, b, Byte.toUnsignedInt(dst[offset + indexes[3]]) / 255f);
+				return new ColorRGB(r, g, b, Byte.toUnsignedInt(dst[offset + indexes[3]]) / 255f, false);
 		}
 	}
 }

@@ -35,11 +35,16 @@ float LinearizeDepth(float depth)
 */
 void main()
 {
+		vec4 texCol = texture(texture0, fTexCoord);
+		vec4 color;
 	if(fTexNum > 0) {
-		FragColor = texture(texture0, fTexCoord);
+		color = texCol;
 	} else {
-		FragColor = fColor;
+		color = fColor;
 	}
+//		float gamma = 1/2.2;
+//		FragColor = pow(color,gamma.xxxx);
+FragColor = color;
     if(FragColor.a <= 0.01)
          discard;
 }
