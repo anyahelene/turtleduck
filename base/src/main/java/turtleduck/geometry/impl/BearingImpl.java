@@ -22,7 +22,7 @@ public class BearingImpl implements DirectionVector, Bearing {
 	protected BearingImpl(int angle, boolean absolute) {
 		while(angle < 0)
 			angle += TWO_MI;
-		while(angle > TWO_MI)
+		while(angle >= TWO_MI)
 			angle -= TWO_MI;
 //		mas = Math.floorMod(angle, TWO_MI);
 		mas = angle;

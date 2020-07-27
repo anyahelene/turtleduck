@@ -9,6 +9,7 @@ import static org.lwjgl.stb.STBImage.stbi_info_from_memory;
 import static org.lwjgl.stb.STBImage.stbi_load_from_memory;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
@@ -40,13 +41,14 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 	public static int maxTextureSize() {
 		return glGetInteger(GL_MAX_TEXTURE_SIZE);
 	}
-	
+
 	/**
 	 * @return {@link GL20#GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS}
 	 */
 	public static int maxTextures() {
 		return glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
 	}
+
 	public static Texture loadWithParams(String pathName, TextureParams params) throws IOException {
 		if (textures.containsKey(pathName)) {
 			TextureData td = textures.get(pathName);
@@ -73,13 +75,16 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 			IntBuffer w = BufferUtils.createIntBuffer(1);
 			IntBuffer h = BufferUtils.createIntBuffer(1);
 			IntBuffer comp = BufferUtils.createIntBuffer(1);
-			imageBuffer = ioResourceToByteBuffer(pathName, 8 * 1024);
+			if (pathName.startsWith("file://"))
+				imageBuffer = Util.urlToByteBuffer(new URL(pathName), 8192);
+			else
+				imageBuffer = ioResourceToByteBuffer(pathName, 8 * 1024);
 
 			if (!stbi_info_from_memory(imageBuffer, w, h, comp)) {
 				throw new IOException("Failed to read image information: " + stbi_failure_reason());
 			}
 			int channels = ((IntBuffer) comp.rewind()).get();
-			if(channels > 1)
+			if (channels > 1)
 				channels = 4;
 			comp.rewind();
 			image = stbi_load_from_memory(imageBuffer, w, h, comp, channels);
@@ -264,6 +269,12 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 		TextureData data = data();
 		glActiveTexture(textureNum);
 		glBindTexture(data.type, data.id());
+	}
+
+	public void unbind(int textureNum) {
+		TextureData data = data();
+		glActiveTexture(textureNum);
+		glBindTexture(data.type, 0);
 	}
 
 	public boolean hasAlpha() {

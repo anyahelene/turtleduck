@@ -85,9 +85,9 @@ public interface Image {
 
 		default T visitTransposed(Transpose method, Image source) {System.out.println(source);  return source.visit(this); }
 
-		default T visitCropped(int x, int y, int width, int height, Image source) {System.out.println(source);  return source.visit(this); }
+		default T visitCropped(int x, int y, int width, int height, Image source) {  return source.visit(this); }
 
-		default T visitScaled(int width, int height, Image source) {System.out.println(source); return source.visit(this); }
+		default T visitScaled(int width, int height, Image source) { return source.visit(this); }
 	}
 
 	static Image create(int width, int height, ImageMode mode) {

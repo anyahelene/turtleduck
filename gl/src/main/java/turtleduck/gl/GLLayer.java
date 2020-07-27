@@ -9,9 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.joml.AxisAngle4f;
 import org.joml.Matrix2f;
 import org.joml.Matrix3f;
 import org.joml.Matrix3x2f;
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -25,10 +27,13 @@ import turtleduck.display.impl.BaseCanvas;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.drawing.Drawing;
 import turtleduck.geometry.Point;
+import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Texture;
+import turtleduck.gl.objects.Uniform;
 import turtleduck.gl.objects.VertexArrayBuilder;
 import turtleduck.image.Image;
 import turtleduck.image.Image.Transpose;
+import turtleduck.image.Tiles;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Pen;
@@ -38,15 +43,19 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	public static double angle = 0;
 	private static Map<Color, Vector4f> colors = new HashMap<>();
 	private final List<Texture> textures = new ArrayList<>();
-	private int vao;
-	private int vbo;
 	private int nVertices;
 	private int imageVbo = 0;
 
 	private VertexArrayBuilder vab;
+	private VertexArrayBuilder vab2;
+	private DrawObject lineObject;
+	private List<DrawObject> drawObjects = new ArrayList<>();
 
 	public GLLayer(String layerId, GLScreen screen, double width, double height) {
 		super(layerId, screen, width, height);
+		vab = new VertexArrayBuilder(glGenVertexArrays(), glGenBuffers(), GL_DYNAMIC_DRAW);
+		vab.layoutFloat("aPos", 0, 3);
+		vab.layoutNormShort("aColor", 1, 4);
 	}
 
 	@Override
@@ -109,9 +118,63 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 
 	@Override
 	public void drawImage(Point at, Image img) {
+		drawImage(at, img, 0);
+	}
+
+	public void drawTileMap(Point at, int cols, int rows, int[] data, Tiles tiles) {
+		int tileWidth = tiles.width(), tileHeight = tiles.height();
+		if (data.length < cols * rows) {
+			throw new IllegalArgumentException("Data too short (" + data.length + ") for " + cols + "x" + rows);
+		}
+		for (int y = 0; y < rows; y++) {
+			Point p = at.add(0, (rows-1-y) * tileHeight);
+			for (int x = 0; x < cols; x++) {
+				drawImage(p, tiles.get(data[x + y * cols]));
+				p = p.add(tileWidth, 0);
+			}
+		}
+	}
+
+	public void drawTileMap(Point at, int cols, int rows, int tileWidth, int tileHeight, int[] data, Tiles tiles) {
+		if (data.length < cols * rows) {
+			throw new IllegalArgumentException("Data too short (" + data.length + ") for " + cols + "x" + rows);
+		}
+		for (int y = 0; y < rows; y++) {
+			Point p = at.add(0, (rows-1-y) * tileHeight);
+			for (int x = 0; x < cols; x++) {
+				drawImage(p, tiles.get(data[x + y * cols]).scale(tileWidth, tileHeight));
+				p = p.add(tileWidth, 0);
+			}
+		}
+	}
+
+	public void drawImage(Point at, Image img, float rotation) {
+		if (lineObject != null) {
+			lineObject.nVertices = vab.nVertices() - lineObject.offset;
+			lineObject = null;
+		}
+
+		DrawObject obj = new DrawObject();
+		obj.shader = screen.shader2d;
+		obj.drawMode = GL_TRIANGLES;
+		obj.transform.set(screen.modelMatrix);
+		obj.offset = vab.nVertices();
+		drawObjects.add(obj);
 		float x = (float) at.x(), y = (float) at.y();
-		Vector2f srcOffset = new Vector2f(0, 0), srcSize = new Vector2f(0, 0), srcCrop = new Vector2f(0,0);
-		Matrix3x2f transform = new Matrix3x2f().translate(x, y);
+		Vector2f srcOffset = new Vector2f(0, 0), srcSize = new Vector2f(0, 0), srcCrop = new Vector2f(0, 0);
+		Matrix3x2f transform = new Matrix3x2f();
+		Vector3f tr = new Vector3f();
+//		System.out.println(screen.modelMatrix);
+//		screen.modelMatrix.getTranslation(tr);
+//		AxisAngle4f aa = new AxisAngle4f();
+//		screen.modelMatrix.getRotation(aa);
+//		System.out.println(aa);
+//		System.out.println(aa.angle-Math.PI);
+		transform.translate(tr.x, tr.y);
+		transform.rotate(rotation);// -(float)Math.PI);
+
+		transform.translate(x, y);
+
 		int[][] texCoords = { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } };
 		Texture tex = img.visit(new Image.Visitor<Texture>() {
 			@Override
@@ -153,6 +216,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 			textures.add(tex);
 			texNum = textures.size();
 		}
+
 		float w = img.width(), h = img.height();
 		Vector2f p0 = new Vector2f(0, 0);
 		Vector2f p1 = new Vector2f(p0).add(w, 0);
@@ -162,69 +226,55 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		transform.transformPosition(p1);
 		transform.transformPosition(p2);
 		transform.transformPosition(p3);
+
 		srcCrop.add(srcOffset);
-		float cropX[] = {srcOffset.x / srcSize.x, srcCrop.x / srcSize.x};
-		float cropY[] = {srcOffset.y / srcSize.y, srcCrop.y / srcSize.y};
-	
+		float cropX[] = { srcOffset.x / srcSize.x, srcCrop.x / srcSize.x };
+		float cropY[] = { srcOffset.y / srcSize.y, srcCrop.y / srcSize.y };
+
 		Vector4f tmp = new Vector4f(1, 1, 1, 1);
-		addPoint(p0, tmp.set(cropX[texCoords[0][0]], cropY[texCoords[0][1]], 0, 0), texNum);
-		addPoint(p1, tmp.set(cropX[texCoords[1][0]], cropY[texCoords[1][1]], 0, 0), texNum);
-		addPoint(p2, tmp.set(cropX[texCoords[2][0]], cropY[texCoords[2][1]], 0, 0), texNum);
+		vab.vec3(p0, texNum).vec4(tmp.set(cropX[texCoords[0][0]], cropY[texCoords[0][1]], 0, 0));
+		vab.vec3(p1, texNum).vec4(tmp.set(cropX[texCoords[1][0]], cropY[texCoords[1][1]], 0, 0));
+		vab.vec3(p2, texNum).vec4(tmp.set(cropX[texCoords[2][0]], cropY[texCoords[2][1]], 0, 0));
 
-		addPoint(p2, tmp.set(cropX[texCoords[2][0]], cropY[texCoords[2][1]], 0, 0), texNum);
-		addPoint(p3, tmp.set(cropX[texCoords[3][0]], cropY[texCoords[3][1]], 0, 0), texNum);
-		addPoint(p1, tmp.set(cropX[texCoords[1][0]], cropY[texCoords[1][1]], 0, 0), texNum);
+		vab.vec3(p2, texNum).vec4(tmp.set(cropX[texCoords[2][0]], cropY[texCoords[2][1]], 0, 0));
+		vab.vec3(p3, texNum).vec4(tmp.set(cropX[texCoords[3][0]], cropY[texCoords[3][1]], 0, 0));
+		vab.vec3(p1, texNum).vec4(tmp.set(cropX[texCoords[1][0]], cropY[texCoords[1][1]], 0, 0));
+		obj.nVertices = vab.nVertices() - obj.offset;
 
-		return; /*
-				 * int vbo = imageVbo(); glBindBuffer(GL_ARRAY_BUFFER, vbo);
-				 * glBufferData(GL_ARRAY_BUFFER, vertices, GL_STREAM_DRAW);
-				 * glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-				 * glEnableVertexAttribArray(0); glDrawArrays(GL_TRIANGLES, 0, vertices.length);
-				 */
+		return;
 	}
 
 	protected void drawLine(Stroke stroke, Point from, Point to) {
-//		System.out.println("Draw from " + from + " to " + to + ", stroke " + stroke);
-//		vertexArray();
-//		vab.vec2((float) from.x(), (float) from.y());
-//		float w = (float) pen.strokeWidth();
-//		Paint color = pen.strokePaint();
-//		vab.vec4((float) color.red(), (float) color.green(), (float) color.blue(), (float) color.opacity());
-////		vab.add(w);
-////		vab.next();
-//		vab.vec2((float) to.x(), (float) to.y());
-//		vab.vec4((float) color.red(), (float) color.green(), (float) color.blue(), (float) color.opacity());
-////		vab.add(w);
-////		vab.next();
+		if (lineObject == null) {
+			lineObject = new DrawObject();
+			lineObject.shader = screen.shader2d;
+			lineObject.drawMode = GL_TRIANGLES;
+			lineObject.offset = vab.nVertices();
+		}
+		if (!drawObjects.contains(lineObject))
+			drawObjects.add(lineObject);
+
 		if (stroke != null) {
-			Vector4f strokeColor = paintToVec(stroke);
 			Vector2f fromVec = new Vector2f((float) from.x(), (float) from.y());
 			Vector2f toVec = new Vector2f((float) to.x(), (float) to.y());
 			Vector2f off = new Vector2f(toVec).sub(fromVec).normalize().perpendicular();
 //			Vector2f off = new Vector2f((float)bearing.dirX(), (float)bearing.dirY()).normalize().perpendicular();
 			Vector2f tmp = new Vector2f();
-			VertexArrayBuilder vertexArray = vertexArray();
 			float w = (float) stroke.strokeWidth() / 2;
-			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
-			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
-			vertexArray.vec3(tmp.set(fromVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
-			
-			vertexArray.vec3(tmp.set(toVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
-			vertexArray.vec3(tmp.set(fromVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
-			vertexArray.vec3(tmp.set(toVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vab.vec3(tmp.set(fromVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vab.vec3(tmp.set(toVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vab.vec3(tmp.set(fromVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
+
+			vab.vec3(tmp.set(toVec).fma(-w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vab.vec3(tmp.set(fromVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
+			vab.vec3(tmp.set(toVec).fma(w, off), 0).color(stroke.strokePaint()).nextVertex();
 		}
 
 	}
 
 	protected VertexArrayBuilder vertexArray() {
 		if (vab == null) {
-			if (vao == 0) {
-				vao = glGenVertexArrays();
-			}
-			if (vbo == 0) {
-				vbo = glGenBuffers();
-			}
-			vab = new VertexArrayBuilder(vao, vbo, GL_STATIC_DRAW);
+			vab = new VertexArrayBuilder(glGenVertexArrays(), glGenBuffers(), GL_STATIC_DRAW);
 			vab.layoutFloat("aPos", 0, 3);
 			vab.layoutNormShort("aColor", 1, 4);
 //			vab.layout("aLineWidth", 2, 1);
@@ -238,42 +288,46 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		return imageVbo;
 	}
 
-	protected static Vector4f paintToVec(Stroke stroke) {
-		if (stroke != null) {
-			Color color = stroke.strokePaint();
-			Vector4f strokeColor = colors.get(color);
-			if (strokeColor == null) {
-				float r = (float) (color.red());
-				float g = (float) (color.green());
-				float b = (float) (color.blue());
-				float a = (float) color.opacity();
-				strokeColor = new Vector4f(r, g, b, 1f);
-				colors.put(color, strokeColor);
-			}
-			return strokeColor;
-		} else {
-			return null;
-		}
-
-	}
-
 	public void render() {
-		if (vab != null && vab.nVertices() > 0) {
-			vab.bindArrayBuffer();
-			nVertices = vab.nVertices();
-			vab.trim();
-			vab.clear();
+		if (lineObject != null) {
+			lineObject.nVertices = vab.nVertices() - lineObject.offset;
+			lineObject = null;
 		}
-		if (vao != 0 && nVertices > 0) {
-			int texNum = GL_TEXTURE0;
-			for (Texture tex : textures) {
-				tex.bind(texNum++);
+		int texNum = GL_TEXTURE0;
+		for (Texture tex : textures) {
+			tex.bind(texNum++);
+		}
+		ShaderProgram shader = null;
+		vab.bindArrayBuffer();
+		for (DrawObject obj : drawObjects) {
+			if (obj.nVertices > 0) {
+				if (obj.shader != shader) {
+					shader = obj.shader;
+					shader.bind();
+				}
+				Uniform<Matrix4f> uModel = shader.uniform("uModel", Matrix4f.class);
+				if (uModel != null)
+					uModel.set(obj.transform);
+				glDrawArrays(obj.drawMode, obj.offset, obj.nVertices);
 			}
-			glBindVertexArray(vao);
-			glDrawArrays(GL_TRIANGLES, 0, nVertices);
-			textures.clear();
 		}
-
+		vab.clear();
+		drawObjects.clear();
+		texNum = GL_TEXTURE0;
+		for (Texture tex : textures) {
+			tex.unbind(texNum++);
+		}
+		textures.clear();
 	}
 
+	class DrawObject {
+		Matrix4f transform = new Matrix4f();
+		VertexArrayBuilder buffer;
+		ShaderProgram shader;
+		int zOrder;
+		int drawMode;
+		int offset;
+		int nVertices;
+
+	}
 }

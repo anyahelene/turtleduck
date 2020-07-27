@@ -33,4 +33,9 @@ public interface Tiles {
 	 * @return
 	 */
 	Image get(int column, int row);
+	
+	Image get(int index);
+	
+	default int size() { return columns() * rows(); }
+
 }

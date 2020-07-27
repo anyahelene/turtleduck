@@ -22,7 +22,7 @@ public class GLPixelData extends AbstractImage implements Image {
 	}
 
 	public GLPixelData(String filename) throws IOException {
-		this(Texture.create().clamp().load(filename));
+		this(Texture.create().clamp().nearest().load(filename));
 	}
 
 	@Override

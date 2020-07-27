@@ -88,7 +88,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	private Callback debugProc;
 	public ShaderProgram shader2d, shader3d;
 	private final int[] oldWindowGeometry = new int[4];
-	private Uniform<Matrix4f> uModel;
+	Uniform<Matrix4f> uModel;
 	private Uniform<Matrix4f> uView;
 	private Uniform<Matrix4f> uProjection;
 	private Uniform<Matrix4f> uProjView;
@@ -660,12 +660,13 @@ public class GLScreen extends BaseScreen implements Screen {
 		// TODO Auto-generated method stub
 
 	}
-
+Stats stats = new Stats();
 	public void render() {
 //		updateProjection();
 //		updateView();
 
 //		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuf);
+		stats.startFrame();
 		glfwPollEvents();
 		if (wireframe) {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -677,8 +678,8 @@ public class GLScreen extends BaseScreen implements Screen {
 		// update();
 		glEnable(GL_FRAMEBUFFER_SRGB); 
 //		glDisable(GL_FRAMEBUFFER_SRGB); 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//		glEnable(GL_BLEND);
+//		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shader2d.bind();
 		modelMatrix.identity();
@@ -709,6 +710,7 @@ public class GLScreen extends BaseScreen implements Screen {
 				GLXSGIVideoSync.glXWaitVideoSyncSGI(2, (count[0] + 1) % 2, count);
 			}
 		}
+		stats.endFrame(true);
 	}
 
 	public void dispose() {

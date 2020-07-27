@@ -61,4 +61,9 @@ public class UniformTiles implements Tiles {
 		return String.format("uniformTiles(columns=%d, rows=%d, size=%dx%d, source=%s)", columns, rows, width, height, source);
 	}
 
+	@Override
+	public Image get(int index) {
+		return tiles[index];
+	}
+
 }
