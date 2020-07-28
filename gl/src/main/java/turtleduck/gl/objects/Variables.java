@@ -2,9 +2,13 @@ package turtleduck.gl.objects;
 import static org.lwjgl.opengl.GL40.*;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.joml.*;
 import org.lwjgl.BufferUtils;
+
+import turtleduck.gl.objects.Variables.TypeDesc;
 
 public class Variables {
 	static abstract class AbstractUniform<T> implements Uniform<T> {
@@ -18,36 +22,183 @@ public class Variables {
 			return typeName() + "("+ program + "::" + name + ", location=" + loc+ ")";
 		}
 	}
+	static class TypeDesc {
+		public final int id;
+		public final String name;
+		public final String baseType;
+		public final Class<?> jomlClass;
+		public final int rows;
+		public final int cols;
 
+		public TypeDesc(int id, String name, String baseType, Class<?> jomlClass, int m, int n) {
+			this.id = id;
+			this.name = name;
+			this.baseType = baseType;
+			this.jomlClass = jomlClass;
+			this.rows = m;
+			this.cols = n;
+		}
+	}
+
+	static public final Map<Integer, TypeDesc> GL_TYPES = new HashMap<>();
+	static public final Map<String, TypeDesc> GLSL_TYPES = new HashMap<>();
+	static public final Map<Class<?>, TypeDesc> JOML_TYPES = new HashMap<>();
+
+	public static String nameOf(int glTypeId) {
+		TypeDesc typeDesc = GL_TYPES.get(glTypeId);
+		if(typeDesc == null)
+			return "void";
+		else
+			return typeDesc.name;
+	}
 
 	// ### BEGIN GENERATED CONTENT ###
+
+	static {
+		TypeDesc type;
+
+		type = new TypeDesc(GL_INT, "int", "int", Integer.class, 1, 1);
+		GL_TYPES.put(GL_INT, type);
+		GLSL_TYPES.put("int", type);
+		JOML_TYPES.put(Integer.class, type);
+
+		type = new TypeDesc(GL_INT_VEC2, "ivec2", "int", Vector2i.class, 2, 1);
+		GL_TYPES.put(GL_INT_VEC2, type);
+		GLSL_TYPES.put("ivec2", type);
+		JOML_TYPES.put(Vector2i.class, type);
+
+		type = new TypeDesc(GL_INT_VEC3, "ivec3", "int", Vector3i.class, 3, 1);
+		GL_TYPES.put(GL_INT_VEC3, type);
+		GLSL_TYPES.put("ivec3", type);
+		JOML_TYPES.put(Vector3i.class, type);
+
+		type = new TypeDesc(GL_INT_VEC4, "ivec4", "int", Vector4i.class, 4, 1);
+		GL_TYPES.put(GL_INT_VEC4, type);
+		GLSL_TYPES.put("ivec4", type);
+		JOML_TYPES.put(Vector4i.class, type);
+
+		type = new TypeDesc(GL_UNSIGNED_INT, "uint", "uint", Integer.class, 1, 1);
+		GL_TYPES.put(GL_UNSIGNED_INT, type);
+		GLSL_TYPES.put("uint", type);
+		JOML_TYPES.put(Integer.class, type);
+
+		type = new TypeDesc(GL_UNSIGNED_INT_VEC2, "uvec2", "uint", Vector2i.class, 2, 1);
+		GL_TYPES.put(GL_UNSIGNED_INT_VEC2, type);
+		GLSL_TYPES.put("uvec2", type);
+		JOML_TYPES.put(Vector2i.class, type);
+
+		type = new TypeDesc(GL_UNSIGNED_INT_VEC3, "uvec3", "uint", Vector3i.class, 3, 1);
+		GL_TYPES.put(GL_UNSIGNED_INT_VEC3, type);
+		GLSL_TYPES.put("uvec3", type);
+		JOML_TYPES.put(Vector3i.class, type);
+
+		type = new TypeDesc(GL_UNSIGNED_INT_VEC4, "uvec4", "uint", Vector4i.class, 4, 1);
+		GL_TYPES.put(GL_UNSIGNED_INT_VEC4, type);
+		GLSL_TYPES.put("uvec4", type);
+		JOML_TYPES.put(Vector4i.class, type);
+
+		type = new TypeDesc(GL_FLOAT, "float", "float", Float.class, 1, 1);
+		GL_TYPES.put(GL_FLOAT, type);
+		GLSL_TYPES.put("float", type);
+		JOML_TYPES.put(Float.class, type);
+
+		type = new TypeDesc(GL_FLOAT_VEC2, "vec2", "float", Vector2f.class, 2, 1);
+		GL_TYPES.put(GL_FLOAT_VEC2, type);
+		GLSL_TYPES.put("vec2", type);
+		JOML_TYPES.put(Vector2f.class, type);
+
+		type = new TypeDesc(GL_FLOAT_VEC3, "vec3", "float", Vector3f.class, 3, 1);
+		GL_TYPES.put(GL_FLOAT_VEC3, type);
+		GLSL_TYPES.put("vec3", type);
+		JOML_TYPES.put(Vector3f.class, type);
+
+		type = new TypeDesc(GL_FLOAT_MAT3x2, "mat3x2", "float", Matrix3x2f.class, 3, 2);
+		GL_TYPES.put(GL_FLOAT_MAT3x2, type);
+		GLSL_TYPES.put("mat3x2", type);
+		JOML_TYPES.put(Matrix3x2f.class, type);
+
+		type = new TypeDesc(GL_FLOAT_MAT3, "mat3", "float", Matrix3f.class, 3, 3);
+		GL_TYPES.put(GL_FLOAT_MAT3, type);
+		GLSL_TYPES.put("mat3", type);
+		JOML_TYPES.put(Matrix3f.class, type);
+
+		type = new TypeDesc(GL_FLOAT_VEC4, "vec4", "float", Vector4f.class, 4, 1);
+		GL_TYPES.put(GL_FLOAT_VEC4, type);
+		GLSL_TYPES.put("vec4", type);
+		JOML_TYPES.put(Vector4f.class, type);
+
+		type = new TypeDesc(GL_FLOAT_MAT4x3, "mat4x3", "float", Matrix4x3f.class, 4, 3);
+		GL_TYPES.put(GL_FLOAT_MAT4x3, type);
+		GLSL_TYPES.put("mat4x3", type);
+		JOML_TYPES.put(Matrix4x3f.class, type);
+
+		type = new TypeDesc(GL_FLOAT_MAT4, "mat4", "float", Matrix4f.class, 4, 4);
+		GL_TYPES.put(GL_FLOAT_MAT4, type);
+		GLSL_TYPES.put("mat4", type);
+		JOML_TYPES.put(Matrix4f.class, type);
+
+		type = new TypeDesc(GL_DOUBLE, "double", "double", Double.class, 1, 1);
+		GL_TYPES.put(GL_DOUBLE, type);
+		GLSL_TYPES.put("double", type);
+		JOML_TYPES.put(Double.class, type);
+
+		type = new TypeDesc(GL_DOUBLE_VEC2, "dvec2", "double", Vector2d.class, 2, 1);
+		GL_TYPES.put(GL_DOUBLE_VEC2, type);
+		GLSL_TYPES.put("dvec2", type);
+		JOML_TYPES.put(Vector2d.class, type);
+
+		type = new TypeDesc(GL_DOUBLE_VEC3, "dvec3", "double", Vector3d.class, 3, 1);
+		GL_TYPES.put(GL_DOUBLE_VEC3, type);
+		GLSL_TYPES.put("dvec3", type);
+		JOML_TYPES.put(Vector3d.class, type);
+
+		type = new TypeDesc(GL_DOUBLE_MAT3x2, "dmat3x2", "double", Matrix3x2d.class, 3, 2);
+		GL_TYPES.put(GL_DOUBLE_MAT3x2, type);
+		GLSL_TYPES.put("dmat3x2", type);
+		JOML_TYPES.put(Matrix3x2d.class, type);
+
+		type = new TypeDesc(GL_DOUBLE_MAT3, "dmat3", "double", Matrix3d.class, 3, 3);
+		GL_TYPES.put(GL_DOUBLE_MAT3, type);
+		GLSL_TYPES.put("dmat3", type);
+		JOML_TYPES.put(Matrix3d.class, type);
+
+		type = new TypeDesc(GL_DOUBLE_VEC4, "dvec4", "double", Vector4d.class, 4, 1);
+		GL_TYPES.put(GL_DOUBLE_VEC4, type);
+		GLSL_TYPES.put("dvec4", type);
+		JOML_TYPES.put(Vector4d.class, type);
+
+		type = new TypeDesc(GL_DOUBLE_MAT4x3, "dmat4x3", "double", Matrix4x3d.class, 4, 3);
+		GL_TYPES.put(GL_DOUBLE_MAT4x3, type);
+		GLSL_TYPES.put("dmat4x3", type);
+		JOML_TYPES.put(Matrix4x3d.class, type);
+
+		type = new TypeDesc(GL_DOUBLE_MAT4, "dmat4", "double", Matrix4d.class, 4, 4);
+		GL_TYPES.put(GL_DOUBLE_MAT4, type);
+		GLSL_TYPES.put("dmat4", type);
+		JOML_TYPES.put(Matrix4d.class, type);
+	}
+
 	static class Uniform1i extends AbstractUniform<Integer> {
 
-		@Override
 		public Integer get(Integer unused) {
 			return glGetUniformi(program.id(), loc);
 		}
-		@Override
 		public Integer get() {
 			return glGetUniformi(program.id(), loc);
 		}
-		@Override
 		public void set(Integer val) {
 			program.bind();
 			glUniform1i(loc, val);
 		}
 
-		@Override
 		public String typeName() {
 			return "int";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_INT;
 		}
 
-		@Override
 		public int size() {
 			return 4;
 		}
@@ -56,37 +207,31 @@ public class Variables {
 
 	static class UniformVec2i extends AbstractUniform<Vector2i> {
 
-		@Override
 		public Vector2i get(Vector2i dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public Vector2i get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector2i(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public void set(Vector2i val) {
 			program.bind();
 			glUniform2i(loc, val.x, val.y);
 		}
 
-		@Override
 		public String typeName() {
 			return "ivec2";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_INT_VEC2;
 		}
 
-		@Override
 		public int size() {
 			return 8;
 		}
@@ -95,37 +240,31 @@ public class Variables {
 
 	static class UniformVec3i extends AbstractUniform<Vector3i> {
 
-		@Override
 		public Vector3i get(Vector3i dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public Vector3i get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector3i(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public void set(Vector3i val) {
 			program.bind();
 			glUniform3i(loc, val.x, val.y, val.z);
 		}
 
-		@Override
 		public String typeName() {
 			return "ivec3";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_INT_VEC3;
 		}
 
-		@Override
 		public int size() {
 			return 12;
 		}
@@ -134,37 +273,31 @@ public class Variables {
 
 	static class UniformVec4i extends AbstractUniform<Vector4i> {
 
-		@Override
 		public Vector4i get(Vector4i dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public Vector4i get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector4i(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public void set(Vector4i val) {
 			program.bind();
 			glUniform4i(loc, val.x, val.y, val.z, val.w);
 		}
 
-		@Override
 		public String typeName() {
 			return "ivec4";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_INT_VEC4;
 		}
 
-		@Override
 		public int size() {
 			return 16;
 		}
@@ -173,31 +306,25 @@ public class Variables {
 
 	static class Uniform1ui extends AbstractUniform<Integer> {
 
-		@Override
 		public Integer get(Integer unused) {
 			return glGetUniformui(program.id(), loc);
 		}
-		@Override
 		public Integer get() {
 			return glGetUniformui(program.id(), loc);
 		}
-		@Override
 		public void set(Integer val) {
 			program.bind();
 			glUniform1ui(loc, val);
 		}
 
-		@Override
 		public String typeName() {
 			return "uint";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_UNSIGNED_INT;
 		}
 
-		@Override
 		public int size() {
 			return 4;
 		}
@@ -206,37 +333,31 @@ public class Variables {
 
 	static class UniformVec2ui extends AbstractUniform<Vector2i> {
 
-		@Override
 		public Vector2i get(Vector2i dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public Vector2i get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector2i(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public void set(Vector2i val) {
 			program.bind();
 			glUniform2ui(loc, val.x, val.y);
 		}
 
-		@Override
 		public String typeName() {
 			return "uvec2";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_UNSIGNED_INT_VEC2;
 		}
 
-		@Override
 		public int size() {
 			return 8;
 		}
@@ -245,37 +366,31 @@ public class Variables {
 
 	static class UniformVec3ui extends AbstractUniform<Vector3i> {
 
-		@Override
 		public Vector3i get(Vector3i dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public Vector3i get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector3i(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public void set(Vector3i val) {
 			program.bind();
 			glUniform3ui(loc, val.x, val.y, val.z);
 		}
 
-		@Override
 		public String typeName() {
 			return "uvec3";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_UNSIGNED_INT_VEC3;
 		}
 
-		@Override
 		public int size() {
 			return 12;
 		}
@@ -284,37 +399,31 @@ public class Variables {
 
 	static class UniformVec4ui extends AbstractUniform<Vector4i> {
 
-		@Override
 		public Vector4i get(Vector4i dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public Vector4i get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector4i(tmpBuf.asIntBuffer());
 		}
 
-		@Override
 		public void set(Vector4i val) {
 			program.bind();
 			glUniform4ui(loc, val.x, val.y, val.z, val.w);
 		}
 
-		@Override
 		public String typeName() {
 			return "uvec4";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_UNSIGNED_INT_VEC4;
 		}
 
-		@Override
 		public int size() {
 			return 16;
 		}
@@ -323,31 +432,25 @@ public class Variables {
 
 	static class Uniform1f extends AbstractUniform<Float> {
 
-		@Override
 		public Float get(Float unused) {
 			return glGetUniformf(program.id(), loc);
 		}
-		@Override
 		public Float get() {
 			return glGetUniformf(program.id(), loc);
 		}
-		@Override
 		public void set(Float val) {
 			program.bind();
 			glUniform1f(loc, val);
 		}
 
-		@Override
 		public String typeName() {
 			return "float";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_FLOAT;
 		}
 
-		@Override
 		public int size() {
 			return 4;
 		}
@@ -356,37 +459,31 @@ public class Variables {
 
 	static class UniformVec2f extends AbstractUniform<Vector2f> {
 
-		@Override
 		public Vector2f get(Vector2f dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public Vector2f get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Vector2f(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public void set(Vector2f val) {
 			program.bind();
 			glUniform2f(loc, val.x, val.y);
 		}
 
-		@Override
 		public String typeName() {
 			return "vec2";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_FLOAT_VEC2;
 		}
 
-		@Override
 		public int size() {
 			return 8;
 		}
@@ -395,37 +492,31 @@ public class Variables {
 
 	static class UniformVec3f extends AbstractUniform<Vector3f> {
 
-		@Override
 		public Vector3f get(Vector3f dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public Vector3f get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Vector3f(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public void set(Vector3f val) {
 			program.bind();
 			glUniform3f(loc, val.x, val.y, val.z);
 		}
 
-		@Override
 		public String typeName() {
 			return "vec3";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_FLOAT_VEC3;
 		}
 
-		@Override
 		public int size() {
 			return 12;
 		}
@@ -434,40 +525,34 @@ public class Variables {
 
 	static class UniformMat3x2f extends AbstractUniform<Matrix3x2f> {
 
-		@Override
 		public Matrix3x2f get(Matrix3x2f dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public Matrix3x2f get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Matrix3x2f(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public void set(Matrix3x2f val)
-		{
+	{
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
 			glUniformMatrix3fv(loc, false, tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public String typeName() {
 			return "mat3x2";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_FLOAT_MAT3x2;
 		}
 
-		@Override
 		public int size() {
 			return 24;
 		}
@@ -476,40 +561,34 @@ public class Variables {
 
 	static class UniformMat3f extends AbstractUniform<Matrix3f> {
 
-		@Override
 		public Matrix3f get(Matrix3f dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public Matrix3f get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Matrix3f(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public void set(Matrix3f val)
-		{
+	{
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
 			glUniformMatrix3fv(loc, false, tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public String typeName() {
 			return "mat3";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_FLOAT_MAT3;
 		}
 
-		@Override
 		public int size() {
 			return 36;
 		}
@@ -518,37 +597,31 @@ public class Variables {
 
 	static class UniformVec4f extends AbstractUniform<Vector4f> {
 
-		@Override
 		public Vector4f get(Vector4f dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public Vector4f get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Vector4f(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public void set(Vector4f val) {
 			program.bind();
 			glUniform4f(loc, val.x, val.y, val.z, val.w);
 		}
 
-		@Override
 		public String typeName() {
 			return "vec4";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_FLOAT_VEC4;
 		}
 
-		@Override
 		public int size() {
 			return 16;
 		}
@@ -557,40 +630,34 @@ public class Variables {
 
 	static class UniformMat4x3f extends AbstractUniform<Matrix4x3f> {
 
-		@Override
 		public Matrix4x3f get(Matrix4x3f dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public Matrix4x3f get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Matrix4x3f(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public void set(Matrix4x3f val)
-		{
+	{
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
 			glUniformMatrix4fv(loc, false, tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public String typeName() {
 			return "mat4x3";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_FLOAT_MAT4x3;
 		}
 
-		@Override
 		public int size() {
 			return 48;
 		}
@@ -599,40 +666,34 @@ public class Variables {
 
 	static class UniformMat4f extends AbstractUniform<Matrix4f> {
 
-		@Override
 		public Matrix4f get(Matrix4f dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public Matrix4f get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Matrix4f(tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public void set(Matrix4f val)
-		{
+	{
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
 			glUniformMatrix4fv(loc, false, tmpBuf.asFloatBuffer());
 		}
 
-		@Override
 		public String typeName() {
 			return "mat4";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_FLOAT_MAT4;
 		}
 
-		@Override
 		public int size() {
 			return 64;
 		}
@@ -641,31 +702,25 @@ public class Variables {
 
 	static class Uniform1d extends AbstractUniform<Double> {
 
-		@Override
 		public Double get(Double unused) {
 			return glGetUniformd(program.id(), loc);
 		}
-		@Override
 		public Double get() {
 			return glGetUniformd(program.id(), loc);
 		}
-		@Override
 		public void set(Double val) {
 			program.bind();
 			glUniform1d(loc, val);
 		}
 
-		@Override
 		public String typeName() {
 			return "double";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_DOUBLE;
 		}
 
-		@Override
 		public int size() {
 			return 8;
 		}
@@ -674,37 +729,31 @@ public class Variables {
 
 	static class UniformVec2d extends AbstractUniform<Vector2d> {
 
-		@Override
 		public Vector2d get(Vector2d dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public Vector2d get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Vector2d(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public void set(Vector2d val) {
 			program.bind();
 			glUniform2d(loc, val.x, val.y);
 		}
 
-		@Override
 		public String typeName() {
 			return "dvec2";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_DOUBLE_VEC2;
 		}
 
-		@Override
 		public int size() {
 			return 16;
 		}
@@ -713,37 +762,31 @@ public class Variables {
 
 	static class UniformVec3d extends AbstractUniform<Vector3d> {
 
-		@Override
 		public Vector3d get(Vector3d dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public Vector3d get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Vector3d(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public void set(Vector3d val) {
 			program.bind();
 			glUniform3d(loc, val.x, val.y, val.z);
 		}
 
-		@Override
 		public String typeName() {
 			return "dvec3";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_DOUBLE_VEC3;
 		}
 
-		@Override
 		public int size() {
 			return 24;
 		}
@@ -752,40 +795,34 @@ public class Variables {
 
 	static class UniformMat3x2d extends AbstractUniform<Matrix3x2d> {
 
-		@Override
 		public Matrix3x2d get(Matrix3x2d dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public Matrix3x2d get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Matrix3x2d(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public void set(Matrix3x2d val)
-		{
+	{
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
 			glUniformMatrix3dv(loc, false, tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public String typeName() {
 			return "dmat3x2";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_DOUBLE_MAT3x2;
 		}
 
-		@Override
 		public int size() {
 			return 48;
 		}
@@ -794,40 +831,34 @@ public class Variables {
 
 	static class UniformMat3d extends AbstractUniform<Matrix3d> {
 
-		@Override
 		public Matrix3d get(Matrix3d dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public Matrix3d get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Matrix3d(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public void set(Matrix3d val)
-		{
+	{
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
 			glUniformMatrix3dv(loc, false, tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public String typeName() {
 			return "dmat3";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_DOUBLE_MAT3;
 		}
 
-		@Override
 		public int size() {
 			return 72;
 		}
@@ -836,37 +867,31 @@ public class Variables {
 
 	static class UniformVec4d extends AbstractUniform<Vector4d> {
 
-		@Override
 		public Vector4d get(Vector4d dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public Vector4d get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Vector4d(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public void set(Vector4d val) {
 			program.bind();
 			glUniform4d(loc, val.x, val.y, val.z, val.w);
 		}
 
-		@Override
 		public String typeName() {
 			return "dvec4";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_DOUBLE_VEC4;
 		}
 
-		@Override
 		public int size() {
 			return 32;
 		}
@@ -875,40 +900,34 @@ public class Variables {
 
 	static class UniformMat4x3d extends AbstractUniform<Matrix4x3d> {
 
-		@Override
 		public Matrix4x3d get(Matrix4x3d dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public Matrix4x3d get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Matrix4x3d(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public void set(Matrix4x3d val)
-		{
+	{
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
 			glUniformMatrix4dv(loc, false, tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public String typeName() {
 			return "dmat4x3";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_DOUBLE_MAT4x3;
 		}
 
-		@Override
 		public int size() {
 			return 96;
 		}
@@ -917,40 +936,34 @@ public class Variables {
 
 	static class UniformMat4d extends AbstractUniform<Matrix4d> {
 
-		@Override
 		public Matrix4d get(Matrix4d dest) {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public Matrix4d get() {
 			tmpBuf.rewind().limit(size());
 			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Matrix4d(tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public void set(Matrix4d val)
-		{
+	{
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
 			glUniformMatrix4dv(loc, false, tmpBuf.asDoubleBuffer());
 		}
 
-		@Override
 		public String typeName() {
 			return "dmat4";
 		}
 
-		@Override
 		public int typeId() {
 			return GL_DOUBLE_MAT4;
 		}
 
-		@Override
 		public int size() {
 			return 128;
 		}

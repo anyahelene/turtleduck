@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL43.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,8 +13,9 @@ import org.joml.Vector2fc;
 import org.joml.Vector3fc;
 import org.joml.Vector4fc;
 
+import turtleduck.gl.objects.ShaderProgram.ProgramData;
 import turtleduck.gl.objects.Variables.AbstractUniform;
-
+import turtleduck.gl.objects.Variables.TypeDesc;
 
 public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.ProgramData> {
 	private static ProgramData lastBound = null;
@@ -22,13 +24,12 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 		super(data);
 	}
 
-
 	public static ShaderProgram createProgram(String name, ShaderObject... shaders) throws IOException {
 		ProgramData data = ProgramData.getCached(name);
-		if(data != null) {
+		if (data != null) {
 			// TODO: check that we use the same shaders
-			for(int i = 0; i < shaders.length; i++) {
-				if(!shaders[i].equals(data.shaders.get(i))) {
+			for (int i = 0; i < shaders.length; i++) {
+				if (!shaders[i].equals(data.shaders.get(i))) {
 					throw new IllegalArgumentException("Program already created with different shaders");
 				}
 			}
@@ -36,7 +37,7 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 		}
 		int program = glCreateProgram();
 		data = new ProgramData(program, name);
-		for(ShaderObject sh : shaders) {
+		for (ShaderObject sh : shaders) {
 			glAttachShader(program, sh.id());
 			data.shaders.add(sh);
 		}
@@ -56,9 +57,9 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 		data.cacheIt();
 		ShaderProgram prog = new ShaderProgram(data);
 		prog.processVars();
-		for(int i = 0; i < 10; i++) {
+		for (int i = 0; i < 10; i++) {
 			int loc = prog.getUniformLocation("texture" + i);
-			if(loc >= 0) {
+			if (loc >= 0) {
 				glUniform1i(loc, i);
 			}
 		}
@@ -67,42 +68,54 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 
 	private void processVars() {
 		ProgramData data = data();
-		if(data.vars == null) {
+		if (data.vars == null) {
 			data.vars = new HashMap<>();
 		}
 
 		int program = data().id();
 		bind();
 		int nUnis = glGetProgramInterfacei(program, GL_UNIFORM, GL_ACTIVE_RESOURCES);
-		if(nUnis > 0) {
-			for(int i = 0; i < nUnis; i++) {
-				String s = glGetProgramResourceName(program, GL_UNIFORM, i);
-				int[] props = {GL_BLOCK_INDEX, GL_TYPE, GL_LOCATION};
-				int[] values = new int[props.length];
-				glGetProgramResourceiv(program, GL_UNIFORM, i, props, null, values);
-				if(s.startsWith("texture")) {
-					try {
-						int n = Integer.parseInt(s.substring(7));
-						glUniform1i(values[2], n);
-					}
-					catch(NumberFormatException e) {
-					}
-				}
+		for (int i = 0; i < nUnis; i++) {
+			String s = glGetProgramResourceName(program, GL_UNIFORM, i);
+			int[] props = { GL_BLOCK_INDEX, GL_TYPE, GL_LOCATION };
+			int[] values = new int[props.length];
+			glGetProgramResourceiv(program, GL_UNIFORM, i, props, null, values);
+			System.out.println("uniform " + i + ": " + s + " " + Arrays.toString(values));
+			if (s.startsWith("texture")) {
 				try {
-					AbstractUniform<?> var = Variables.createVariable(values[1]);
-					if(var != null) {
-						var.loc = values[2];
-						var.name = s;
-						var.program = this;
-						data.vars.put(s, var);
-						System.out.println(var);
-					}
-				} catch(IllegalArgumentException e) {
-					System.out.println(s + ": type=" + values[1] + ", loc=" + values[2]);
+					int n = Integer.parseInt(s.substring(7));
+					glUniform1i(values[2], n);
+				} catch (NumberFormatException e) {
 				}
 			}
+			try {
+				AbstractUniform<?> var = Variables.createVariable(values[1]);
+				if (var != null) {
+					var.loc = values[2];
+					var.name = s;
+					var.program = this;
+					data.vars.put(s, var);
+					System.out.println(var);
+				}
+			} catch (IllegalArgumentException e) {
+				System.out.println(s + ": type=" + values[1] + ", loc=" + values[2]);
+			}
 		}
+
+		int nInputs = glGetProgramInterfacei(program, GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES);
+		for (int i = 0; i < nInputs; i++) {
+			String s = glGetProgramResourceName(program, GL_PROGRAM_INPUT, i);
+			int[] props = { GL_TYPE, GL_LOCATION };
+			int[] values = new int[props.length];
+			glGetProgramResourceiv(program, GL_PROGRAM_INPUT, i, props, null, values);
+			TypeDesc typeDesc = Variables.GL_TYPES.get(values[0]);
+			if(typeDesc != null) {
+				data.inputFormat.addField(s, values[1], typeDesc);
+			}
+		}
+		System.out.println("Input format: " + data.inputFormat);
 	}
+
 	public int getUniformLocation(String name) {
 		return glGetUniformLocation(data().id(), name);
 	}
@@ -111,6 +124,7 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 		bind();
 		glUniform1i(getUniformLocation(name), value);
 	}
+
 	public void setUniform(String name, float value) {
 		bind();
 		glUniform1f(getUniformLocation(name), value);
@@ -135,11 +149,20 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 		return glGetUniformi(data().id(), getUniformLocation(name));
 	}
 
+	public VertexArrayFormat format() {
+		ProgramData data = data();
+		return data.format != null ? data.format : data.inputFormat;
+	}
+	public void format(VertexArrayFormat format) {
+		data().format = format;
+	}
 	static class ProgramData extends DataObject {
 		List<ShaderObject> shaders = new ArrayList<>();
 		String log = "";
 		boolean linked = false;
 		Map<String, Uniform<?>> vars;
+		VertexArrayFormat inputFormat = new VertexArrayFormat();
+		VertexArrayFormat format = null;
 
 		public static ProgramData getCached(String name) {
 			return DataObject.getCached(name, GL_PROGRAM, ProgramData.class);
@@ -151,20 +174,18 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 
 	}
 
-
 	@Override
 	protected void dispose(int id, ProgramData data) {
-		if(lastBound == data) {
+		if (lastBound == data) {
 			glUseProgram(0);
 		}
 		glDeleteProgram(id);
 	}
 
-
 	@Override
 	public void bind() {
 		ProgramData data = data();
-		if(lastBound != data) {
+		if (lastBound != data) {
 			glUseProgram(data().id());
 			lastBound = data;
 		}
@@ -178,7 +199,7 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 	@SuppressWarnings("unchecked")
 	public <T> Uniform<T> uniform(String name, Class<T> type) {
 		Map<String, Uniform<?>> vars = data().vars;
-		if(vars == null) {
+		if (vars == null) {
 			processVars();
 		}
 		return (Uniform<T>) vars.get(name);

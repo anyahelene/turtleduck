@@ -28,6 +28,17 @@ public class GenerateVariables {
 
 		//		System.out.println("import static org.lwjgl.opengl.GL40.*;");
 		//		System.out.println("import org.joml.*;");
+		
+		String init = "";
+//		inti += "\tstatic class TypeDesc {\n";
+//		init += "\t\tpublic final int id;\n\t\tpublic final String name;\n";
+//		init += "\t\tpublic final Class<?> jomlClass;\n\t\tpublic final int rows;\n\t\tpublic final int cols;\n";
+//		init += "\n\t\tpublic TypeDesc(int id, String name, Class<?> jomlClass, int m, int n) {\n";
+//		init += "\t\t\tthis.id = id;\n\t\t\tthis.name = name;\n\t\t\tthis.jomlClass = jomlClass;\n\t\t\tthis.rows = m;\n\t\t\tthis.cols = n;\n\t\t}\n\t}\n\n";
+//		init += "\tstatic public final Map<Integer, TypeDesc> GL_TYPES = new HashMap<>();\n";
+//		init += "\tstatic public final Map<String, TypeDesc> GLSL_TYPES = new HashMap<>();\n";
+//		init += "\tstatic public final Map<Class<?>, TypeDesc> JOML_TYPES = new HashMap<>();\n";
+		init += "\n\tstatic {\n\t\tTypeDesc type;\n";
 		for(int b = 0; b < baseTypes.length; b++) {
 			String baseType = baseTypes[b];
 			String baseJavaType = baseJavaTypes[b];
@@ -45,12 +56,12 @@ public class GenerateVariables {
 					if(i == 1) {
 						className += i + letter;
 						jType = baseObjectType;
-						output += String.format("\tstatic class %s extends AbstractUniform<%s> {%n%n", className, baseObjectType);
-						output += String.format("\t\tpublic %s get(%s unused) {%n\t\t\treturn glGetUniform%s(program.id(), loc);%n\t\t}%n", baseObjectType, baseObjectType, letter);
-						output += String.format("\t\tpublic %s get() {%n\t\t\treturn glGetUniform%s(program.id(), loc);%n\t\t}%n", baseObjectType, letter);
-						output += String.format("\t\tpublic void set(%s val) {%n" //
-								+ "\t\t\tprogram.bind();%n"
-								+ "\t\t\tglUniform%d%s(loc, val);%n\t\t}%n%n", baseObjectType, i, letter);
+						output += String.format("\tstatic class %s extends AbstractUniform<%s> {\n\n", className, baseObjectType);
+						output += String.format("\t\tpublic %s get(%s unused) {\n\t\t\treturn glGetUniform%s(program.id(), loc);\n\t\t}\n", baseObjectType, baseObjectType, letter);
+						output += String.format("\t\tpublic %s get() {\n\t\t\treturn glGetUniform%s(program.id(), loc);\n\t\t}\n", baseObjectType, letter);
+						output += String.format("\t\tpublic void set(%s val) {\n" //
+								+ "\t\t\tprogram.bind();\n"
+								+ "\t\t\tglUniform%d%s(loc, val);\n\t\t}\n\n", baseObjectType, i, letter);
 					} else if(j == 1) {
 						String args = "";
 						type = vecLetters[b] + "vec" + i;
@@ -58,23 +69,23 @@ public class GenerateVariables {
 						className += "Vec" + i + letter;
 						glType += "_VEC" + i;
 
-						output += String.format("\tstatic class %s extends AbstractUniform<%s> {%n%n", className, jType);
+						output += String.format("\tstatic class %s extends AbstractUniform<%s> {\n\n", className, jType);
 						for(int k = 0; k < i; k++) {
 							args += ", val." + vectorElements[k];
 						}
-						output += String.format("\t\tpublic %s get(%s dest) {%n" //
-								+ "\t\t\ttmpBuf.rewind().limit(size());%n" //
-								+ "\t\t\tglGetUniform%sv(program.id(), loc, tmpBuf.as%s());%n" //
-								+ "\t\t\treturn dest.set(tmpBuf.as%s());%n"
-								+ "\t\t}%n%n", jType, jType, letter, bufferTypes[b], bufferTypes[b]);
-						output += String.format("\t\tpublic %s get() {%n" //
-								+ "\t\t\ttmpBuf.rewind().limit(size());%n" //
-								+ "\t\t\tglGetUniform%sv(program.id(), loc, tmpBuf.as%s());%n" //
-								+ "\t\t\treturn new %s(tmpBuf.as%s());%n"
-								+ "\t\t}%n%n", jType, letter, bufferTypes[b], jType, bufferTypes[b]);
-						output += String.format("\t\tpublic void set(%s val) {%n" //
-								+ "\t\t\tprogram.bind();%n"
-								+ "\t\t\tglUniform%d%s(loc%s);%n\t\t}%n%n", jType, i, letter, args);
+						output += String.format("\t\tpublic %s get(%s dest) {\n" //
+								+ "\t\t\ttmpBuf.rewind().limit(size());\n" //
+								+ "\t\t\tglGetUniform%sv(program.id(), loc, tmpBuf.as%s());\n" //
+								+ "\t\t\treturn dest.set(tmpBuf.as%s());\n"
+								+ "\t\t}\n\n", jType, jType, letter, bufferTypes[b], bufferTypes[b]);
+						output += String.format("\t\tpublic %s get() {\n" //
+								+ "\t\t\ttmpBuf.rewind().limit(size());\n" //
+								+ "\t\t\tglGetUniform%sv(program.id(), loc, tmpBuf.as%s());\n" //
+								+ "\t\t\treturn new %s(tmpBuf.as%s());\n"
+								+ "\t\t}\n\n", jType, letter, bufferTypes[b], jType, bufferTypes[b]);
+						output += String.format("\t\tpublic void set(%s val) {\n" //
+								+ "\t\t\tprogram.bind();\n"
+								+ "\t\t\tglUniform%d%s(loc%s);\n\t\t}\n\n", jType, i, letter, args);
 					} else {
 						if(i != j && i > 2 && j != i-1) {
 							continue;
@@ -89,35 +100,48 @@ public class GenerateVariables {
 						glType += "_MAT" + suf;
 
 
-						output += String.format("\tstatic class %s extends AbstractUniform<%s> {%n%n", className, jType);
+						output += String.format("\tstatic class %s extends AbstractUniform<%s> {\n\n", className, jType);
 
-						output += String.format("\t\tpublic %s get(%s dest) {%n" //
-								+ "\t\t\ttmpBuf.rewind().limit(size());%n" //
-								+ "\t\t\tglGetUniform%sv(program.id(), loc, tmpBuf.as%s());%n" //
-								+ "\t\t\treturn dest.set(tmpBuf.as%s());%n"
-								+ "\t\t}%n%n", jType, jType, letter, bufferTypes[b], bufferTypes[b]);
-						output += String.format("\t\tpublic %s get() {%n" //
-								+ "\t\t\ttmpBuf.rewind().limit(size());%n" //
-								+ "\t\t\tglGetUniform%sv(program.id(), loc, tmpBuf.as%s());%n" //
-								+ "\t\t\treturn new %s(tmpBuf.as%s());%n"
-								+ "\t\t}%n%n", jType, letter, bufferTypes[b], jType, bufferTypes[b]);
-						output += String.format("\t\tpublic void set(%s val)%n\t{%n" //
-								+ "\t\t\tval.get(tmpBuf);%n" //
-								+ "\t\t\ttmpBuf.limit(size());%n" //
-								+ "\t\t\tprogram.bind();%n"
-								+ "\t\t\tglUniformMatrix%d%sv(loc, false, tmpBuf.as%s());%n\t\t}%n%n", jType, i, letter, bufferTypes[b]);
+						output += String.format("\t\tpublic %s get(%s dest) {\n" //
+								+ "\t\t\ttmpBuf.rewind().limit(size());\n" //
+								+ "\t\t\tglGetUniform%sv(program.id(), loc, tmpBuf.as%s());\n" //
+								+ "\t\t\treturn dest.set(tmpBuf.as%s());\n"
+								+ "\t\t}\n\n", jType, jType, letter, bufferTypes[b], bufferTypes[b]);
+						output += String.format("\t\tpublic %s get() {\n" //
+								+ "\t\t\ttmpBuf.rewind().limit(size());\n" //
+								+ "\t\t\tglGetUniform%sv(program.id(), loc, tmpBuf.as%s());\n" //
+								+ "\t\t\treturn new %s(tmpBuf.as%s());\n"
+								+ "\t\t}\n\n", jType, letter, bufferTypes[b], jType, bufferTypes[b]);
+						output += String.format("\t\tpublic void set(%s val)\n\t{\n" //
+								+ "\t\t\tval.get(tmpBuf);\n" //
+								+ "\t\t\ttmpBuf.limit(size());\n" //
+								+ "\t\t\tprogram.bind();\n"
+								+ "\t\t\tglUniformMatrix%d%sv(loc, false, tmpBuf.as%s());\n\t\t}\n\n", jType, i, letter, bufferTypes[b]);
 					}
-					output += String.format("\t\tpublic String typeName() {%n\t\t\treturn \"%s\";%n\t\t}%n%n", type); //
-					output += String.format("\t\tpublic int typeId() {%n\t\t\treturn %s;%n\t\t}%n%n", glType); //
-					output += String.format("\t\tpublic int size() {%n\t\t\treturn %d;%n\t\t}%n%n", baseTypeSizes[b] * i * j);
+					output += String.format("\t\tpublic String typeName() {\n\t\t\treturn \"%s\";\n\t\t}\n\n", type); //
+					output += String.format("\t\tpublic int typeId() {\n\t\t\treturn %s;\n\t\t}\n\n", glType); //
+					output += String.format("\t\tpublic int size() {\n\t\t\treturn %d;\n\t\t}\n\n", baseTypeSizes[b] * i * j);
 
-					output += String.format("\t}%n%n");
+					output += String.format("\t}\n\n");
 					glslTypes.put(type, className);
 					glTypes.put(glType, className);
 					jTypes.put(jType, className);
+					init += String.format("\n\t\ttype = new TypeDesc(%s, \"%s\", \"%s\", %s.class, %d, %d);\n", glType, type, baseType, jType, i, j);
+					init += String.format("\t\tGL_TYPES.put(%s, type);\n", glType);
+					init += String.format("\t\tGLSL_TYPES.put(\"%s\", type);\n", type);
+					init += String.format("\t\tJOML_TYPES.put(%s.class, type);\n", jType);
 				}
 			}
 		}
+		init += "\t}\n\n";
+//		System.out.println(init);
+//		System.out.println(glslTypes);
+//		System.out.println(glslTypes.size());
+//		System.out.println(glTypes);
+//		System.out.println(glTypes.size());
+//		System.out.println(jTypes);
+//		System.out.println(jTypes.size());
+		
 		output += "\t@SuppressWarnings(\"unchecked\")\n";
 		output += "\tprotected static <T> AbstractUniform<T> createVariable(String typeName) {\n";
 		output += "\t\tswitch(typeName) {\n";
@@ -155,10 +179,11 @@ public class GenerateVariables {
 		output += "\t\t}\n";
 		output += "\t}\n\n";
 
+
 		StringBuffer buf = new StringBuffer();
 		try(BufferedReader reader = new BufferedReader(new FileReader(as[0]))) {
 			boolean skip[] = {false};
-			String mainContent = output;
+			String mainContent = init + output;
 			reader.lines().forEachOrdered((line) -> {
 				if(line.contains("### BEGIN GENERATED CONTENT ###")) {
 					skip[0] = true;
@@ -178,11 +203,6 @@ public class GenerateVariables {
 			writer.print(buf);
 		}
 
-		//		System.out.println(glslTypes);
-		//		System.out.println(glslTypes.size());
-		//		System.out.println(glTypes);
-		//		System.out.println(glTypes.size());
-		//		System.out.println(jTypes);
-		//		System.out.println(jTypes.size());
+
 	}
 }

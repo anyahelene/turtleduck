@@ -7,6 +7,8 @@ import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
+import java.text.NumberFormat;
+
 import org.joml.Vector2f;
 import org.joml.Vector2fc;
 import org.joml.Vector2i;
@@ -18,7 +20,7 @@ public class GLMouse {
 	private static final boolean DEBUG_MOUSE = false;
 	private GLScreen screen;
 	private Vector2f mouseNrmPos = new Vector2f();
-	private Vector2f but1ClickPos = new Vector2f();
+	private Vector2f but1ClickPos = null;
 	private int mouseButtons;
 	private Vector2i mouseScrPos = new Vector2i();
 	private Vector3f mouseObjPos = new Vector3f();

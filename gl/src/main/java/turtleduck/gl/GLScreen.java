@@ -74,13 +74,14 @@ import turtleduck.gl.objects.CubeModel;
 import turtleduck.gl.objects.ShaderObject;
 import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Uniform;
+import turtleduck.gl.objects.VertexArrayFormat;
 import turtleduck.text.TextWindow;
 
 public class GLScreen extends BaseScreen implements Screen {
 
 	private static final int STD_WIDTH = 1280, STD_HEIGHT = 720;
 
-	private static final boolean DOUBLE_BUFFER = false;
+	private static final boolean DOUBLE_BUFFER = true;
 	private static final boolean WAIT_FOR_SYNC = false;
 	long window;
 	private boolean sgiVideoSync;
@@ -92,9 +93,12 @@ public class GLScreen extends BaseScreen implements Screen {
 	private Uniform<Matrix4f> uView;
 	private Uniform<Matrix4f> uProjection;
 	private Uniform<Matrix4f> uProjView;
+	public final Matrix4f perspectiveProjectionMatrix = new Matrix4f();
+	public final Matrix4f perspectiveProjectionMatrixInv = new Matrix4f();
 	public final Matrix4f projectionMatrix = new Matrix4f();
 	public final Matrix4f modelMatrix = new Matrix4f();
 	public final Matrix4f viewMatrix = new Matrix4f();
+	public final Matrix4f perspectiveViewMatrix = new Matrix4f();
 	public final Matrix4f projectionMatrixInv = new Matrix4f();
 	public final Matrix4f viewMatrixInv = new Matrix4f();
 	public final Vector4f lightPosition = vec4(-1.2f, 1.5f, 5.2f, 1f);// .rotateX(pi(1f/8));
@@ -114,7 +118,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	private double fov = 50;
 	private boolean wireframe = false;
 	private int frameBuf;
-	
+
 	@Override
 	public void clearBackground() {
 		// TODO Auto-generated method stub
@@ -386,7 +390,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-		glfwWindowHint(GLFW_SAMPLES, 4);
+//		glfwWindowHint(GLFW_SAMPLES, 1);
 		glfwWindowHint(GLFW_DOUBLEBUFFER, DOUBLE_BUFFER ? GLFW_TRUE : GLFW_FALSE);
 
 		window = glfwCreateWindow(width, height, getClass().getName(), NULL, NULL);
@@ -460,6 +464,10 @@ public class GLScreen extends BaseScreen implements Screen {
 			ShaderObject vs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
 			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
 			shader2d = ShaderProgram.createProgram("shader2d", vs2, fs2);
+			VertexArrayFormat format = new VertexArrayFormat();
+			format.layoutFloat("aPos", 0, 3);
+			format.layoutNormShort("aColor", 1, 4);
+			shader2d.format(format);
 			uModel = shader2d.uniform("uModel", Matrix4f.class);
 			uProjection = shader2d.uniform("uProjection", Matrix4f.class);
 			uView = shader2d.uniform("uView", Matrix4f.class);
@@ -627,9 +635,9 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	void updateProjection() {
-		projectionMatrix.setPerspective((float) Math.toRadians(fov), (float) (dim.winWidth / dim.winHeight), 0.01f,
+		perspectiveProjectionMatrix.setPerspective((float) Math.toRadians(fov), (float) (dim.winWidth / dim.winHeight), 0.01f,
 				100.0f);
-		projectionMatrix.invertPerspective(projectionMatrixInv);
+		perspectiveProjectionMatrix.invertPerspective(perspectiveProjectionMatrixInv);
 		projectionMatrix.setOrtho2D(0, (float) dim.canvasWidth, (float) dim.canvasHeight, 0);
 		projectionMatrix.invertOrtho(projectionMatrixInv);
 		System.err.println(projectionMatrix.transformProject(new Vector3f(0, 0, 0)));
@@ -643,8 +651,8 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	public void updateView() {
-		cameraOrientation.get(viewMatrix);
-		viewMatrix.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z);
+		cameraOrientation.get(perspectiveViewMatrix);
+		perspectiveViewMatrix.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z);
 		viewMatrix.identity();
 		viewMatrix.invertAffine(viewMatrixInv);
 		if (uView != null) {
@@ -660,7 +668,9 @@ public class GLScreen extends BaseScreen implements Screen {
 		// TODO Auto-generated method stub
 
 	}
-Stats stats = new Stats();
+
+	Stats stats = new Stats();
+
 	public void render() {
 //		updateProjection();
 //		updateView();
@@ -676,7 +686,7 @@ Stats stats = new Stats();
 
 		glEnable(GL_DEPTH_TEST);
 		// update();
-		glEnable(GL_FRAMEBUFFER_SRGB); 
+		glEnable(GL_FRAMEBUFFER_SRGB);
 //		glDisable(GL_FRAMEBUFFER_SRGB); 
 //		glEnable(GL_BLEND);
 //		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -684,25 +694,25 @@ Stats stats = new Stats();
 		shader2d.bind();
 		modelMatrix.identity();
 		uModel.set(modelMatrix);
-		for(Layer l : layers.values()) {
-			((GLLayer)l).render();
+		for (Layer l : layers.values()) {
+			((GLLayer) l).render();
 		}
 		glDisable(GL_BLEND);
 		shader3d.bind();
-//		cubeModel.moveTo(300, 300, 10);
-//		cubeModel.rotate(0.01f, 0.01f, 0.01f);
-//		cubeModel.scale(200f);
-//		cubeModel.render(this);
+		cubeModel.moveTo(-0,0, 3);
+		cubeModel.rotate(0.01f, 0.01f, 0.01f);
+		cubeModel.scale(2f);
+		cubeModel.render(this);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 
 		if (DOUBLE_BUFFER) {
-			// glDrawBuffer(GL_BACK);
-			// glBlitFramebuffer(0, 0, width, height, 0, 0, fbWidth, fbHeight,
-			// GL_COLOR_BUFFER_BIT/*|GL_DEPTH_BUFFER_BIT*/, GL_LINEAR);
-			// glfwSwapBuffers(window);
+			 glDrawBuffer(GL_BACK);
+//			 glBlitFramebuffer(0, 0, width, height, 0, 0, fbWidth, fbHeight, GL_COLOR_BUFFER_BIT/*|GL_DEPTH_BUFFER_BIT*/, GL_LINEAR);
+			 glfwSwapBuffers(window);
 		} else {
+//			glFlush();
 			glFinish();
 			if (sgiVideoSync) {
 				int[] count = new int[1];

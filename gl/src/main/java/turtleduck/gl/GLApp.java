@@ -25,6 +25,7 @@ public class GLApp {
 		setupTimers();
 
 		System.err.println("DPI: " + GLDisplayInfo.INSTANCE.getDisplayDpi());
+		System.setProperty("joml.format", "false");
 
 		screen = GLScreen.create(launcher.config());
 		try {

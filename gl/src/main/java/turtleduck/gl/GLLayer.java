@@ -31,6 +31,7 @@ import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Texture;
 import turtleduck.gl.objects.Uniform;
 import turtleduck.gl.objects.VertexArrayBuilder;
+import turtleduck.gl.objects.VertexArrayFormat;
 import turtleduck.image.Image;
 import turtleduck.image.Image.Transpose;
 import turtleduck.image.Tiles;
@@ -53,9 +54,9 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 
 	public GLLayer(String layerId, GLScreen screen, double width, double height) {
 		super(layerId, screen, width, height);
-		vab = new VertexArrayBuilder(glGenVertexArrays(), glGenBuffers(), GL_DYNAMIC_DRAW);
-		vab.layoutFloat("aPos", 0, 3);
-		vab.layoutNormShort("aColor", 1, 4);
+
+		vab = screen.shader2d.format().build(GL_DYNAMIC_DRAW);
+
 	}
 
 	@Override
@@ -110,10 +111,6 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	public Canvas clear(Fill fill) {
 		// TODO Auto-generated method stub
 		return this;
-	}
-
-	private void addPoint(Vector2f pos, Vector4f color, int texture) {
-		vertexArray().vec3(pos, texture).vec4(color);
 	}
 
 	@Override
@@ -272,15 +269,6 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 
 	}
 
-	protected VertexArrayBuilder vertexArray() {
-		if (vab == null) {
-			vab = new VertexArrayBuilder(glGenVertexArrays(), glGenBuffers(), GL_STATIC_DRAW);
-			vab.layoutFloat("aPos", 0, 3);
-			vab.layoutNormShort("aColor", 1, 4);
-//			vab.layout("aLineWidth", 2, 1);
-		}
-		return vab;
-	}
 
 	protected int imageVbo() {
 		if (imageVbo == 0)

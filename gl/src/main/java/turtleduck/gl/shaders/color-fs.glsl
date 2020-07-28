@@ -45,7 +45,7 @@ void main()
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularExponent);
 	vec4 specular = specularStrength * spec * lightColor;
 
-    FragColor = (ambient + diffuse + specular) * fColor; // texture(texture0, fTexCoord/texSize); //vec4(fColor, 1.0);
+    FragColor =(ambient + diffuse + specular) * fColor; // texture(texture0, fTexCoord/texSize); //vec4(fColor, 1.0);
     FragColor.a = fColor.a;
     if(FragColor.a <= 0.1)
          discard;

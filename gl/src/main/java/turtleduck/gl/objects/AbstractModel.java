@@ -15,14 +15,14 @@ public abstract class AbstractModel implements IModel {
 	protected static final Vector3f ORIGIN = new Vector3f();
 	protected Vector3f position = new Vector3f();
 	protected Quaternionf orientation = new Quaternionf();
-	protected Vector3f scale = new Vector3f(1,1,1);
+	protected Vector3f scale = new Vector3f(1, 1, 1);
 	protected ShaderProgram shader;
 	protected IModel parent;
 	protected boolean transformNeeded = true;
 	protected boolean scaleIsNonUniform = false;
 
-	//	protected Matrix4f preTransform = new Matrix4f();
-	//	private Matrix4f transform = new Matrix4f();
+	// protected Matrix4f preTransform = new Matrix4f();
+	// private Matrix4f transform = new Matrix4f();
 	private Matrix4f normalTransform = new Matrix4f();
 	private Matrix4f transform = new Matrix4f();
 	protected Matrix4f innerTransform = null;
@@ -40,7 +40,6 @@ public abstract class AbstractModel implements IModel {
 	private Uniform<Matrix4f> uProjView;
 	private Uniform<Matrix4f> uProjViewModel;
 
-
 	protected void setShader(ShaderProgram prog) {
 		shader = prog;
 		uModel = shader.uniform("uModel", Matrix4f.class);
@@ -51,18 +50,20 @@ public abstract class AbstractModel implements IModel {
 		uProjViewModel = shader.uniform("uProjViewModel", Matrix4f.class);
 		uLightPos = shader.uniform("uLightPos", Vector4f.class);
 		uViewPos = shader.uniform("uViewPos", Vector4f.class);
-		if(uView == null  && uProjView == null && uProjViewModel == null) {
+		if (uView == null && uProjView == null && uProjViewModel == null) {
 			System.err.println("Warning: shader program should probably have a view matrix uniform: " + prog);
 		}
-		if(uProjection == null  && uProjView == null && uProjViewModel == null) {
+		if (uProjection == null && uProjView == null && uProjViewModel == null) {
 			System.err.println("Warning: shader program should probably have a projection matrix uniform: " + prog);
 		}
-		if(uModel == null && uProjViewModel == null) {
+		if (uModel == null && uProjViewModel == null) {
 			System.err.println("Warning: shader program should probably have a model matrix uniform: " + prog);
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#computeTransform()
 	 */
 	@Override
@@ -70,76 +71,82 @@ public abstract class AbstractModel implements IModel {
 		transform.translationRotateScale(position, orientation, scale);
 		normalTransform.translationRotateScale(ORIGIN, orientation, scale);
 
-		if(innerTransform != null) {
+		if (innerTransform != null) {
 			transform.mul(innerTransform);
-			if(innerNormalTransform != null) {
+			if (innerNormalTransform != null) {
 				normalTransform.mul(innerNormalTransform);
 			}
 		}
 
-		if(parent != null) {
+		if (parent != null) {
 			transform.mulLocal(parent.getTransform());
 			normalTransform.mulLocal(parent.getNormalTransform());
 		}
 
-		if(scaleIsNonUniform) {
+		if (scaleIsNonUniform) {
 			normalTransform.invert().transpose();
 		}
 		transformNeeded = false;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#renderStart(gltest.GLMain)
 	 */
 	@Override
 	public void renderStart(GLScreen glm) {
-		if(shader == null) {
+		if (shader == null) {
 			setShader(glm.shader3d);
 		}
-		if(transformNeeded) {
+		if (transformNeeded) {
 			computeTransform();
 		}
-		if(uModel != null) {
+		if (uModel != null) {
 			uModel.set(transform);
 		}
-		if(uNormal != null) {
+		if (uNormal != null) {
 			uNormal.set(normalTransform);
 		}
-		if(uProjection != null) {
-			uProjection.set(glm.projectionMatrix);
+		if (uProjection != null) {
+			uProjection.set(glm.perspectiveProjectionMatrix);
 		}
-		if(uView != null) {
-			uView.set(glm.viewMatrix);
+		if (uView != null) {
+			uView.set(glm.perspectiveViewMatrix);
 		}
-		if(uProjView != null) {
-			uProjView.set(new Matrix4f(glm.projectionMatrix).mul(glm.viewMatrix));
+		if (uProjView != null) {
+			uProjView.set(new Matrix4f(glm.perspectiveProjectionMatrix).mul(glm.perspectiveViewMatrix));
 		}
-		if(uProjViewModel != null) {
-			uProjViewModel.set(new Matrix4f(glm.projectionMatrix).mul(glm.viewMatrix).mul(transform));
+		if (uProjViewModel != null) {
+			uProjViewModel.set(new Matrix4f(glm.perspectiveProjectionMatrix).mul(glm.perspectiveViewMatrix).mul(transform));
 		}
-		if(uLightPos != null) {
+		if (uLightPos != null) {
 			glm.lightPosition.w = 1;
 			uLightPos.set(glm.lightPosition);
 		}
-		if(uViewPos != null) {
+		if (uViewPos != null) {
 			glm.cameraPosition.w = 1;
 			uViewPos.set(glm.cameraPosition);
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#renderBindBuffers(gltest.GLMain)
 	 */
 	@Override
 	public void renderBindBuffers(GLScreen glm) {
-		if(vao != 0) {
+		if (vao != 0) {
 			glBindVertexArray(vao);
-		} else if(vbo != 0) {
+		} else if (vbo != 0) {
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#scale(float)
 	 */
 	@Override
@@ -149,17 +156,21 @@ public abstract class AbstractModel implements IModel {
 		scaleIsNonUniform = false;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#scale(float, float, float)
 	 */
 	@Override
 	public void scale(float sx, float sy, float sz) {
-		scale.set(sx,sy,sz);
+		scale.set(sx, sy, sz);
 		transformNeeded = true;
 		scaleIsNonUniform = sx != sy || sx != sz || sy != sz;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#scaleTo(org.joml.Vector3f)
 	 */
 	@Override
@@ -169,7 +180,9 @@ public abstract class AbstractModel implements IModel {
 		scaleIsNonUniform = scale.x != scale.y || scale.y != scale.z || scale.z != scale.x;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#move(float, float, float)
 	 */
 	@Override
@@ -178,7 +191,9 @@ public abstract class AbstractModel implements IModel {
 		transformNeeded = true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#moveTo(org.joml.Vector3f)
 	 */
 	@Override
@@ -186,7 +201,10 @@ public abstract class AbstractModel implements IModel {
 		position.set(xyz);
 		transformNeeded = true;
 	}
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#moveTo(org.joml.Vector4f)
 	 */
 	@Override
@@ -195,7 +213,9 @@ public abstract class AbstractModel implements IModel {
 		transformNeeded = true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#moveTo(float, float, float)
 	 */
 	@Override
@@ -204,15 +224,20 @@ public abstract class AbstractModel implements IModel {
 		transformNeeded = true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#rotate(float, float, float)
 	 */
 	@Override
 	public void rotate(float x, float y, float z) {
-		orientation.rotateXYZ(x,y,z);
+		orientation.rotateXYZ(x, y, z);
 		transformNeeded = true;
 	}
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#rotation(float, float, float)
 	 */
 	@Override
@@ -220,7 +245,10 @@ public abstract class AbstractModel implements IModel {
 		orientation.rotationXYZ(x, y, z);
 		transformNeeded = true;
 	}
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#orientTo(org.joml.Quaternionf)
 	 */
 	@Override
@@ -229,7 +257,9 @@ public abstract class AbstractModel implements IModel {
 		transformNeeded = true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#pitch(float)
 	 */
 	@Override
@@ -237,7 +267,10 @@ public abstract class AbstractModel implements IModel {
 		orientation.rotateX(d);
 		transformNeeded = true;
 	}
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#yaw(float)
 	 */
 	@Override
@@ -245,7 +278,10 @@ public abstract class AbstractModel implements IModel {
 		orientation.rotateY(d);
 		transformNeeded = true;
 	}
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#roll(float)
 	 */
 	@Override
@@ -254,76 +290,84 @@ public abstract class AbstractModel implements IModel {
 		transformNeeded = true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#transformDirection(org.joml.Vector3f)
 	 */
 	@Override
 	public void transformDirection(Vector3f v) {
-		if(transformNeeded) {
+		if (transformNeeded) {
 			computeTransform();
 		}
 		transform.transformDirection(v);
 	}
+
 	@Override
 	public void transformDirection(Vector4f v) {
-		if(transformNeeded) {
+		if (transformNeeded) {
 			computeTransform();
 		}
 		v.w = 0;
 		transform.transform(v);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#transformPosition(org.joml.Vector3f)
 	 */
 	@Override
 	public void transformPosition(Vector3f v) {
-		if(transformNeeded) {
+		if (transformNeeded) {
 			computeTransform();
 		}
 		transform.transformPosition(v);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#transform(org.joml.Vector4f)
 	 */
 	@Override
 	public void transform(Vector4f v) {
-		if(transformNeeded) {
+		if (transformNeeded) {
 			computeTransform();
 		}
 		transform.transform(v);
 	}
 
-	protected VertexArrayBuilder buildVertexArray() {
-		if(vao == 0) {
-			vao = glGenVertexArrays();
-		}
-		if(vbo == 0) {
-			vbo = glGenBuffers();
-		}
-		return new VertexArrayBuilder(vao, vbo, GL_STATIC_DRAW);
+	protected VertexArrayBuilder buildVertexArray(VertexArrayFormat format) {
+		VertexArrayBuilder builder = new VertexArrayBuilder(format, GL_STATIC_DRAW);
+		vao = builder.vao();
+		return builder;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#getTransform()
 	 */
 	@Override
 	public Matrix4f getTransform() {
-		if(transformNeeded) {
+		if (transformNeeded) {
 			computeTransform();
 		}
 		return transform;
 	}
+
 	@Override
 	public Matrix4f getNormalTransform() {
-		if(transformNeeded) {
+		if (transformNeeded) {
 			computeTransform();
 		}
 		return normalTransform;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#setParent(gltest.IModel)
 	 */
 	@Override
@@ -332,7 +376,9 @@ public abstract class AbstractModel implements IModel {
 		transformNeeded = true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see gltest.IModel#getParent()
 	 */
 	@Override

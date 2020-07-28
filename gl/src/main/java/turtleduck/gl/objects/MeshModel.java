@@ -28,11 +28,13 @@ public class MeshModel extends AbstractModel {
 	List<Integer> idxBuffer = new ArrayList<>();
 	public MeshModel(String pathName) {
 		try {
-			VertexArrayBuilder builder = buildVertexArray();
-			builder.layoutFloat("aPos", 0, 3);
-			builder.layoutFloat("aColor", 1, 3);
-			builder.layoutFloat("aNormal", 2, 3);
-			builder.layoutFloat("aTexCoord", 3, 2);
+			VertexArrayFormat format = new VertexArrayFormat();
+			format.layoutFloat("aPos", 0, 3);
+			format.layoutFloat("aColor", 1, 3);
+			format.layoutFloat("aNormal", 2, 3);
+			format.layoutFloat("aTexCoord", 3, 2);
+			VertexArrayBuilder builder = buildVertexArray(format);
+
 			ByteBuffer buf = ioResourceToByteBuffer(pathName, 8 * 1024);
 			ByteBuffer b2 = BufferUtils.createByteBuffer(buf.limit()+1);
 			b2.put(buf);
@@ -94,7 +96,7 @@ public class MeshModel extends AbstractModel {
 	}
 
 	private void processMesh(AIMesh mesh, VertexArrayBuilder builder) {
-		int vertexOffset = builder.nVertices;
+		int vertexOffset = builder.nVertices();
 		AIVector3D.Buffer normals = mesh.mNormals();
 		AIVector3D.Buffer textureCoords = mesh.mTextureCoords(0);
 		AIColor4D.Buffer colors = mesh.mColors(0);

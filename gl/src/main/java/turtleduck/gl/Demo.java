@@ -93,11 +93,6 @@ public class Demo implements TurtleDuckApp {
 			screen.uModel.set(screen.modelMatrix.identity());
 		}
 
-		grid.locationParallelStream().forEach((l) -> {
-			tileMap[l.getX() + l.getY() * GRID_COLS] = grid.get(l).background;
-		});
-		((GLLayer) canvas).drawTileMap(Point.point(0, 0), 48, 32, 32, 32, tileMap, tiles);
-
 		if (false) {
 
 			for (int y = 0; y < image2.height(); y++) {
@@ -110,7 +105,6 @@ public class Demo implements TurtleDuckApp {
 				}
 			}
 		}
-
 
 //		canvas.drawImage(Point.point(600, 0), image.transpose(Image.Transpose.FLIP_TOP_BOTTOM));
 //		canvas.drawImage(Point.point(900, 0),
@@ -127,22 +121,26 @@ public class Demo implements TurtleDuckApp {
 //		img = img.transpose(Image.Transpose.ROTATE_90);
 //		canvas.drawImage(Point.point(900, 600), img);
 
-		if (true)
-			return;
-		turtle.beginPath();
+		if (false) {
+			turtle.beginPath();
 
-		turtle.turn(1);
-		for (int i = 0; i < 10; i++) {
-			footprint(turtle.child(), 5);
-			turtle.jump(100).turn(36);
-		}
+			turtle.turn(1);
+			for (int i = 0; i < 10; i++) {
+				footprint(turtle.child(), 5);
+				turtle.jump(100).turn(36);
+			}
 //		turtle.jump(0);
 //		turtle.moveTo(600,200);
-		colorWheel(turtle, -100);
-		colorWheel(turtle, 100);
+			colorWheel(turtle, -100);
+			colorWheel(turtle, 100);
 
 //		turtle.moveTo(500,400);
-		turtle.done();
+			turtle.done();
+		}
+		grid.locationParallelStream().forEach((l) -> {
+			tileMap[l.getX() + l.getY() * GRID_COLS] = grid.get(l).background;
+		});
+		((GLLayer) canvas).drawTileMap(Point.point(0, 0), 48, 32, 32, 32, tileMap, tiles);
 
 //		System.out.println(deltaTime);
 	}
@@ -180,7 +178,6 @@ public class Demo implements TurtleDuckApp {
 				for (int col = 0, x = 0; col < tiles.columns(); col++, x += 32) {
 					Image img = tiles.get(col, row);
 					sprites.add(new DemoSprite(Point.point(500 + x, 200 + y), b, 1, (col - 3.5) / (1 + row), img));
-					System.out.println(b);
 					b = b.add(Bearing.relative(5));
 				}
 			}
