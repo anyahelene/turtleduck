@@ -2,6 +2,9 @@ package turtleduck.gl.objects;
 
 import static org.lwjgl.opengl.GL30.*;
 
+import org.joml.Vector2f;
+import org.joml.Vector3f;
+
 import turtleduck.gl.GLScreen;
 
 public class CubeModel extends AbstractModel {
@@ -10,10 +13,10 @@ public class CubeModel extends AbstractModel {
 
 	public CubeModel() {
 		VertexArrayFormat format = new VertexArrayFormat();
-		format.layoutFloat("aPos", 0, 3);
-		format.layoutFloat("aColor", 1, 3);
-		format.layoutFloat("aNormal", 2, 3);
-		format.layoutFloat("aTexCoord", 3, 2);	
+		format.addField("aPos",  Vector3f.class);
+		format.addField("aColor", Vector3f.class);
+		format.addField("aNormal", Vector3f.class);
+		format.addField("aTexCoord", Vector2f.class);	
 		VertexArrayBuilder builder = buildVertexArray(format);
 
 		builder.vec3(-.5f,  .5f,  .5f).vec3(0,1,1).vec3(-.5f, .5f, .5f).vec2(0,1); // 0

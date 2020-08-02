@@ -1,9 +1,8 @@
 package turtleduck.geometry.impl;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
-import turtleduck.geometry.unused.Direction;
 
 public class Point2 implements Point {
 	protected final double x;
@@ -15,8 +14,8 @@ public class Point2 implements Point {
 	}
 
 	@Override
-	public Bearing bearingTo(PositionVector otherPoint) {
-		return Bearing.absolute(otherPoint.x() - x(), otherPoint.y() - y());
+	public Direction bearingTo(PositionVector otherPoint) {
+		return Direction.absolute(otherPoint.x() - x(), otherPoint.y() - y());
 	}
 
 	@Override
@@ -44,8 +43,8 @@ public class Point2 implements Point {
 	}
 
 	@Override
-	public Bearing asBearing() {
-		return Bearing.absolute(x(), y());
+	public Direction asBearing() {
+		return Direction.absolute(x(), y());
 	}
 
 	@Override
@@ -64,7 +63,7 @@ public class Point2 implements Point {
 	}
 
 	@Override
-	public Point add(Bearing dir, double distance) {
+	public Point add(Direction dir, double distance) {
 //	TODO:	return new Point2(Math.fma(dir.dirX(), distance, x), Math.fma(dir.dirY(), distance, y));
 		return new Point2(dir.dirX() * distance + x, dir.dirY() * distance + y);
 	}

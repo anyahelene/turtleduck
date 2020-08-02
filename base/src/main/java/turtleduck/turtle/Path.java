@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import turtleduck.colors.Color;
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.impl.PathPointImpl;
 
@@ -59,7 +59,7 @@ public interface Path {
 
 	/**
 	 * @return The first point in the path (given to
-	 *         {@link PathBuilder#beginPath(Point, Bearing, RelativeTo)}
+	 *         {@link PathBuilder#beginPath(Point, Direction, RelativeTo)}
 	 */
 	Point first();
 

@@ -1,5 +1,5 @@
 
-#version 430 core
+#version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 
@@ -11,7 +11,7 @@ out vec2 fTexCoord;
 out vec4 fPos;
 out vec4 fColor;
 out vec4 fNormal;
-out flat int fTexNum;
+flat out int fTexNum;
 
 void main()
 {
@@ -19,7 +19,7 @@ void main()
 	//float r = -aPos.x/0.866;
 	//float b = 1.0 - r;
 	
-    fPos = uModel * vec4(aPos.xy, 0.0, 1.0);
+    fPos = uModel * vec4(aPos.xy, 0, 1.0);
     gl_Position = uProjView * fPos; // uModel * vec4(aPos.xy, 0.0, 1.0);
     fColor = aColor; // vec4(aPos.xy, 0.0, 1.0);
     fTexCoord = aColor.xy;

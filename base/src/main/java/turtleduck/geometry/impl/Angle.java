@@ -2,53 +2,74 @@ package turtleduck.geometry.impl;
 
 import java.util.logging.Logger;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
 
-public class BearingImpl implements DirectionVector, Bearing {
-	
+/**
+ * 
+ * Implements angles using milliarcseconds
+ * @author anya
+ *
+ */
+/**
+ * @author anya
+ *
+ */
+public class Angle implements DirectionVector, Direction {
+
 	static final double SIGN_LEFT = -1, SIGN_RIGHT = 1;
 	public static final double HALF_PI = Math.PI / 2;
 	public static final double TWO_PI = 2 * Math.PI;
 	public static final double THREE_PI = 2 * Math.PI;
-	public static final int ARCSEC = 3600, MARCSEC = ARCSEC * 100, MI = 180 * MARCSEC;
+
+	/**
+	 * There are 3600 arc seconds in a degree
+	 */
+	public static final int ARCSEC = 3600;
+	/**
+	 * Number of milliarcsecs in a dregree
+	 */
+	public static final int MARCSEC = ARCSEC * 1000;
+	/**
+	 * π in milliarcsecs
+	 */
+	public static final int MI = 180 * MARCSEC;
+	/**
+	 * 2π in milliarcsecs
+	 */
 	public static final int TWO_MI = 360 * MARCSEC;
-	static final int ARCSEC_NORTH = 360 * MARCSEC, ARCSEC_EAST = 90 * MARCSEC, //
-			ARCSEC_SOUTH = 180 * MARCSEC, ARCSEC_WEST = 270 * MARCSEC;
+	static final int ARCSEC_NORTH = 0 * MARCSEC, ARCSEC_EAST = 90 * MARCSEC, //
+			ARCSEC_SOUTH = 180 * MARCSEC, ARCSEC_WEST = -90 * MARCSEC;
 	public static final double HALF_SQRT_2 = Math.sqrt(2) / 2, HALF_SQRT_3 = Math.sqrt(3) / 2;
-	private final int mas;
+	private final int angle;
 	private final boolean absolute;
 
-	protected BearingImpl(int angle, boolean absolute) {
-		while(angle < 0)
-			angle += TWO_MI;
-		while(angle >= TWO_MI)
-			angle -= TWO_MI;
-//		mas = Math.floorMod(angle, TWO_MI);
-		mas = angle;
+	protected Angle(int mArcSecs, boolean absolute) {
+		mArcSecs = mArcSecs % TWO_MI;
+		if (mArcSecs > MI) {
+			mArcSecs -= TWO_MI;
+		} else if (mArcSecs <= -MI) {
+			mArcSecs += TWO_MI;
+		}
+		this.angle = mArcSecs;
 		this.absolute = absolute;
+//		assert angle > -MI && angle <= MI;
 	}
 
-	public static int degreesToMilliArcSec(double angle) {
-		while(angle < 0)
-			angle += 360;
-		while(angle > 360)
-			angle -= 360;
-		int m = (int) Math.round(angle * MARCSEC); // Math.floorMod(Math.round(angle * MARCSEC), TWO_MI);
-		return angle < 0 ? -m : m;
+	public static int degreesToMilliArcSec(double degrees) {
+		degrees = degrees % 360;
+		int m = (int) Math.round(degrees * MARCSEC); // ;
+		return m; // degrees < 0 ? -m : m;
 	}
 
-	public static int radiansToMilliArcSec(double angle) {
-		int m = Math.floorMod(Math.round(Math.PI * angle * MARCSEC / 180.0), TWO_MI);
+	public static int radiansToMilliArcSec(double radians) {
+		radians = radians % TWO_PI;
+		int m = (int) Math.round(radians * MI / Math.PI);
 		return m;
 	}
 
-	public static double milliArcSecToDegrees(int angle) {
-//		if (angle == Short.MIN_VALUE)
-//			return 180.0;
-//		else
-		double a = angle % MARCSEC;
-		return ((double) angle) / MARCSEC;
+	public static double milliArcSecToDegrees(int mArcSecs) {
+		return ((double) mArcSecs) / MARCSEC;
 	}
 
 	public static double milliArcSecToRadians(int angle) {
@@ -58,25 +79,28 @@ public class BearingImpl implements DirectionVector, Bearing {
 		return ((double) angle) * Math.PI / MI;
 	}
 
-	public static BearingImpl absolute(double a) {
-		return new BearingImpl(degreesToMilliArcSec(a), true);
+	public static Angle absolute(double a) {
+		return new Angle(degreesToMilliArcSec(a), true);
 	}
 
-	public static BearingImpl relative(double a) {
-		return new BearingImpl(degreesToMilliArcSec(a), false);
+	public static Angle relative(double a) {
+		return new Angle(degreesToMilliArcSec(a), false);
 	}
 
-	public static BearingImpl absolute(double x, double y) {
-		return new BearingImpl(atan2(x, y), true);
+	public static Angle absolute(double x, double y) {
+		return new Angle(atan2(x, y), true);
 	}
 
-	public static Bearing relative(double x, double y) {
-		return new BearingImpl(atan2(x, y), false);
+	public static Direction relative(double x, double y) {
+		return new Angle(atan2(x, y), false);
 	}
 
 	@Override
-	public double azimuth() {
-		return milliArcSecToDegrees(mas);
+	public double degrees() {
+		double degs = milliArcSecToDegrees(angle);
+		if (absolute && degs < 0)
+			degs += 360.0;
+		return degs;
 	}
 
 	/*
@@ -92,125 +116,123 @@ public class BearingImpl implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public double toRadians() {
-		return milliArcSecToRadians(mas);
+	public double radians() {
+		double rads = milliArcSecToRadians(angle);
+		if (absolute && rads < 0)
+			rads += TWO_PI;
+		return rads;
 	}
 
 	@Override
-	public Bearing add(Bearing other) {
-		int b = ((BearingImpl) other).mas;
+	public Direction add(Direction other) {
+		int b = ((Angle) other).angle;
+		assert ((long) angle + (long) b) == angle + b;
 		if (!absolute)
-			return new BearingImpl(mas + b, other.isAbsolute());
+			return new Angle(angle + b, other.isAbsolute());
 		else if (!other.isAbsolute()) {
-			return new BearingImpl(mas + b, true);
+			return new Angle(angle + b, true);
 		} else {
 			Logger.getLogger("TurtleDuck").warning("Adding two absolute bearings: " + this + " + " + other);
-			return new BearingImpl(mas + b, false);
+			return new Angle(angle + b, false);
 		}
 	}
 
 	@Override
-	public Bearing sub(Bearing other) {
-		int b = ((BearingImpl) other).mas;
+	public Direction sub(Direction other) {
+		int b = ((Angle) other).angle;
+		assert ((long) angle - (long) b) == angle - b;
 		if (!absolute)
-			return new BearingImpl(mas - b, other.isAbsolute());
+			return new Angle(angle - b, other.isAbsolute());
 		else if (!other.isAbsolute()) {
-			return new BearingImpl(mas - b, true);
+			return new Angle(angle - b, true);
 		} else {
-			return new BearingImpl(mas - b, false);
+			return new Angle(angle - b, false);
 		}
 	}
 
 	@Override
-	public Bearing interpolate(Bearing other, double t) {
+	public Direction interpolate(Direction other, double t) {
 		if (t <= 0.0)
 			return this;
 		else if (t >= 1.0)
 			return other;
-		int a = mas, b = ((BearingImpl) other).mas;
-		if (a + Short.MAX_VALUE < b)
-			a += 65536;
-		else if (b + Short.MAX_VALUE < a)
-			b += 65536;
-		return new BearingImpl((short) Math.round(a + (b - a) * t), absolute);
+		double x0 = dirX(), x1 = other.dirX();
+		double y0 = dirY(), y1 = other.dirY();
+		double x = x0 + (x1 - x0) * t;
+		double y = y0 + (y1 - y0) * t;
+		return new Angle(atan2(x, y), absolute);
 	}
 
 	@Override
 	public String toNavString() {
-		double d = milliArcSecToDegrees(mas);
+		double d = milliArcSecToDegrees(angle);
 		if (absolute) {
-			assert mas >= 0 && mas < ARCSEC_NORTH : String.format("0 <= %d < %d", mas, ARCSEC_NORTH);
-			if (mas == 0) {
+			if (d < 0)
+				d += MI;
+			assert angle >= 0 && angle < ARCSEC_NORTH : String.format("0 <= %d < %d", angle, ARCSEC_NORTH);
+			if (angle == 0) {
 				return "N";
-			} else if (mas == ARCSEC_EAST) {
+			} else if (angle == ARCSEC_EAST) {
 				return "E";
-			} else if (mas == ARCSEC_SOUTH) {
+			} else if (angle == ARCSEC_SOUTH) {
 				return "S";
-			} else if (mas == ARCSEC_WEST) {
+			} else if (angle == ARCSEC_WEST) {
 				return "W";
-			} else if (mas < ARCSEC_EAST) {
+			} else if (angle < ARCSEC_EAST) {
 				return "N" + (d) + "°E";
-			} else if (mas < ARCSEC_SOUTH) {
+			} else if (angle < ARCSEC_SOUTH) {
 				return "S" + (180 - d) + "°E";
-			} else if (mas < ARCSEC_WEST) {
+			} else if (angle < ARCSEC_WEST) {
 				return "S" + (d - 180) + "°W";
-			} else if (mas < ARCSEC_NORTH) {
+			} else if (angle < ARCSEC_NORTH) {
 				return "N" + (360 - d) + "°W";
 			}
 			return String.format("%06.2f°", d);
 		} else {
 //			assert mas > -180 * MARCSEC && mas <= 180 * MARCSEC : String.format("%d <= %d < %d", -180 * MARCSEC, mas,
 //					180 * MARCSEC);
-			if (mas == 0)
+			if (angle == 0)
 				return "0°";
-			else if (mas == 180 * MARCSEC)
+			else if (angle < 0)
+				return "R" + (360 - d) + "°";
+			else if (angle == 180 * MARCSEC)
 				return "180°";
-			else if (mas < 180 * MARCSEC)
+			else // if (angle < 180 * MARCSEC)
 				return "G" + d + "°";
-			else
-				return "R" + (360-d) + "°";
 		}
 	}
 
 	@Override
 	public String toArrow() {
-			if (mas == 0)
-				return "↑";
-			else if (mas < ARCSEC_EAST)
-				return "↗";
-			else if (mas == ARCSEC_EAST)
-				return "→";
-			else if (mas < ARCSEC_SOUTH)
-				return "↘";
-			else if (mas == ARCSEC_SOUTH)
-				return "↓";
-			else if (mas < ARCSEC_WEST)
-				return "↙";
-			else if (mas == ARCSEC_WEST)
-				return "←";
-			else
-				return "↖";
-//		} else {
-//			if (Math.abs(mas) == 0)
-//				return "↑";
-//			else if (Math.abs(mas) == Math.PI)
-//				return "⟳";
-//			else if (mas <= -Math.PI / 2)
-//				return "⤹";
-//			else if (mas < 0)
-//				return "↶";
-//			else if (mas <= Math.PI / 2)
-//				return "↷";
-//			else // if(brad <= 3*Math.PI/4)
-//				return "⤸";
-//		}
+		if (angle == 0)
+			return "↑";
+		else if (angle < ARCSEC_WEST)
+			return "↙";
+		else if (angle == ARCSEC_WEST)
+			return "←";
+		else if (angle < 0)
+			return "↖";
+		else if (angle < ARCSEC_EAST)
+			return "↗";
+		else if (angle == ARCSEC_EAST)
+			return "→";
+		else if (angle < ARCSEC_SOUTH)
+			return "↘";
+		else if (angle == ARCSEC_SOUTH)
+			return "↓";
+		else
+			return ""; // throw new IllegalStateException();
 	}
 
 	@Override
 	public String toString() {
-		return toArrow() + (absolute || mas < 0 ? "" : "+") + milliArcSecToDegrees(mas) + "°";
+		double degs = milliArcSecToDegrees(angle);
+		String format = absolute ? "%s%.6f°" : "%s%+.6f°";
+		if (absolute && degs < 0) {
+			degs += 360;
+		}
+		return String.format(format, toArrow(), degs);
 	}
-
 
 	public static double sin(int a) {
 		double sign = -1;
@@ -301,12 +323,12 @@ public class BearingImpl implements DirectionVector, Bearing {
 	 */
 	@Override
 	public double dirX() {
-		return cos(mas);
+		return cos(angle);
 	}
 
 	@Override
 	public double dirY() {
-		return sin(mas);
+		return sin(angle);
 	}
 
 	@Override
@@ -319,7 +341,7 @@ public class BearingImpl implements DirectionVector, Bearing {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (absolute ? 1231 : 1237);
-		result = prime * result + mas;
+		result = prime * result + angle;
 		return result;
 	}
 
@@ -328,14 +350,14 @@ public class BearingImpl implements DirectionVector, Bearing {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof BearingImpl)) {
+		if (!(obj instanceof Angle)) {
 			return false;
 		}
-		BearingImpl other = (BearingImpl) obj;
+		Angle other = (Angle) obj;
 		if (absolute != other.absolute) {
 			return false;
 		}
-		if (mas != other.mas) {
+		if (angle != other.angle) {
 			return false;
 		}
 		return true;

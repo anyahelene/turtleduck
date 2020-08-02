@@ -1,8 +1,6 @@
 package turtleduck.gl.objects;
 
-import static org.lwjgl.opengl.GL15.glGenBuffers;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
-import static org.lwjgl.opengl.GL40.*;
+import static org.lwjgl.opengl.GL33C.*;
 
 import java.nio.ByteBuffer;
 
@@ -10,14 +8,15 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
+import turtleduck.buffer.DataFormat;
 
+import turtleduck.buffer.DataField;
 import turtleduck.colors.Color;
 import turtleduck.util.TextUtil;
-import turtleduck.gl.objects.VertexArrayFormat.Type;
 
 public class VertexArrayBuilder {
 	private VertexArrayFormat format;
-	private VertexArrayFormat.Field currentField;
+	private DataField<?> currentField;
 	private ByteBuffer data;
 	private int pos = 0;
 	private int start = 0;
@@ -40,7 +39,7 @@ public class VertexArrayBuilder {
 		this.usage = usage == 0 ? GL_STATIC_DRAW : usage;
 		ensureCapacity(capacity);
 		this.ownsGlObjects = true;
-		currentField = format.fields.get(0);
+		currentField = format.field(0);
 	}
 
 	public VertexArrayBuilder(VertexArrayFormat format, int usage) {
@@ -51,13 +50,13 @@ public class VertexArrayBuilder {
 		this.usage = usage == 0 ? GL_STATIC_DRAW : usage;
 		ensureCapacity(16);
 		this.ownsGlObjects = true;
-		currentField = format.fields.get(0);
+		currentField = format.field(0);
 	}
 
 	public void ensureCapacity(int minVertexCap) {
 		if (minVertexCap > vertexCap) {
 			minVertexCap = Math.max(minVertexCap, nVertices + (nVertices >> 1));
-			int newCap = minVertexCap * format.vertexSize;
+			int newCap = minVertexCap * format.numBytes();
 			System.out.printf("Realloc at %d (%d vertices) to %d (%sB, %d vertices)%n", pos, vertexCap, newCap,
 					TextUtil.humanFriendlyBinary(newCap), minVertexCap);
 			ByteBuffer newBuf = BufferUtils.createByteBuffer(newCap);
@@ -89,11 +88,11 @@ public class VertexArrayBuilder {
 					+ currentField + ", got " + currentSize);
 		}
 		start = pos;
-		loc = (loc + 1) % format.fields.size();
+		loc = (loc + 1) % format.numFields();
 		if (loc == 0) {
 			nVertices++;
 		}
-		currentField = format.fields.get(loc);
+		currentField = format.field(loc);
 	}
 
 	public VertexArrayBuilder flt(float x) {
@@ -140,7 +139,7 @@ public class VertexArrayBuilder {
 	}
 
 	private void writeFloat(float x) {
-		switch (currentField.type) {
+		switch (currentField.type()) {
 		case FLOAT:
 			data.putFloat(pos, x);
 			pos += 4;
@@ -171,7 +170,7 @@ public class VertexArrayBuilder {
 		if (x < 0 || x > 255) {
 			throw new IllegalArgumentException("" + x);
 		}
-		switch (currentField.type) {
+		switch (currentField.type()) {
 		case UNSIGNED_BYTE:
 		case NORM_BYTE:
 			data.put(pos++, (byte) x);
@@ -215,7 +214,7 @@ public class VertexArrayBuilder {
 	}
 
 	public VertexArrayBuilder vec2(Vector2f vec) {
-		if (currentField.type == Type.FLOAT) {
+		if (currentField.type() == DataFormat.Type.FLOAT) {
 			check(2);
 			vec.get(pos, data);
 			pos += 2 * 4;
@@ -227,7 +226,7 @@ public class VertexArrayBuilder {
 	}
 
 	public VertexArrayBuilder vec3(Vector2f vec, float z) {
-		if (currentField.type == Type.FLOAT) {
+		if (currentField.type() == DataFormat.Type.FLOAT) {
 			check(3);
 			vec.get(pos, data);
 			pos += 2 * 4;
@@ -240,7 +239,7 @@ public class VertexArrayBuilder {
 	}
 
 	public VertexArrayBuilder vec3(Vector3f vec) {
-		if (currentField.type == Type.FLOAT) {
+		if (currentField.type() == DataFormat.Type.FLOAT) {
 			check(3);
 			vec.get(pos, data);
 			pos += 3 * 4;
@@ -252,7 +251,7 @@ public class VertexArrayBuilder {
 	}
 
 	public VertexArrayBuilder vec4(Vector4f vec) {
-		if (currentField.type == Type.FLOAT) {
+		if (currentField.type() == DataFormat.Type.FLOAT) {
 			check(4);
 			vec.get(pos, data);
 			pos += 4 * 4;
@@ -265,7 +264,7 @@ public class VertexArrayBuilder {
 
 	private void check(int n) {
 		if (currentField == null)
-			currentField = format.fields.get(loc);
+			currentField = format.field(loc);
 		n *= currentField.numBytes();
 
 		if (pos + n > data.capacity()) {
@@ -290,7 +289,7 @@ public class VertexArrayBuilder {
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		if (!formatted) {
-			format.setVertexAttributes();
+			format.setVertexAttributes(0);
 			formatted = true;
 		}
 		if (pos > allocated[currentBuffer]) {
@@ -302,8 +301,8 @@ public class VertexArrayBuilder {
 		if (DEBUG) {
 			System.out.println("Array buffer: ");
 			System.out.println("  number of vertices: " + nVertices);
-			System.out.println("  stride:             " + format.vertexSize);
-			System.out.println("  buffer size:        " + data.capacity() + " (" + data.limit() + " used)");
+			System.out.println("  stride:             " + format.numBytes());
+			System.out.println("  buffer:             " + data.capacity() + " (" + data.limit() + " used)");
 			System.out.println("  format:             " + format);
 		}
 //		currentBuffer = (currentBuffer + 1) % buffers.length;
@@ -314,7 +313,7 @@ public class VertexArrayBuilder {
 		data.clear();
 		start = pos = loc = 0;
 		nVertices = 0;
-		currentField = format.fields.get(0);
+		currentField = format.field(0);
 	}
 
 	public void dispose() {
@@ -325,7 +324,7 @@ public class VertexArrayBuilder {
 		}
 		data = null;
 	}
-	
+
 	public int vao() {
 		return vao;
 	}

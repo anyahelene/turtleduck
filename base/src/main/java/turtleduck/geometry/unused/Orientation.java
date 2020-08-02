@@ -10,8 +10,8 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import turtleduck.colors.Colors;
-import turtleduck.geometry.Bearing;
-import turtleduck.geometry.impl.BearingImpl;
+import turtleduck.geometry.Direction;
+import turtleduck.geometry.impl.Angle;
 import turtleduck.terminal.TerminalInputStream;
 import turtleduck.terminal.TerminalPrintStream;
 
@@ -99,34 +99,34 @@ public class Orientation {
 		System.out.println(String.format("%.30f", Math.sin(Math.PI)));
 		for (int i = 0; i <= 360; i += 5) {
 			double y = -Math.cos(Math.toRadians(i)), x = Math.sin(Math.toRadians(i));
-			int atan2 = BearingImpl.atan2(x, y);
-			System.out.printf("%4d → (%.25f,%.25f) → %10d %.25f %7.4f\n", i, x, y, atan2, BearingImpl.sin(atan2),
-					BearingImpl.milliArcSecToDegrees(atan2));
+			int atan2 = Angle.atan2(x, y);
+			System.out.printf("%4d → (%.25f,%.25f) → %10d %.25f %7.4f\n", i, x, y, atan2, Angle.sin(atan2),
+					Angle.milliArcSecToDegrees(atan2));
 
 		}
 //		System.exit(0);
 		for (int i = -72; i <= 72; i++) {
 			for (int j = -1; j <= 1; j++) {
-				int b = BearingImpl.degreesToMilliArcSec(i * 5) + j;
+				int b = Angle.degreesToMilliArcSec(i * 5) + j;
 				System.out.printf("%4d° = %6.2f° = %12d = %17.12f° = %15.12f\n", i * 5, //
 						Math.toDegrees(Math.atan2(Math.sin(Math.toRadians(i * 5)), Math.cos(Math.toRadians(i * 5)))), //
-						b, BearingImpl.milliArcSecToDegrees(b), BearingImpl.milliArcSecToRadians(b));
+						b, Angle.milliArcSecToDegrees(b), Angle.milliArcSecToRadians(b));
 			}
 		}
 		int a = -540;
-		int m = BearingImpl.degreesToMilliArcSec(a);
+		int m = Angle.degreesToMilliArcSec(a);
 		System.out.printf("%4d° = %6.2f° = %12d = %17.12f° = %15.12f\n", a, //
 				Math.toDegrees(Math.atan2(Math.sin(Math.toRadians(a)), Math.cos(Math.toRadians(a)))), m,
-				BearingImpl.milliArcSecToDegrees(m), BearingImpl.milliArcSecToRadians(m));
+				Angle.milliArcSecToDegrees(m), Angle.milliArcSecToRadians(m));
 //		System.exit(0);
-		Bearing b = Bearing.absolute(90);
+		Direction b = Direction.absolute(90);
 		System.out.println(b);
 		for (int i = 0; i < 50; i++) {
 			double d = i * 15;
-			Bearing abs = Bearing.absolute(d);
-			Bearing rel = Bearing.relative(d);
+			Direction abs = Direction.absolute(d);
+			Direction rel = Direction.relative(d);
 			System.out.printf("a=%9.6f, abs=%s (%4.2f), dx=%5.2f, dy=%5.2f, rel=%s, nav=%7s, rnv=%7s\n", d, abs,
-					abs.azimuth(), abs.dirX(), abs.dirY(), rel, abs.toNavString(), rel.toNavString());
+					abs.degrees(), abs.dirX(), abs.dirY(), rel, abs.toNavString(), rel.toNavString());
 			System.out.println(abs.add(rel));
 			System.out.printf("%.2f,%.2f → %7.2f°\n", abs.dirX(), abs.dirY(),
 					Math.toDegrees(Math.atan2(abs.dirX(), -abs.dirY())));

@@ -1,6 +1,5 @@
 package turtleduck.gl;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
@@ -11,16 +10,14 @@ import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.grid.Grid;
 import turtleduck.grid.MyGrid;
-import turtleduck.image.AbstractImage;
 import turtleduck.image.Image;
 import turtleduck.image.ImageFactory;
 import turtleduck.image.Tiles;
 import turtleduck.sprites.AbstractSprite;
-import turtleduck.sprites.Sprite;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Turtle;
 
@@ -29,25 +26,25 @@ public class Demo implements TurtleDuckApp {
 		protected final Point offset;
 		protected final Image img;
 		protected double speed;
-		protected Bearing rotation;
+		protected Direction rotation;
 
-		private DemoSprite(Point p, Bearing b, double speed, double rotation, Image img) {
+		private DemoSprite(Point p, Direction b, double speed, double rotation, Image img) {
 			super(p, b);
 			this.offset = Point.point(-img.width() / 2, -img.height() / 2);
 			this.img = img;
 			this.speed = speed;
-			this.rotation = Bearing.relative(rotation);
+			this.rotation = Direction.relative(rotation);
 //			System.out.println("rotation: " + rotation + " → " + this.rotation);
 		}
 
 		@Override
 		public void draw(Canvas canvas) {
-			((GLLayer) canvas).drawImage(offset, img, (float) bearing().toRadians());
+			((GLLayer) canvas).drawImage(offset, img, (float) bearing().radians());
 		}
 
 		public void step() {
 			if (x() < -1280 || x() > 1280 * 2 || y() < -720 || y() > 720 * 2)
-				bearing(Bearing.relative(90));
+				bearing(Direction.relative(90));
 
 			bearing(rotation);
 			if (this == sprites.get(0)) {
@@ -71,11 +68,27 @@ public class Demo implements TurtleDuckApp {
 	private Tiles tiles;
 	private GLScreen screen;
 	private int[] tileMap;
+	private double rotation = 0;
 
 	@Override
 	public void bigStep(double deltaTime) {
-		canvas.drawImage(Point.point(300, 0), image2);
-		canvas.drawImage(Point.point(300, 0), image2.transpose(Image.Transpose.FLIP_LEFT_RIGHT).scale(400, 200));
+		turtle.jumpTo(500, 500);
+		turtle.child().jumpTo(500, 500).turnTo(0).penWidth(20).penColor(Color.color(.5, .5, .5, 1)).draw(200).turn(45)
+				.draw(200).turn(90).draw(200).turn(-90).draw(200);
+		turtle.child().jumpTo(600, 500).turnTo(0).penWidth(2).penColor(Color.color(.5, .5, .5, 1)).draw(200).turn(45)
+				.draw(200).turn(90).draw(200).turn(-90).draw(200);
+//		if(true)
+//			return;
+
+		wheel1(turtle.child().at(500, 500).turnTo(rotation).penColor(Color.color(0.5, 0, 0, 0.5))); 
+		rotation += 16 * deltaTime;
+		canvas.drawImage(Point.point(100, 0), image2);
+		canvas.drawImage(Point.point(200, 0), image2);
+		((GLLayer) canvas).plot(Point.point(100, 100), 1000, 1000, Colors.BLACK,
+				"between(cos((x-0.005)*3.14159265),cos((x+0.005)*3.14159265), y) + equal(cos(x*3.14159265), y)"); // "equal(x*x
+																													// +
+																													// y*y,
+																													// 1)");
 
 //		GLLayer.angle += deltaTime;
 		count = (count + 1) % 256;
@@ -87,7 +100,7 @@ public class Demo implements TurtleDuckApp {
 		for (DemoSprite sprite : sprites) {
 			sprite.step();
 			screen.modelMatrix.translation((float) sprite.x(), (float) sprite.y(), 0f)
-					.rotateZ((float) (sprite.bearing().toRadians()));
+					.rotateZ((float) (sprite.bearing().radians()));
 			screen.uModel.set(screen.modelMatrix);
 			sprite.draw(canvas);
 			screen.uModel.set(screen.modelMatrix.identity());
@@ -97,7 +110,7 @@ public class Demo implements TurtleDuckApp {
 
 			for (int y = 0; y < image2.height(); y++) {
 				turtle.jumpTo(300, 0 + y);
-				turtle.bearing(Bearing.DUE_EAST);
+				turtle.bearing(Direction.DUE_EAST);
 				for (int x = 0; x < image2.width(); x++) {
 					Color p = image2.readPixel(x, y);
 					turtle.penColor(p);
@@ -121,7 +134,7 @@ public class Demo implements TurtleDuckApp {
 //		img = img.transpose(Image.Transpose.ROTATE_90);
 //		canvas.drawImage(Point.point(900, 600), img);
 
-		if (false) {
+		if (true) {
 			turtle.beginPath();
 
 			turtle.turn(1);
@@ -132,7 +145,7 @@ public class Demo implements TurtleDuckApp {
 //		turtle.jump(0);
 //		turtle.moveTo(600,200);
 			colorWheel(turtle, -100);
-			colorWheel(turtle, 100);
+//			colorWheel(turtle, 100);
 
 //		turtle.moveTo(500,400);
 			turtle.done();
@@ -140,9 +153,10 @@ public class Demo implements TurtleDuckApp {
 		grid.locationParallelStream().forEach((l) -> {
 			tileMap[l.getX() + l.getY() * GRID_COLS] = grid.get(l).background;
 		});
-		((GLLayer) canvas).drawTileMap(Point.point(0, 0), 48, 32, 32, 32, tileMap, tiles);
+//		((GLLayer) canvas).drawTileMap(Point.point(0, 0), 48, 32, 32, 32, tileMap, tiles);
 
 //		System.out.println(deltaTime);
+
 	}
 
 	@Override
@@ -159,12 +173,7 @@ public class Demo implements TurtleDuckApp {
 		pen = canvas.createPen();
 		turtle = canvas.createTurtle();
 		System.out.println(turtle);
-		turtle.jumpTo(500, 500);
-		System.out.println(turtle);
-		turtle.turn(1);
-		for (int i = 0; i < 360; i++) {
-			turtle.draw(5).turn(1);
-		}
+
 		System.out.println(Color.fromARGB(0xffffffff));
 		System.out.println(Color.fromARGB(0xff7f7f7f));
 
@@ -174,11 +183,11 @@ public class Demo implements TurtleDuckApp {
 			image = new GLPixelData("file:///tmp/tiled.png");
 			tiles = image.tiles(8, 8);
 			for (int row = 0, y = 0; row < tiles.rows(); row++, y += 32) {
-				Bearing b = Bearing.absolute(-20 + 180);
+				Direction b = Direction.absolute(-20 + 180);
 				for (int col = 0, x = 0; col < tiles.columns(); col++, x += 32) {
 					Image img = tiles.get(col, row);
 					sprites.add(new DemoSprite(Point.point(500 + x, 200 + y), b, 1, (col - 3.5) / (1 + row), img));
-					b = b.add(Bearing.relative(5));
+					b = b.add(Direction.relative(5));
 				}
 			}
 			tileMap = new int[48 * 32];
@@ -238,7 +247,7 @@ public class Demo implements TurtleDuckApp {
 				}
 				turtle.turn(10);
 				if (i % 2 == 0) {
-					double a = turtle.bearing().azimuth();
+					double a = turtle.bearing().degrees();
 					turtle.turnTo(i).jump(10).turnTo(a);
 				}
 				turtle.draw(-step / 2);
@@ -256,6 +265,41 @@ public class Demo implements TurtleDuckApp {
 		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15);
 		turtle.done();
+	}
+
+	private void circle(Turtle turtle, double radius, int segments) {
+		double s = 360.0 / segments;
+		turtle.jump(radius).turn(90 + s / 2);
+		for (int i = 0; i < segments; i++) {
+			turtle.draw(2 * radius * Math.sin(Math.PI / segments));
+			turtle.turn(s);
+		}
+	}
+
+	private void wheel1(Turtle turtle) {
+		double hubRadius = 24;
+		double wheelRadius = 250;
+		double rimRadius = 55;
+		int segments = 24;
+		double step = 360 / segments;
+		turtle.penWidth(2);
+
+		circle(turtle.child().penWidth(10), hubRadius, segments);
+		circle(turtle.child().penWidth(10), wheelRadius, segments);
+
+		for (int i = 0; i < 6; i++) {
+			Turtle t = turtle.child().penWidth(10);
+			t.jump(hubRadius).draw(wheelRadius - hubRadius);
+			turtle.turn(60);
+		}
+
+		turtle.penWidth(5);
+		for (int i = 0; i < 360; i += 15) {
+			turtle.child().jump(wheelRadius).draw(Direction.absolute(-45), 2 * rimRadius).turn(97.5).draw(50).done()
+					.turn(15);
+		}
+//		circle(turtle.child().turnTo(-30).jump(2*rimRadius).penWidth(20), wheelRadius, segments);
+
 	}
 
 }

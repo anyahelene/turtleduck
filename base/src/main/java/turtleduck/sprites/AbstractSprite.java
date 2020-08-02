@@ -1,12 +1,12 @@
 package turtleduck.sprites;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.impl.NavigatorImpl;
 import turtleduck.turtle.impl.PathPointImpl;
 
 public abstract class AbstractSprite extends NavigatorImpl<Sprite> implements Sprite {
-	public AbstractSprite(Point p, Bearing b) {
+	public AbstractSprite(Point p, Direction b) {
 		super(p, b);
 	}
 	public AbstractSprite(AbstractSprite old) {

@@ -47,6 +47,7 @@ import java.util.function.Supplier;
  * @see #toString()
  */
 public class EqualsProperties {
+	public static final int NEQUALS = 10;
 	/**
 	 * Test that all the standard properties of equals() hold for objects supplied
 	 * by the generator.
@@ -65,6 +66,7 @@ public class EqualsProperties {
 	 * @param n   The number of times to run the tests
 	 */
 	public static <T> void allEqualsTests(Generator<T> gen, int n) {
+		equalsGeneratorMakesEqualValues(gen, n);
 		equalsIsReflexiveTest(gen, n);
 		equalsIsSymmetricTest(gen, n);
 		equalsIsTransitiveTest(gen, n);
@@ -103,7 +105,7 @@ public class EqualsProperties {
 
 			// we want to test this both we totally random values, and with
 			// values known to be equal
-			List<T> ss = gen.generateEquals(2);
+			List<T> ss = gen.generateEquals(NEQUALS);
 
 			symmetricProperty(ss.get(0), ss.get(1));
 		}
@@ -125,7 +127,7 @@ public class EqualsProperties {
 
 			// we want to test this both we totally random values, and with
 			// values known to be equal
-			List<T> ss = gen.generateEquals(3);
+			List<T> ss = gen.generateEquals(NEQUALS);
 
 			transitiveProperty(ss.get(0), ss.get(1), ss.get(2));
 		}
@@ -144,12 +146,26 @@ public class EqualsProperties {
 
 			// we want to test this both we totally random values, and with
 			// values known to be equal
-			List<T> ss = gen.generateEquals(2);
+			List<T> ss = gen.generateEquals(NEQUALS);
 
 			hashCodeProperty(ss.get(0), ss.get(1));
 		}
 	}
 
+	/**
+	 * A generic test for the hashcode property.
+	 *
+	 * @param gen A data generator
+	 * @param n   The number of times to run the test.
+	 * @see #hashCodeProperty(Object, Object)
+	 */
+	public static <T> void equalsGeneratorMakesEqualValues(Generator<T> gen, int n) {
+		for (int i = 0; i < n; i++) {
+			List<T> ss = gen.generateEquals(NEQUALS+1);
+			for(int j = 0; j < NEQUALS; j++)
+				assertEquals(ss.get(j), ss.get(j+1), "Generator should provide equal values: " + ss);
+		}
+	}
 	/**
 	 * Checks the equals/hashCode property, i.e. that s1.equals(s2) implies
 	 * s1.hashCode() == s2.hashCode().
@@ -209,7 +225,7 @@ public class EqualsProperties {
 		for (int i = 0; i < n; i++) {
 			strongToStringProperty(gen.generate(), gen.generate());
 
-			List<T> ss = gen.generateEquals(2);
+			List<T> ss = gen.generateEquals(NEQUALS);
 
 			strongToStringProperty(ss.get(0), ss.get(1));
 		}
@@ -227,7 +243,7 @@ public class EqualsProperties {
 		for (int i = 0; i < n; i++) {
 			weakToStringProperty(gen.generate(), gen.generate());
 
-			List<T> ss = gen.generateEquals(2);
+			List<T> ss = gen.generateEquals(NEQUALS);
 
 			weakToStringProperty(ss.get(0), ss.get(1));
 		}

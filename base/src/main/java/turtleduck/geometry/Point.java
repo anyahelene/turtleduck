@@ -2,7 +2,6 @@ package turtleduck.geometry;
 
 import turtleduck.geometry.impl.Point2;
 import turtleduck.geometry.impl.Point3;
-import turtleduck.geometry.unused.Direction;
 
 public interface Point extends PositionVector {
 	static final Point ZERO = point(0, 0);
@@ -24,7 +23,7 @@ public interface Point extends PositionVector {
 	 * @param otherPoint
 	 * @return
 	 */
-	Bearing bearingTo(PositionVector otherPoint);
+	Direction bearingTo(PositionVector otherPoint);
 
 	/**
 	 * Calculate direction towards other point
@@ -72,7 +71,7 @@ public interface Point extends PositionVector {
 	 * @param bearing  Direction
 	 * @param distance Distance to move
 	 */
-	Point add(Bearing bearing, double distance);
+	Point add(Direction bearing, double distance);
 
 	/**
 	 * Relative move
@@ -119,7 +118,7 @@ public interface Point extends PositionVector {
 	/**
 	 * @return Bearing from (0,0) to this point
 	 */
-	Bearing asBearing();
+	Direction asBearing();
 
 	/**
 	 * @return The distance from (0,0) to this point

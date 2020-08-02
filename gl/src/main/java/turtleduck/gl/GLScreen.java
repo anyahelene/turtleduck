@@ -2,10 +2,9 @@ package turtleduck.gl;
 
 import static turtleduck.gl.Vectors.*;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL33C.*;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.glfw.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
@@ -21,44 +20,14 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL33C;
+//import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.GLUtil;
 import org.lwjgl.opengl.GLXSGIVideoSync;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_FILL;
-import static org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK;
-import static org.lwjgl.opengl.GL11.GL_LINE;
-import static org.lwjgl.opengl.GL11.GL_MAX_TEXTURE_SIZE;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glClearColor;
-import static org.lwjgl.opengl.GL11.glDrawElements;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glFinish;
-import static org.lwjgl.opengl.GL11.glGenTextures;
-import static org.lwjgl.opengl.GL11.glPolygonMode;
-import static org.lwjgl.opengl.GL11.glViewport;
-import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
-import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.glBindBuffer;
-import static org.lwjgl.opengl.GL15.glDeleteBuffers;
-import static org.lwjgl.opengl.GL15.glGenBuffers;
-import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
-import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
-import static org.lwjgl.opengl.GL30.GL_DRAW_FRAMEBUFFER;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
-import static org.lwjgl.opengl.GL30.glBindFramebuffer;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
-import static org.lwjgl.opengl.GL30.glGenFramebuffers;
-import static org.lwjgl.opengl.GL30.glGenRenderbuffers;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import java.util.Arrays;
 import java.util.function.Predicate;
 
@@ -68,7 +37,6 @@ import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
-import turtleduck.display.impl.BaseScreen.Dimensions;
 import turtleduck.events.KeyEvent;
 import turtleduck.gl.objects.CubeModel;
 import turtleduck.gl.objects.ShaderObject;
@@ -436,6 +404,9 @@ public class GLScreen extends BaseScreen implements Screen {
 			height = framebufferSize.get(1);
 		}
 		caps = GL.createCapabilities();
+		if(!caps.GL_ARB_program_interface_query) {
+			throw new AssertionError("Required OpenGL extension missing: ARB_program_interface_query");
+		}
 		if (!caps.GL_ARB_shader_objects) {
 			throw new AssertionError("Required OpenGL extension missing: ARB_shader_objects");
 		}
@@ -465,8 +436,8 @@ public class GLScreen extends BaseScreen implements Screen {
 			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
 			shader2d = ShaderProgram.createProgram("shader2d", vs2, fs2);
 			VertexArrayFormat format = new VertexArrayFormat();
-			format.layoutFloat("aPos", 0, 3);
-			format.layoutNormShort("aColor", 1, 4);
+			format.addField("aPos", Vector3f.class);
+			format.addField("aColor", Color.class);
 			shader2d.format(format);
 			uModel = shader2d.uniform("uModel", Matrix4f.class);
 			uProjection = shader2d.uniform("uProjection", Matrix4f.class);
@@ -638,7 +609,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		perspectiveProjectionMatrix.setPerspective((float) Math.toRadians(fov), (float) (dim.winWidth / dim.winHeight), 0.01f,
 				100.0f);
 		perspectiveProjectionMatrix.invertPerspective(perspectiveProjectionMatrixInv);
-		projectionMatrix.setOrtho2D(0, (float) dim.canvasWidth, (float) dim.canvasHeight, 0);
+		projectionMatrix.setOrtho(0, (float) dim.canvasWidth, (float) dim.canvasHeight, 0, -1, 1);
 		projectionMatrix.invertOrtho(projectionMatrixInv);
 		System.err.println(projectionMatrix.transformProject(new Vector3f(0, 0, 0)));
 		System.err.println(projectionMatrix.transformProject(new Vector3f(640, 0, 0)));
@@ -684,25 +655,36 @@ public class GLScreen extends BaseScreen implements Screen {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 
-		glEnable(GL_DEPTH_TEST);
+//		glEnable(GL_DEPTH_TEST);
 		// update();
 		glEnable(GL_FRAMEBUFFER_SRGB);
+		glEnable(GL_CULL_FACE);
+		glFrontFace(GL_CCW);
+		glCullFace(GL_BACK);
+		glDisable(GL_CULL_FACE);
 //		glDisable(GL_FRAMEBUFFER_SRGB); 
-//		glEnable(GL_BLEND);
-//		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shader2d.bind();
 		modelMatrix.identity();
 		uModel.set(modelMatrix);
-		for (Layer l : layers.values()) {
-			((GLLayer) l).render();
-		}
+		
+		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
-		shader3d.bind();
-		cubeModel.moveTo(-0,0, 3);
-		cubeModel.rotate(0.01f, 0.01f, 0.01f);
-		cubeModel.scale(2f);
-		cubeModel.render(this);
+		forEachLayer(true, (l) -> ((GLLayer) l).render(true));
+		
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(false);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		forEachLayer(false, (l) -> ((GLLayer) l).render(false));
+		glDepthMask(true);
+		glDisable(GL_BLEND);
+		
+//		shader3d.bind();
+//		cubeModel.moveTo(-0,0, 3);
+//		cubeModel.rotate(0.01f, 0.01f, 0.01f);
+//		cubeModel.scale(2f);
+//		cubeModel.render(this);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);

@@ -1,6 +1,6 @@
 package turtleduck.turtle.impl;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Path.PointType;
 import turtleduck.turtle.PathPoint;
@@ -8,8 +8,8 @@ import turtleduck.turtle.Pen;
 
 public class PathPointImpl implements PathPoint, Cloneable {
 	protected Point point;
-	protected Bearing bearing;
-	protected Pen pen;
+	protected Direction bearing;
+	public Pen pen;
 	protected PointType type;
 
 	public String toString() {
@@ -34,7 +34,17 @@ public class PathPointImpl implements PathPoint, Cloneable {
 	public PointType type() {
 		return type;
 	}
-	public Bearing bearing() {
+	public Direction bearing() {
 		return bearing;
+	}
+
+	@Override
+	public double x() {
+		return point.x();
+	}
+
+	@Override
+	public double y() {
+		return point.y();
 	}
 }

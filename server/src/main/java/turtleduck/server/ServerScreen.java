@@ -198,7 +198,7 @@ public class ServerScreen extends BaseScreen {
 
 	@Override
 	public void flush() {
-		for (Layer l : layers.values()) {
+		for (Layer l : layerMap.values()) {
 			l.flush();
 		}
 	}

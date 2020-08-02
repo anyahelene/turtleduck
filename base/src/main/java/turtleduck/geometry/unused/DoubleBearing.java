@@ -2,12 +2,12 @@ package turtleduck.geometry.unused;
 
 import java.util.logging.Logger;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
 
 @Deprecated
-public class DoubleBearing implements DirectionVector, Bearing {
-	static final Bearing DUE_NORTH = new DoubleBearing(0, true, true),//
+public class DoubleBearing implements DirectionVector, Direction {
+	static final Direction DUE_NORTH = new DoubleBearing(0, true, true),//
 			DUE_EAST = new DoubleBearing(Math.PI/2, true, true),//
 			DUE_SOUTH = new DoubleBearing(Math.PI, true, true),//
 			DUE_WEST = new DoubleBearing(3*Math.PI/2, true, true);
@@ -32,7 +32,7 @@ public class DoubleBearing implements DirectionVector, Bearing {
 
 
 	@Override
-	public double azimuth() {
+	public double degrees() {
 		return Math.toDegrees(radians);
 	}
 
@@ -49,12 +49,12 @@ public class DoubleBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public double toRadians() {
+	public double radians() {
 		return radians;
 	}
 
 	@Override
-	public DoubleBearing add(Bearing o) {
+	public DoubleBearing add(Direction o) {
 		DoubleBearing other = (DoubleBearing) o;
 		if (!absolute)
 			return new DoubleBearing(radians + other.radians, other.absolute, false);
@@ -67,7 +67,7 @@ public class DoubleBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public DoubleBearing sub(Bearing o) {
+	public DoubleBearing sub(Direction o) {
 		DoubleBearing other = (DoubleBearing) o;
 		if (!absolute)
 			return new DoubleBearing(radians - other.radians, other.absolute, false);
@@ -79,7 +79,7 @@ public class DoubleBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public Bearing interpolate(Bearing o, double t) {
+	public Direction interpolate(Direction o, double t) {
 		DoubleBearing other = (DoubleBearing) o;
 		if (t <= 0.0)
 			return this;

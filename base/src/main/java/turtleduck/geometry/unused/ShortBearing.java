@@ -2,12 +2,12 @@ package turtleduck.geometry.unused;
 
 import java.util.logging.Logger;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
 
 @Deprecated
-public class ShortBearing implements DirectionVector, Bearing {
-	static final Bearing DUE_NORTH = absolute(0), DUE_EAST = absolute(90), DUE_SOUTH = absolute(180),
+public class ShortBearing implements DirectionVector, Direction {
+	static final Direction DUE_NORTH = absolute(0), DUE_EAST = absolute(90), DUE_SOUTH = absolute(180),
 			DUE_WEST = absolute(270);
 	static final int ARCSEC_NORTH = 360 * 3600, ARCSEC_EAST = 90 * 3600, ARCSEC_SOUTH = 180 * 3600,
 			ARCSEC_WEST = 270 * 3600;
@@ -55,12 +55,12 @@ public class ShortBearing implements DirectionVector, Bearing {
 		return new ShortBearing(degreesToBrad(Math.toDegrees(dirToRad(x, y))), true);
 	}
 
-	public static Bearing relative(double x, double y) {
+	public static Direction relative(double x, double y) {
 		return new ShortBearing(degreesToBrad(Math.toDegrees(dirToRad(x, y))), false);
 	}
 
 	@Override
-	public double azimuth() {
+	public double degrees() {
 		return bradToDegrees(brad);
 	}
 
@@ -77,12 +77,12 @@ public class ShortBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public double toRadians() {
+	public double radians() {
 		return bradToRadians(brad);
 	}
 
 	@Override
-	public Bearing add(Bearing other) {
+	public Direction add(Direction other) {
 		short b = ((ShortBearing) other).brad;
 		if (!absolute)
 			return new ShortBearing(brad + b, other.isAbsolute());
@@ -95,7 +95,7 @@ public class ShortBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public Bearing sub(Bearing other) {
+	public Direction sub(Direction other) {
 		short b = ((ShortBearing) other).brad;
 		if (!absolute)
 			return new ShortBearing(brad - b, other.isAbsolute());
@@ -107,7 +107,7 @@ public class ShortBearing implements DirectionVector, Bearing {
 	}
 
 	@Override
-	public Bearing interpolate(Bearing other, double t) {
+	public Direction interpolate(Direction other, double t) {
 		if (t <= 0.0)
 			return this;
 		else if (t >= 1.0)

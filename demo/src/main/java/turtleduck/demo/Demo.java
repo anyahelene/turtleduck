@@ -7,7 +7,7 @@ import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Turtle;
 
@@ -54,7 +54,7 @@ public class Demo implements TurtleDuckApp {
 				}
 				turtle.turn(10);
 				if (i % 2 == 0) {
-					turtle.jump(Bearing.absolute(i), 10);
+					turtle.jump(Direction.absolute(i), 10);
 				}
 				turtle.draw(-step / 2);
 

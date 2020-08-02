@@ -1,6 +1,6 @@
 package turtleduck.turtle;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
@@ -36,7 +36,7 @@ public interface BasicNavigator<T extends BasicNavigator<T>> extends PositionVec
 	 * @return The current bearing of the turtle (the direction in which it is
 	 *         facing)
 	 */
-	Bearing bearing();
+	Direction bearing();
 
 	/**
 	 * Turn to face the given direction.
@@ -46,7 +46,7 @@ public interface BasicNavigator<T extends BasicNavigator<T>> extends PositionVec
 	 * @param bearing the bearing to turn to
 	 * @return {@code this}, for sending more draw commands
 	 */
-	T bearing(Bearing bearing);
+	T bearing(Direction bearing);
 
 
 	/**

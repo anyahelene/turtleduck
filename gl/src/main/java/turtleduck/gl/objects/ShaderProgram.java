@@ -1,6 +1,6 @@
 package turtleduck.gl.objects;
 
-import static org.lwjgl.opengl.GL43.*;
+import static org.lwjgl.opengl.GL33C.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,8 +12,9 @@ import java.util.Map;
 import org.joml.Vector2fc;
 import org.joml.Vector3fc;
 import org.joml.Vector4fc;
+import org.lwjgl.opengl.ARBProgramInterfaceQuery;
+import org.lwjgl.opengl.GL43C;
 
-import turtleduck.gl.objects.ShaderProgram.ProgramData;
 import turtleduck.gl.objects.Variables.AbstractUniform;
 import turtleduck.gl.objects.Variables.TypeDesc;
 
@@ -74,12 +75,13 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 
 		int program = data().id();
 		bind();
-		int nUnis = glGetProgramInterfacei(program, GL_UNIFORM, GL_ACTIVE_RESOURCES);
+		int nUnis = ARBProgramInterfaceQuery.glGetProgramInterfacei(program, ARBProgramInterfaceQuery.GL_UNIFORM, ARBProgramInterfaceQuery.GL_ACTIVE_RESOURCES);
+//		int nUnis = glGetProgramInterfacei(program, GL43C.GL_UNIFORM, GL43C.GL_ACTIVE_RESOURCES);
 		for (int i = 0; i < nUnis; i++) {
-			String s = glGetProgramResourceName(program, GL_UNIFORM, i);
-			int[] props = { GL_BLOCK_INDEX, GL_TYPE, GL_LOCATION };
+			String s = ARBProgramInterfaceQuery.glGetProgramResourceName(program, ARBProgramInterfaceQuery.GL_UNIFORM, i);
+			int[] props = { ARBProgramInterfaceQuery.GL_BLOCK_INDEX, ARBProgramInterfaceQuery.GL_TYPE, ARBProgramInterfaceQuery.GL_LOCATION };
 			int[] values = new int[props.length];
-			glGetProgramResourceiv(program, GL_UNIFORM, i, props, null, values);
+			ARBProgramInterfaceQuery.glGetProgramResourceiv(program, ARBProgramInterfaceQuery.GL_UNIFORM, i, props, null, values);
 			System.out.println("uniform " + i + ": " + s + " " + Arrays.toString(values));
 			if (s.startsWith("texture")) {
 				try {
@@ -102,12 +104,12 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 			}
 		}
 
-		int nInputs = glGetProgramInterfacei(program, GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES);
+		int nInputs = ARBProgramInterfaceQuery.glGetProgramInterfacei(program, ARBProgramInterfaceQuery.GL_PROGRAM_INPUT, ARBProgramInterfaceQuery.GL_ACTIVE_RESOURCES);
 		for (int i = 0; i < nInputs; i++) {
-			String s = glGetProgramResourceName(program, GL_PROGRAM_INPUT, i);
-			int[] props = { GL_TYPE, GL_LOCATION };
+			String s = ARBProgramInterfaceQuery.glGetProgramResourceName(program, ARBProgramInterfaceQuery.GL_PROGRAM_INPUT, i);
+			int[] props = { ARBProgramInterfaceQuery.GL_TYPE, ARBProgramInterfaceQuery.GL_LOCATION };
 			int[] values = new int[props.length];
-			glGetProgramResourceiv(program, GL_PROGRAM_INPUT, i, props, null, values);
+			ARBProgramInterfaceQuery.glGetProgramResourceiv(program, ARBProgramInterfaceQuery.GL_PROGRAM_INPUT, i, props, null, values);
 			TypeDesc typeDesc = Variables.GL_TYPES.get(values[0]);
 			if(typeDesc != null) {
 				data.inputFormat.addField(s, values[1], typeDesc);
@@ -165,11 +167,11 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 		VertexArrayFormat format = null;
 
 		public static ProgramData getCached(String name) {
-			return DataObject.getCached(name, GL_PROGRAM, ProgramData.class);
+			return DataObject.getCached(name, GL43C.GL_PROGRAM, ProgramData.class);
 		}
 
 		public ProgramData(int id, String name) {
-			super(id, GL_PROGRAM, name);
+			super(id, GL43C.GL_PROGRAM, name);
 		}
 
 	}

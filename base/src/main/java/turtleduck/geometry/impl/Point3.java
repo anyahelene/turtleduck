@@ -1,10 +1,9 @@
 package turtleduck.geometry.impl;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.IPoint3;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
-import turtleduck.geometry.unused.Direction;
 
 /**
  * A 3D version of {@link Point2}
@@ -30,7 +29,7 @@ public class Point3 extends Point2 implements IPoint3 {
 	}
 
 	@Override
-	public Point add(Bearing dir, double distance) {
+	public Point add(Direction dir, double distance) {
 		return new Point3(Math.fma(dir.dirX(), distance, x), Math.fma(dir.dirY(), distance, y), Math.fma(dir.dirZ(), distance, z));
 	}
 

@@ -200,7 +200,7 @@ public class JfxScreen extends BaseScreen {
 	public Layer getBackgroundPainter() {
 		if (backgroundPainter == null) {
 			backgroundPainter = new JfxLayer(newLayerId(), width(), getHeight(), this, background);
-			layers.put(backgroundPainter.id(), backgroundPainter);
+			layerMap.put(backgroundPainter.id(), backgroundPainter);
 		}
 		return backgroundPainter;
 	}
@@ -464,7 +464,7 @@ public class JfxScreen extends BaseScreen {
 
 	@Override
 	public void flush() {
-		layers.values().forEach(Layer::flush);
+		layerMap.values().forEach(Layer::flush);
 	}
 
 	@Override

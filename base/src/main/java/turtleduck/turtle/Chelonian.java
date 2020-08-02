@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.objects.IdentifiedObject;
 
@@ -86,7 +86,7 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Navigator<T>, I
 	 * @param dist    Distance to move
 	 * @return {@code this}, for sending more draw commands
 	 */
-	T jump(Bearing bearing, double dist);
+	T jump(Direction bearing, double dist);
 
 	/**
 	 * Move to a new position, without drawing.
@@ -136,7 +136,7 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Navigator<T>, I
 	 * @see #useDegrees(), {@link #useRadians()}
 	 */
 	default T turnTo(double angle) {
-		return bearing(Bearing.absolute(angle));
+		return bearing(Direction.absolute(angle));
 	}
 
 	PenBuilder<? extends T> penChange();
@@ -192,11 +192,13 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Navigator<T>, I
 
 	DrawingBuilder drawing();
 
-	T draw(Bearing bearing, double dist);
+	T draw(Direction bearing, double dist);
 
 	T onDraw(BiConsumer<PathPoint, PathPoint> action);
 
 	T onMove(Consumer<PathPoint> action);
+
+	T writePathsTo(PathWriter pathWriter);
 
 	void beginPath();
 

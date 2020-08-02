@@ -1,6 +1,6 @@
 package turtleduck.turtle;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
@@ -16,7 +16,7 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * @return {@code this}, for sending more draw commands
 	 */
 	default T at(double x, double y) {
-		return at(Point.point(x, y));
+		return goTo(Point.point(x, y));
 	}
 
 	/**
@@ -25,7 +25,7 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * @param p the new position
 	 * @return {@code this}, for sending more draw commands
 	 */
-	default T at(Point p) {
+	default T goTo(Point p) {
 		return go(p, RelativeTo.WORLD);
 	}
 
@@ -61,7 +61,7 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * @return {@code this}, for sending more commands
 	 */
 	default T left(double degrees) {
-		return bearing(Bearing.relative(-degrees));
+		return bearing(Direction.relative(-degrees));
 	}
 
 	/**
@@ -80,7 +80,7 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * @return {@code this}, for sending more commands
 	 */
 	default T right(double degrees) {
-		return bearing(Bearing.relative(degrees));
+		return bearing(Direction.relative(degrees));
 	}
 
 	/**
@@ -106,7 +106,7 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * @param dist    Distance to move
 	 * @return {@code this}, for sending more draw commands
 	 */
-	default T go(Bearing bearing, double dist) {
+	default T go(Direction bearing, double dist) {
 		return go(Point.ZERO.add(bearing, dist), RelativeTo.POSITION);
 	}
 }

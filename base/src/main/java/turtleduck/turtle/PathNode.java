@@ -1,6 +1,6 @@
 package turtleduck.turtle;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Path.PointType;
 import turtleduck.turtle.Pen.SmoothType;
@@ -55,14 +55,14 @@ public interface PathNode {
 	 *         straight lines; or {@link #bearingOut()} for the first node in a
 	 *         path.
 	 */
-	Bearing bearingIn();
+	Direction bearingIn();
 
 	/**
 	 * @return Angle of the outgoing line segment; bearing from {@link #point()} to
 	 *         {@link #ctrlOut()} for Bézier curves, or to {@link #next()} for
 	 *         straight lines; or {@link #bearingIn()} for the last node in a path.
 	 */
-	Bearing bearingOut();
+	Direction bearingOut();
 
 	/**
 	 * @return Distance to {@link #ctrlIn()}; or 0 for a straight line.

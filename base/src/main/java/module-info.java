@@ -1,5 +1,6 @@
 module turtleduck.base {
 	exports turtleduck;
+	exports turtleduck.buffer;
 	exports turtleduck.colors;
 	exports turtleduck.objects;
 	exports turtleduck.display;
@@ -24,6 +25,6 @@ module turtleduck.base {
 	uses turtleduck.image.ImageFactory;
 	requires java.logging;
 	requires java.xml;
-	requires org.joml;
+	requires transitive org.joml;
 	requires java.desktop;
 }

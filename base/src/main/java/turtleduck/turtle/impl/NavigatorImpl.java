@@ -1,6 +1,6 @@
 package turtleduck.turtle.impl;
 
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
 import turtleduck.turtle.Navigator;
@@ -17,7 +17,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 		current = old.current.copy();
 	}
 
-	public NavigatorImpl(Point p, Bearing b) {
+	public NavigatorImpl(Point p, Direction b) {
 		current = new PathPointImpl();
 		current.point = p;
 		current.bearing = b;
@@ -27,7 +27,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 	protected abstract void addPoint(PathPointImpl point); 
 
 	@Override
-	public Bearing bearing() {
+	public Direction bearing() {
 		return current.bearing;
 	}
 
@@ -45,7 +45,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 		return (T) this;
 	}
 
-	protected void updateBearing(Bearing b) {
+	protected void updateBearing(Direction b) {
 		if (recordTurns) {
 			PathPointImpl pp = current.copy();
 			pp.bearing = current.bearing.add(b);
@@ -57,12 +57,12 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 	}
 
 	public T turnTo(PositionVector dest) {
-		bearing(Bearing.absolute(dest.x() - current.point.x(), dest.y() - current.point.y()).sub(current.bearing));
+		bearing(Direction.absolute(dest.x() - current.point.x(), dest.y() - current.point.y()).sub(current.bearing));
 		return (T) this;
 	}
 
 	@Override
-	public T bearing(Bearing dest) {
+	public T bearing(Direction dest) {
 		if (dest.isAbsolute())
 			updateBearing(dest.sub(current.bearing));
 		else
@@ -100,7 +100,8 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 		return current.bearing.dirZ();
 	}
 
-	public T at(Point dest) {
+	@Override
+	public T goTo(Point dest) {
 		if (!isAt(dest)) {
 			PathPointImpl pp = current.copy();
 			pp.point = dest;

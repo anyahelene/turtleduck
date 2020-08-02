@@ -5,13 +5,16 @@ import java.util.function.Consumer;
 
 import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
-import turtleduck.geometry.Bearing;
+import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Chelonian;
 import turtleduck.turtle.DrawingBuilder;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
+import turtleduck.turtle.PathWriter;
+import turtleduck.turtle.PathWriter.PathStroke;
+
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.SpriteBuilder;
@@ -22,7 +25,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		implements Chelonian<THIS, RESULT> {
 	public static class SpecificTurtle extends TurtleImpl<Turtle, Turtle> implements Turtle {
 
-		public SpecificTurtle(Point p, Bearing b, Pen pen) {
+		public SpecificTurtle(Point p, Direction b, Pen pen) {
 			super(p, b, pen);
 		}
 
@@ -57,6 +60,9 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 //	protected List<TurtleImpl<THIS, RESULT>> children = new ArrayList<>();
 	protected TurtleImpl<THIS, RESULT> parent = null;
 	protected PenBuilder<Pen> penBuilder;
+	private PathWriter writer;
+	private PathStroke currentStroke;
+	private double stepSize = 0;
 	private BiConsumer<PathPoint, PathPoint> drawAction;
 	private Consumer<PathPoint> moveAction;
 
@@ -68,9 +74,10 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		this.drawAction = parent.drawAction;
 		this.moveAction = parent.moveAction;
 		this.parent = parent;
+		this.writer = parent.writer;
 	}
 
-	public TurtleImpl(Point p, Bearing b, Pen pen) {
+	public TurtleImpl(Point p, Direction b, Pen pen) {
 		super(p, b);
 		this.pen = pen;
 	}
@@ -93,19 +100,14 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 //		Path path = Path.fromList(points);
 		return null;
 	}
-/*
-	public Bearing previousBearing(int index) {
-		if (index < 0)
-			index = points.size() + index;
-		return points.get(index).bearing;
-	}
 
-	public Point previousPosition(int index) {
-		if (index < 0)
-			index = points.size() + index;
-		return points.get(index).point;
-	}
-*/
+	/*
+	 * public Bearing previousBearing(int index) { if (index < 0) index =
+	 * points.size() + index; return points.get(index).bearing; }
+	 * 
+	 * public Point previousPosition(int index) { if (index < 0) index =
+	 * points.size() + index; return points.get(index).point; }
+	 */
 	public THIS pen(Pen newPen) {
 		pen = newPen;
 		penBuilder = null;
@@ -147,7 +149,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		drawing = true;
 		boolean penStatus = penDown;
 		penDown = true;
-		current.pen = pen;
+		current.pen = pen();
 		forward(dist);
 		penDown = penStatus;
 		triggerActions();
@@ -159,7 +161,6 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		drawing = false;
 		boolean penStatus = penDown;
 		penDown = false;
-		current.pen = null;
 		forward(dist);
 		penDown = penStatus;
 		triggerActions();
@@ -167,21 +168,30 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	}
 
 	@Override
-	public THIS jumpTo(Point newPos) {
-		drawing = false;
-		at(newPos);
+	public THIS goTo(Point newPos) {
+		super.goTo(newPos);
 		triggerActions();
 		return (THIS) this;
 	}
 
 	@Override
+	public THIS jumpTo(Point newPos) {
+		drawing = false;
+		boolean penStatus = penDown;
+		penDown = false;
+		goTo(newPos);
+		penDown = penStatus;
+		return (THIS) this;
+	}
+
+	@Override
 	public THIS turn(double angle) {
-		return bearing(Bearing.relative(angle));
+		return bearing(Direction.relative(angle));
 	}
 
 	@Override
 	public THIS turnTo(double angle) {
-		return bearing(Bearing.absolute(angle));
+		return bearing(Direction.absolute(angle));
 	}
 
 	@Override
@@ -265,35 +275,54 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	}
 
 	@Override
-	public THIS go(Bearing bearing, double dist) {
+	public THIS go(Direction bearing, double dist) {
 		super.go(bearing, dist);
 		triggerActions();
 		return (THIS) this;
 	}
 
 	private void triggerActions() {
-		if(last.point.equals(current.point)) {
+		if (last != null && last.point.equals(current.point)) {
 			System.out.println("" + last + " == " + current);
 		}
-		if (drawing && drawAction != null) {
-			drawAction.accept(last, current);
-//			drawAction.accept(points.get(points.size() - 2), points.get(points.size() - 1));
-		}
-		if (moveAction != null) {
-			moveAction.accept(current);
+		if (writer != null) {
+			if (drawing) {
+				if (currentStroke == null)
+					currentStroke = writer.addStroke();
+				if (stepSize > 0) {
+					double len = last.point().distanceTo(current.point());
+					currentStroke.addLine(last);
+					for (double d = stepSize; d < len; d++) {
+						Point p = last.point().interpolate(current.point(), d / len);
+						PathPointImpl tmp = current.copy();
+						tmp.point = p;
+						currentStroke.updateLine(last, current);
+					}
+				}
+				currentStroke.addLine(last, current);
+			} else if (currentStroke != null) {
+				currentStroke.endPath();
+				currentStroke = null;
+			}
 		}
 	}
 
 	@Override
-	public THIS jump(Bearing bearing, double dist) {
+	public THIS jump(Direction bearing, double dist) {
 		drawing = false;
 		return super.go(bearing, dist);
 	}
 
 	@Override
-	public THIS draw(Bearing bearing, double dist) {
+	public THIS draw(Direction bearing, double dist) {
 		drawing = true;
-		return super.go(bearing, dist);
+		boolean penStatus = penDown;
+		penDown = true;
+		current.pen = pen;
+		super.go(bearing, dist);
+		penDown = penStatus;
+		triggerActions();
+		return (THIS) this;
 	}
 
 	@Override
@@ -310,5 +339,11 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	public String toString() {
 		return "turtle(at=" + at() + ", bearing=" + bearing() + ")";
+	}
+
+	@Override
+	public THIS writePathsTo(PathWriter pathWriter) {
+		this.writer = pathWriter;
+		return (THIS) this;
 	}
 }

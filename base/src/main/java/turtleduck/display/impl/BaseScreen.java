@@ -1,11 +1,16 @@
 package turtleduck.display.impl;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import turtleduck.Debug;
 import turtleduck.display.Canvas;
@@ -20,7 +25,8 @@ public abstract class BaseScreen implements Screen {
 	private static final List<Double> STD_ASPECTS = Arrays.asList(16.0 / 9.0, 16.0 / 10.0, 4.0 / 3.0);
 	protected final String id;
 	private int nLayers = 0;
-	protected final Map<String, Layer> layers = new HashMap<>();
+	protected final Map<String, Layer> layerMap = new HashMap<>();
+	protected final List<Layer> layers = new ArrayList<>();
 	protected List<Double> aspects;
 	protected Canvas debugLayer;
 	protected int aspect = 0;
@@ -41,14 +47,43 @@ public abstract class BaseScreen implements Screen {
 	}
 
 	protected <T extends Layer> T addLayer(T layer) {
-		layers.put(layer.id(), layer);
+		layers.add(layer);
+		layerMap.put(layer.id(), layer);
 		return layer;
+	}
+
+	protected void layerToFront(Layer l) {
+		int i = layers.indexOf(l);
+		if (i >= 0 && i < layers.size() - 1) {
+			layers.remove(i);
+			layers.add(l);
+		}
+	}
+
+	protected void layerToBack(Layer l) {
+		int i = layers.indexOf(l);
+		if (i >= 1) {
+			layers.remove(i);
+			layers.add(0, l);
+		}
+	}
+	
+	protected void forEachLayer(boolean frontToBack, Consumer<Layer> fun) {
+		if(frontToBack) {
+			for(int i = layers.size()-1; i >= 0; i--) {
+				fun.accept(layers.get(i));
+			}
+		} else {
+			for(int i = 0; i < layers.size(); i++) {
+				fun.accept(layers.get(i));
+			}
+		}
 	}
 
 	public Canvas debugCanvas() {
 		if (debugLayer == null) {
 			debugLayer = createCanvas();
-			debugLayer.layerToFront();
+//			debugLayer.layerToFront();
 		}
 		return debugLayer;
 	}
@@ -119,7 +154,8 @@ public abstract class BaseScreen implements Screen {
 		public double fbInUseHeight;
 
 		/**
-		 * @return Scaling factor to translate from virtual coordinates to framebuffer coordinates
+		 * @return Scaling factor to translate from virtual coordinates to framebuffer
+		 *         coordinates
 		 */
 		public double resolutionScale() {
 			return fbWidth / canvasWidth;
@@ -195,9 +231,11 @@ public abstract class BaseScreen implements Screen {
 		}
 		return dim;
 	}
-	
+
 	/**
-	 * Set up list of current aspect ratios so that it includes ratio of current window.
+	 * Set up list of current aspect ratios so that it includes ratio of current
+	 * window.
+	 * 
 	 * @param dim
 	 * @param currentRatio
 	 */
@@ -215,9 +253,10 @@ public abstract class BaseScreen implements Screen {
 			aspects.add(currentRatio);
 		}
 	}
-	
+
 	/**
 	 * Before calling this, set dim.winWidth and dim.winHeight to updated values
+	 * 
 	 * @param info
 	 */
 	protected void recomputeDimensions(DisplayInfo info) {
@@ -228,12 +267,12 @@ public abstract class BaseScreen implements Screen {
 		dim.yScale = dim.winHeight / dim.fbInUseHeight;
 		dim.xMaxScale = dim.rawDispWidth / dim.fbWidth;
 		dim.yMaxScale = dim.rawDispHeight / dim.fbInUseHeight;
-		dim.fitScale =  Math.min(dim.xScale, dim.yScale);
+		dim.fitScale = Math.min(dim.xScale, dim.yScale);
 		dim.maxScale = (int) Math.max(1, Math.ceil(Math.min(dim.xMaxScale, dim.yMaxScale)));
-		
+
 		dim.scale = scaling == 0 ? dim.fitScale : scaling;
 	}
-	
+
 	@Override
 	public void zoomCycle() {
 		scaling++;
@@ -255,7 +294,7 @@ public abstract class BaseScreen implements Screen {
 		scaling = Math.min(10, dim.scale + 0.2);
 		recomputeLayout(false);
 	}
-	
+
 	@Override
 	public void zoomOne() {
 		scaling = 1;
