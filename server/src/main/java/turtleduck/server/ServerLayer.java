@@ -15,6 +15,7 @@ import turtleduck.geometry.Point;
 import turtleduck.image.Image;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
+import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
@@ -90,5 +91,11 @@ public class ServerLayer extends BaseCanvas<ServerScreen> {
 	public void drawImage(Point at, Image img) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	protected PathWriter pathWriter() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

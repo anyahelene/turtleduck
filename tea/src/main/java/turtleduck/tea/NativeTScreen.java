@@ -18,6 +18,7 @@ import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.display.impl.BaseScreen.Dimensions;
+import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
 import turtleduck.text.TextWindow;
 import xtermjs.Terminal;
@@ -254,6 +255,12 @@ public class NativeTScreen extends BaseScreen {
 	public void clipboardPut(String copied) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public <T> InputControl<T> inputControl(Class<T> type, int code, int controller) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

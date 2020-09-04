@@ -9,7 +9,7 @@
 	</parent>
 	<properties>
 		<lwjgl.version>3.2.3</lwjgl.version>
-		<joml.version>1.9.19</joml.version>
+		<joml.version>1.9.25</joml.version>
 		<lwjgl.natives>natives-linux</lwjgl.natives>
 	</properties>
 

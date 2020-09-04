@@ -51,6 +51,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 
 	private ArrayBuffer streamBuffer;
 	private VertexArray streamArray;
+	private VertexArray staticArray;
 	private GLPathWriter pathWriter = new GLPathWriter();
 //	private VertexArrayBuilder vab;
 //	private VertexArrayBuilder vab2;
@@ -63,6 +64,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	private VertexArrayFormat format;
 	private DataField<Vector3f> aPosVec3;
 	private DataField<Color> aColorVec4;
+	private int quadVertices = -1;
 
 	public GLLayer(String layerId, GLScreen screen, double width, double height) {
 		super(layerId, screen, width, height);
@@ -77,6 +79,16 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		streamBuffer = new ArrayBuffer(GL_STREAM_DRAW, 2048);
 		streamArray = new VertexArray(format, streamBuffer);
 		streamArray.setFormat();
+		staticArray = new VertexArray(format, GL_STATIC_DRAW, 2048);
+		staticArray.setFormat();
+		quadVertices = staticArray.nVertices();
+		staticArray.begin().put(aPosVec3, 0, 0, 0).put(aColorVec4, 0, 0, 0, 1).end();
+		staticArray.begin().put(aPosVec3, 0, 1, 0).put(aColorVec4, 0, 1, 0, 1).end();
+		staticArray.begin().put(aPosVec3, 1, 0, 0).put(aColorVec4, 1, 0, 0, 1).end();
+
+		staticArray.begin().put(aPosVec3, 1, 0, 0).put(aColorVec4, 1, 0, 0, 1).end();
+		staticArray.begin().put(aPosVec3, 0, 1, 0).put(aColorVec4, 0, 1, 0, 1).end();
+		staticArray.begin().put(aPosVec3, 1, 1, 0).put(aColorVec4, 1, 1, 0, 1).end();
 //		vab = screen.shader2d.format().build(GL_DYNAMIC_DRAW);
 
 	}
@@ -167,6 +179,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		}
 	}
 
+	int count = 0;
 	public void plot(Point at, double width, double height, Color color, String function) {
 		ShaderProgram program = programs.get(function);
 		if (program == null) {
@@ -178,6 +191,9 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 						"in vec4 fNormal;\n" + //
 						"in vec2 fTexCoord;\n" + //
 						"flat in int fTexNum;\n" + //
+						"uniform float MAXITER = 1024;\n" + //
+						"uniform vec2 zoom = vec2(2,2);\n" + //
+						"uniform vec2 offset = vec2(-1,-1);\n" + //
 						"\n" + //
 						"out vec4 FragColor;\n" + //
 						"\n" + //
@@ -193,9 +209,23 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 						"float between(float a, float b, float c) { return c > min(a,b) && c < max(a,b) ? 1.0 : 0.0; }\n"
 						+ //
 						"void main() {\n" + //
-						"	float x = (2*fColor.x-1)*(1.0+threshold), y = (2*fColor.y-1)*(1.0+threshold);\n" + //
+//						"   float MAXITER = 128;\n" + //
+						"   vec2 xy0 = zoom*fColor.xy + offset;\n" + // x0 = 0.1*fColor.x+.3, y0 = 0.1*fColor.y-.5;\n" + //
+						"   float x = xy0.x, y = xy0.y;\n" + //
+						"   float i = 0;\n" + //
+						"   while(x*x+y*y <= 4 && ++i < MAXITER) {\n" + //
+						"      float tmp = x*x-y*y+xy0.x;\n" + //
+						"       y = 2*x*y + xy0.y;\n" + //
+						"       x = tmp;\n" + //
+						"   }\n" + //
+						"   float c = max(i-32, 0) / (128-32);\n" + //
+						"   if(i <= 32) FragColor = mix(vec4(0,0,0,1), vec4(0,0,.1,1), i/32.0);\n" + //
+						"   else if(i >= 128) FragColor = mix(vec4(1,.9,.4,1), vec4(1,1,1,0), (i-128)/(MAXITER-128));\n" + //
+						"   else FragColor = mix(vec4(.0,.0,.1,1), vec4(1,.9,.4,1), c);\n" + //
+						"   if(i >= MAXITER) discard;\n" + //
+//						"	float x = (2*fColor.x-1)*(1.0+threshold), y = (2*fColor.y-1)*(1.0+threshold);\n" + //
 //						"	if(" + function + ") {\n" +  //
-						"		FragColor = vec4(x*x,y*y,1,1) * (" + function + ");\n" + //
+//						"		FragColor = vec4(x*x,y*y,1,1) * (" + function + ");\n" + //
 						"       if(FragColor.a < 0.05) discard;\n" + //
 //						"	} else {\n" +  //
 //						"		discard;\n" +  //
@@ -204,7 +234,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 						"";
 				ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
 				ShaderObject fs = ShaderObject.createFromString(code, GL_FRAGMENT_SHADER);
-				program = ShaderProgram.createProgram("plot_" + function, vs, fs);
+program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 //				program.uniform("uProjection", Matrix4f.class).set(screen.projectionMatrix);
 //				program.uniform("uView", Matrix4f.class).set(screen.viewMatrix);
 				program.uniform("uProjView", Matrix4f.class)
@@ -216,26 +246,24 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 				e.printStackTrace();
 			}
 		}
+		program.uniform("MAXITER", Float.class).set((float)128+count);
+		float zoom = (float) ((screen.fov - 10) / 120);
+		program.uniform("zoom", Vector2f.class).set(new Vector2f(2.5f*zoom));
+		program.uniform("offset", Vector2f.class).set(new Vector2f(screen.cameraPosition.x-1.8f, screen.cameraPosition.y-1f));
+
 		DrawObject obj = new DrawObject();
 		obj.shader = program;
-		obj.array = streamArray;
+		obj.array = staticArray;
 		obj.drawMode = GL_TRIANGLES;
 		obj.transform.translation((float) at.x(), (float) at.y(), 0).scale((float) width, (float) height, 1);
 		obj.zOrder = depth++;
-		obj.offset = streamArray.nVertices();
+		obj.offset = quadVertices;
+		obj.nVertices = 6;
 		obj.blend = true;
 		obj.type = "plot";
 		drawObjects.add(obj);
 
-		streamArray.begin().put(aPosVec3, 0, 0, 0).put(aColorVec4, 0, 0, 0, 1).end();
-		streamArray.begin().put(aPosVec3, 0, 1, 0).put(aColorVec4, 0, 1, 0, 1).end();
-		streamArray.begin().put(aPosVec3, 1, 0, 0).put(aColorVec4, 1, 0, 0, 1).end();
-
-		streamArray.begin().put(aPosVec3, 1, 0, 0).put(aColorVec4, 1, 0, 0, 1).end();
-		streamArray.begin().put(aPosVec3, 0, 1, 0).put(aColorVec4, 0, 1, 0, 1).end();
-		streamArray.begin().put(aPosVec3, 1, 1, 0).put(aColorVec4, 1, 1, 0, 1).end();
-		obj.nVertices = streamArray.nVertices() - obj.offset;
-
+		count = (count + 1) % 1024;
 	}
 
 	public void drawImage(Point at, Image img, float rotation) {

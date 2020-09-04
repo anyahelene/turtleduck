@@ -37,6 +37,7 @@ import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
+import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
 import turtleduck.gl.objects.CubeModel;
 import turtleduck.gl.objects.ShaderObject;
@@ -81,11 +82,13 @@ public class GLScreen extends BaseScreen implements Screen {
 //	private int fbHeight;
 //	private int width;
 //	int height;
-	private GLMouse mouse;
+	protected GLMouse mouse;
 	private boolean fullscreen;
-	private double fov = 50;
+	double fov = 50;
 	private boolean wireframe = false;
 	private int frameBuf;
+
+	private GLStick joysticks;
 
 	@Override
 	public void clearBackground() {
@@ -371,9 +374,9 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwSetWindowSizeCallback(window, this::callbackWindowSize);
 		glfwSetKeyCallback(window, this::processInput);
 		mouse = new GLMouse(this, dim);
-		glfwSetMouseButtonCallback(window, mouse::callbackMouseButton);
-		glfwSetCursorPosCallback(window, mouse::callbackMousePosition);
-		glfwSetScrollCallback(window, mouse::callbackMouseScroll);
+		mouse.registerCallbacks(window);
+		joysticks = new GLStick();
+		joysticks.registerCallbacks();
 		long monitor = glfwGetPrimaryMonitor();
 		GLFWVidMode vidmode = glfwGetVideoMode(monitor);
 		glfwSetWindowPos(window, (vidmode.width() - width) / 2, (vidmode.height() - height) / 2);
@@ -649,6 +652,7 @@ public class GLScreen extends BaseScreen implements Screen {
 //		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuf);
 		stats.startFrame();
 		glfwPollEvents();
+		joysticks.processInput();
 		if (wireframe) {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		} else {
@@ -713,10 +717,17 @@ public class GLScreen extends BaseScreen implements Screen {
 			glfwSetFramebufferSizeCallback(window, null);
 			glfwSetWindowSizeCallback(window, null);
 			glfwSetKeyCallback(window, null);
+			joysticks.unregisterCallbacks();
 			glfwSetMouseButtonCallback(window, null);
 			glfwSetCursorPosCallback(window, null);
 			glfwSetScrollCallback(window, null);
 			glfwDestroyWindow(window);
 		}
+	}
+
+	@Override
+	public <T> InputControl<T> inputControl(Class<T> type, int code, int controller) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

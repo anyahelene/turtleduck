@@ -13,6 +13,7 @@ import turtleduck.geometry.Point;
 import turtleduck.image.Image;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
+import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
@@ -117,6 +118,12 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 	protected void drawLine(Stroke stroke, Point from, Point to) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	protected PathWriter pathWriter() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

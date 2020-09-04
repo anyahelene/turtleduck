@@ -634,6 +634,40 @@ public class KeyCodes {
 		protected static final int FIRST_ID = 0x300000, LAST_ID = 0x300008;
 	}
 
+	public static class GamePad {
+		/** The A or Cross button */
+		public static final int BUTTON_A = 0x1010_0000;
+		/** The B or Circle button */
+		public static final int BUTTON_B = 0x1020_0000;
+		/** The X or Square button */
+		public static final int BUTTON_X = 0x1030_0000;
+		/** The Y or Triangle button */
+		public static final int BUTTON_Y = 0x1040_0000;
+		/** Left bumper/shoulder, L button */
+		public static final int BUTTON_LEFT_BUMPER = 0x105_00000;
+		/** Right bumper/shoulder, R button */
+		public static final int BUTTON_RIGHT_BUMPER = 0x106_00000;
+		/** Left thumb stick button */
+		public static final int BUTTON_LEFT_THUMB = 0x107_00000;
+		/** Right stick button */
+		public static final int BUTTON_RIGHT_THUMB = 0x108_00000;
+		public static final int BUTTON_BACK = 0x109_00000;
+		public static final int BUTTON_START = 0x10a_00000;
+		public static final int BUTTON_GUIDE = 0x10b_0000;
+
+		public static final int AXIS_LEFT_TRIGGER = 0x10c_00000;
+		public static final int AXIS_RIGHT_TRIGGER = 0x10d_00000;
+		public static final int BUTTON_DPAD_DOWN = 0x10f_00000;
+		public static final int BUTTON_DPAD_LEFT = 0x110_00000;
+		public static final int BUTTON_DPAD_RIGHT = 0x111_00000;
+		public static final int BUTTON_DPAD_UP = 0x112_00000;
+		public static final int AXIS_LEFT_X = 0x113_00000;
+		public static final int AXIS_LEFT_Y = 0x114_00000;
+		public static final int AXIS_RIGHT_X = 0x115_00000;
+		public static final int AXIS_RIGHT_Y = 0x116_00000;
+		public static final int AXIS_MASK = 0x000_1ffff;
+
+		}
 	protected static final int FIRST_ID = 0x200000, LAST_ID = 0x300008;
 	public static void initialize() {
 		defineKey(Special.UNDEFINED, "UNDEFINED",  "Undefined",  "UNDEFINED",  "VK_UNDEFINED", "GLFW_KEY_UNKNOWN",  "Special");
@@ -904,6 +938,28 @@ public class KeyCodes {
 		defineKey(Document.MAIL_REPLY, "MAIL_REPLY",  "MailReply",  null,  null, null,  "Document");
 		defineKey(Document.MAIL_SEND, "MAIL_SEND",  "MailSend",  null,  null, null,  "Document");
 		defineKey(Document.SPELL_CHECK, "SPELL_CHECK",  "SpellCheck",  null,  null, null,  "Document");
+
+		defineKey(GamePad.BUTTON_A, "Gamepad_A",  "buttons[0]",  null, null, "GLFW_GAMEPAD_BUTTON_A",  "Gamepad");
+		defineKey(GamePad.BUTTON_B, "Gamepad_B",  "buttons[1]",  null, null, "GLFW_GAMEPAD_BUTTON_B",  "Gamepad");
+		defineKey(GamePad.BUTTON_X, "Gamepad_X",  "buttons[2]",  null, null, "GLFW_GAMEPAD_BUTTON_X",  "Gamepad");
+		defineKey(GamePad.BUTTON_Y, "Gamepad_Y",  "buttons[3]",  null, null, "GLFW_GAMEPAD_BUTTON_Y",  "Gamepad");
+		defineKey(GamePad.BUTTON_LEFT_BUMPER, "Gamepad_L",  "buttons[4]",  null, null, "GLFW_GAMEPAD_BUTTON_LEFT_BUMPER",  "Gamepad");
+		defineKey(GamePad.BUTTON_RIGHT_BUMPER, "Gamepad_R",  "buttons[5]",  null, null, "GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER",  "Gamepad");
+		defineKey(GamePad.AXIS_LEFT_TRIGGER, "Gamepad_ZL",  "buttons[6]",  null, null, "GLFW_GAMEPAD_AXIS_LEFT_TRIGGER",  "Gamepad");
+		defineKey(GamePad.AXIS_RIGHT_TRIGGER, "Gamepad_ZR",  "buttons[7]",  null, null, "GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER",  "Gamepad");
+		defineKey(GamePad.BUTTON_BACK, "Gamepad_Back",  "buttons[8]",  null, null, "GLFW_GAMEPAD_BUTTON_BACK",  "Gamepad");
+		defineKey(GamePad.BUTTON_START, "Gamepad_Start",  "buttons[9]",  null, null, "GLFW_GAMEPAD_BUTTON_START",  "Gamepad");
+		defineKey(GamePad.BUTTON_GUIDE, "Gamepad_Guide",  "buttons[16]",  null, null, "GLFW_GAMEPAD_BUTTON_GUIDE",  "Gamepad");
+		defineKey(GamePad.BUTTON_LEFT_THUMB, "Gamepad_L",  "buttons[10]",  null, null, "GLFW_GAMEPAD_BUTTON_LEFT_THUMB",  "Gamepad");
+		defineKey(GamePad.BUTTON_RIGHT_THUMB, "Gamepad_R",  "buttons[11]",  null, null, "GLFW_GAMEPAD_BUTTON_RIGHT_THUMB",  "Gamepad");
+		defineKey(GamePad.BUTTON_DPAD_UP, "Gamepad_Up",  "buttons[12]",  null, null, "GLFW_GAMEPAD_BUTTON_DPAD_UP",  "Gamepad");
+		defineKey(GamePad.BUTTON_DPAD_DOWN, "Gamepad_Down",  "buttons[13]",  null, null, "GLFW_GAMEPAD_BUTTON_DPAD_DOWN",  "Gamepad");
+		defineKey(GamePad.BUTTON_DPAD_LEFT, "Gamepad_Left",  "buttons[14]",  null, null, "GLFW_GAMEPAD_BUTTON_DPAD_LEFT",  "Gamepad");
+		defineKey(GamePad.BUTTON_DPAD_RIGHT, "Gamepad_Right",  "buttons[15]",  null, null, "GLFW_GAMEPAD_BUTTON_DPAD_RIGHT",  "Gamepad");
+		defineKey(GamePad.AXIS_LEFT_X, "Gamepad_Up",  "axes[0]",  null, null, "GLFW_GAMEPAD_AXIS_LEFT_X",  "Gamepad");
+		defineKey(GamePad.AXIS_LEFT_Y, "Gamepad_Down",  "axes[1]",  null, null, "GLFW_GAMEPAD_AXIS_LEFT_Y",  "Gamepad");
+		defineKey(GamePad.AXIS_RIGHT_X, "Gamepad_Left",  "axes[2]",  null, null, "GLFW_GAMEPAD_AXIS_RIGHT_X",  "Gamepad");
+		defineKey(GamePad.AXIS_RIGHT_Y, "Gamepad_Right",  "axes[3]",  null, null, "GLFW_GAMEPAD_AXIS_RIGHT_Y",  "Gamepad");
 
 
 

@@ -29,6 +29,7 @@ import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.display.MouseCursor;
 import turtleduck.events.KeyEvent;
+import turtleduck.events.InputControl;
 import turtleduck.events.KeyCodes;
 import turtleduck.turtle.Pen;
 import turtleduck.text.TextMode;
@@ -473,5 +474,11 @@ public class JfxScreen extends BaseScreen {
 			shortcutKeyMask = KeyEvent.SHORTCUT_MASK_ALT;
 		else
 			shortcutKeyMask = KeyEvent.SHORTCUT_MASK;
+	}
+
+	@Override
+	public <T> InputControl<T> inputControl(Class<T> type, int code, int controller) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

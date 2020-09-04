@@ -4,6 +4,7 @@ import java.util.function.Predicate;
 
 import turtleduck.turtle.Pen;
 import turtleduck.colors.Color;
+import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
 import turtleduck.objects.IdentifiedObject;
 import turtleduck.text.TextWindow;
@@ -103,6 +104,14 @@ public interface Screen extends IdentifiedObject {
 
 	Layer getBackgroundPainter();
 
+	/**
+	 * Return an input control for the given key/button/stick code.
+	 * @param type the type of value that should be provided, usually Boolean.class or Float.class
+	 * @param code a keycode, usually from {@link turtleduck.events.KeyCodes.GamePad}
+	 * @param controller which gamepad/controller to use (0 for the first, 1 for the second, -1 for 
+	 * @return
+	 */
+	<T> InputControl<T> inputControl(Class<T> type, int code, int controller);
 	double getHeight();
 
 	/** @return the keyOverride */

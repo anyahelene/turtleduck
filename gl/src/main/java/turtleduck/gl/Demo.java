@@ -2,7 +2,11 @@ package turtleduck.gl;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.lwjgl.glfw.GLFW;
+
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
@@ -12,6 +16,7 @@ import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
+import turtleduck.gl.objects.Util;
 import turtleduck.grid.Grid;
 import turtleduck.grid.MyGrid;
 import turtleduck.image.Image;
@@ -63,7 +68,7 @@ public class Demo implements TurtleDuckApp {
 	private Pen pen;
 	private Turtle turtle;
 	private GLPixelData image;
-	private int count = 0;
+	private int count = 0, count2 = 0;
 	private Image image2;
 	private Tiles tiles;
 	private GLScreen screen;
@@ -80,6 +85,9 @@ public class Demo implements TurtleDuckApp {
 //		if(true)
 //			return;
 
+		fern(turtle.child().at(200, 900).turnTo(45), 10, 5);
+		fern2(turtle.child().at(900, 900).turnTo(0), 5, 10);
+	tree(turtle.child().at(850,800).penColor(Color.color(.5, .3, .0)).penWidth(2).turnTo(0), 10, 10);
 		wheel1(turtle.child().at(500, 500).turnTo(rotation).penColor(Color.color(0.5, 0, 0, 0.5))); 
 		rotation += 16 * deltaTime;
 		canvas.drawImage(Point.point(100, 0), image2);
@@ -91,7 +99,9 @@ public class Demo implements TurtleDuckApp {
 																													// 1)");
 
 //		GLLayer.angle += deltaTime;
-		count = (count + 1) % 256;
+		count = (count + 1) & 0xff;
+		count2 = (count2 + 1) & 0xffff;
+
 		/*
 		 * int s = count / 16; for (int offY = 0; offY < 256; offY += 32) for (int offX
 		 * = 0; offX < 256; offX += 32) { canvas.drawImage(Point.point(offX + s, offY +
@@ -145,7 +155,7 @@ public class Demo implements TurtleDuckApp {
 //		turtle.jump(0);
 //		turtle.moveTo(600,200);
 			colorWheel(turtle, -100);
-//			colorWheel(turtle, 100);
+			colorWheel(turtle, 100);
 
 //		turtle.moveTo(500,400);
 			turtle.done();
@@ -176,6 +186,7 @@ public class Demo implements TurtleDuckApp {
 
 		System.out.println(Color.fromARGB(0xffffffff));
 		System.out.println(Color.fromARGB(0xff7f7f7f));
+
 
 		try {
 			image2 = new GLPixelData("/yeti-juno.jpg");
@@ -229,11 +240,11 @@ public class Demo implements TurtleDuckApp {
 			turtle.penChange().strokePaint(ink).done();
 			turtle.draw(step);
 			Turtle sub = turtle.child().turn(90);
-			for (int j = 20; j > 0; j--) {
-				sub.penChange().strokeWidth(j / 3.5).strokePaint(ink).done();
-				sub.draw(radius / 20.0);
-				ink = ink.brighter();
-			}
+			sub.penChange().strokeWidth(5).strokePaint(ink).done();
+			sub.draw(1);
+		ink = 	Colors.WHITE; //ink.brighter().brighter().brighter().brighter().brighter();
+			sub.penChange().strokeWidth(1).strokePaint(ink).done();
+			sub.draw(radius);
 			sub.done();
 			if (radius < 0) {
 				if (i % 3 == 0) {
@@ -273,6 +284,65 @@ public class Demo implements TurtleDuckApp {
 		for (int i = 0; i < segments; i++) {
 			turtle.draw(2 * radius * Math.sin(Math.PI / segments));
 			turtle.turn(s);
+		}
+	}
+	
+	private void fern(Turtle turtle, double h, int n) {
+		fernX(turtle, h, n);
+	}
+	
+	private void fernX(Turtle turtle, double h, int n) {
+		double factor = 1;
+		if(n <= 0)
+			return;
+		turtle.draw(h*n);
+		turtle.turn(-25);
+		Turtle ch = turtle.child();
+		fernX(ch.child(), h*factor, n-1);
+		fernX(ch.turn(-25), h*factor, n-1);
+		turtle.turn(25);
+		turtle.draw(h*n);
+		ch = turtle.child();
+		ch.turn(25).draw(h*n);
+		fernX(ch, h*factor, n-1);
+		turtle.turn(-25);
+		fernX(turtle, h*factor, n-1);
+	}
+	
+	private void fern2(Turtle turtle, double h, int n) {
+		if(n <= 0)
+			return;
+		else if(n == 1)
+			turtle.draw(h*n*2);
+		else {
+		turtle.penWidth(n);
+		turtle.draw(h*n);
+		fern2(turtle.child().turn(n*5), h, Math.max(1,n-2));
+		turtle.turn(1).draw(h*n);
+		fern2(turtle.child().turn(-n*5), h, Math.max(1, n-2));
+		turtle.turn(1).draw(h*n);
+		fern2(turtle, h, n-1);
+		}
+	}
+	private void tree(Turtle turtle, double h, int n) {
+		double growth = Math.min(1, count2/8192.0);
+		double stage = n - (1-growth) * 10;
+		if(stage <= 0)
+			return;
+		
+		turtle.penColor(Color.color(.4, 1, 0).mix(Color.color(.4, .25, 0), stage/3));
+		if(n <= 1)
+			turtle.penColor(Colors.RED).draw(Math.min(stage, 1)*5);
+		else {
+			double a = Math.sin(2*Math.PI*count/256.0) / n;
+			turtle.turn(a);
+			turtle.draw(2*h*Math.min(stage/2, 1)/3);
+			turtle.penWidth(2*n*Math.min(stage/2, 1));
+			turtle.draw(2*h*Math.min(stage/2, 1)*2/3);
+//			turtle.penWidth(2*turtle.pen().strokeWidth()*.75);
+			
+			tree(turtle.child().turn(30), h*.75, n-1);
+			tree(turtle.child().turn(-20), h*.75, n-1);
 		}
 	}
 

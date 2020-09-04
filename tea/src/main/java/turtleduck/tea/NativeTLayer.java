@@ -12,6 +12,7 @@ import turtleduck.image.Image;
 import turtleduck.tea.net.SockJS;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
+import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
@@ -112,5 +113,11 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 	public void drawImage(Point at, Image img) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	protected PathWriter pathWriter() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
