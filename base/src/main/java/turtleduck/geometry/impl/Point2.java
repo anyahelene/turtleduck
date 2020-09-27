@@ -1,5 +1,8 @@
 package turtleduck.geometry.impl;
 
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
@@ -65,7 +68,10 @@ public class Point2 implements Point {
 	@Override
 	public Point add(Direction dir, double distance) {
 //	TODO:	return new Point2(Math.fma(dir.dirX(), distance, x), Math.fma(dir.dirY(), distance, y));
-		return new Point2(dir.dirX() * distance + x, dir.dirY() * distance + y);
+		if (dir.is3d())
+			return new Point3(dir.dirX() * distance + x, dir.dirY() * distance + y, dir.dirZ() * distance);
+		else
+			return new Point2(dir.dirX() * distance + x, dir.dirY() * distance + y);
 	}
 
 	@Override
@@ -109,11 +115,6 @@ public class Point2 implements Point {
 	@Override
 	public Point xyz(double newX, double newY, double newZ) {
 		return new Point3(newX, newY, newZ);
-	}
-
-	@Override
-	public Point diff(PositionVector point) {
-		return new Point2(x() - x, y() - y);
 	}
 
 	@Override
@@ -175,6 +176,15 @@ public class Point2 implements Point {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public Vector3f toVector(Vector3f dest) {
+		return dest.set(x, y, 0);
+	}
+	@Override
+	public Vector3d toVector(Vector3d dest) {
+		return dest.set(x, y, 0);
 	}
 
 }

@@ -2,6 +2,8 @@ package turtleduck.geometry.impl;
 
 import java.util.logging.Logger;
 
+import org.joml.Vector3f;
+
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
 
@@ -88,11 +90,11 @@ public class Angle implements DirectionVector, Direction {
 	}
 
 	public static Angle absolute(double x, double y) {
-		return new Angle(atan2(x, y), true);
+		return new Angle(atan2(y, x), true);
 	}
 
 	public static Direction relative(double x, double y) {
-		return new Angle(atan2(x, y), false);
+		return new Angle(atan2(y, x), false);
 	}
 
 	@Override
@@ -125,6 +127,8 @@ public class Angle implements DirectionVector, Direction {
 
 	@Override
 	public Direction add(Direction other) {
+		if (other.is3d())
+			return other.add(this);
 		int b = ((Angle) other).angle;
 		assert ((long) angle + (long) b) == angle + b;
 		if (!absolute)
@@ -139,6 +143,8 @@ public class Angle implements DirectionVector, Direction {
 
 	@Override
 	public Direction sub(Direction other) {
+		if (other.is3d())
+			return new Angle3(this).sub(other);
 		int b = ((Angle) other).angle;
 		assert ((long) angle - (long) b) == angle - b;
 		if (!absolute)
@@ -234,8 +240,8 @@ public class Angle implements DirectionVector, Direction {
 		return String.format(format, toArrow(), degs);
 	}
 
-	public static double sin(int a) {
-		double sign = -1;
+	public static double cos(int a) {
+		double sign = 1;
 		if (a < 0)
 			a += TWO_MI;
 		else if (a >= TWO_MI)
@@ -244,7 +250,7 @@ public class Angle implements DirectionVector, Direction {
 			a = TWO_MI - a;
 		if (a > MI / 2) { // reflect vertical
 			a = MI - a;
-			sign = 1;
+			sign = -1;
 		}
 
 		switch (a) {
@@ -263,7 +269,7 @@ public class Angle implements DirectionVector, Direction {
 		}
 	}
 
-	static double cos(int a) {
+	static double sin(int a) {
 		double sign = 1;
 		if (a < 0)
 			a += TWO_MI;
@@ -293,20 +299,17 @@ public class Angle implements DirectionVector, Direction {
 		}
 	}
 
-	public static int atan2(double x, double y) {
+	public static int atan2(double y, double x) {
 		double absX = Math.abs(x), absY = Math.abs(y);
 		if (absX < 1e-10) {
 			if (absY < 1e-10)
 				throw new ArithmeticException(String.format("atan2(%g,%g", x, y));
 			else
-				return y > 0 ? MI : 0;
+				return y > 0 ? MI/2 : -MI/2;
 		} else if (absY < 1e-10) {
-			if (x > 0)
-				return MI / 2;
-			else
-				return -MI / 2;
+			return x > 0 ? 0 : -MI;
 		} else {
-			int m = degreesToMilliArcSec(Math.toDegrees(Math.atan(y / x)) + 90);
+			int m = degreesToMilliArcSec(Math.toDegrees(Math.atan(y / x)));
 			if (x < 0)
 				return m - MI;
 			else
@@ -341,7 +344,7 @@ public class Angle implements DirectionVector, Direction {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (absolute ? 1231 : 1237);
-		result = prime * result + angle;
+		result = prime * result + Double.hashCode(degrees());
 		return result;
 	}
 
@@ -350,16 +353,70 @@ public class Angle implements DirectionVector, Direction {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof Angle)) {
+		if (!(obj instanceof Direction)) {
 			return false;
 		}
-		Angle other = (Angle) obj;
-		if (absolute != other.absolute) {
+		Direction other = (Direction) obj;
+
+		if (other.is3d())
+			return other.equals(this);
+
+		if (absolute != other.isAbsolute())
 			return false;
-		}
-		if (angle != other.angle) {
-			return false;
-		}
-		return true;
+
+		if (other instanceof Angle)
+			return angle == ((Angle) other).angle;
+		else
+			return degrees() == other.degrees();
+	}
+
+	@Override
+	public boolean is3d() {
+		return false;
+	}
+
+	@Override
+	public double altDegrees() {
+		return 0;
+	}
+
+	@Override
+	public Vector3f perpendicular(Vector3f dest) {
+		return dest.set(dirX(), dirY(), 0).rotateZ((float) Math.PI / 2);
+	}
+
+	@Override
+	public Vector3f normalVector(Vector3f dest) {
+		return dest.set(0, 0, 1);
+	}
+
+	@Override
+	public Vector3f directionVector(Vector3f dest) {
+		return dest.set(dirX(), dirY(), 0);
+	}
+
+	@Override
+	public Direction yaw(double degrees) {
+		return new Angle(angle + degreesToMilliArcSec(degrees), absolute);
+	}
+
+	@Override
+	public Direction pitch(double degrees) {
+		return new Angle3(this).pitch(degrees);
+	}
+
+	@Override
+	public Direction roll(double degrees) {
+		return new Angle3(this).roll(degrees);
+	}
+
+	@Override
+	public boolean like(Direction other) {
+		if (other instanceof Angle) {
+			Angle o = (Angle) other;
+			return Math.abs(angle - o.angle) < 10e-6;
+		} else if (other instanceof Angle3)
+			return other.equals(this);
+		return false;
 	}
 }

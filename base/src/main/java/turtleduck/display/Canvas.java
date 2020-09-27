@@ -7,6 +7,7 @@ import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Turtle;
+import turtleduck.turtle.Turtle3;
 
 public interface Canvas extends Layer {
 	/**
@@ -61,7 +62,8 @@ public interface Canvas extends Layer {
 	Pen createPen();
 
 	Turtle createTurtle();
-	
+	Turtle3 createTurtle3();
+
 	Canvas flush();
 	Canvas draw(Path path);
 	Canvas draw(Drawing drawing);

@@ -25,6 +25,7 @@ import turtleduck.image.Tiles;
 import turtleduck.sprites.AbstractSprite;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Turtle;
+import turtleduck.turtle.Turtle;
 
 public class Demo implements TurtleDuckApp {
 	private final class DemoSprite extends AbstractSprite {
@@ -77,19 +78,19 @@ public class Demo implements TurtleDuckApp {
 
 	@Override
 	public void bigStep(double deltaTime) {
-		turtle.jumpTo(500, 500);
-		turtle.child().jumpTo(500, 500).turnTo(0).penWidth(20).penColor(Color.color(.5, .5, .5, 1)).draw(200).turn(45)
+		turtle.jumpTo(500, 500).turnTo(0);
+		turtle.spawn().jumpTo(500, 100).turnTo(0).penWidth(1).penColor(Color.color(.5, .5, .5, 1)).draw(200).turn(45)
 				.draw(200).turn(90).draw(200).turn(-90).draw(200);
-		turtle.child().jumpTo(600, 500).turnTo(0).penWidth(2).penColor(Color.color(.5, .5, .5, 1)).draw(200).turn(45)
+		turtle.spawn().jumpTo(600, 100).turnTo(0).penWidth(1).penColor(Color.color(.5, .5, .5, 1)).draw(200).turn(45)
 				.draw(200).turn(90).draw(200).turn(-90).draw(200);
 //		if(true)
 //			return;
 
-		fern(turtle.child().at(200, 900).turnTo(45), 10, 5);
-		fern2(turtle.child().at(900, 900).turnTo(0), 5, 10);
-	tree(turtle.child().at(850,800).penColor(Color.color(.5, .3, .0)).penWidth(2).turnTo(0), 10, 10);
-		wheel1(turtle.child().at(500, 500).turnTo(rotation).penColor(Color.color(0.5, 0, 0, 0.5))); 
-		rotation += 16 * deltaTime;
+		fern(turtle.spawn().penColor(Colors.GREEN).at(200, 200).turnTo(135), 10, 5);
+		fern2(turtle.spawn().at(900, 200).turnTo(90), 5, 10);
+		tree(turtle.spawn().at(850, 200).penColor(Color.color(.5, .3, .0)).penWidth(2).turnTo(90), 10, 10);
+		wheel1(turtle.spawn().at(500, 200).turnTo(-2 * rotation).penColor(Color.color(0.5, 0, 0, 0.5)));
+		rotation += 8 * deltaTime;
 		canvas.drawImage(Point.point(100, 0), image2);
 		canvas.drawImage(Point.point(200, 0), image2);
 		((GLLayer) canvas).plot(Point.point(100, 100), 1000, 1000, Colors.BLACK,
@@ -149,11 +150,12 @@ public class Demo implements TurtleDuckApp {
 
 			turtle.turn(1);
 			for (int i = 0; i < 10; i++) {
-				footprint(turtle.child(), 5);
+				footprint(turtle.spawn(), 5);
 				turtle.jump(100).turn(36);
 			}
 //		turtle.jump(0);
 //		turtle.moveTo(600,200);
+			turtle.turnTo(rotation);
 			colorWheel(turtle, -100);
 			colorWheel(turtle, 100);
 
@@ -186,7 +188,6 @@ public class Demo implements TurtleDuckApp {
 
 		System.out.println(Color.fromARGB(0xffffffff));
 		System.out.println(Color.fromARGB(0xff7f7f7f));
-
 
 		try {
 			image2 = new GLPixelData("/yeti-juno.jpg");
@@ -239,10 +240,10 @@ public class Demo implements TurtleDuckApp {
 				ink = blue.mix(red, (i - 240) / 119.0);
 			turtle.penChange().strokePaint(ink).done();
 			turtle.draw(step);
-			Turtle sub = turtle.child().turn(90);
+			var sub = turtle.spawn().turn(90);
 			sub.penChange().strokeWidth(5).strokePaint(ink).done();
 			sub.draw(1);
-		ink = 	Colors.WHITE; //ink.brighter().brighter().brighter().brighter().brighter();
+			ink = Colors.WHITE; // ink.brighter().brighter().brighter().brighter().brighter();
 			sub.penChange().strokeWidth(1).strokePaint(ink).done();
 			sub.draw(radius);
 			sub.done();
@@ -256,10 +257,18 @@ public class Demo implements TurtleDuckApp {
 //						footprint(child.turn(-90).move(2.5).turn(80), 1);
 //					turtle.done();
 				}
+//				System.out.println("0:" + turtle.bearing());
+//				if(turtle.bearing().degrees() > 80)
+//					System.out.println("...");
 				turtle.turn(10);
+//				System.out.println("1:" + turtle.bearing());
 				if (i % 2 == 0) {
 					double a = turtle.bearing().degrees();
-					turtle.turnTo(i).jump(10).turnTo(a);
+//					System.out.println(a);
+					turtle.turnTo(i).jump(10);
+//					System.out.println(turtle.bearing().degrees());
+					turtle.turnTo(a);
+//					System.out.println(turtle.bearing().degrees());
 				}
 				turtle.draw(-step / 2);
 
@@ -280,69 +289,75 @@ public class Demo implements TurtleDuckApp {
 
 	private void circle(Turtle turtle, double radius, int segments) {
 		double s = 360.0 / segments;
-		turtle.jump(radius).turn(90 + s / 2);
 		for (int i = 0; i < segments; i++) {
-			turtle.draw(2 * radius * Math.sin(Math.PI / segments));
+			turtle.spawn().jump(radius).turn(90 + s / 2).draw(2 * radius * Math.sin(Math.PI / segments)).done();
 			turtle.turn(s);
 		}
 	}
-	
+
 	private void fern(Turtle turtle, double h, int n) {
 		fernX(turtle, h, n);
 	}
-	
+
 	private void fernX(Turtle turtle, double h, int n) {
 		double factor = 1;
-		if(n <= 0)
+		if (n <= 0) {
+			turtle.penWidth(2).penColor(Colors.YELLOW);
+			turtle.turn(30).draw(4);
+			turtle.turn(-60).draw(4);
+
 			return;
-		turtle.draw(h*n);
+		}
+		turtle.draw(h * n);
 		turtle.turn(-25);
-		Turtle ch = turtle.child();
-		fernX(ch.child(), h*factor, n-1);
-		fernX(ch.turn(-25), h*factor, n-1);
+		Turtle ch = turtle.spawn();
+		fernX(ch.spawn(), h * factor, n - 1);
+		fernX(ch.turn(-25), h * factor, n - 1);
 		turtle.turn(25);
-		turtle.draw(h*n);
-		ch = turtle.child();
-		ch.turn(25).draw(h*n);
-		fernX(ch, h*factor, n-1);
+		turtle.draw(h * n);
+		ch = turtle.spawn();
+		ch.turn(25).draw(h * n);
+		fernX(ch, h * factor, n - 1);
 		turtle.turn(-25);
-		fernX(turtle, h*factor, n-1);
+		fernX(turtle, h * factor, n - 1);
 	}
-	
+
 	private void fern2(Turtle turtle, double h, int n) {
-		if(n <= 0)
+		if (n <= 0)
 			return;
-		else if(n == 1)
-			turtle.draw(h*n*2);
-		else {
-		turtle.penWidth(n);
-		turtle.draw(h*n);
-		fern2(turtle.child().turn(n*5), h, Math.max(1,n-2));
-		turtle.turn(1).draw(h*n);
-		fern2(turtle.child().turn(-n*5), h, Math.max(1, n-2));
-		turtle.turn(1).draw(h*n);
-		fern2(turtle, h, n-1);
+		else if (n == 1) {
+			turtle.penWidth(1).penColor(Colors.GREEN);
+			turtle.draw(h * n * 2);
+		} else {
+			turtle.penWidth(n);
+			turtle.draw(h * n);
+			fern2(turtle.spawn().turn(n * 5), h, Math.max(1, n - 2));
+			turtle.turn(1).draw(h * n);
+			fern2(turtle.spawn().turn(-n * 5), h, Math.max(1, n - 2));
+			turtle.turn(1).draw(h * n);
+			fern2(turtle, h, n - 1);
 		}
 	}
+
 	private void tree(Turtle turtle, double h, int n) {
-		double growth = Math.min(1, count2/8192.0);
-		double stage = n - (1-growth) * 10;
-		if(stage <= 0)
+		double growth = Math.min(1, count2 / 8192.0);
+		double stage = n - (1 - growth) * 10;
+		if (stage <= 0)
 			return;
-		
-		turtle.penColor(Color.color(.4, 1, 0).mix(Color.color(.4, .25, 0), stage/3));
-		if(n <= 1)
-			turtle.penColor(Colors.RED).draw(Math.min(stage, 1)*5);
+
+		turtle.penColor(Color.color(.4, 1, 0).mix(Color.color(.4, .25, 0), stage / 3));
+		if (n <= 1)
+			turtle.penColor(Colors.RED).draw(Math.min(stage, 1) * 5);
 		else {
-			double a = Math.sin(2*Math.PI*count/256.0) / n;
+			double a = Math.sin(2 * Math.PI * count / 256.0) / n;
 			turtle.turn(a);
-			turtle.draw(2*h*Math.min(stage/2, 1)/3);
-			turtle.penWidth(2*n*Math.min(stage/2, 1));
-			turtle.draw(2*h*Math.min(stage/2, 1)*2/3);
+			turtle.draw(2 * h * Math.min(stage / 2, 1) / 3);
+			turtle.penWidth(2 * n * Math.min(stage / 2, 1));
+			turtle.draw(2 * h * Math.min(stage / 2, 1) * 2 / 3);
 //			turtle.penWidth(2*turtle.pen().strokeWidth()*.75);
-			
-			tree(turtle.child().turn(30), h*.75, n-1);
-			tree(turtle.child().turn(-20), h*.75, n-1);
+
+			tree(turtle.spawn().turn(30), h * .75, n - 1);
+			tree(turtle.spawn().turn(-20), h * .75, n - 1);
 		}
 	}
 
@@ -351,22 +366,23 @@ public class Demo implements TurtleDuckApp {
 		double wheelRadius = 250;
 		double rimRadius = 55;
 		int segments = 24;
-		double step = 360 / segments;
+		double step = 360.0 / segments;
 		turtle.penWidth(2);
-
-		circle(turtle.child().penWidth(10), hubRadius, segments);
-		circle(turtle.child().penWidth(10), wheelRadius, segments);
+//turtle.turnTo(0);
+		circle(turtle.spawn().penWidth(10), hubRadius, segments);
+		circle(turtle.spawn().penWidth(10), wheelRadius, segments);
 
 		for (int i = 0; i < 6; i++) {
-			Turtle t = turtle.child().penWidth(10);
+			var t = turtle.spawn().penWidth(10);
 			t.jump(hubRadius).draw(wheelRadius - hubRadius);
 			turtle.turn(60);
 		}
 
+//		turtle.turnTo(0);
 		turtle.penWidth(5);
-		for (int i = 0; i < 360; i += 15) {
-			turtle.child().jump(wheelRadius).draw(Direction.absolute(-45), 2 * rimRadius).turn(97.5).draw(50).done()
-					.turn(15);
+		for (int i = 0; i < segments; i++) {
+			turtle.spawn().jump(wheelRadius).draw(Direction.absolute(45), 2 * rimRadius).turn(90 + step / 2)
+					.draw(2 * wheelRadius * Math.sin(Math.PI / segments)).done().turn(step);
 		}
 //		circle(turtle.child().turnTo(-30).jump(2*rimRadius).penWidth(20), wheelRadius, segments);
 

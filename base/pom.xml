@@ -8,7 +8,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<properties>
-		<joml.version>1.9.19</joml.version>
+		<joml.version>1.9.25</joml.version>
 	</properties>
 	<artifactId>turtleduck-base</artifactId>
 	<packaging>jar</packaging>

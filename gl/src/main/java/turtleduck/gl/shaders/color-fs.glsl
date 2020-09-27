@@ -17,9 +17,9 @@ vec2 texSize = textureSize(texture0, 0);
 vec4 lightColor = vec4(1.0,1.0,1.0,1.0);
 vec4 selectColor = vec4(1.0,1.0,1.0,1.0);
 
-const float specularStrength = 0.2;
-const float specularExponent = 256;
-const float ambient = 0.35;
+const float specularStrength = 5;
+const float specularExponent = 16;
+const float ambient = 0.1;
 
 /*
 float near = 0.1;
@@ -36,7 +36,7 @@ void main()
 {
 	vec4 norm = normalize(fNormal);
 	vec4 lightDir = normalize(uLightPos - fPos);
-	float diff = 1.2 * max(dot(norm, lightDir), 0.0);
+	float diff =  max(dot(norm, lightDir), 0.0);
 	vec4 diffuse = diff * lightColor;
 
 	vec4 viewDir = normalize(uViewPos - fPos);
@@ -45,7 +45,7 @@ void main()
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularExponent);
 	vec4 specular = specularStrength * spec * lightColor;
 
-    FragColor =(ambient + diffuse + specular) * fColor; // texture(texture0, fTexCoord/texSize); //vec4(fColor, 1.0);
+    FragColor =  (ambient + diffuse + specular) * fColor; // texture(texture0, fTexCoord/texSize); //vec4(fColor, 1.0);
     FragColor.a = fColor.a;
     if(FragColor.a <= 0.1)
          discard;

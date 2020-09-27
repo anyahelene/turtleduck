@@ -1,5 +1,7 @@
 package turtleduck.turtle;
 
+import org.joml.Vector3f;
+
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Path.PointType;
@@ -18,5 +20,5 @@ public interface PathPoint {
 
 	public double x();
 	public double y();
-
+	public double z();
 }

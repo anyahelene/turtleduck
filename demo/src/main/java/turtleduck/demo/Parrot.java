@@ -9,11 +9,10 @@ import turtleduck.colors.Colors;
 import turtleduck.colors.Color;
 import turtleduck.geometry.Gravity;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.TurtleMark;
 import turtleduck.turtle.Turtle;
 
 public class Parrot {
-	public static int values[] = { 0, 0, 45, 35, 20, 30, 10, 10, 10, 15 }, valNum = 0;
+/*	public static int values[] = { 0, 0, 45, 35, 20, 30, 10, 10, 10, 15 }, valNum = 0;
 
 	private static final boolean DEBUG_FACE = true;
 	private static final boolean DEBUG_NECK = false;
@@ -235,15 +234,15 @@ public class Parrot {
 	}
 
 	public void keyPressed(int code, boolean shift) {
-		/*
-		 * if(code.equals(KeyCode.B)) { if(shift) beakAngle = Math.max(0, beakAngle-5);
-		 * else beakAngle = Math.min(120, beakAngle+5); } else
-		 * if(code.equals(KeyCode.N)) { if(shift) neckAngleStep1 = Math.max(-50,
-		 * neckAngleStep1 - 0.5); else neckAngleStep1 = Math.min(50, neckAngleStep1 +
-		 * 0.5); } else if(code.equals(KeyCode.M)) { if(shift) neckAngleStep2 =
-		 * Math.max(-50, neckAngleStep2 - 0.5); else neckAngleStep2 = Math.min(50,
-		 * neckAngleStep2 + 0.5); }
-		 */
+		
+//		 if(code.equals(KeyCode.B)) { if(shift) beakAngle = Math.max(0, beakAngle-5);
+//		 else beakAngle = Math.min(120, beakAngle+5); } else
+//		 if(code.equals(KeyCode.N)) { if(shift) neckAngleStep1 = Math.max(-50,
+//		 neckAngleStep1 - 0.5); else neckAngleStep1 = Math.min(50, neckAngleStep1 +
+//		 0.5); } else if(code.equals(KeyCode.M)) { if(shift) neckAngleStep2 =
+//		 Math.max(-50, neckAngleStep2 - 0.5); else neckAngleStep2 = Math.min(50,
+//		 neckAngleStep2 + 0.5); }
+		 
 	}
 
 	private void leg(Turtle turtle) {
@@ -341,5 +340,5 @@ public class Parrot {
 
 		return turtle;
 	}
-
+*/
 }

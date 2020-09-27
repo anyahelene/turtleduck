@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
@@ -29,10 +30,11 @@ public class MeshModel extends AbstractModel {
 	public MeshModel(String pathName) {
 		try {
 			VertexArrayFormat format = new VertexArrayFormat();
-			format.layoutFloat("aPos", 0, 3);
-			format.layoutFloat("aColor", 1, 3);
-			format.layoutFloat("aNormal", 2, 3);
-			format.layoutFloat("aTexCoord", 3, 2);
+			format.addField("aPos", Vector3f.class);
+			format.addField("aColor", Vector3f.class);
+			format.addField("aNormal", Vector3f.class);
+			format.addField("aTexCoord", Vector2f.class);
+
 			VertexArrayBuilder builder = buildVertexArray(format);
 
 			ByteBuffer buf = ioResourceToByteBuffer(pathName, 8 * 1024);

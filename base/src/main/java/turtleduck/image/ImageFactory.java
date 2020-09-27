@@ -59,9 +59,10 @@ public interface ImageFactory {
 		static {
 			ServiceLoader<ImageFactory> loader = ServiceLoader.load(ImageFactory.class);
 			ImageFactory first = null;
+			System.out.println("Available factories:");
 			for (ImageFactory fac : loader) {
 				String name = fac.getClass().getModule().getName();
-				System.out.println("Available factory: " + fac + " from " + name);
+				System.out.println("    " + fac + " from " + name);
 				if (first == null)
 					first = fac;
 				factories.put(name, fac);

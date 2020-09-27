@@ -568,7 +568,7 @@ public class TShell {
 				ink = blue.mix(red, (i - 240) / 119.0);
 			turtle.penChange().strokePaint(ink).done();
 			turtle.draw(step);
-			Turtle sub = turtle.child().turn(90);
+			Turtle sub = turtle.spawn().turn(90);
 			for (int j = 20; j > 0; j--) {
 				sub.penChange().strokeWidth(j / 3.5).strokePaint(ink).done();
 				sub.draw(radius / 20.0);

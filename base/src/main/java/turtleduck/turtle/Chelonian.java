@@ -5,11 +5,12 @@ import java.util.function.Consumer;
 
 import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
+import turtleduck.drawing.Functional;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.objects.IdentifiedObject;
 
-public interface Chelonian<T extends Chelonian<T, C>, C> extends Navigator<T>, IdentifiedObject {
+public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, Navigator<T>, IdentifiedObject {
 
 	/**
 	 * This method is used to convert the turtle to an other type, determined by the
@@ -180,7 +181,7 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Navigator<T>, I
 	 * 
 	 * @return A fresh turtle, equal to this one, ready for new drawing adventures
 	 */
-	T child();
+	T spawn();
 
 	T child(Canvas canvas);
 

@@ -1,5 +1,8 @@
 package turtleduck.geometry;
 
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+
 import turtleduck.geometry.impl.Point2;
 import turtleduck.geometry.impl.Point3;
 
@@ -80,7 +83,6 @@ public interface Point extends PositionVector {
 	 */
 	Point add(PositionVector other);
 
-	Point sub(PositionVector other);
 
 	/**
 	 * Change point
@@ -113,7 +115,7 @@ public interface Point extends PositionVector {
 	 * @param other Another point
 	 * @return A new Point, (point.getX()-getX(), point.getY()-getY())
 	 */
-	Point diff(PositionVector other);
+	Point sub(PositionVector other);
 
 	/**
 	 * @return Bearing from (0,0) to this point
@@ -147,5 +149,13 @@ public interface Point extends PositionVector {
 		else
 			return point(point.x(), point.y(), point.z());
 	}
+	Vector3f toVector(Vector3f dest);
+	Vector3d toVector(Vector3d dest);
+
+	static Point point(Vector3d position) {
+		return point(position.x,position.y,position.z);
+	}
+
+
 
 }

@@ -45,16 +45,16 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 		return (T) this;
 	}
 
-	protected void updateBearing(Direction b) {
-		if (recordTurns) {
-			PathPointImpl pp = current.copy();
-			pp.bearing = current.bearing.add(b);
-			addPoint(pp);
-			current = pp;
-		} else {
-			current.bearing = current.bearing.add(b);
-		}
-	}
+//	protected void updateBearing(Direction b) {
+//		if (recordTurns) {
+//			PathPointImpl pp = current.copy();
+//			pp.bearing = current.bearing.add(b);
+//			addPoint(pp);
+//			current = pp;
+//		} else {
+//			current.bearing = current.bearing.add(b);
+//		}
+//	}
 
 	public T turnTo(PositionVector dest) {
 		bearing(Direction.absolute(dest.x() - current.point.x(), dest.y() - current.point.y()).sub(current.bearing));
@@ -64,9 +64,9 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 	@Override
 	public T bearing(Direction dest) {
 		if (dest.isAbsolute())
-			updateBearing(dest.sub(current.bearing));
+			current.bearing = dest;
 		else
-			updateBearing(dest);
+			current.bearing = current.bearing.add(dest);
 		return (T) this;
 	}
 
@@ -128,5 +128,5 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 			throw new IllegalStateException();
 		}
 	}
-
+	
 }

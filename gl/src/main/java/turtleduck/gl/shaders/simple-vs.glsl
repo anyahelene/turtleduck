@@ -24,5 +24,6 @@ void main()
     gl_Position = uProjView * fPos; // uModel * vec4(aPos.xyz, 1.0);
     fColor = vec4(aColor); // vec4(aPos.xyz, 1.0);
     fTexCoord = aTexCoord;
-    fNormal = uNormal * vec4(aNormal,0);
+    //fNormal = vec4(mat3(transpose(inverse(uProjView))) * mat3(transpose(inverse(uModel))) * (aNormal),0);
+    fNormal = uModel * vec4(aNormal,0);
 }

@@ -19,9 +19,9 @@ void main()
 	//float r = -aPos.x/0.866;
 	//float b = 1.0 - r;
 	
-    fPos = uModel * vec4(aPos.xy, 0, 1.0);
-    gl_Position = uProjView * fPos; // uModel * vec4(aPos.xy, 0.0, 1.0);
+    fPos = uModel * vec4(aPos.xyz, 1.0);
+    gl_Position = uProjView * vec4(aPos.xyz, 1.0); // uModel * vec4(aPos.xy, 0.0, 1.0);
     fColor = aColor; // vec4(aPos.xy, 0.0, 1.0);
     fTexCoord = aColor.xy;
-    fTexNum = int(aPos.z);
+    fTexNum = 0; // int(aPos.z);
 }

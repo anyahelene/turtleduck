@@ -1,11 +1,14 @@
 package turtleduck.geometry;
 
+import org.joml.Vector3f;
+
 import turtleduck.geometry.impl.Angle;
+import turtleduck.geometry.impl.Angle3;
 
 public interface Direction {
-	static final Direction DUE_NORTH = absolute(0), DUE_EAST = absolute(90), DUE_SOUTH = absolute(180),
-			DUE_WEST = absolute(270);
-	static final Direction FORWARD = relative(0), RIGHT = relative(90), BACK = relative(180), LEFT = relative(270);
+	static final Direction DUE_NORTH = absolute(90), DUE_EAST = absolute(180), DUE_SOUTH = absolute(270),
+			DUE_WEST = absolute(0);
+	static final Direction FORWARD = relative(0), RIGHT = relative(-90), BACK = relative(180), LEFT = relative(90);
 	public static Direction absolute(double a) {
 		return Angle.absolute(a);
 	}
@@ -68,5 +71,19 @@ public interface Direction {
 	@Override
 	boolean equals(Object other);
 	
+	boolean is3d();
+
+	double altDegrees();
+	Vector3f perpendicular(Vector3f dest);
+
+	Vector3f directionVector(Vector3f dest);
+	Vector3f normalVector(Vector3f dest);
+
+	Direction yaw(double angle);
+	Direction pitch(double angle);
+	Direction roll(double angle);
+
+	boolean like(Direction other);
+
 
 }

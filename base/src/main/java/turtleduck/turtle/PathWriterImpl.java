@@ -9,9 +9,12 @@ import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 
 public class PathWriterImpl implements PathWriter {
-
+	protected boolean use3d = false;
 	protected Queue<PathStrokeImpl> strokes = new LinkedList<>();
 
+	public boolean hasNextStroke() {
+		return !strokes.isEmpty();
+	}
 	public PathStroke nextStroke() {
 		if (strokes.isEmpty())
 			return null;

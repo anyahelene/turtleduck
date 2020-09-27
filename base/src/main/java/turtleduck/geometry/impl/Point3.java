@@ -1,6 +1,10 @@
 package turtleduck.geometry.impl;
 
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+
 import turtleduck.geometry.Direction;
+import turtleduck.geometry.Direction3;
 import turtleduck.geometry.IPoint3;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
@@ -30,7 +34,8 @@ public class Point3 extends Point2 implements IPoint3 {
 
 	@Override
 	public Point add(Direction dir, double distance) {
-		return new Point3(Math.fma(dir.dirX(), distance, x), Math.fma(dir.dirY(), distance, y), Math.fma(dir.dirZ(), distance, z));
+		Vector3f vec = dir.directionVector(new Vector3f()).mul((float)distance);
+		return new Point3(x+vec.x,y+vec.y,z+vec.z);
 	}
 
 	@Override
@@ -83,5 +88,20 @@ public class Point3 extends Point2 implements IPoint3 {
 		}
 		else return super.equals(obj);
 	}
-
+	@Override
+	public Direction3 asBearing() {
+		return Direction3.absoluteVec(x(), y(), z());
+	}
+	@Override
+	public Direction bearingTo(PositionVector otherPoint) {
+		return Direction3.absoluteVec(otherPoint.x() - x(), otherPoint.y() - y(), otherPoint.z() -z());
+	}
+	@Override
+	public Vector3f toVector(Vector3f dest) {
+		return dest.set(x, y, 0);
+	}
+	@Override
+	public Vector3d toVector(Vector3d dest) {
+		return dest.set(x, y, z);
+	}
 }

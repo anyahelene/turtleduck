@@ -2,6 +2,9 @@ package turtleduck.turtle.impl;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import org.joml.Vector3f;
 
 import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
@@ -186,12 +189,14 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	@Override
 	public THIS turn(double angle) {
-		return bearing(Direction.relative(angle));
+		current.bearing = current.bearing.yaw(angle);
+		return (THIS) this;
 	}
 
 	@Override
 	public THIS turnTo(double angle) {
-		return bearing(Direction.absolute(angle));
+		current.bearing = Direction.absolute(angle);
+		return (THIS) this;
 	}
 
 	@Override
@@ -240,7 +245,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	}
 
 	@Override
-	public THIS child() {
+	public THIS spawn() {
 		var child = copy();
 		return (THIS) child;
 	}
@@ -299,6 +304,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 						currentStroke.updateLine(last, current);
 					}
 				}
+		
 				currentStroke.addLine(last, current);
 			} else if (currentStroke != null) {
 				currentStroke.endPath();
@@ -345,5 +351,81 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	public THIS writePathsTo(PathWriter pathWriter) {
 		this.writer = pathWriter;
 		return (THIS) this;
+	}
+
+	@Override
+	public THIS spawn(Consumer<THIS> f) {
+		THIS child = spawn();
+		f.accept(child);
+		child.done();
+		return (THIS) this;
+	}
+
+	@Override
+	public THIS spawn(int n, BiConsumer<THIS, Integer> f) {
+		for (int i = 0; i < n; i++) {
+			THIS child = spawn();
+			f.accept(child, i);
+			child.done();
+		}
+		return (THIS) this;
+	}
+
+	@Override
+	public <U> THIS spawn(Iterable<U> elts, BiConsumer<THIS, U> f) {
+		for (U elt : elts) {
+			THIS child = spawn();
+			f.accept(child, elt);
+			child.done();
+		}
+		return (THIS) this;
+	}
+
+	@Override
+	public <U> THIS spawn(Stream<U> elts, BiConsumer<THIS, U> f) {
+		elts.forEach((elt) -> {
+			THIS child = spawn();
+			f.accept(child, elt);
+			child.done();
+		});
+		return (THIS) this;
+
+	}
+
+	@Override
+	public THIS repeat(int n, BiConsumer<THIS, Integer> f) {
+		for (int i = 0; i < n; i++) {
+			f.accept((THIS) this, i);
+		}
+		return (THIS) this;
+	}
+
+	@Override
+	public <U> THIS repeat(Iterable<U> elts, BiConsumer<THIS, U> f) {
+		for (U elt : elts) {
+			f.accept((THIS) this, elt);
+		}
+		return (THIS) this;
+	}
+
+	@Override
+	public <U> THIS repeat(Stream<U> elts, BiConsumer<THIS, U> f) {
+		elts.forEachOrdered((elt) -> f.accept((THIS) this, elt));
+		return (THIS) this;
+
+	}
+
+	@Override
+	public THIS apply(Consumer<THIS> f) {
+		f.accept((THIS) this);
+		return (THIS) this;
+
+	}
+
+	@Override
+	public <U> THIS apply(U arg, BiConsumer<THIS, U> f) {
+		f.accept((THIS) this, arg);
+		return (THIS) this;
+
 	}
 }

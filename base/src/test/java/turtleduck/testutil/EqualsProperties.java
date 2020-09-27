@@ -163,7 +163,7 @@ public class EqualsProperties {
 		for (int i = 0; i < n; i++) {
 			List<T> ss = gen.generateEquals(NEQUALS+1);
 			for(int j = 0; j < NEQUALS; j++)
-				assertEquals(ss.get(j), ss.get(j+1), "Generator should provide equal values: " + ss);
+				assertEquals(ss.get(j), ss.get(j+1), "Generator should provide equal values: " + ss.get(j) + " != " + ss.get(j+1));
 		}
 	}
 	/**

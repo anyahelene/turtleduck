@@ -47,4 +47,10 @@ public class PathPointImpl implements PathPoint, Cloneable {
 	public double y() {
 		return point.y();
 	}
+
+	@Override
+	public double z() {
+		return point.z();
+	}
+
 }

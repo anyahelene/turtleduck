@@ -31,7 +31,7 @@ public abstract class BaseScreen implements Screen {
 	protected Canvas debugLayer;
 	protected int aspect = 0;
 	private double scaling = 0;
-	protected Dimensions dim;
+	public Dimensions dim;
 
 	public BaseScreen() {
 		id = IdentifiedObject.Registry.makeId(Screen.class, this);

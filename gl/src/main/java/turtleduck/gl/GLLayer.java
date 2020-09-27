@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
@@ -52,7 +53,10 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	private ArrayBuffer streamBuffer;
 	private VertexArray streamArray;
 	private VertexArray staticArray;
+	private VertexArray streamArray3;
 	private GLPathWriter pathWriter = new GLPathWriter();
+	private GLPathWriter pathWriter3 = new GLPathWriter3();
+
 //	private VertexArrayBuilder vab;
 //	private VertexArrayBuilder vab2;
 	private DrawObject lineObject;
@@ -64,21 +68,32 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	private VertexArrayFormat format;
 	private DataField<Vector3f> aPosVec3;
 	private DataField<Color> aColorVec4;
+	private DataField<Vector3f> a3Normal3;
 	private int quadVertices = -1;
+	private VertexArrayFormat format3;
+	private DataField<Vector3f> a3PosVec3;
+	private DataField<Color> a3ColorVec4;
 
 	public GLLayer(String layerId, GLScreen screen, double width, double height) {
 		super(layerId, screen, width, height);
-
 		this.format = screen.shader2d.format();
-		aPosVec3 = format.setField("aPos", Vector3f.class);
-		aColorVec4 = format.setField("aColor", Color.class);
+		this.format3 = screen.shader3d.format();
 		System.out.println("Layer " + layerId);
 		System.out.println(format);
+		System.out.println(format3);
 		System.out.println(aPosVec3);
 		System.out.println(aColorVec4);
+
+		aPosVec3 = format.setField("aPos", Vector3f.class);
+		aColorVec4 = format.setField("aColor", Color.class);
+		a3PosVec3 = format3.setField("aPos", Vector3f.class);
+		a3ColorVec4 = format3.setField("aColor", Color.class);
+		a3Normal3 = format3.setField("aNormal", Vector3f.class);
 		streamBuffer = new ArrayBuffer(GL_STREAM_DRAW, 2048);
 		streamArray = new VertexArray(format, streamBuffer);
 		streamArray.setFormat();
+		streamArray3 = new VertexArray(format3, GL_STREAM_DRAW, 2048);
+		streamArray3.setFormat();
 		staticArray = new VertexArray(format, GL_STATIC_DRAW, 2048);
 		staticArray.setFormat();
 		quadVertices = staticArray.nVertices();
@@ -152,6 +167,115 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		drawImage(at, img, 0);
 	}
 
+	public void drawHeightMap(Point at, double xsize, double ysize, double zsize, int cols, int rows, double[] data) {
+		DrawObject obj = new DrawObject();
+		obj.array = streamArray3;
+		obj.shader = screen.shader3d;
+		obj.drawMode = GL_TRIANGLES;
+		obj.offset = streamArray3.nVertices();
+		obj.zOrder = depth++;
+		obj.type = "image";
+		drawObjects.add(obj);
+		obj.transform.identity();
+		obj.transform.rotationX(-(float) Math.PI / 4);
+//		obj.transform.rotateX((float)Math.PI/3); //.rotateY(-(float)Math.PI/2);
+		obj.transform.translate((float) at.x(), (float) at.y(), (float) at.z());
+//		obj.transform.translate((float)-xsize/2, (float) -ysize, 0);
+		obj.transform.scale((float) xsize, (float) ysize, (float) zsize);
+		obj.indices = new int[6 * (cols - 1) * (rows - 1) + 6 + 24];
+		Vector3f p0 = new Vector3f(-.5f, -.5f + 1, 0);
+		Vector3f p1 = new Vector3f(-.5f, -.5f, 0);
+		Vector3f p2 = new Vector3f(-.5f + 1, .5f, 0);
+		Vector3f p3 = new Vector3f(-.5f + 1, -.5f, 0);
+		Vector3f u = new Vector3f(), v = new Vector3f();
+		Color color = Color.color(.8, .8, .9, 1);
+		p0.sub(p2, u);
+		p1.sub(p2, v);
+		u.cross(v).normalize();
+		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		p0.set(-.5f, .5f, .5f);
+		p1.set(-.5f, .5f, 0f);
+		p2.set(-.5f + 1, .5f, .5f);
+		p3.set(-.5f + 1, .5f, 0f);
+		p0.sub(p2, u);
+		p1.sub(p2, v);
+		u.cross(v).normalize();
+		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		p0.set(-.5f, -.5f, .5f);
+		p1.set(-.5f, -.5f, 0f);
+		p2.set(-.5f, .5f, .5f);
+		p3.set(-.5f, .5f, 0f);
+		p0.sub(p2, u);
+		p1.sub(p2, v);
+		u.cross(v).normalize();
+		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		p0.set(.5f, .5f, .5f);
+		p1.set(.5f, .5f, 0f);
+		p2.set(.5f, -.5f, .5f);
+		p3.set(.5f, -.5f, 0f);
+		p0.sub(p2, u);
+		p1.sub(p2, v);
+		u.cross(v).normalize();
+		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		float frows = rows, fcols = cols;
+		float s = 1f;
+		Vector3f normal = new Vector3f();
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < cols; x++) {
+				double opacity = .7; // Math.min(1, Math.max(0, (5 - Math.min(1, data[x + y * cols])) / 10));
+				Color c = Color.color(0, .2 * opacity, .8 * opacity, opacity);
+				float N = (float) data[x + Math.max(y - 1, 0) * cols];
+				float S = (float) data[x + Math.min(y + 1, rows - 1) * cols];
+				float W = (float) data[Math.max(x - 1, 0) + y * cols];
+				float E = (float) data[Math.min(x + 1, cols - 1) + y * cols];
+				normal.set(-2 * (E - W) * fcols, -2 * (N - S) * frows, 4).normalize();
+				streamArray3.begin()
+						.put(a3PosVec3, (float) x / (fcols - 1) - .5f, .5f - (float) (y) / (frows - 1),
+								(float) data[x + y * cols]) //
+						.put(a3ColorVec4, c)//
+						.put(a3Normal3, normal)//
+						.end();
+
+			}
+		}
+		for (int i = 0; i < 24; i++) {
+			obj.indices[i] = i;
+		}
+		for (int y = 0; y < rows - 1; y++) {
+			for (int x = 0; x < cols - 1; x++) {
+				obj.indices[24 + 6 * (x + y * (cols - 1)) + 0] = obj.offset + 24 + x + y * cols;
+				obj.indices[24 + 6 * (x + y * (cols - 1)) + 1] = obj.offset + 24 + x + (y + 1) * cols;
+				obj.indices[24 + 6 * (x + y * (cols - 1)) + 2] = obj.offset + 24 + (x + 1) + (y + 1) * cols;
+				obj.indices[24 + 6 * (x + y * (cols - 1)) + 4] = obj.offset + 24 + x + y * cols;
+				obj.indices[24 + 6 * (x + y * (cols - 1)) + 3] = obj.offset + 24 + (x + 1) + y * cols;
+				obj.indices[24 + 6 * (x + y * (cols - 1)) + 5] = obj.offset + 24 + (x + 1) + (y + 1) * cols;
+			}
+		}
+		obj.blend = true;
+		obj.nVertices = streamArray3.nVertices() - obj.offset;
+		obj.projection = new Matrix4f(screen.perspectiveProjectionMatrix).mul(screen.perspectiveViewMatrix);
+	}
+
 	public void drawTileMap(Point at, int cols, int rows, int[] data, Tiles tiles) {
 		int tileWidth = tiles.width(), tileHeight = tiles.height();
 		if (data.length < cols * rows) {
@@ -180,6 +304,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	}
 
 	int count = 0;
+
 	public void plot(Point at, double width, double height, Color color, String function) {
 		ShaderProgram program = programs.get(function);
 		if (program == null) {
@@ -210,7 +335,8 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 						+ //
 						"void main() {\n" + //
 //						"   float MAXITER = 128;\n" + //
-						"   vec2 xy0 = zoom*fColor.xy + offset;\n" + // x0 = 0.1*fColor.x+.3, y0 = 0.1*fColor.y-.5;\n" + //
+						"   vec2 xy0 = zoom*fColor.xy + offset;\n" + // x0 = 0.1*fColor.x+.3, y0 = 0.1*fColor.y-.5;\n" +
+																		// //
 						"   float x = xy0.x, y = xy0.y;\n" + //
 						"   float i = 0;\n" + //
 						"   while(x*x+y*y <= 4 && ++i < MAXITER) {\n" + //
@@ -220,7 +346,8 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 						"   }\n" + //
 						"   float c = max(i-32, 0) / (128-32);\n" + //
 						"   if(i <= 32) FragColor = mix(vec4(0,0,0,1), vec4(0,0,.1,1), i/32.0);\n" + //
-						"   else if(i >= 128) FragColor = mix(vec4(1,.9,.4,1), vec4(1,1,1,0), (i-128)/(MAXITER-128));\n" + //
+						"   else if(i >= 128) FragColor = mix(vec4(1,.9,.4,1), vec4(1,1,1,0), (i-128)/(MAXITER-128));\n"
+						+ //
 						"   else FragColor = mix(vec4(.0,.0,.1,1), vec4(1,.9,.4,1), c);\n" + //
 						"   if(i >= MAXITER) discard;\n" + //
 //						"	float x = (2*fColor.x-1)*(1.0+threshold), y = (2*fColor.y-1)*(1.0+threshold);\n" + //
@@ -234,7 +361,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 						"";
 				ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
 				ShaderObject fs = ShaderObject.createFromString(code, GL_FRAGMENT_SHADER);
-program = ShaderProgram.createProgram("plot_" + function, vs, fs);
+				program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 //				program.uniform("uProjection", Matrix4f.class).set(screen.projectionMatrix);
 //				program.uniform("uView", Matrix4f.class).set(screen.viewMatrix);
 				program.uniform("uProjView", Matrix4f.class)
@@ -246,10 +373,11 @@ program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 				e.printStackTrace();
 			}
 		}
-		program.uniform("MAXITER", Float.class).set((float)128+count);
+		program.uniform("MAXITER", Float.class).set((float) 128 + count);
 		float zoom = (float) ((screen.fov - 10) / 120);
-		program.uniform("zoom", Vector2f.class).set(new Vector2f(2.5f*zoom));
-		program.uniform("offset", Vector2f.class).set(new Vector2f(screen.cameraPosition.x-1.8f, screen.cameraPosition.y-1f));
+		program.uniform("zoom", Vector2f.class).set(new Vector2f(2.5f * zoom));
+		program.uniform("offset", Vector2f.class)
+				.set(new Vector2f(screen.cameraPosition.x - 1.8f, screen.cameraPosition.y - 1f));
 
 		DrawObject obj = new DrawObject();
 		obj.shader = program;
@@ -291,7 +419,7 @@ program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 
 		transform.translate(x, y);
 
-		int[][] texCoords = { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } };
+		int[][] texCoords = { { 0, 1 }, { 1, 1 }, { 0, 0 }, { 1, 0 } };
 		Texture tex = img.visit(new Image.Visitor<Texture>() {
 			@Override
 			public Texture visitData(Object data) {
@@ -384,24 +512,41 @@ program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 		return imageVbo;
 	}
 
-	protected void drawPaths() {
+	int step = 0;
+	private boolean showNormals;
+
+	protected void drawPaths(GLPathWriter paths) {
+		List<Integer> indices = new ArrayList<>();
 		PathWriter.PathStroke stroke;
 		DrawObject obj = new DrawObject();
-		obj.array = streamArray;
-		obj.shader = screen.shader2d;
-		obj.drawMode = GL_TRIANGLE_STRIP;
-		obj.offset = streamArray.nVertices();
+		obj.array = streamArray3;
+		obj.shader = screen.shader3d;
+		obj.drawMode = GL_TRIANGLES;
+		obj.offset = streamArray3.nVertices();
 		obj.type = "line";
 		obj.zOrder = depth++;
+		obj.transform.identity(); // .rotationX(-(float) Math.PI / 4);// + (step++) / 100.0f);
+		obj.projection = paths.projection();
 		drawObjects.add(obj);
-
-		Vector2f fromVec = new Vector2f();
-		Vector2f toVec = new Vector2f();
-		Vector2f off1 = new Vector2f();
-		Vector2f off2 = new Vector2f();
-		Vector2f tmp = new Vector2f();
+		DrawObject debugObj = new DrawObject();
+		debugObj.array = streamArray;
+		debugObj.shader = screen.shader2d;
+		debugObj.drawMode = GL_LINES;
+		debugObj.offset = streamArray.nVertices();
+		debugObj.type = "line";
+		debugObj.zOrder = depth - 1;
+//		debugObj.transform.translation(0, 0, -.01f).rotateX((float) Math.PI / 2);// + (step++) / 100.0f);
+		debugObj.projection = paths.projection();
+		drawObjects.add(debugObj);
+		Vector3f fromVec = new Vector3f(), fromDir = new Vector3f();
+		Vector3f toVec = new Vector3f(), tmp2 = new Vector3f();
+		Vector3f offset = new Vector3f();
+		Vector3f normal = new Vector3f();
+//		Vector3f tangent = new Vector3f();
+		Vector3f tmp = new Vector3f();
 		boolean first = true;
-		while ((stroke = pathWriter.nextStroke()) != null) {
+		int index = 0;
+		while ((stroke = paths.nextStroke()) != null) {
 			List<PathPoint> points = stroke.points();
 
 			if (points.size() > 1) {
@@ -410,62 +555,154 @@ program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 				Pen pen = from.pen();
 				Color color = pen.strokePaint();
 				float w = (float) pen.strokeWidth() / 2;
-				Direction fromDir; // = tangents.get(line.get(0));
-				fromVec.set((float) from.x(), (float) from.y());
-				toVec.set((float) to.x(), (float) to.y());
-				off1.set(toVec).sub(fromVec).normalize().perpendicular();
-//				off1.set((float) fromDir.dirX(), (float) fromDir.dirY()).normalize().perpendicular();
-				if (!first)
-					streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, off1), 0).put(aColorVec4, color).end();
-				first = false;
-				streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, off1), 0).put(aColorVec4, color).end();
-				streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, off1), 0).put(aColorVec4, color).end();
+//				Direction fromDir = from.bearing(); // = tangents.get(line.get(0));
+				from.point().toVector(fromVec);
+				to.point().toVector(toVec);
+				from.bearing().directionVector(fromDir);
+				from.bearing().normalVector(normal);
+				toVec.sub(fromVec, fromDir).normalize();
+				normal.cross(fromDir, offset);
+//				showNormals = true;
+//				if (showNormals) {
+//					streamArray3.begin().put(a3PosVec3, fromVec).put(a3ColorVec4, Colors.BLUE).put(a3Normal3, normal)
+//							.end();
+//					streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).add(offset)).put(a3ColorVec4, Colors.RED)
+//							.put(a3Normal3, normal).end();
+//				}
+//				if (!first)
+//					streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, offset)).put(aColorVec4, color).end();
+//				first = false;
+//				streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, offset)).put(aColorVec4, color).end();
+//				streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, offset)).put(aColorVec4, color).end();
 				for (int i = 1; i < points.size(); i++) {
+					from = points.get(i - 1);
 					to = points.get(i);
-//					Direction toDir = tangents.get(line.get(i));
-					toVec.set((float) to.x(), (float) to.y());
-//					off2.set((float) toDir.dirX(), (float) toDir.dirY()).normalize().perpendicular();
-					off2.set(toVec).sub(fromVec).normalize().perpendicular();
-					obj.blend = color.opacity() < 1;
-					streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(-w, off2), 0).put(aColorVec4, color).end();
-					streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, off2), 0).put(aColorVec4, color).end();
-					if (i == points.size() - 1)
-						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, off2), 0).put(aColorVec4, color).end();
+					from.point().toVector(fromVec);
+					to.point().toVector(toVec);
+//					toVec.sub(fromVec, toDir).normalize();
+					from.bearing().directionVector(fromDir).normalize();
 
-					if (false) {
-						toVec.set(fromVec).add(50 * (float) fromDir.dirX(), 50 * (float) fromDir.dirY());
-						off1.set(toVec).sub(fromVec).normalize().perpendicular();
-						off2.set(toVec).sub(fromVec).normalize().perpendicular();
-						w = 1;
-						color = Colors.RED;
-						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, off1), 0).put(aColorVec4, color)
-								.end();
-						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(-w, off1), 0).put(aColorVec4, color).end();
-						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, off1), 0).put(aColorVec4, color)
-								.end();
+//					fromDir.add(toDir).mul(.5f);
+					from.bearing().normalVector(normal).normalize();
+					normal.cross(fromDir, offset); // .normalize();
 
-						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(-w, off2), 0).put(aColorVec4, color).end();
-						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, off2), 0).put(aColorVec4, color)
+//					if(Double.isNaN(fromDir.lengthSquared()) || fromDir.lengthSquared() != 1)
+//						System.out.println("fromDir: " + fromDir + ", " + fromDir.length());
+//
+					if (Double.isNaN(fromVec.lengthSquared()))
+						System.out.println("fromVec: " + fromVec);
+					if (Double.isNaN(toVec.lengthSquared()))
+						System.out.println("toVec: " + toVec);
+					if (Double.isNaN(offset.lengthSquared()))
+						System.out.println("offset: " + offset);
+//					showNormals = true;
+					if (showNormals) {
+						System.out.println("from: " + fromVec);
+						System.out.println("to: " + toVec);
+						System.out.println("normal: " + normal);
+						System.out.println("cross: " + offset);
+						streamArray.begin().put(aPosVec3, fromVec).put(aColorVec4, Colors.WHITE)//
+								// .put(a3Normal3, normal)
 								.end();
-						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, off2), 0).put(aColorVec4, color).end();
+						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-3 * w, offset))
+								.put(aColorVec4, Colors.RED)
+//								.put(a3Normal3, normal)//
+								.end();
+//						streamArray.begin().put(aPosVec3,fromVec).put(aColorVec4, Colors.WHITE)//
+//						//.put(a3Normal3, normal)
+//								.end();
+//						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(3*w, offset)).put(aColorVec4, Colors.RED)
+////								.put(a3Normal3, normal)//
+//								.end();				
 					}
-					// System.out.printf("[" + from.point() + ":" + fromDir + " – " + to.point() +
-					// ":" + toDir + "] ");
+//					off2.add(off1).mul(.5f);
+					obj.blend |= color.opacity() < 1;
+					if (paths instanceof GLPathWriter3) {
+						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(0, offset).fma(w, normal))//
+								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(1, tmp2)).end();
+						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(0, offset).fma(w, normal))//
+								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(1, tmp2)).end();
+						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(w, offset).fma(0, normal))//
+								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(1, tmp2)).end();
+						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(w, offset).fma(0, normal))//
+								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(1, tmp2)).end();
+						
+						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(0, offset).fma(-w, normal))//
+								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(-1, tmp2)).end();
+						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(0, offset).fma(-w, normal))//
+								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(-1, tmp2)).end();
+						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(-w, offset).fma(0, normal))//
+								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(-1, tmp2)).end();
+						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(-w, offset).fma(0, normal))//
+								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(-1, tmp2)).end();
+						// front
+						indices.add(index + 0);
+						indices.add(index + 1);
+						indices.add(index + 2);
+						indices.add(index + 2);
+						indices.add(index + 1);
+						indices.add(index + 3);
+						// back
+						indices.add(index + 2);
+						indices.add(index + 3);
+						indices.add(index + 4);
+						indices.add(index + 4);
+						indices.add(index + 3);
+						indices.add(index + 5);
+						// side a
+						indices.add(index + 4);
+						indices.add(index + 5);
+						indices.add(index + 6);
+						indices.add(index + 6);
+						indices.add(index + 5);
+						indices.add(index + 7);
+//						// side b
+						indices.add(index + 6);
+						indices.add(index + 7);
+						indices.add(index + 0);
+						indices.add(index + 0);
+						indices.add(index + 7);
+						indices.add(index + 1);
+						index += 8;
+					} else {
+						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, offset)).put(aColorVec4, color)
+								.end();
+						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, offset)).put(aColorVec4, color).end();
+						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(-w, offset)).put(aColorVec4, color).end();
+						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, offset)).put(aColorVec4, color).end();
+						indices.add(index + 0);
+						indices.add(index + 1);
+						indices.add(index + 2);
+						indices.add(index + 2);
+						indices.add(index + 1);
+						indices.add(index + 3);
+
+						index += 4;
+					}
+//					if (i == points.size() - 1)
+//						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, offset)).put(aColorVec4, color).end();
+
 					pen = to.pen();
 					color = pen.strokePaint();
 					w = (float) pen.strokeWidth() / 2;
-					fromVec.set(toVec);
+//					fromVec.set(toVec);
+//					fromDir.set(toDir);
+//					from = to;
 				}
 			}
 //			System.out.println();
 //			pathWriter.clear();
-			obj.nVertices = streamArray.nVertices() - obj.offset;
+			obj.nVertices = streamArray3.nVertices() - obj.offset;
+			obj.indices = indices.stream().mapToInt(i -> i).toArray();
+			debugObj.nVertices = streamArray.nVertices() - debugObj.offset;
 		}
 	}
 
 	public void render(boolean frontToBack) {
-		if (frontToBack)
-			drawPaths();
+		if (frontToBack && pathWriter.hasNextStroke())
+			drawPaths(pathWriter);
+		if (frontToBack && pathWriter3.hasNextStroke())
+			drawPaths(pathWriter3);
 		ShaderProgram shader = null;
 		if (frontToBack) {
 			int texNum = GL_TEXTURE0;
@@ -474,6 +711,12 @@ program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 			}
 		}
 		Matrix4f modelTransform = new Matrix4f();
+		Matrix4f projection = null;
+		Uniform<Matrix4f> uProjView = null;
+		Uniform<Matrix4f> uModel = null;
+		Uniform<Vector4f> uLightPos = null;
+		Uniform<Vector4f> uViewPos = null;
+
 //		System.out.print("render: " + (frontToBack ? "front-to-back" : "back-to-front") + " [");
 		for (int i = 0; i < drawObjects.size(); i++) {
 			DrawObject obj = frontToBack ? drawObjects.get(drawObjects.size() - 1 - i) : drawObjects.get(i);
@@ -484,19 +727,55 @@ program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 				if (obj.shader != shader) {
 					shader = obj.shader;
 					shader.bind();
+					uProjView = shader.uniform("uProjView", Matrix4f.class);
+					uModel = shader.uniform("uModel", Matrix4f.class);
+					uLightPos = shader.uniform("uLightPos", Vector4f.class);
+					uViewPos = shader.uniform("uViewPos", Vector4f.class);
+					projection = obj.projection;
+					if (uProjView != null) {
+						uProjView.set(projection == null ? screen.projectionMatrix : projection);
+					}
 				}
-				Uniform<Matrix4f> uModel = shader.uniform("uModel", Matrix4f.class);
 				if (uModel != null) {
-					modelTransform.set(obj.transform).translate(0, 0, (float) obj.zOrder / depth);
+//					modelTransform.set(obj.transform).translate(0, 0, (float) obj.zOrder / depth);
 					uModel.set(modelTransform);
 				}
-				glDrawArrays(obj.drawMode, obj.offset, obj.nVertices);
+				if (uLightPos != null) {
+//				Vector4f light = projection.transform(screen.lightPosition, new Vector4f());
+				Vector4f light = new Vector4f(100,100,16,1);//.rotateX(step++/10f);
+//				light = projection.transform(light);
+//				light.div(light.w);
+//					System.out.println("light: " + light + ", " + projection.transform(new Vector4f(0,0,1,1)));
+					uLightPos.set(light);
+				}
+				if (uViewPos != null) {
+					Vector4f camera = screen.cameraPosition.mul(16, new Vector4f());
+//					System.out.println("camera: " + view);
+					uViewPos.set(camera);
+				}
+				if (obj.projection != projection) {
+					projection = obj.projection;
+					if (uProjView != null) {
+						uProjView.set(projection == null ? screen.projectionMatrix : projection);
+					}
+				}
+				if (obj.indices != null) {
+					int eab = glGenBuffers();
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eab);
+					glBufferData(GL_ELEMENT_ARRAY_BUFFER, obj.indices, GL_DYNAMIC_DRAW);
+					glDrawElements(obj.drawMode, obj.indices.length, GL_UNSIGNED_INT, 0);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+					glDeleteBuffers(eab);
+				} else {
+					glDrawArrays(obj.drawMode, obj.offset, obj.nVertices);
+				}
 			}
 		}
 //		System.out.println("]");
 		if (!frontToBack) {
 			streamArray.clear();
 			streamBuffer.clear();
+			streamArray3.clear();
 			drawObjects.clear();
 			int texNum = GL_TEXTURE0;
 			for (Texture tex : textures) {
@@ -508,7 +787,9 @@ program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 	}
 
 	class DrawObject {
+		public int[] indices;
 		Matrix4f transform = new Matrix4f();
+		Matrix4f projection = null;
 		VertexArray array;
 		ShaderProgram shader;
 		String type;
@@ -521,11 +802,22 @@ program = ShaderProgram.createProgram("plot_" + function, vs, fs);
 	}
 
 	class GLPathWriter extends PathWriterImpl {
+		Matrix4f projection() {
+			return screen.projectionMatrix;
+		}
+	}
 
+	class GLPathWriter3 extends GLPathWriter {
+		Matrix4f projection() {
+			return new Matrix4f(screen.perspectiveProjectionMatrix).mul(screen.perspectiveViewMatrix);
+		}
 	}
 
 	@Override
-	protected PathWriter pathWriter() {
-		return pathWriter;
+	protected PathWriter pathWriter(boolean use3d) {
+		if (use3d)
+			return pathWriter3;
+		else
+			return pathWriter;
 	}
 }

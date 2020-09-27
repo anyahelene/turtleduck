@@ -8,7 +8,7 @@ public class Stats {
 	private double lastPrintTime;
 	private double deltaTime;
 	private double currentFrameTime;
-	private double targetFps = 3000.0;
+	private double targetFps = 60.0;
 	private Stat frames = new Stat();
 	private Stat render = new Stat();
 

@@ -5,16 +5,18 @@ import java.util.List;
 import java.util.Random;
 
 import turtleduck.geometry.Direction;
+import turtleduck.geometry.Direction3;
 import turtleduck.testutil.Generator;
 
 public class DirectionGenerator extends AbstractGenerator<Direction> {
 	/**
 	 * Generator for the angle
 	 */
-	private final Generator<Double> aGenerator;
+	private final Generator<Integer> aGenerator;
+	private final long MILLIARCSEC = 60 * 60 * 1000;
 
 	public DirectionGenerator() {
-		this.aGenerator = new DoubleGenerator(-3600, 3600);
+		this(0, 360);
 	}
 
 	/**
@@ -24,7 +26,7 @@ public class DirectionGenerator extends AbstractGenerator<Direction> {
 	 */
 	public DirectionGenerator(double min, double max) {
 
-		this.aGenerator = new DoubleGenerator(min, max);
+		this.aGenerator = new IntGenerator((int) (min * MILLIARCSEC), (int) (max * MILLIARCSEC));
 	}
 
 	@Override
@@ -35,14 +37,20 @@ public class DirectionGenerator extends AbstractGenerator<Direction> {
 
 	@Override
 	public List<Direction> generateEquals(Random r, int n) {
-		double angle = aGenerator.generate(r);
+		long angle = aGenerator.generate(r);
 		List<Direction> list = new ArrayList<>();
 		boolean absolute = r.nextBoolean();
+		boolean threedee = r.nextBoolean();
 
 		for (int i = 0; i < n; i++) {
-			int offset = (r.nextInt(33)-16) * 360;
-			list.add(absolute ? Direction.absolute(angle+offset) : Direction.relative(angle+offset));
-			System.out.println("" + (angle+offset) + ", " + list.get(list.size()-1));
+			long offset = (r.nextInt(33) - 16) * 360 * MILLIARCSEC;
+			double a = (double)(angle + offset) / MILLIARCSEC;
+			if (threedee) {
+				list.add(absolute ? Direction3.absoluteAz(a) : Direction3.relativeAz(a));
+			} else {
+				list.add(absolute ? Direction.absolute(a) : Direction.relative(a));
+			}
+//			System.out.printf("%12d * %12d = %25.15f => %20.18f\n", angle, offset, a, list.get(list.size() - 1).degrees());
 		}
 		return list;
 	}
