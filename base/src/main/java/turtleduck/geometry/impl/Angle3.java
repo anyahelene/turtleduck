@@ -13,11 +13,12 @@ import turtleduck.geometry.Direction;
 import turtleduck.geometry.Direction3;
 
 public class Angle3 implements Direction3 {
-	public static final Vector3f FORWARD_VEC = new Vector3f(1, 0, 0);
-	public static final Vector3f UP_VEC = new Vector3f(0, 0, 1);
-	public static final Vector3f LEFT_VEC = new Vector3f(0, 0, 1);
-
+	public static final Vector3f FORWARD_VEC = new Vector3f(1,0,0);
+	public static final Vector3f UP_VEC = new Vector3f(0, 0,1);
+	public static final Vector3f LEFT_VEC = new Vector3f(1, 0, 0);
+	private static final Quaterniondc ROTATE_YZ = new Quaterniond(new AxisAngle4d(-Math.PI / 2, 1, 0, 0));
 	private final Quaterniondc q;
+	private final Vector3f vec;
 	private final boolean absolute;
 
 	private static double normalizeDegrees(double deg) {
@@ -30,20 +31,27 @@ public class Angle3 implements Direction3 {
 		return deg;
 	}
 
+	public static Direction3 absoluteVec(double dx, double dy, double dz) {
+		return new Angle3(new Quaterniond(new AxisAngle4d(0, dx, dy, dz)), true);
+	}
+
+	public static Direction3 relativeVec(double dx, double dy, double dz) {
+		return new Angle3(new Quaterniond(new AxisAngle4d(0, dx, dy, dz)), false);
+	}
 	public static Direction3 absoluteAz(double az) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), 0, 0, 1)), true);
+		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), UP_VEC)), true);
 	}
 
 	public static Direction3 relativeAz(double az) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), 0, 0, 1)), false);
+		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), UP_VEC)), false);
 	}
 
 	public static Direction3 absoluteAlt(double alt) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 0, 1, 0)), true);
+		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 1, 0, 0)), true);
 	}
 
 	public static Direction3 relativeAlt(double alt) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 0, 1, 0)), false);
+		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 1, 0, 0)), false);
 	}
 
 //	public static Direction3 absoluteVec(double dx, double dy, double dz) {
@@ -63,29 +71,37 @@ public class Angle3 implements Direction3 {
 	 * Double.isNaN(q.w())); assert Math.round(10e8 * q.lengthSquared()) == 10e8; }
 	 */
 	public Angle3(Quaterniond newQ, boolean b) {
-		this.q = newQ.normalize();
+		newQ.normalize();
+//		if (newQ.w < 0) {
+//			System.out.println(newQ);
+//			this.q = newQ.set(-newQ.x, -newQ.y, -newQ.z, -newQ.w);
+//			System.out.println(" => " + newQ);
+//		} else {
+		this.q = newQ;
+//		}
 		this.absolute = b;
 		newQ.normalize();
+		Vector3f tmp = q.transform(new Vector3f(FORWARD_VEC)).normalize();
+//		vec = tmp.set(tmp.x, -tmp.z, -tmp.y);
+		vec = tmp;
 		assert !(Double.isNaN(newQ.x) || Double.isNaN(newQ.y) || Double.isNaN(newQ.z) || Double.isNaN(newQ.w));
 		assert Math.round(10e8 * q.lengthSquared()) == 10e8;
 	}
 
 	public Angle3(Angle angle) {
-		this(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(angle.degrees())), 0, 0, 1)),
-				angle.isAbsolute());
+		this(new Quaterniond(new AxisAngle4d(Math.toRadians((angle.degrees())), 0, 0, 1)), angle.isAbsolute());
 	}
 
 	@Override
 	public double degrees() {
-//		double x = q.x(), y = q.y(), z = q.z(), w = q.w();
-//        eulerAngles.x = Math.atan2(2.0 * (x*w - y*z), 1.0 - 2.0 * (x*x + y*y));
-//        eulerAngles.y = Math.safeAsin(2.0 * (x*z + y*w));
-//        eulerAngles.z = Math.atan2(2.0 * (z*w - x*y), 1.0 - 2.0 * (y*y + z*z));
-		Vector3d xyz = q.getEulerAnglesXYZ(new Vector3d());
-		if (xyz.z >= 0)
-			return Math.toDegrees(xyz.z);
-		else
-			return Math.toDegrees(xyz.z) + 360.0;
+		Vector3d xyz = new Vector3d();
+		double x = q.x(), y = q.y(), z = q.z(), w = q.w();
+		xyz.y = Math.atan2(2.0 * (y * z + w * x), w * w - x * x - y * y + z * z); // 1.0 - 2.0 * (x*x + y*y));
+		xyz.x = Math.safeAsin(2.0 * (x * z + y * w));
+//		xyz.z = 
+				double yaw = Math.atan2(2.0 * (z * w - x * y), 1.0 - 2.0 * (y * y + z * z));
+//		Vector3d xyz = q.getEulerAnglesXYZ(new Vector3d());
+		return Math.toDegrees(yaw < 0 ? 2*Math.PI + yaw : yaw);
 	}
 
 	@Override
@@ -159,34 +175,36 @@ public class Angle3 implements Direction3 {
 
 	@Override
 	public double dirX() {
-		return q.transform(new Vector3d(1, 0, 0)).x;
+		return vec.x;
 	}
 
 	@Override
 	public double dirY() {
-		return q.transform(new Vector3d(1, 0, 0)).y;
+		return vec.y;
 	}
 
 	@Override
 	public double dirZ() {
-		return q.transform(new Vector3d(1, 0, 0)).z;
+		return vec.z;
 	}
 
 	@Override
 	public Vector3f perpendicular(Vector3f dest) {
-		q.transform(dest.set(0, 1, 0));
+		q.transform(dest.set(LEFT_VEC));
+//		ROTATE_YZ.transform(dest);
 		return dest;
 	}
 
 	@Override
 	public Vector3f directionVector(Vector3f dest) {
-		q.transform(dest.set(1, 0, 0));
+		dest.set(vec);
 		return dest; // .set(dest.y, dest.z, dest.x);
 	}
 
 	@Override
 	public Vector3f normalVector(Vector3f dest) {
-		q.transform(dest.set(0, 0, 1));
+		q.transform(dest.set(UP_VEC));
+//		ROTATE_YZ.transform(dest);
 		return dest; // .set(dest.y, dest.z, dest.x);
 	}
 
@@ -199,6 +217,13 @@ public class Angle3 implements Direction3 {
 	public String toString() {
 		double degs = degrees();
 		Vector3d euler = q.getEulerAnglesXYZ(new Vector3d());
+		Vector3d xyz = new Vector3d();
+		double x = q.x(), y = q.y(), z = q.z(), w = q.w();
+		xyz.y = Math.atan2(2.0 * (y * z + w * x), w * w - x * x - y * y + z * z); // 1.0 - 2.0 * (x*x + y*y));
+//		xyz.y = Math.atan2(2*(z*w +x*y), -1 + 2*(w*w+x*x));
+		xyz.x = Math.safeAsin(-2.0 * (x * z - w * y));
+		xyz.z = Math.atan2(2.0 * (z * w + x * y),w*w+x*x-y*y-z*z); //1.0 - 2.0 * (y * y + z * z));
+		
 //		double x = q.x(), y = q.y(), z = q.z(), w = q.w();
 //        euler.x = Math.atan2(2.0 * (x*w - y*z), 1.0 - 2.0 * (x*x + y*y));
 //        euler.y = Math.safeAsin(2.0 * (x*z + y*w));
@@ -208,23 +233,26 @@ public class Angle3 implements Direction3 {
 		if (absolute && degs < 0) {
 			degs += 360;
 		}
-		return String.format(format, toArrow(), Math.toDegrees(euler.x), Math.toDegrees(euler.y),
-				Math.toDegrees(euler.z), q.toString());
+		return String.format("%.2f°,%.2f°,%.2f° / %.2f°,%.2f°,%.2f° %s %s", Math.toDegrees(euler.x), Math.toDegrees(euler.y),
+				Math.toDegrees(euler.z), Math.toDegrees(xyz.x), Math.toDegrees(xyz.y),
+				Math.toDegrees(xyz.z), vec, q);
+//		return String.format(format, toArrow(), Math.toDegrees(euler.x), Math.toDegrees(euler.y),
+//				Math.toDegrees(euler.z), euler.toString() + "/" + xyz.toString() + " vec " + vec.toString());
 	}
 
 	@Override
 	public Direction3 yaw(double degrees) {
-		return new Angle3(q.rotateLocalZ(Math.toRadians(degrees), new Quaterniond()), absolute);
+		return new Angle3(q.rotateZ(Math.toRadians(degrees), new Quaterniond()), absolute);
 	}
 
 	@Override
 	public Direction3 pitch(double degrees) {
-		return new Angle3(q.rotateLocalY(Math.toRadians(degrees), new Quaterniond()), absolute);
+		return new Angle3(q.rotateY(Math.toRadians(degrees), new Quaterniond()), absolute);
 	}
 
 	@Override
 	public Direction3 roll(double degrees) {
-		return new Angle3(q.rotateLocalX(Math.toRadians(degrees), new Quaterniond()), absolute);
+		return new Angle3(q.rotateX(Math.toRadians(degrees), new Quaterniond()), absolute);
 	}
 
 	@Override
@@ -253,7 +281,7 @@ public class Angle3 implements Direction3 {
 				return false;
 			}
 		}
-		return Math.abs(q.dot(other.q)) > 1-10e-12;
+		return Math.abs(q.dot(other.q)) > 1 - 10e-12;
 	}
 
 	@Override

@@ -27,13 +27,13 @@ public interface Direction3 extends Direction {
 		return Angle3.relativeAlt(alt);
 	}
 
-//	public static Direction3 absoluteVec(double dx, double dy, double dz) {
-//		return Angle3.absoluteVec(dx, dy, dz);
-//	}
-//
-//	public static Direction3 relativeVec(double dx, double dy, double dz) {
-//		return Angle3.relativeVec(dx, dy, dz);
-//	}
+	public static Direction3 absoluteVec(double dx, double dy, double dz) {
+		return Angle3.absoluteVec(dx, dy, dz);
+	}
+
+	public static Direction3 relativeVec(double dx, double dy, double dz) {
+		return Angle3.relativeVec(dx, dy, dz);
+	}
 
 	/**
 	 * Return direction angle, measured in degrees

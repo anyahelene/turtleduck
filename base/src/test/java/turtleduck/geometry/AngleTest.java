@@ -26,7 +26,7 @@ public class AngleTest extends AbstractEqualsTest<Direction> {
 	@ParameterizedTest(name = "absoluteAz({0}).degrees() == {0}")
 	public void basicAngle(double a) {
 		Direction3 dir = Direction3.absoluteAz(a);
-
+System.out.println(dir + ".degrees() == " + dir.degrees());
 		assertEquals(a, dir.degrees(), 10e-6);
 	}
 
@@ -37,7 +37,7 @@ public class AngleTest extends AbstractEqualsTest<Direction> {
 		Vector3f vec = dir.directionVector(new Vector3f());
 		double expected = Math.cos(Math.toRadians(a));
 		assertEquals(dir.dirX(), vec.x, 10e-6);
-//		System.out.println("a=" +a + ", expect "+ expected + " == " + vec);
+		System.out.println("a=" +a + ", expect "+ expected + " == " + vec);
 		assertEquals(expected, vec.x, 10e-6);
 	}
 
@@ -58,6 +58,18 @@ public class AngleTest extends AbstractEqualsTest<Direction> {
 		Direction3 dir = Direction3.absoluteAz(a);
 		Vector3f vec = dir.normalVector(new Vector3f());
 		assertEquals(UP, vec);
+	}
+
+	@CsvSource(value = { "0", "45", "-45", "90", "-90", "127", "179.9", "180.1" })
+	@ParameterizedTest(name = "absoluteAz({0}).normal() == [0,0,1]")
+	public void basicRoll(double a) {
+		Direction3 dir = Direction3.absoluteAz(0).roll(a).yaw(90);
+		Vector3f vec = dir.normalVector(new Vector3f());
+		System.out.println("" + a + ", " + vec);
+		assertEquals(0, vec.x);
+		assertEquals(Math.sin(Math.toRadians(-a)), vec.y, 1e-6);
+		assertEquals(Math.cos(Math.toRadians(-a)), vec.z, 1e-6);
+
 	}
 
 	@Test

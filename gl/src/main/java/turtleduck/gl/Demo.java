@@ -108,14 +108,14 @@ public class Demo implements TurtleDuckApp {
 		 * = 0; offX < 256; offX += 32) { canvas.drawImage(Point.point(offX + s, offY +
 		 * s), image.crop(offX, offY, 32, 32).crop(s, s, 32 - s * 2, 32 - s * 2)); }
 		 */
-		for (DemoSprite sprite : sprites) {
-			sprite.step();
-			screen.modelMatrix.translation((float) sprite.x(), (float) sprite.y(), 0f)
-					.rotateZ((float) (sprite.bearing().radians()));
-			screen.uModel.set(screen.modelMatrix);
-			sprite.draw(canvas);
-			screen.uModel.set(screen.modelMatrix.identity());
-		}
+//		for (DemoSprite sprite : sprites) {
+//			sprite.step();
+//			screen.modelMatrix.translation((float) sprite.x(), (float) sprite.y(), 0f)
+//					.rotateZ((float) (sprite.bearing().radians()));
+//			screen.uModel.set(screen.modelMatrix);
+//			sprite.draw(canvas);
+//			screen.uModel.set(screen.modelMatrix.identity());
+//		}
 
 		if (false) {
 

@@ -9,6 +9,7 @@ import org.joml.Vector3f;
 import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.geometry.Direction;
+import turtleduck.geometry.Direction3;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Chelonian;
 import turtleduck.turtle.DrawingBuilder;
@@ -195,7 +196,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	@Override
 	public THIS turnTo(double angle) {
-		current.bearing = Direction.absolute(angle);
+		current.bearing = Direction3.absoluteAz(angle);
 		return (THIS) this;
 	}
 

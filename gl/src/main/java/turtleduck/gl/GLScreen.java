@@ -73,7 +73,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	public final Matrix4f viewMatrixInv = new Matrix4f();
 //	public final Vector4f lightPosition = vec4(-1.2f,0f,5f, 1f);// .rotateX(pi(1f/8));
     public final Vector4f lightPosition = vec4(0f,-2.5f,-2.5f,1f);//.rotateX(pi(1f/8));
-	public final Vector4f defaultCameraPosition = vec4(0f, 0f, 5f, 1f);
+	public final Vector4f defaultCameraPosition = vec4(0f, 0f, 25f, 1f);
 	private final Quaternionf defaultCameraOrientation = new Quaternionf(new AxisAngle4f(0, 0, 0, -1));
 	public final Vector4f cameraPosition = vec4(defaultCameraPosition);
 	final Quaternionf cameraOrientation = new Quaternionf(defaultCameraOrientation);
@@ -690,7 +690,7 @@ public class GLScreen extends BaseScreen implements Screen {
 
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
-		glEnable(GL_CULL_FACE);
+//		glEnable(GL_CULL_FACE);
 		glDepthMask(true);
 //		glEnable(GL_CULL_FACE);
 		forEachLayer(true, (l) -> ((GLLayer) l).render(true));
@@ -700,7 +700,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 //		glEnable(GL_CULL_FACE);
-		glDisable(GL_CULL_FACE);
+//		glDisable(GL_CULL_FACE);
 		forEachLayer(false, (l) -> ((GLLayer) l).render(false));
 		glDepthMask(true);
 		glDisable(GL_BLEND);

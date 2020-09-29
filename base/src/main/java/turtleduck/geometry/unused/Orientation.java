@@ -97,13 +97,7 @@ public class Orientation {
 		System.out.println(orient.quat.transformPositiveX(v));
 
 		System.out.println(String.format("%.30f", Math.sin(Math.PI)));
-		for (int i = 0; i <= 360; i += 5) {
-			double y = -Math.cos(Math.toRadians(i)), x = Math.sin(Math.toRadians(i));
-			int atan2 = Angle.atan2(x, y);
-			System.out.printf("%4d → (%.25f,%.25f) → %10d %.25f %7.4f\n", i, x, y, atan2, Angle.sin(atan2),
-					Angle.milliArcSecToDegrees(atan2));
 
-		}
 //		System.exit(0);
 		for (int i = -72; i <= 72; i++) {
 			for (int j = -1; j <= 1; j++) {

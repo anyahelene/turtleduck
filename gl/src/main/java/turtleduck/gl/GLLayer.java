@@ -259,7 +259,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 			}
 		}
 		for (int i = 0; i < 24; i++) {
-			obj.indices[i] = i;
+			obj.indices[i] = obj.offset + i;
 		}
 		for (int y = 0; y < rows - 1; y++) {
 			for (int x = 0; x < cols - 1; x++) {
@@ -519,10 +519,10 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		List<Integer> indices = new ArrayList<>();
 		PathWriter.PathStroke stroke;
 		DrawObject obj = new DrawObject();
-		obj.array = streamArray3;
-		obj.shader = screen.shader3d;
+		obj.array = paths instanceof GLPathWriter3 ? streamArray3 : streamArray;
+		obj.shader = paths instanceof GLPathWriter3 ? screen.shader3d : screen.shader2d;
 		obj.drawMode = GL_TRIANGLES;
-		obj.offset = streamArray3.nVertices();
+		obj.offset = obj.array.nVertices();
 		obj.type = "line";
 		obj.zOrder = depth++;
 		obj.transform.identity(); // .rotationX(-(float) Math.PI / 4);// + (step++) / 100.0f);
@@ -545,7 +545,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 //		Vector3f tangent = new Vector3f();
 		Vector3f tmp = new Vector3f();
 		boolean first = true;
-		int index = 0;
+		int index = obj.offset;
 		while ((stroke = paths.nextStroke()) != null) {
 			List<PathPoint> points = stroke.points();
 
@@ -626,7 +626,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(1, tmp2)).end();
 						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(w, offset).fma(0, normal))//
 								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(1, tmp2)).end();
-						
+
 						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(0, offset).fma(-w, normal))//
 								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(-1, tmp2)).end();
 						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(0, offset).fma(-w, normal))//
@@ -692,7 +692,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 			}
 //			System.out.println();
 //			pathWriter.clear();
-			obj.nVertices = streamArray3.nVertices() - obj.offset;
+			obj.nVertices = obj.array.nVertices() - obj.offset;
 			obj.indices = indices.stream().mapToInt(i -> i).toArray();
 			debugObj.nVertices = streamArray.nVertices() - debugObj.offset;
 		}
@@ -710,7 +710,6 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 				tex.bind(texNum++);
 			}
 		}
-		Matrix4f modelTransform = new Matrix4f();
 		Matrix4f projection = null;
 		Uniform<Matrix4f> uProjView = null;
 		Uniform<Matrix4f> uModel = null;
@@ -738,11 +737,11 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 				}
 				if (uModel != null) {
 //					modelTransform.set(obj.transform).translate(0, 0, (float) obj.zOrder / depth);
-					uModel.set(modelTransform);
+					uModel.set(obj.transform);
 				}
 				if (uLightPos != null) {
 //				Vector4f light = projection.transform(screen.lightPosition, new Vector4f());
-				Vector4f light = new Vector4f(100,100,16,1);//.rotateX(step++/10f);
+					Vector4f light = new Vector4f(100, 100, 16, 1);// .rotateX(step++/10f);
 //				light = projection.transform(light);
 //				light.div(light.w);
 //					System.out.println("light: " + light + ", " + projection.transform(new Vector4f(0,0,1,1)));
