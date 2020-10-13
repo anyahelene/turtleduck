@@ -356,6 +356,11 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	protected void init(int width, int height) {
+		if(!glfwInit()) {
+			throw new RuntimeException("Failed to initialize OpenGL");
+		}
+		
+		
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -368,10 +373,28 @@ public class GLScreen extends BaseScreen implements Screen {
 
 		window = glfwCreateWindow(width, height, getClass().getName(), NULL, NULL);
 		if (window == NULL) {
+			glfwTerminate();
 			throw new AssertionError("Failed to create the GLFW window");
 		}
+		glfwMakeContextCurrent(window);
 		GLDisplayInfo.INSTANCE.updateVideoMode(window);
-
+		caps = GL.createCapabilities();
+		if (!caps.GL_ARB_program_interface_query) {
+			glfwTerminate();
+			throw new AssertionError("Required OpenGL extension missing: ARB_program_interface_query");
+		}
+		if (!caps.GL_ARB_shader_objects) {
+			glfwTerminate();
+			throw new AssertionError("Required OpenGL extension missing: ARB_shader_objects");
+		}
+		if (!caps.GL_ARB_vertex_shader) {
+			glfwTerminate();
+			throw new AssertionError("Required OpenGL extension missing: ARB_vertex_shader");
+		}
+		if (!caps.GL_ARB_separate_shader_objects) {
+			glfwTerminate();
+			throw new AssertionError("Required OpenGL extension missing: ARB_fragment_shader");
+		}
 		glfwSetFramebufferSizeCallback(window, this::callbackFramebufferSize);
 		glfwSetWindowSizeCallback(window, this::callbackWindowSize);
 		glfwSetKeyCallback(window, this::processInput);
@@ -409,19 +432,7 @@ public class GLScreen extends BaseScreen implements Screen {
 			width = framebufferSize.get(0);
 			height = framebufferSize.get(1);
 		}
-		caps = GL.createCapabilities();
-		if (!caps.GL_ARB_program_interface_query) {
-			throw new AssertionError("Required OpenGL extension missing: ARB_program_interface_query");
-		}
-		if (!caps.GL_ARB_shader_objects) {
-			throw new AssertionError("Required OpenGL extension missing: ARB_shader_objects");
-		}
-		if (!caps.GL_ARB_vertex_shader) {
-			throw new AssertionError("Required OpenGL extension missing: ARB_vertex_shader");
-		}
-		if (!caps.GL_ARB_separate_shader_objects) {
-			throw new AssertionError("Required OpenGL extension missing: ARB_fragment_shader");
-		}
+
 
 		debugProc = GLUtil.setupDebugMessageCallback();
 

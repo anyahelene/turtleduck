@@ -145,7 +145,7 @@ public class Demo implements TurtleDuckApp {
 //		img = img.transpose(Image.Transpose.ROTATE_90);
 //		canvas.drawImage(Point.point(900, 600), img);
 
-		if (true) {
+		if (false) {
 			turtle.beginPath();
 
 			turtle.turn(1);
@@ -162,6 +162,7 @@ public class Demo implements TurtleDuckApp {
 //		turtle.moveTo(500,400);
 			turtle.done();
 		}
+		if(false)
 		grid.locationParallelStream().forEach((l) -> {
 			tileMap[l.getX() + l.getY() * GRID_COLS] = grid.get(l).background;
 		});
@@ -192,7 +193,7 @@ public class Demo implements TurtleDuckApp {
 		try {
 			image2 = new GLPixelData("/yeti-juno.jpg");
 			System.out.println(image2);
-			image = new GLPixelData("file:///tmp/tiled.png");
+			image = new GLPixelData("/yeti-juno.jpg"); // file:///tmp/tiled.png");
 			tiles = image.tiles(8, 8);
 			for (int row = 0, y = 0; row < tiles.rows(); row++, y += 32) {
 				Direction b = Direction.absolute(-20 + 180);
@@ -203,6 +204,7 @@ public class Demo implements TurtleDuckApp {
 				}
 			}
 			tileMap = new int[48 * 32];
+			System.out.println("tileMap init");
 			for (int j = 0; j < 32; j++) {
 				for (int i = 0; i < 48; i++) {
 					tileMap[i + j * 48] = 180 + j;
