@@ -23,7 +23,7 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 	private final BlockingQueue<Path> queue = new ArrayBlockingQueue<>(QUEUE_SIZE);
 	protected final GraphicsContext context;
 	private Pen lastPen = null;
-	
+
 	public JfxLayer(String id, double width, double height, JfxScreen jfxScreen, javafx.scene.canvas.Canvas canvas) {
 		super(id, jfxScreen, width, height);
 		this.fxCanvas = canvas;
@@ -83,7 +83,7 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 		Pen pen = path.pointPen(0);
 		for (int i = 1; i < path.size(); i++) {
 			Point to = path.point(i);
-			if(pen != lastPen) {
+			if (pen != lastPen) {
 				changeStroke(pen);
 				lastPen = pen;
 			}
@@ -111,17 +111,17 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 	@Override
 	public void drawImage(Point at, Image img) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	protected void drawLine(Stroke stroke, Point from, Point to) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	protected PathWriter pathWriter() {
+	protected PathWriter pathWriter(boolean use3d) {
 		// TODO Auto-generated method stub
 		return null;
 	}

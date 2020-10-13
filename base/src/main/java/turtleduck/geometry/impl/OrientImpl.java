@@ -10,9 +10,9 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import turtleduck.geometry.Direction;
-import turtleduck.geometry.Direction3;
+import turtleduck.geometry.Orientation;
 
-public class Angle3 implements Direction3 {
+public class OrientImpl implements Orientation {
 	public static final Vector3f FORWARD_VEC = new Vector3f(1,0,0);
 	public static final Vector3f UP_VEC = new Vector3f(0, 0,1);
 	public static final Vector3f LEFT_VEC = new Vector3f(1, 0, 0);
@@ -31,27 +31,27 @@ public class Angle3 implements Direction3 {
 		return deg;
 	}
 
-	public static Direction3 absoluteVec(double dx, double dy, double dz) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(0, dx, dy, dz)), true);
+	public static Orientation absoluteVec(double dx, double dy, double dz) {
+		return new OrientImpl(new Quaterniond(new AxisAngle4d(0, dx, dy, dz)), true);
 	}
 
-	public static Direction3 relativeVec(double dx, double dy, double dz) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(0, dx, dy, dz)), false);
+	public static Orientation relativeVec(double dx, double dy, double dz) {
+		return new OrientImpl(new Quaterniond(new AxisAngle4d(0, dx, dy, dz)), false);
 	}
-	public static Direction3 absoluteAz(double az) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), UP_VEC)), true);
-	}
-
-	public static Direction3 relativeAz(double az) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), UP_VEC)), false);
+	public static Orientation absoluteAz(double az) {
+		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), UP_VEC)), true);
 	}
 
-	public static Direction3 absoluteAlt(double alt) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 1, 0, 0)), true);
+	public static Orientation relativeAz(double az) {
+		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), UP_VEC)), false);
 	}
 
-	public static Direction3 relativeAlt(double alt) {
-		return new Angle3(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 1, 0, 0)), false);
+	public static Orientation absoluteAlt(double alt) {
+		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 1, 0, 0)), true);
+	}
+
+	public static Orientation relativeAlt(double alt) {
+		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 1, 0, 0)), false);
 	}
 
 //	public static Direction3 absoluteVec(double dx, double dy, double dz) {
@@ -70,7 +70,7 @@ public class Angle3 implements Direction3 {
 	 * !(Double.isNaN(q.x()) || Double.isNaN(q.y()) || Double.isNaN(q.z()) ||
 	 * Double.isNaN(q.w())); assert Math.round(10e8 * q.lengthSquared()) == 10e8; }
 	 */
-	public Angle3(Quaterniond newQ, boolean b) {
+	public OrientImpl(Quaterniond newQ, boolean b) {
 		newQ.normalize();
 //		if (newQ.w < 0) {
 //			System.out.println(newQ);
@@ -88,7 +88,7 @@ public class Angle3 implements Direction3 {
 		assert Math.round(10e8 * q.lengthSquared()) == 10e8;
 	}
 
-	public Angle3(Angle angle) {
+	public OrientImpl(AngleImpl angle) {
 		this(new Quaterniond(new AxisAngle4d(Math.toRadians((angle.degrees())), 0, 0, 1)), angle.isAbsolute());
 	}
 
@@ -127,39 +127,39 @@ public class Angle3 implements Direction3 {
 	}
 
 	@Override
-	public Direction3 add(Direction other) {
+	public Orientation add(Direction other) {
 		if (absolute && other.isAbsolute())
 			Logger.getLogger("TurtleDuck").warning("Adding two absolute bearings: " + this + " + " + other);
 
 		if (other.is3d()) {
-			Angle3 o = ((Angle3) other);
-			return new Angle3(q.mul(o.q, new Quaterniond()), absolute || other.isAbsolute());
+			OrientImpl o = ((OrientImpl) other);
+			return new OrientImpl(q.mul(o.q, new Quaterniond()), absolute || other.isAbsolute());
 		} else {
-			return new Angle3(new Quaterniond(q).rotateLocalY(other.radians()), absolute || other.isAbsolute());
+			return new OrientImpl(new Quaterniond(q).rotateLocalY(other.radians()), absolute || other.isAbsolute());
 		}
 	}
 
 	@Override
-	public Direction3 sub(Direction other) {
+	public Orientation sub(Direction other) {
 //		Vector3d result = new Vector3d(other.dirX(), other.dirY(), other.dirZ());
 
 //		vec.sub(result, result);
 		if (other.is3d()) {
-			Angle3 o = ((Angle3) other);
-			return new Angle3(new Quaterniond(q).mul(new Quaterniond(o.q).conjugate()),
+			OrientImpl o = ((OrientImpl) other);
+			return new OrientImpl(new Quaterniond(q).mul(new Quaterniond(o.q).conjugate()),
 					absolute && !other.isAbsolute());
 		} else {
-			return new Angle3(new Quaterniond(q).rotateLocalY(-other.radians()), absolute && !other.isAbsolute());
+			return new OrientImpl(new Quaterniond(q).rotateLocalY(-other.radians()), absolute && !other.isAbsolute());
 		}
 	}
 
 	@Override
-	public Direction3 interpolate(Direction other, double t) {
+	public Orientation interpolate(Direction other, double t) {
 		if (other.is3d()) {
-			Angle3 o = ((Angle3) other);
-			return new Angle3(new Quaterniond(q).nlerp(o.q, t), absolute);
+			OrientImpl o = ((OrientImpl) other);
+			return new OrientImpl(new Quaterniond(q).nlerp(o.q, t), absolute);
 		} else {
-			return interpolate((Angle) other, t);
+			return interpolate((AngleImpl) other, t);
 		}
 	}
 
@@ -241,18 +241,18 @@ public class Angle3 implements Direction3 {
 	}
 
 	@Override
-	public Direction3 yaw(double degrees) {
-		return new Angle3(q.rotateZ(Math.toRadians(degrees), new Quaterniond()), absolute);
+	public Orientation yaw(double degrees) {
+		return new OrientImpl(q.rotateZ(Math.toRadians(degrees), new Quaterniond()), absolute);
 	}
 
 	@Override
-	public Direction3 pitch(double degrees) {
-		return new Angle3(q.rotateY(Math.toRadians(degrees), new Quaterniond()), absolute);
+	public Orientation pitch(double degrees) {
+		return new OrientImpl(q.rotateY(Math.toRadians(degrees), new Quaterniond()), absolute);
 	}
 
 	@Override
-	public Direction3 roll(double degrees) {
-		return new Angle3(q.rotateX(Math.toRadians(degrees), new Quaterniond()), absolute);
+	public Orientation roll(double degrees) {
+		return new OrientImpl(q.rotateX(Math.toRadians(degrees), new Quaterniond()), absolute);
 	}
 
 	@Override
@@ -269,10 +269,10 @@ public class Angle3 implements Direction3 {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof Angle3)) {
+		if (!(obj instanceof OrientImpl)) {
 			return false;
 		}
-		Angle3 other = (Angle3) obj;
+		OrientImpl other = (OrientImpl) obj;
 		if (absolute != other.absolute) {
 			return false;
 		}
@@ -286,8 +286,8 @@ public class Angle3 implements Direction3 {
 
 	@Override
 	public boolean like(Direction other) {
-		if (other instanceof Angle3) {
-			Angle3 o = (Angle3) other;
+		if (other instanceof OrientImpl) {
+			OrientImpl o = (OrientImpl) other;
 			// dot product will be 1 or -1 when equal
 			return Math.abs(q.dot(o.q)) > 1 - 10e-6;
 //			return Math.abs(q.x() - o.q.x()) < 10e-6 //

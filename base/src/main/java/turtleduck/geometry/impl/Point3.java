@@ -4,7 +4,7 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import turtleduck.geometry.Direction;
-import turtleduck.geometry.Direction3;
+import turtleduck.geometry.Orientation;
 import turtleduck.geometry.IPoint3;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
@@ -89,12 +89,12 @@ public class Point3 extends Point2 implements IPoint3 {
 		else return super.equals(obj);
 	}
 	@Override
-	public Direction3 asBearing() {
-		return Direction3.absoluteVec(x(), y(), z());
+	public Orientation asBearing() {
+		return Orientation.absoluteVec(x(), y(), z());
 	}
 	@Override
 	public Direction bearingTo(PositionVector otherPoint) {
-		return Direction3.absoluteVec(otherPoint.x() - x(), otherPoint.y() - y(), otherPoint.z() -z());
+		return Orientation.absoluteVec(otherPoint.x() - x(), otherPoint.y() - y(), otherPoint.z() -z());
 	}
 	@Override
 	public Vector3f toVector(Vector3f dest) {

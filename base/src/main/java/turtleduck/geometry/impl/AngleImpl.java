@@ -17,7 +17,7 @@ import turtleduck.geometry.DirectionVector;
  * @author anya
  *
  */
-public class Angle implements DirectionVector, Direction {
+public class AngleImpl implements DirectionVector, Direction {
 
 	static final double SIGN_LEFT = -1, SIGN_RIGHT = 1;
 	public static final double HALF_PI = Math.PI / 2;
@@ -46,7 +46,7 @@ public class Angle implements DirectionVector, Direction {
 	private final int angle;
 	private final boolean absolute;
 
-	protected Angle(int mArcSecs, boolean absolute) {
+	protected AngleImpl(int mArcSecs, boolean absolute) {
 		mArcSecs = mArcSecs % TWO_MI;
 		if (mArcSecs > MI) {
 			mArcSecs -= TWO_MI;
@@ -81,20 +81,20 @@ public class Angle implements DirectionVector, Direction {
 		return ((double) angle) * Math.PI / MI;
 	}
 
-	public static Angle absolute(double a) {
-		return new Angle(degreesToMilliArcSec(a), true);
+	public static AngleImpl absolute(double a) {
+		return new AngleImpl(degreesToMilliArcSec(a), true);
 	}
 
-	public static Angle relative(double a) {
-		return new Angle(degreesToMilliArcSec(a), false);
+	public static AngleImpl relative(double a) {
+		return new AngleImpl(degreesToMilliArcSec(a), false);
 	}
 
-	public static Angle absolute(double x, double y) {
-		return new Angle(atan2(y, x), true);
+	public static AngleImpl absolute(double x, double y) {
+		return new AngleImpl(atan2(y, x), true);
 	}
 
 	public static Direction relative(double x, double y) {
-		return new Angle(atan2(y, x), false);
+		return new AngleImpl(atan2(y, x), false);
 	}
 
 	@Override
@@ -129,30 +129,30 @@ public class Angle implements DirectionVector, Direction {
 	public Direction add(Direction other) {
 		if (other.is3d())
 			return other.add(this);
-		int b = ((Angle) other).angle;
+		int b = ((AngleImpl) other).angle;
 		assert ((long) angle + (long) b) == angle + b;
 		if (!absolute)
-			return new Angle(angle + b, other.isAbsolute());
+			return new AngleImpl(angle + b, other.isAbsolute());
 		else if (!other.isAbsolute()) {
-			return new Angle(angle + b, true);
+			return new AngleImpl(angle + b, true);
 		} else {
 			Logger.getLogger("TurtleDuck").warning("Adding two absolute bearings: " + this + " + " + other);
-			return new Angle(angle + b, false);
+			return new AngleImpl(angle + b, false);
 		}
 	}
 
 	@Override
 	public Direction sub(Direction other) {
 		if (other.is3d())
-			return new Angle3(this).sub(other);
-		int b = ((Angle) other).angle;
+			return new OrientImpl(this).sub(other);
+		int b = ((AngleImpl) other).angle;
 		assert ((long) angle - (long) b) == angle - b;
 		if (!absolute)
-			return new Angle(angle - b, other.isAbsolute());
+			return new AngleImpl(angle - b, other.isAbsolute());
 		else if (!other.isAbsolute()) {
-			return new Angle(angle - b, true);
+			return new AngleImpl(angle - b, true);
 		} else {
-			return new Angle(angle - b, false);
+			return new AngleImpl(angle - b, false);
 		}
 	}
 
@@ -166,7 +166,7 @@ public class Angle implements DirectionVector, Direction {
 		double y0 = dirY(), y1 = other.dirY();
 		double x = x0 + (x1 - x0) * t;
 		double y = y0 + (y1 - y0) * t;
-		return new Angle(atan2(x, y), absolute);
+		return new AngleImpl(atan2(x, y), absolute);
 	}
 
 	@Override
@@ -364,8 +364,8 @@ public class Angle implements DirectionVector, Direction {
 		if (absolute != other.isAbsolute())
 			return false;
 
-		if (other instanceof Angle)
-			return angle == ((Angle) other).angle;
+		if (other instanceof AngleImpl)
+			return angle == ((AngleImpl) other).angle;
 		else
 			return degrees() == other.degrees();
 	}
@@ -397,25 +397,25 @@ public class Angle implements DirectionVector, Direction {
 
 	@Override
 	public Direction yaw(double degrees) {
-		return new Angle(angle + degreesToMilliArcSec(degrees), absolute);
+		return new AngleImpl(angle + degreesToMilliArcSec(degrees), absolute);
 	}
 
 	@Override
 	public Direction pitch(double degrees) {
-		return new Angle3(this).pitch(degrees);
+		return new OrientImpl(this).pitch(degrees);
 	}
 
 	@Override
 	public Direction roll(double degrees) {
-		return new Angle3(this).roll(degrees);
+		return new OrientImpl(this).roll(degrees);
 	}
 
 	@Override
 	public boolean like(Direction other) {
-		if (other instanceof Angle) {
-			Angle o = (Angle) other;
+		if (other instanceof AngleImpl) {
+			AngleImpl o = (AngleImpl) other;
 			return Math.abs(angle - o.angle) < 10e-6;
-		} else if (other instanceof Angle3)
+		} else if (other instanceof OrientImpl)
 			return other.equals(this);
 		return false;
 	}

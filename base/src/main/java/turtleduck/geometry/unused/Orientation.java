@@ -11,7 +11,7 @@ import org.joml.Vector3f;
 
 import turtleduck.colors.Colors;
 import turtleduck.geometry.Direction;
-import turtleduck.geometry.impl.Angle;
+import turtleduck.geometry.impl.AngleImpl;
 import turtleduck.terminal.TerminalInputStream;
 import turtleduck.terminal.TerminalPrintStream;
 
@@ -101,17 +101,17 @@ public class Orientation {
 //		System.exit(0);
 		for (int i = -72; i <= 72; i++) {
 			for (int j = -1; j <= 1; j++) {
-				int b = Angle.degreesToMilliArcSec(i * 5) + j;
+				int b = AngleImpl.degreesToMilliArcSec(i * 5) + j;
 				System.out.printf("%4d° = %6.2f° = %12d = %17.12f° = %15.12f\n", i * 5, //
 						Math.toDegrees(Math.atan2(Math.sin(Math.toRadians(i * 5)), Math.cos(Math.toRadians(i * 5)))), //
-						b, Angle.milliArcSecToDegrees(b), Angle.milliArcSecToRadians(b));
+						b, AngleImpl.milliArcSecToDegrees(b), AngleImpl.milliArcSecToRadians(b));
 			}
 		}
 		int a = -540;
-		int m = Angle.degreesToMilliArcSec(a);
+		int m = AngleImpl.degreesToMilliArcSec(a);
 		System.out.printf("%4d° = %6.2f° = %12d = %17.12f° = %15.12f\n", a, //
 				Math.toDegrees(Math.atan2(Math.sin(Math.toRadians(a)), Math.cos(Math.toRadians(a)))), m,
-				Angle.milliArcSecToDegrees(m), Angle.milliArcSecToRadians(m));
+				AngleImpl.milliArcSecToDegrees(m), AngleImpl.milliArcSecToRadians(m));
 //		System.exit(0);
 		Direction b = Direction.absolute(90);
 		System.out.println(b);

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import turtleduck.geometry.Direction;
-import turtleduck.geometry.Direction3;
+import turtleduck.geometry.Orientation;
 import turtleduck.testutil.Generator;
 
 public class DirectionGenerator extends AbstractGenerator<Direction> {
@@ -46,7 +46,7 @@ public class DirectionGenerator extends AbstractGenerator<Direction> {
 			long offset = (r.nextInt(33) - 16) * 360 * MILLIARCSEC;
 			double a = (double)(angle + offset) / MILLIARCSEC;
 			if (threedee) {
-				list.add(absolute ? Direction3.absoluteAz(a) : Direction3.relativeAz(a));
+				list.add(absolute ? Orientation.absoluteAz(a) : Orientation.relativeAz(a));
 			} else {
 				list.add(absolute ? Direction.absolute(a) : Direction.relative(a));
 			}

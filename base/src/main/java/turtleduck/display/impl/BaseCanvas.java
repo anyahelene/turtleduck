@@ -6,7 +6,7 @@ import java.util.List;
 import turtleduck.display.Canvas;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Direction;
-import turtleduck.geometry.Direction3;
+import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.impl.Point3;
 import turtleduck.turtle.Chelonian;
@@ -48,7 +48,7 @@ public abstract class BaseCanvas<S extends Screen> extends BaseLayer<S> implemen
 
 	public Turtle3 createTurtle3() {
 		String tId = id + "." + nTurtles++;
-		Turtle3 t = new TurtleImpl3.SpecificTurtle3(Point3.ZERO, Direction3.DUE_NORTH, createPen());
+		Turtle3 t = new TurtleImpl3.SpecificTurtle3(Point3.ZERO, Orientation.DUE_NORTH, createPen());
 		t.writePathsTo(pathWriter(true));
 		turtles.add(t);
 		return t;

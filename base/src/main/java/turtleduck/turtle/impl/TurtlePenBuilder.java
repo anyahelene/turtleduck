@@ -4,7 +4,6 @@ import turtleduck.colors.Color;
 import turtleduck.geometry.Projection;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
-import turtleduck.turtle.Stroke;
 import turtleduck.turtle.Pen.SmoothType;
 import turtleduck.turtle.Chelonian;
 

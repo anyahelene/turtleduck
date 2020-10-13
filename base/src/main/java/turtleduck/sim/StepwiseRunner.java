@@ -1,6 +1,4 @@
-package turtleduck.sim;
-
-import java.util.concurrent.Future;
+	package turtleduck.sim;
 
 import turtleduck.sim.impl.RunnerImpl;
 

@@ -1,7 +1,6 @@
 package turtleduck.turtle.impl;
 
 import turtleduck.geometry.Direction;
-import turtleduck.geometry.Direction3;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Chelonian3;
 import turtleduck.turtle.Pen;
@@ -32,15 +31,18 @@ public class TurtleImpl3<THIS extends Chelonian3<THIS, RESULT>, RESULT> extends 
 		super(parent);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS pitch(double angle) {
 		current.bearing = current.bearing.pitch(angle);
-		return (THIS)this;
+		return (THIS) this;
 	}
+
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS roll(double angle) {
 		current.bearing = current.bearing.roll(angle);
-		return (THIS)this;
+		return (THIS) this;
 	}
 
 }

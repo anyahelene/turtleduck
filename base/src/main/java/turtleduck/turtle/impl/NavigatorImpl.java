@@ -5,8 +5,6 @@ import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
 import turtleduck.turtle.Navigator;
 import turtleduck.turtle.Path;
-import turtleduck.turtle.PathPoint;
-import turtleduck.turtle.BasicNavigator.RelativeTo;
 
 public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator<T>, Cloneable {
 	protected boolean recordMoves = false;
@@ -36,6 +34,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 		return current.point;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public T go(PositionVector off, RelativeTo rel) {
 		PathPointImpl pp = current.copy();
@@ -56,11 +55,13 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 //		}
 //	}
 
+	@SuppressWarnings("unchecked")
 	public T turnTo(PositionVector dest) {
 		bearing(Direction.absolute(dest.x() - current.point.x(), dest.y() - current.point.y()).sub(current.bearing));
 		return (T) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public T bearing(Direction dest) {
 		if (dest.isAbsolute())
@@ -100,6 +101,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 		return current.bearing.dirZ();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public T goTo(Point dest) {
 		if (!isAt(dest)) {

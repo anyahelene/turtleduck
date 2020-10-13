@@ -4,12 +4,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import org.joml.Vector3f;
-
 import turtleduck.colors.Color;
 import turtleduck.display.Canvas;
 import turtleduck.geometry.Direction;
-import turtleduck.geometry.Direction3;
+import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Chelonian;
 import turtleduck.turtle.DrawingBuilder;
@@ -112,6 +110,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	 * public Point previousPosition(int index) { if (index < 0) index =
 	 * points.size() + index; return points.get(index).point; }
 	 */
+	@SuppressWarnings("unchecked")
 	public THIS pen(Pen newPen) {
 		pen = newPen;
 		penBuilder = null;
@@ -148,6 +147,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		throw new UnsupportedOperationException();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS draw(double dist) {
 		drawing = true;
@@ -160,6 +160,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS jump(double dist) {
 		drawing = false;
@@ -171,6 +172,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS goTo(Point newPos) {
 		super.goTo(newPos);
@@ -178,6 +180,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS jumpTo(Point newPos) {
 		drawing = false;
@@ -188,54 +191,63 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS turn(double angle) {
 		current.bearing = current.bearing.yaw(angle);
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS turnTo(double angle) {
-		current.bearing = Direction3.absoluteAz(angle);
+		current.bearing = Orientation.absoluteAz(angle);
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public PenBuilder<? extends THIS> penChange() {
 		penBuilder = pen.change();
 		return new TurtlePenBuilder<THIS, RESULT>(penBuilder, (THIS) this);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS pen(Stroke newPen) {
 		pen = pen.stroke(newPen);
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS pen(Fill newPen) {
 		pen = pen.fill(newPen);
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS penColor(Color color) {
 		pen = pen.change().strokePaint(color).done();
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS penWidth(double width) {
 		pen = pen.change().strokeWidth(width).done();
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS stroke() { // TODO?
 		beginPath();
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public RESULT done() {
 		if (parent != null) {
@@ -245,6 +257,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS spawn() {
 		var child = copy();
@@ -265,6 +278,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return parent != null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS parent() {
 		return (THIS) parent;
@@ -280,6 +294,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		throw new UnsupportedOperationException();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS go(Direction bearing, double dist) {
 		super.go(bearing, dist);
@@ -305,7 +320,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 						currentStroke.updateLine(last, current);
 					}
 				}
-		
+
 				currentStroke.addLine(last, current);
 			} else if (currentStroke != null) {
 				currentStroke.endPath();
@@ -320,6 +335,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return super.go(bearing, dist);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS draw(Direction bearing, double dist) {
 		drawing = true;
@@ -332,12 +348,14 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS onDraw(BiConsumer<PathPoint, PathPoint> action) {
 		drawAction = action;
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS onMove(Consumer<PathPoint> action) {
 		moveAction = action;
@@ -348,12 +366,14 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return "turtle(at=" + at() + ", bearing=" + bearing() + ")";
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS writePathsTo(PathWriter pathWriter) {
 		this.writer = pathWriter;
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS spawn(Consumer<THIS> f) {
 		THIS child = spawn();
@@ -362,6 +382,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS spawn(int n, BiConsumer<THIS, Integer> f) {
 		for (int i = 0; i < n; i++) {
@@ -372,6 +393,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <U> THIS spawn(Iterable<U> elts, BiConsumer<THIS, U> f) {
 		for (U elt : elts) {
@@ -382,6 +404,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <U> THIS spawn(Stream<U> elts, BiConsumer<THIS, U> f) {
 		elts.forEach((elt) -> {
@@ -393,6 +416,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS repeat(int n, BiConsumer<THIS, Integer> f) {
 		for (int i = 0; i < n; i++) {
@@ -401,6 +425,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <U> THIS repeat(Iterable<U> elts, BiConsumer<THIS, U> f) {
 		for (U elt : elts) {
@@ -409,6 +434,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return (THIS) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <U> THIS repeat(Stream<U> elts, BiConsumer<THIS, U> f) {
 		elts.forEachOrdered((elt) -> f.accept((THIS) this, elt));
@@ -416,6 +442,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS apply(Consumer<THIS> f) {
 		f.accept((THIS) this);
@@ -423,6 +450,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <U> THIS apply(U arg, BiConsumer<THIS, U> f) {
 		f.accept((THIS) this, arg);

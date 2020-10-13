@@ -1,10 +1,8 @@
 package turtleduck.turtle;
 
 import turtleduck.geometry.Direction;
-import turtleduck.geometry.DirectionVector;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
-import turtleduck.geometry.Waypoint;
 
 public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 

@@ -115,8 +115,9 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 		
 	}
 
+
 	@Override
-	protected PathWriter pathWriter() {
+	protected PathWriter pathWriter(boolean use3d) {
 		// TODO Auto-generated method stub
 		return null;
 	}

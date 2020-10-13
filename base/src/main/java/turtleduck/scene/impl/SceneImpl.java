@@ -1,16 +1,23 @@
 package turtleduck.scene.impl;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
 import org.joml.Matrix4f;
 import org.joml.Quaterniond;
 import org.joml.Quaternionf;
 import org.joml.Vector3d;
-import org.joml.Vector3f;
 
 import turtleduck.geometry.Box3;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.scene.Camera;
 import turtleduck.scene.RenderContext;
+import turtleduck.scene.SceneContainer;
+import turtleduck.scene.SceneGroup3;
 import turtleduck.scene.SceneNode;
 import turtleduck.scene.SceneObject3;
 import turtleduck.scene.SceneVisitor;
@@ -22,11 +29,110 @@ public abstract class SceneImpl implements SceneNode {
 //		return visitor.visitNode(this, context);
 //	}
 
+	public class Container<T extends Container<T>> extends SceneImpl implements SceneContainer<T> {
+		protected List<SceneNode> elements = new ArrayList<>();
+
+		@Override
+		public <U, C extends RenderContext<C>> U accept(SceneVisitor<U, C> visitor, C context) {
+			return visitor.visitContainer((SceneContainer<?>) this, context);
+		}
+
+		@Override
+		public Iterator<SceneNode> iterator() {
+			return elements.iterator();
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public T add(SceneNode elt) {
+			elements.add(elt);
+			return (T) this;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public T remove(SceneNode elt) {
+			elements.remove(elt);
+			return (T) this;
+		}
+
+		@Override
+		public int size() {
+			return elements.size();
+		}
+
+		@Override
+		public void forEach(Consumer<? super SceneNode> fun) {
+			elements.forEach(fun);
+		}
+
+		@Override
+		public <U> U reduce(U identity, BiFunction<U, ? super SceneNode, U> accumulator) {
+			U result = identity;
+			for (SceneNode n : elements) {
+				result = accumulator.apply(result, n);
+			}
+			return result;
+		}
+
+	}
+
+	public class Group<T extends Group<T>> extends Object3<T> implements SceneGroup3<T> {
+		protected List<SceneNode> elements = new ArrayList<>();
+
+		@Override
+		public Iterator<SceneNode> iterator() {
+			return elements.iterator();
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public T add(SceneNode elt) {
+			elements.add(elt);
+			return (T) this;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public T remove(SceneNode elt) {
+			elements.remove(elt);
+			return (T) this;
+		}
+
+		@Override
+		public int size() {
+			return elements.size();
+		}
+
+		@Override
+		public void forEach(Consumer<? super SceneNode> fun) {
+			elements.forEach(fun);
+		}
+
+		@Override
+		public <U> U reduce(U identity, BiFunction<U, ? super SceneNode, U> accumulator) {
+			U result = identity;
+			for (SceneNode n : elements) {
+				result = accumulator.apply(result, n);
+			}
+			return result;
+		}
+
+		@Override
+		public <U, C extends RenderContext<C>> U accept(SceneVisitor<U, C> visitor, C context) {
+			Matrix4f m = context.matrix();
+			m.translate((float) position.x, (float) position.y, (float) position.z);
+			m.scale(scale);
+			m.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
+			return visitor.visitGroup3(this, context);
+		}
+	}
+
 	public class Object3<T extends SceneObject3<T>> extends SceneImpl implements SceneObject3<T> {
 		protected Quaterniond orientation = new Quaterniond();
 		protected Vector3d position = new Vector3d();
 		protected Vector3d pivot = new Vector3d();
-		protected Vector3d scale = new Vector3d();
+		protected float scale = 1;
 		protected Point posPoint, pivotPoint;
 
 		@Override
@@ -68,6 +174,7 @@ public abstract class SceneImpl implements SceneNode {
 			return pivotPoint;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T pivot(Point p) {
 			p.toVector(pivot);
@@ -75,6 +182,7 @@ public abstract class SceneImpl implements SceneNode {
 			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T move(double dx, double dy, double dz) {
 			position.add(dx, dy, dz);
@@ -82,6 +190,7 @@ public abstract class SceneImpl implements SceneNode {
 			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T moveTo(double x, double y, double z) {
 			position.set(x, y, z);
@@ -101,57 +210,66 @@ public abstract class SceneImpl implements SceneNode {
 			return posPoint;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T yaw(double angle) {
 			orientation.rotateLocalZ(Math.toRadians(angle));
 			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T pitch(double angle) {
 			orientation.rotateLocalX(Math.toRadians(angle));
 			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T roll(double angle) {
 			orientation.rotateLocalY(Math.toRadians(angle));
 			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T yawTo(double angle) {
 			// TODO Auto-generated method stub
-			return null;
+			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T pitchTo(double angle) {
 			// TODO Auto-generated method stub
-			return null;
+			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T rollTo(double angle) {
 			// TODO Auto-generated method stub
-			return null;
+			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T orient(Direction dir) {
 			// TODO Auto-generated method stub
-			return null;
+			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T orientTo(Direction dir) {
 			// TODO Auto-generated method stub
-			return null;
+			return (T) this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public T scale(double xScale, double yScale, double zScale) {
-			scale.set(xScale, yScale, zScale);
+			scale = (float) xScale;
 			return (T) this;
 		}
 
@@ -163,7 +281,7 @@ public abstract class SceneImpl implements SceneNode {
 
 		@Override
 		public Point scale() {
-			return Point.point(scale.x, scale.y, scale.z);
+			return Point.point(scale, scale, scale);
 		}
 
 		@Override
@@ -188,9 +306,10 @@ public abstract class SceneImpl implements SceneNode {
 		}
 
 		@Override
-		public <U, C extends RenderContext> U accept(SceneVisitor<U, C> visitor, C context) {
-			Matrix4f m = context.modelMatrix();
-			m.translation((float) position.x, (float) position.y, (float) position.z);
+		public <U, C extends RenderContext<C>> U accept(SceneVisitor<U, C> visitor, C context) {
+			Matrix4f m = context.matrix();
+			m.translate((float) position.x, (float) position.y, (float) position.z);
+			m.scale(scale);
 			m.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
 			return visitor.visitObject3(this, context);
 		}
@@ -256,14 +375,15 @@ public abstract class SceneImpl implements SceneNode {
 		public double nearClip() {
 			return nearClip;
 		}
+
 		@Override
-		public <U, C extends RenderContext> U accept(SceneVisitor<U, C> visitor, C context) {
-			Matrix4f m = context.modelMatrix();
+		public <U, C extends RenderContext<C>> U accept(SceneVisitor<U, C> visitor, C context) {
+			Matrix4f m = context.matrix();
 			m.translation((float) position.x, (float) position.y, (float) position.z);
 			m.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
 			return visitor.visitObject3(this, context);
 		}
-		
+
 		public Matrix4f toMatrix(Matrix4f dest) {
 			dest.translation((float) position.x, (float) position.y, (float) position.z);
 			dest.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z,

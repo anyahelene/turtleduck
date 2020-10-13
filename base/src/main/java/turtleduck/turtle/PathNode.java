@@ -3,7 +3,6 @@ package turtleduck.turtle;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Path.PointType;
-import turtleduck.turtle.Pen.SmoothType;
 
 /**
  * An abstraction over the points in a path. Each {@link PointType#POINT} will
