@@ -359,6 +359,8 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 //						"	}\n" + 
 						"}\n" + //
 						"";
+//				System.out.println(code);
+//				System.exit(0);
 				ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
 				ShaderObject fs = ShaderObject.createFromString(code, GL_FRAGMENT_SHADER);
 				program = ShaderProgram.createProgram("plot_" + function, vs, fs);

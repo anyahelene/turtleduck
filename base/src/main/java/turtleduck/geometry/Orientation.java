@@ -1,5 +1,9 @@
 package turtleduck.geometry;
 
+import org.joml.Matrix4f;
+import org.joml.Quaterniond;
+import org.joml.Quaternionf;
+
 import turtleduck.geometry.impl.OrientImpl;
 
 public interface Orientation extends Direction {
@@ -83,8 +87,16 @@ public interface Orientation extends Direction {
 	double altDegrees();
 
 	double altRadians();
-	
+
 	Orientation yaw(double angle);
+
 	Orientation pitch(double angle);
+
 	Orientation roll(double angle);
+
+	Quaterniond toQuaternion(Quaterniond dest);
+
+	Quaternionf toQuaternion(Quaternionf dest);
+
+	Matrix4f toMatrix(Matrix4f dest);
 }

@@ -1,7 +1,6 @@
 package turtleduck.scene;
 
 public interface SceneVisitor<T, C extends RenderContext<C>> {
-	T visitElement(SceneNode elt, C context);
 
 	default T visitContainer(SceneContainer<?> container, C context) {
 		return container.reduce(identity(), (last, next) -> accumulator(last, next.accept(this, context.child())));
@@ -15,9 +14,13 @@ public interface SceneVisitor<T, C extends RenderContext<C>> {
 		return next;
 	}
 
-	T visitGroup3(SceneGroup3<?> group, C context);
+	default T visitGroup3(SceneGroup3<?> group, C context) {
+		return group.reduce(identity(), (last, next) -> accumulator(last, next.accept(this, context.child())));
+	}
 
-	T visitTransform2(SceneTransform2<?> container, C context);
+	default T visitTransform2(SceneTransform2<?> container, C context) {
+		return container.reduce(identity(), (last, next) -> accumulator(last, next.accept(this, context.child())));
+	}
 
 	T visitObject2(SceneObject2<?> obj, C context);
 

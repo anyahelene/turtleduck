@@ -1,5 +1,8 @@
 package turtleduck.tea;
 
+import java.util.List;
+
+import org.joml.Matrix4f;
 import org.teavm.jso.canvas.CanvasRenderingContext2D;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
 
@@ -12,7 +15,9 @@ import turtleduck.image.Image;
 import turtleduck.tea.net.SockJS;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
+import turtleduck.turtle.PathPoint;
 import turtleduck.turtle.PathWriter;
+import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
@@ -23,6 +28,7 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 	private Pen lastPen = null;
 	private int channel;
 	private SockJS socket;
+	protected TeaPathWriter pathWriter = new TeaPathWriter();
 
 	public NativeTLayer(String layerId, NativeTScreen screen, double width, double height, HTMLCanvasElement element) {
 		super(layerId, screen, width, height);
@@ -115,10 +121,38 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 		
 	}
 
+	public void render(boolean frontToBack) {
+		if(pathWriter.hasNextStroke()) {
+			PathWriter.PathStroke stroke;
+			while((stroke = pathWriter.nextStroke()) != null) {
+				List<PathPoint> points = stroke.points();
+				PathPoint from = points.get(0);
+				Pen pen = from.pen();
+				context.moveTo(from.x(), from.y());
 
+				for (int i = 1; i < points.size(); i++) {
+					PathPoint to = points.get(i);
+					if (pen != lastPen) {
+						context.stroke();
+						changeStroke(pen);
+						lastPen = pen;
+					}
+
+					context.lineTo(to.x(), to.y());
+
+					from = to;
+					pen = to.pen();
+				}
+				context.stroke();
+			}
+		}
+	}
 	@Override
 	protected PathWriter pathWriter(boolean use3d) {
-		// TODO Auto-generated method stub
-		return null;
+		return pathWriter;
 	}
+	
+	class TeaPathWriter extends PathWriterImpl {
+	}
+
 }

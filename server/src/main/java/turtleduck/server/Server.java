@@ -1,32 +1,48 @@
 package turtleduck.server;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.ServerWebSocket;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.AuthHandler;
+import io.vertx.ext.web.handler.AuthenticationHandler;
 import io.vertx.ext.web.handler.BasicAuthHandler;
 import io.vertx.ext.web.handler.LoggerHandler;
+import io.vertx.ext.web.handler.OAuth2AuthHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
-import io.vertx.ext.web.handler.sockjs.BridgeOptions;
+import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
+import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.ext.auth.oauth2.OAuth2Options;
+
+import io.vertx.ext.auth.oauth2.providers.OpenIDConnectAuth;
 import io.vertx.ext.bridge.PermittedOptions;
 import turtleduck.comms.MessageData;
 import turtleduck.shell.TShell;
@@ -35,8 +51,11 @@ import turtleduck.terminal.Readline;
 import turtleduck.util.Strings;
 import com.julienviet.childprocess.Process;
 import com.julienviet.childprocess.ProcessOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Server extends AbstractVerticle {
+	protected final Logger logger = LoggerFactory.getLogger(Server.class);
 	protected SessionStore sessionStore;
 	protected TShell shell;
 	private HttpServer server;
@@ -45,20 +64,46 @@ public class Server extends AbstractVerticle {
 	Path[] serverRoot = { Path.of("/home/anya/git/turtleduck/tea/target/generated/js"),
 			Path.of("/home/anya/git/turtleduck/tea/src/main/webapp/"),
 			Path.of("/home/anya/git/turtleduck/tea/node_modules"), };
+	protected String callbackPath = "/auth_callback";
 	protected Readline readline;
 	private SessionHandler sessionHandler;
+	private LoggerHandler loggerHandler;
+	private OAuth2Auth oAuth2Provider;
+	private AuthenticationHandler authHandler;
+
+	/**
+	 * The port clients should send requests to
+	 */
+	private int externalPort = 9090;
+	/**
+	 * The host address clients should send requests to
+	 */
+	private String externalAddress = "localhost";
+	private boolean externalSsl = !externalAddress.equals("localhost");
+	/**
+	 * The port we should bind to
+	 */
+	private int bindPort = 9080;
+	/**
+	 * The host address we should bind to
+	 */
+	private String bindAddress = "localhost";
+	private boolean bindSsl = !bindAddress.equals("localhost");
 
 	public static void main(String[] args) {
+		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "info");
+		System.setProperty("org.slf4j.simpleLogger.showThreadName", "false");
+		System.setProperty("org.slf4j.simpleLogger.showLogName", "false");
+		System.setProperty("org.slf4j.simpleLogger.showShortLogName", "true");
+
 		Vertx vertx = Vertx.vertx(new VertxOptions().setMaxEventLoopExecuteTimeUnit(TimeUnit.MILLISECONDS));
 		Server server = new Server();
-
 		DeploymentOptions opts = new DeploymentOptions();
 		vertx.deployVerticle(server, opts, res -> {
 			if (res.succeeded()) {
-				System.out.println("Deployment id is: " + res.result());
+				server.logger.info("Deployment id is: {}", res.result());
 			} else {
-				System.out.println("Deployment failed!");
-				res.cause().printStackTrace();
+				server.logger.error("Deployment failed", res.cause());
 				vertx.close();
 			}
 		});
@@ -67,8 +112,16 @@ public class Server extends AbstractVerticle {
 	public Server() {
 	}
 
+	public URI externalUri(String path) {
+		try {
+			return new URI(externalSsl ? "https" : "http", null, externalAddress, externalPort, path, null, null);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public void send(String s) {
-		System.out.println("Output: " + Strings.escape(s));
+		logger.info("Output: " + Strings.escape(s));
 		if (webSocket != null) {
 			webSocket.writeTextMessage(s);
 		}
@@ -76,62 +129,116 @@ public class Server extends AbstractVerticle {
 
 	public void start(Promise<Void> startPromise) {
 		context.put("verticle", "server");
-		System.out.println("Server context: " + vertx.getOrCreateContext());
+		logger.info("Server context: " + vertx.getOrCreateContext());
 
-		System.out.println(this.config());
+		logger.info("config: " + this.config());
 
 //		JsonObject authInfo = new JsonObject().put("username", "anya").put("password", "panya");
 
-		AuthHandler basicAuthHandler = BasicAuthHandler.create((authInfo, resultHandler) -> {
-			System.out.println(authInfo);
-			resultHandler.handle(Future.succeededFuture(new User(authInfo.getString("username"))));
+//		AuthHandler basicAuthHandler = BasicAuthHandler.create((authInfo, resultHandler) -> {
+//			System.out.println(authInfo);
+//			resultHandler.handle(Future.succeededFuture(new User(authInfo.getString("username"))));
+//		});
+
+		OAuth2Options oauth2opts = new OAuth2Options()
+				.setClientID(System.getenv("OAUTH_CLIENTID")) //
+				.setClientSecret(System.getenv("OAUTH_SECRET")) //
+				.setSite("https://retting.ii.uib.no") //
+//				.setTokenPath("/oauth/token") //
+//				.setAuthorizationPath("/oauth/authorize") //
+//				.setFlow(OAuth2FlowType.AUTH_CODE)
+		;
+		logger.info("oauth2opts: " + oauth2opts);
+		OpenIDConnectAuth.discover(vertx, oauth2opts, oidcRes -> {
+			if (oidcRes.succeeded()) {
+				oAuth2Provider = oidcRes.result();
+				OAuth2AuthHandler authHandler = OAuth2AuthHandler.create(vertx, oAuth2Provider,
+						externalUri(callbackPath).toString());
+				startWebServer(startPromise,
+						(r) -> authHandler.setupCallback(r.route(callbackPath)).withScope("openid email"));
+			} else {
+				logger.error("Failed to initialize OpenID Connect", oidcRes.cause());
+				vertx.close();
+			}
 		});
-		
+	}
+
+	private void startWebServer(Promise<Void> startPromise, Function<Router, AuthenticationHandler> auth) {
 		sessionStore = LocalSessionStore.create(vertx);
 		sessionHandler = SessionHandler.create(sessionStore);
-
+		loggerHandler = LoggerHandler.create(false, LoggerHandler.DEFAULT_FORMAT);
 		MessageData.setDataConstructor(() -> new MessageRepr());
-
 		server = vertx.createHttpServer();
 		Router router = Router.router(vertx);
-		router.route().handler(sessionHandler).handler(LoggerHandler.create()).handler(basicAuthHandler);
-		Route statics = router.get();
-		for (Path p : serverRoot)
-			statics.handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(p.toString()));
-		
+		AuthenticationHandler basicAuthHandler = BasicAuthHandler.create((authInfo, resultHandler) -> {
+			System.out.println(authInfo);
+			resultHandler.handle(Future.succeededFuture(User.fromName(authInfo.getString("username"))));
+		});
+		router.route().handler(LoggerHandler.create(true, LoggerHandler.DEFAULT_FORMAT)).handler(sessionHandler);
+
+//		Route root = router.route("/");
+		authHandler = auth.apply(router);
+		router.route().handler(authHandler).handler(loggerHandler);
+//		Route main = router.route("/*").handler(authHandler);
+		// router.route().handler(sessionHandler).handler(loggerHandler);//
+		// .handler(authHandler);
+
 		SockJSHandlerOptions options = new SockJSHandlerOptions(); // .setHeartbeatInterval(10000);
-		BridgeOptions opts = new BridgeOptions();
-		opts.addInboundPermitted(new PermittedOptions().setAddressRegex(".*"));
-		opts.addOutboundPermitted(new PermittedOptions().setAddressRegex(".*"));
+//		BridgeOptions opts = new BridgeOptions();
+//		opts.addInboundPermitted(new PermittedOptions().setAddressRegex(".*"));
+//		opts.addOutboundPermitted(new PermittedOptions().setAddressRegex(".*"));
 		// .addInboundPermitted();// new PermittedOptions().setAddressRegex(".*"))
 		// .addOutboundPermitted(new PermittedOptions().setAddressRegex(".*"));
 		SockJSHandler sockJSHandler = SockJSHandler.create(vertx, options);
-		sockJSHandler.socketHandler((sockjs) -> {
+		Router sockJSRouter = sockJSHandler.socketHandler((sockjs) -> {
+			System.out.println("handling: "+  sockjs.uri());
 			Session session = sockjs.webSession();
-			String user = sockjs.webUser() != null ? sockjs.webUser().principal().getString("username") : "__anonymous__";
-			System.out.println("user: " + sockjs.webUser());
-			if(session.get("TurtleDuckSession") != null) {
-				TurtleDuckSession tds = session.get("TurtleDuckSession");
-				tds.runOnContext((__) -> tds.connect(sockjs));
+			TurtleDuckSession tds = session.get("TurtleDuckSession");
+			long t = System.currentTimeMillis();
+			System.out.println("start: " + t + " " + sockjs + ", " + sockjs.uri() + "\n" + sockjs.headers());
+			if (tds != null) {
+				try {
+					tds.runOnContext((__) -> tds.connect(sockjs));
+				} catch (RuntimeException e) {
+					logger.error("Connecting to TurtleDuckSession failed", e);
+				}
 			} else {
-				TurtleDuckSession tds = new TurtleDuckSession(user);
-				session.put("TurtleDuckSession", tds);
-				session.put("User", user);
-				vertx.deployVerticle(tds, new DeploymentOptions(), (res) -> {
-					if (res.succeeded()) {
-						System.out.println("Deployed TurtleDuck as " + res.result());
-						tds.runOnContext((__) -> tds.connect(sockjs));
-					} else {
-						System.out.println("Deployment failed!");
-						res.cause().printStackTrace();
-						sockjs.close(1011, "internal error");
-					}
-				});
+				try {
+					
+					userInfo(sockjs.webUser(), session, (userInfo -> {
+						logger.info("Creating TurtleDuckSession for " + session.get("userInfo") + sockjs.uri());
+						TurtleDuckSession newTds = new TurtleDuckSession(session);
+						session.put("TurtleDuckSession", newTds);
+						vertx.deployVerticle(newTds, new DeploymentOptions(), (res) -> {
+							if (res.succeeded()) {
+								logger.info("Deployed TurtleDuck as " + res.result());
+								newTds.runOnContext((__) -> newTds.connect(sockjs));
+							} else {
+								logger.error("TurtleDuck deployment failed!", res.cause());
+								sockjs.close(1011, "internal error");
+							}
+						});
+					}));
+				} catch (RuntimeException e) {
+					logger.error("Creating TurtleDuckSession failed", e);
+					sockjs.close(1011, "internal error");
+				}
 			}
+			System.out.println("end: " + (System.currentTimeMillis() - t));
 		});
-		router.route("/terminal").handler(sockJSHandler);
-		router.route("/terminal/*").handler(sockJSHandler);
+		router.mountSubRouter("/terminal", sockJSRouter);
+//		router.route("/terminal/*").handler(sockJSHandler);
+		router.get("/hello").handler(ctx -> {
+			userInfo(ctx.user(), ctx.session(), (ui) -> {
+				ctx.response().end("Hello, " + ui.getString("name"));
+			});
+		});
+		
+		Route statics = router.route().method(HttpMethod.GET);//.order(2000);
+		for (Path p : serverRoot)
+			statics.handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(p.toString()));
 
+		
 		server.requestHandler(router);
 
 		/*
@@ -143,13 +250,34 @@ public class Server extends AbstractVerticle {
 		 */
 
 		// Now bind the server:
-		server.listen(9080, "localhost", res -> {
+		server.listen(bindPort, bindAddress, res -> {
 			if (res.succeeded()) {
 				startPromise.complete();
 			} else {
 				startPromise.fail(res.cause());
 			}
 		});
+	}
+
+	private void userInfo(User user, Session session, Handler<JsonObject> handler) {
+		JsonObject userinfo = session.get("userInfo");
+		if (userinfo != null) {
+			handler.handle(userinfo);
+		} else {
+			userinfo = new JsonObject();
+			userinfo.put("nickname", "anya");
+			session.put("userInfo", userinfo);
+			handler.handle(userinfo);
+//			oAuth2Provider.userInfo(user, res -> {
+//				if (res.succeeded()) {
+//					JsonObject userInfo = res.result();
+//					session.put("userInfo", userInfo);
+//					handler.handle(userInfo);
+//				} else {
+//					logger.error("Getting userInfo for " + user + " failed", res.cause());
+//				}
+//			});
+		}
 	}
 
 	private String contentTypeOf(Path path) {

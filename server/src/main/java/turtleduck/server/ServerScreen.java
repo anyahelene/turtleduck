@@ -203,6 +203,11 @@ public class ServerScreen extends BaseScreen {
 			l.flush();
 		}
 	}
+	public void render() {
+		for (Layer l : layerMap.values()) {
+			((ServerLayer)l).render(false);
+		}
+	}
 
 	@Override
 	public void useAlternateShortcut(boolean useAlternate) {

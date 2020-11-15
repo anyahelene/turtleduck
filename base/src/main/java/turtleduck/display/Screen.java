@@ -7,6 +7,7 @@ import turtleduck.colors.Color;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
 import turtleduck.objects.IdentifiedObject;
+import turtleduck.scene.SceneWorld;
 import turtleduck.text.TextWindow;
 
 public interface Screen extends IdentifiedObject {
@@ -197,4 +198,6 @@ public interface Screen extends IdentifiedObject {
 	void setPasteHandler(Predicate<String> pasteHandler);
 
 	void clipboardPut(String copied);
+	
+	SceneWorld createScene3();
 }

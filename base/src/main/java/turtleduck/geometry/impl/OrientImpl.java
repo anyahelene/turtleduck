@@ -4,8 +4,10 @@ import java.util.logging.Logger;
 
 import org.joml.AxisAngle4d;
 import org.joml.Math;
+import org.joml.Matrix4f;
 import org.joml.Quaterniond;
 import org.joml.Quaterniondc;
+import org.joml.Quaternionf;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
@@ -207,7 +209,22 @@ public class OrientImpl implements Orientation {
 //		ROTATE_YZ.transform(dest);
 		return dest; // .set(dest.y, dest.z, dest.x);
 	}
-
+	@Override
+	public Quaternionf toQuaternion(Quaternionf dest) {
+		q.get(dest);
+		return dest;
+	}
+	@Override
+	public Quaterniond toQuaternion(Quaterniond dest) {
+		q.get(dest);
+		return dest;
+	}
+	
+	@Override
+	public Matrix4f toMatrix(Matrix4f dest) {
+		q.get(dest);
+		return dest;
+	}
 	@Override
 	public boolean is3d() {
 		return true;

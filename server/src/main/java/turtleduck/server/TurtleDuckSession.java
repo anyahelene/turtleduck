@@ -5,9 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 import turtleduck.comms.Channel;
 import turtleduck.comms.EndPoint;
@@ -28,18 +32,22 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 	private int nextChannelId = 1;
 	private final List<Handler<Void>> todo = new ArrayList<>();
 	private String user;
+	private Session session;
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	public TurtleDuckSession(String user) {
-		this.user = user;
+	protected TurtleDuckSession(Session session) {
+		this.session = session;
+		JsonObject userInfo = session.get("userInfo");
+		user = userInfo.getString("nickname");
 	}
 
 	public void start() {
-		context.put("verticle", "session-"+ user);
+		context.put("verticle", "session-" + user);
 
-		System.out.println("Starting TurtleDuck " + context.deploymentID() + " for user " + user);
+		logger.info("Starting TurtleDuck " + context.deploymentID() + " for user " + user);
 		synchronized (todo) {
-			for(Handler<Void> h : todo) {
-				System.out.println("running delayed startup job: " + h);
+			for (Handler<Void> h : todo) {
+				logger.info("running delayed startup job: " + h);
 				context.runOnContext(h);
 			}
 			todo.clear();
@@ -56,20 +64,21 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 	}
 
 	public void connect(SockJSSocket sockjs) {
+		logger.info("connect({}), socket={}", sockjs, socket);
 		if (socket == sockjs) {
 			return;
 		} else if (socket != null) {
+			logger.warn("Already connected, closing old socket");
 			socket.close();
 			socket = null;
 		}
 
 		socket = sockjs;
 		socket.exceptionHandler((e) -> {
-			System.err.println("Socket error");
-			e.printStackTrace();
+			logger.error("Socket error", e);
 		});
 		socket.endHandler((x) -> {
-			System.err.println("Socket closed");
+			logger.info("Socket closed");
 			if (socket == sockjs) {
 				socket = null;
 			}
@@ -90,8 +99,8 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 
 	public void receive(Buffer buf) {
 		try {
-			System.out.println("recv context: " + vertx.getOrCreateContext().get("verticle"));
-			System.out.println("RECV: " + buf);
+			logger.info("recv context: " + vertx.getOrCreateContext().get("verticle"));
+			logger.info("RECV: " + buf);
 			JsonObject obj = buf.toJsonObject();
 			MessageRepr repr = new MessageRepr(obj);
 			Message msg = Message.create(repr);
@@ -100,7 +109,7 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 			if (channel > 0) {
 				Channel ch = channels.get(channel);
 				if (ch == null) {
-					System.out.println("  dropped msg to nonexistent channel " + channel);
+					logger.warn("  dropped msg to nonexistent channel " + channel);
 					return;
 				}
 
@@ -133,12 +142,14 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 							try {
 //								Readline readline = new Readline();
 //								readline.attach(pty);
-								Screen screen = ServerDisplayInfo.provider().startPaintScene(TurtleDuckSession.this);
+								ServerScreen screen = (ServerScreen) ServerDisplayInfo.provider()
+										.startPaintScene(TurtleDuckSession.this);
 								TShell shell = new TShell(screen, null, pty.createCursor());
 								pty.hostInputListener((line) -> {
 									context.executeBlocking((linePromise) -> {
 										try {
 											shell.enter(line);
+											screen.render();
 											linePromise.complete("ok");
 										} catch (Throwable t) {
 											linePromise.fail(t);
@@ -148,14 +159,18 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 									});
 									return true;
 								});
-								shell.editorFactory((n, callback) -> {EditorChannel ch = new EditorChannel(n, "editor", callback);open(ch);return ch;});
+								shell.editorFactory((n, callback) -> {
+									EditorChannel ch = new EditorChannel(n, "editor", callback);
+									open(ch);
+									return ch;
+								});
 								promise.complete("ok");
 							} catch (Throwable t) {
 								t.printStackTrace();
 								promise.fail(t);
 							}
 						}, (result) -> {
-							System.out.print("Shell started: " + result);
+							logger.info("Shell started: " + result);
 						});
 						int id = nextChannelId();
 						Channel ch = new PtyChannel(name, service, pty);
@@ -170,9 +185,9 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 					OpenMessage omsg = (OpenMessage) msg;
 					int newch = omsg.chNum();
 					String tag = omsg.name() + ":" + omsg.service();
-					System.out.println("Opened: " + tag);
+					logger.info("Opened: " + tag);
 					Channel ch = names.get(tag);
-					System.out.println("Channel: " + ch.hashCode());
+					logger.info("Channel: " + ch.hashCode());
 					if (newch != 0 && ch != null) {
 						channels.put(newch, ch);
 						ch.opened(newch, this);
@@ -192,9 +207,14 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 
 	public void send(Message msg) {
 		if (socket != null) {
-			System.out.println("send context: " + vertx.getOrCreateContext().get("verticle"));
-			System.out.println("SEND: " + msg);
-			socket.write(msg.encodeAs(Buffer.class));
+			logger.info("send context: " + vertx.getOrCreateContext().get("verticle"));
+			Buffer buffer = msg.encodeAs(Buffer.class);
+			String string = msg.toString();
+			if (string.length() < 80)
+				logger.info("SEND: " + msg);
+			else
+				logger.info("SEND: " + string.substring(0, 75) + "… [" + buffer.length() + " bytes]");
+			socket.write(buffer);
 		}
 	}
 

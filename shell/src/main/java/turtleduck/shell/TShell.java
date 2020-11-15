@@ -113,20 +113,21 @@ public class TShell {
 		for (String s : Arrays.asList(//
 				"import turtleduck.display.Screen;", //
 				"import turtleduck.geometry.Point;", //
-				"import turtleduck.geometry.Bearing;", //
-				"import turtleduck.turtle.Canvas;", "import turtleduck.turtle.TurtleDuck;",
+				"import turtleduck.geometry.Direction;", //
+				"import turtleduck.display.Canvas;", //
+				"import turtleduck.turtle.Turtle;",
 				"import turtleduck.turtle.Pen;", //
-				"import turtleduck.text.Printer;", //
+				"import turtleduck.text.TextCursor;", //
 				"import turtleduck.colors.Colors;", //
 				"import turtleduck.shell.TShell;", //
 				"Screen screen = turtleduck.objects.IdentifiedObject.Registry\n.findObject(Screen.class, \""
 						+ screen.id() + "\");", //
-				"var canvas = screen.createCanvas();", //
-				"var turtle = canvas.createTurtleDuck();", "turtle.changePen().strokePaint(Colors.BLACK).done();", //
-				"turtle.moveTo(10, 10);", "turtleduck.shell.TShell.testValue = 5;",
-				"void head() {\n\tturtle.child().turn(-170).move(2.5).turn(90).draw(5)\n\t.turn(30).draw(10).turn(45).draw(5)\n\t.turn(60).draw(5).turn(45).draw(10)\n\t.turn(30).draw(5).done();\n}",
-				"void foot() {\n\tturtle.child().turn(-120).draw(5).turn(45).draw(7)\n\t.turn(45).draw(5).turn(45).draw(3)\n\t.turn(45).draw(5).turn(45).draw(7)\n\t.turn(45).draw(5).done();\n}",
-				"void turtle() {\n\tturtle.move(50);\n\tfor(int i = 0; i < 12; i++) {\n\t\tturtle.turn(30).draw(10 + (i==3||i==9 ?5 : 0));\n\t\tif(i==1||i==3||i==7|i==9) {\n\t\t\tfoot();\n\t\t}\n\t\tif(i==5) {\n\t\t\thead();\n\t\t}\n\t}\n}")) {
+				"Canvas canvas = screen.createCanvas();", //
+				"Turtle turtle = canvas.createTurtle();", "turtle.penChange().strokePaint(Colors.BLACK).done();", //
+				"turtle.jumpTo(10, 10);", "turtleduck.shell.TShell.testValue = 5;",
+				"void head() {\n\tturtle.spawn().turn(-170).jump(2.5).turn(90).draw(5)\n\t.turn(30).draw(10).turn(45).draw(5)\n\t.turn(60).draw(5).turn(45).draw(10)\n\t.turn(30).draw(5).done();\n}",
+				"void foot() {\n\tturtle.spawn().turn(-120).draw(5).turn(45).draw(7)\n\t.turn(45).draw(5).turn(45).draw(3)\n\t.turn(45).draw(5).turn(45).draw(7)\n\t.turn(45).draw(5).done();\n}",
+				"void turtle() {\n\tturtle.jump(50);\n\tfor(int i = 0; i < 12; i++) {\n\t\tturtle.turn(30).draw(10 + (i==3||i==9 ?5 : 0));\n\t\tif(i==1||i==3||i==7|i==9) {\n\t\t\tfoot();\n\t\t}\n\t\tif(i==5) {\n\t\t\thead();\n\t\t}\n\t}\n}")) {
 //			printer2.print("> ");
 //			inputX = printer2.x();
 //			inputY = printer2.y();
@@ -524,7 +525,7 @@ public class TShell {
 			CompletionInfo info = sca.analyzeCompletion(input);
 			System.out.println(info.completeness());
 //		printer.println();
-			eval(input, true);
+			eval(input, false);
 			screen.flush();
 			input = "";
 		} else {

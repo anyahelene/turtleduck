@@ -7,6 +7,9 @@
 		<artifactId>turtleduck</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
+		<properties>
+		<vertx.version>4.0.0.CR1</vertx.version>
+	</properties>
 	<artifactId>turtleduck-server</artifactId>
 	<packaging>jar</packaging>
 	<name>TurtleDuck Server</name>
@@ -22,22 +25,27 @@
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-core</artifactId>
-			<version>3.8.5</version>
+			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-web</artifactId>
-			<version>3.8.5</version>
+			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-auth-common</artifactId>
-			<version>3.8.5</version>
+			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-bridge-common</artifactId>
-			<version>3.8.5</version>
+			<version>${vertx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-auth-oauth2</artifactId>
+			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.julienviet</groupId>

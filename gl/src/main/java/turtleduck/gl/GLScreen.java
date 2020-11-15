@@ -29,7 +29,9 @@ import org.lwjgl.opengl.GLXSGIVideoSync;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Predicate;
 
 import turtleduck.colors.Color;
@@ -40,11 +42,20 @@ import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
+import turtleduck.geometry.Orientation;
 import turtleduck.gl.objects.CubeModel;
 import turtleduck.gl.objects.ShaderObject;
 import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Uniform;
 import turtleduck.gl.objects.VertexArrayFormat;
+import turtleduck.scene.Camera;
+import turtleduck.scene.SceneGroup3;
+import turtleduck.scene.SceneNode;
+import turtleduck.scene.SceneObject2;
+import turtleduck.scene.SceneObject3;
+import turtleduck.scene.SceneTransform2;
+import turtleduck.scene.SceneVisitor;
+import turtleduck.scene.SceneWorld;
 import turtleduck.text.TextWindow;
 
 public class GLScreen extends BaseScreen implements Screen {
@@ -72,7 +83,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	public final Matrix4f projectionMatrixInv = new Matrix4f();
 	public final Matrix4f viewMatrixInv = new Matrix4f();
 //	public final Vector4f lightPosition = vec4(-1.2f,0f,5f, 1f);// .rotateX(pi(1f/8));
-    public final Vector4f lightPosition = vec4(0f,-2.5f,-2.5f,1f);//.rotateX(pi(1f/8));
+	public final Vector4f lightPosition = vec4(0f, -2.5f, -2.5f, 1f);// .rotateX(pi(1f/8));
 	public final Vector4f defaultCameraPosition = vec4(0f, 0f, 25f, 1f);
 	private final Quaternionf defaultCameraOrientation = new Quaternionf(new AxisAngle4f(0, 0, 0, -1));
 	public final Vector4f cameraPosition = vec4(defaultCameraPosition);
@@ -356,11 +367,10 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	protected void init(int width, int height) {
-		if(!glfwInit()) {
+		if (!glfwInit()) {
 			throw new RuntimeException("Failed to initialize OpenGL");
 		}
-		
-		
+
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -432,7 +442,6 @@ public class GLScreen extends BaseScreen implements Screen {
 			width = framebufferSize.get(0);
 			height = framebufferSize.get(1);
 		}
-
 
 		debugProc = GLUtil.setupDebugMessageCallback();
 
@@ -653,7 +662,7 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	public void updateView() {
 		cameraOrientation.get(perspectiveViewMatrix);
-		perspectiveViewMatrix.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z).scale(1f/16f);
+		perspectiveViewMatrix.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z).scale(1f / 16f);
 		viewMatrix.identity();
 		viewMatrix.invertAffine(viewMatrixInv);
 //		if (uView != null) {
@@ -686,6 +695,56 @@ public class GLScreen extends BaseScreen implements Screen {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 
+		for (SceneWorld world : scenes) {
+			List<GLRenderContext> cameras = new ArrayList<>();
+			List<SceneNode> objs = new ArrayList<>();
+			List<Matrix4f> mats = new ArrayList<>();
+			GLRenderContext context = new GLRenderContext();
+			world.accept(new SceneVisitor<Void, GLRenderContext>() {
+
+				@Override
+				public Void visitObject2(SceneObject2<?> obj, GLRenderContext context) {
+					return null;
+				}
+
+				@Override
+				public Void visitObject3(SceneObject3<?> obj, GLRenderContext context) {
+					objs.add(obj);
+					mats.add(context.matrix());
+					return null;
+				}
+
+				@Override
+				public Void visitNode(SceneNode obj, GLRenderContext context) {
+					return null;
+				}
+
+				@Override
+				public Void visitWorld(SceneWorld world, GLRenderContext context) {
+					return visitGroup3(world, context);
+				}
+
+				@Override
+				public Void visitCamera(Camera camera, GLRenderContext context) {
+					context.proj = new Matrix4f();
+					if (camera.isPerspective())
+						context.proj.setPerspective((float) camera.fieldOfView(),
+								(float) (dim.winWidth / dim.winHeight), (float) camera.nearClip(),
+								(float) camera.farClip());
+					else
+						context.proj.setOrtho(0, (float) dim.canvasWidth, 0, (float) dim.canvasHeight,
+								(float) camera.nearClip(), (float) camera.farClip());
+//					Orientation orient = camera.orientation();
+//					Matrix4f view = orient.toMatrix(new Matrix4f());
+//					view.translate(-(float) camera.x(), -(float) camera.y(), -(float) camera.z());
+					context.view = context.matrix();
+					context.projView = new Matrix4f(context.proj).mul(context.view);
+					cameras.add(context);
+					return null;
+				}
+			}, context);
+		}
+
 //		glEnable(GL_DEPTH_TEST);
 		// update();
 		glEnable(GL_FRAMEBUFFER_SRGB);
@@ -703,7 +762,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glDisable(GL_BLEND);
 //		glEnable(GL_CULL_FACE);
 		glDepthMask(true);
-//		glEnable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 		forEachLayer(true, (l) -> ((GLLayer) l).render(true));
 
 		glEnable(GL_DEPTH_TEST);

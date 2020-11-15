@@ -19,6 +19,8 @@ import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen.Dimensions;
 import turtleduck.objects.IdentifiedObject;
+import turtleduck.scene.SceneWorld;
+import turtleduck.scene.impl.SceneImpl;
 
 public abstract class BaseScreen implements Screen {
 	private static final double STD_CANVAS_WIDTH = 1280;
@@ -27,6 +29,7 @@ public abstract class BaseScreen implements Screen {
 	private int nLayers = 0;
 	protected final Map<String, Layer> layerMap = new HashMap<>();
 	protected final List<Layer> layers = new ArrayList<>();
+	protected final List<SceneWorld> scenes = new ArrayList<>();
 	protected List<Double> aspects;
 	protected Canvas debugLayer;
 	protected int aspect = 0;
@@ -67,14 +70,14 @@ public abstract class BaseScreen implements Screen {
 			layers.add(0, l);
 		}
 	}
-	
+
 	protected void forEachLayer(boolean frontToBack, Consumer<Layer> fun) {
-		if(frontToBack) {
-			for(int i = layers.size()-1; i >= 0; i--) {
+		if (frontToBack) {
+			for (int i = layers.size() - 1; i >= 0; i--) {
 				fun.accept(layers.get(i));
 			}
 		} else {
-			for(int i = 0; i < layers.size(); i++) {
+			for (int i = 0; i < layers.size(); i++) {
 				fun.accept(layers.get(i));
 			}
 		}
@@ -307,4 +310,9 @@ public abstract class BaseScreen implements Screen {
 		recomputeLayout(false);
 	}
 
+	public SceneWorld createScene3() {
+		SceneWorld w = new SceneImpl.World();
+		scenes.add(w);
+		return w;
+	}
 }

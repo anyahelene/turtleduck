@@ -3,6 +3,7 @@ package turtleduck.scene;
 import turtleduck.geometry.Box3;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
+import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
 
@@ -25,9 +26,9 @@ public interface SceneObject3<T extends SceneObject3<T>> extends SceneNode , Pos
 	T yawTo(double angle);
 	T pitchTo(double angle);
 	T rollTo(double angle);
-	T orient(Direction dir);
+	T orient(Orientation dir);
 
-	T orientTo(Direction dir);
+	T orientTo(Orientation dir);
 
 
 	default T scale(double scale) {
@@ -36,7 +37,7 @@ public interface SceneObject3<T extends SceneObject3<T>> extends SceneNode , Pos
 
 	T scale(double xScale, double yScale, double zScale);
 	
-	Direction orientation();
+	Orientation orientation();
 	
 	Point scale();
 	

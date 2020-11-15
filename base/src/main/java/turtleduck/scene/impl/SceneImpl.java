@@ -13,6 +13,7 @@ import org.joml.Vector3d;
 
 import turtleduck.geometry.Box3;
 import turtleduck.geometry.Direction;
+import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 import turtleduck.scene.Camera;
 import turtleduck.scene.RenderContext;
@@ -21,6 +22,7 @@ import turtleduck.scene.SceneGroup3;
 import turtleduck.scene.SceneNode;
 import turtleduck.scene.SceneObject3;
 import turtleduck.scene.SceneVisitor;
+import turtleduck.scene.SceneWorld;
 
 public abstract class SceneImpl implements SceneNode {
 
@@ -29,7 +31,7 @@ public abstract class SceneImpl implements SceneNode {
 //		return visitor.visitNode(this, context);
 //	}
 
-	public class Container<T extends Container<T>> extends SceneImpl implements SceneContainer<T> {
+	public static class Container<T extends Container<T>> extends SceneImpl implements SceneContainer<T> {
 		protected List<SceneNode> elements = new ArrayList<>();
 
 		@Override
@@ -77,7 +79,7 @@ public abstract class SceneImpl implements SceneNode {
 
 	}
 
-	public class Group<T extends Group<T>> extends Object3<T> implements SceneGroup3<T> {
+	public static class Group<T extends SceneGroup3<T>> extends Object3<T> implements SceneGroup3<T> {
 		protected List<SceneNode> elements = new ArrayList<>();
 
 		@Override
@@ -120,16 +122,43 @@ public abstract class SceneImpl implements SceneNode {
 
 		@Override
 		public <U, C extends RenderContext<C>> U accept(SceneVisitor<U, C> visitor, C context) {
+			orientation.toQuaternion(quat);
 			Matrix4f m = context.matrix();
 			m.translate((float) position.x, (float) position.y, (float) position.z);
 			m.scale(scale);
-			m.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
+			m.rotateAroundAffine(quat, (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
 			return visitor.visitGroup3(this, context);
+		}
+
+		@Override
+		public SceneObject3<?> createObject() {
+			SceneObject3<?> obj =  new Object3();
+			add(obj);
+			return obj;
+		}
+
+		@Override
+		public SceneGroup3<?> createGroup() {
+			SceneGroup3<?> obj = new Group();
+			add(obj);
+			return obj;
+		}
+
+		@Override
+		public Camera createCamera() {
+			Camera obj = new CameraImpl();
+			add(obj);
+			return obj;
 		}
 	}
 
-	public class Object3<T extends SceneObject3<T>> extends SceneImpl implements SceneObject3<T> {
-		protected Quaterniond orientation = new Quaterniond();
+	public static class World extends Group<SceneWorld> implements SceneWorld {
+
+	}
+
+	public static class Object3<T extends SceneObject3<T>> extends SceneImpl implements SceneObject3<T> {
+		protected Orientation orientation = Orientation.FORWARD;
+		protected Quaternionf quat = new Quaternionf();
 		protected Vector3d position = new Vector3d();
 		protected Vector3d pivot = new Vector3d();
 		protected float scale = 1;
@@ -213,21 +242,21 @@ public abstract class SceneImpl implements SceneNode {
 		@SuppressWarnings("unchecked")
 		@Override
 		public T yaw(double angle) {
-			orientation.rotateLocalZ(Math.toRadians(angle));
+			orientation = orientation.yaw(angle);
 			return (T) this;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
 		public T pitch(double angle) {
-			orientation.rotateLocalX(Math.toRadians(angle));
+			orientation = orientation.pitch(angle);
 			return (T) this;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
 		public T roll(double angle) {
-			orientation.rotateLocalY(Math.toRadians(angle));
+			orientation = orientation.roll(angle);
 			return (T) this;
 		}
 
@@ -254,15 +283,15 @@ public abstract class SceneImpl implements SceneNode {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public T orient(Direction dir) {
+		public T orient(Orientation dir) {
 			// TODO Auto-generated method stub
 			return (T) this;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public T orientTo(Direction dir) {
-			// TODO Auto-generated method stub
+		public T orientTo(Orientation dir) {
+			orientation = dir;
 			return (T) this;
 		}
 
@@ -274,9 +303,8 @@ public abstract class SceneImpl implements SceneNode {
 		}
 
 		@Override
-		public Direction orientation() {
-			// TODO Auto-generated method stub
-			return null;
+		public Orientation orientation() {
+			return orientation;
 		}
 
 		@Override
@@ -291,7 +319,7 @@ public abstract class SceneImpl implements SceneNode {
 		}
 
 		public Quaterniond toQuaternion(Quaterniond dest) {
-			return dest.set(orientation);
+			return orientation.toQuaternion(dest);
 		}
 
 		public Vector3d toVector(Vector3d dest) {
@@ -299,23 +327,25 @@ public abstract class SceneImpl implements SceneNode {
 		}
 
 		public Matrix4f toMatrix(Matrix4f dest) {
+			orientation.toQuaternion(quat);
 			dest.translation((float) position.x, (float) position.y, (float) position.z);
-			dest.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z,
+			dest.rotateAroundAffine(quat, (float) pivot.x, (float) pivot.y, (float) pivot.z,
 					dest);
 			return dest;
 		}
 
 		@Override
 		public <U, C extends RenderContext<C>> U accept(SceneVisitor<U, C> visitor, C context) {
+			orientation.toQuaternion(quat);
 			Matrix4f m = context.matrix();
 			m.translate((float) position.x, (float) position.y, (float) position.z);
 			m.scale(scale);
-			m.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
+			m.rotateAroundAffine(quat, (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
 			return visitor.visitObject3(this, context);
 		}
 	}
 
-	class CameraImpl extends Object3<Camera> implements Camera {
+	public static class CameraImpl extends Object3<Camera> implements Camera {
 		protected double fov = 30;
 		private double farClip;
 		private double nearClip;
@@ -378,15 +408,17 @@ public abstract class SceneImpl implements SceneNode {
 
 		@Override
 		public <U, C extends RenderContext<C>> U accept(SceneVisitor<U, C> visitor, C context) {
+			orientation.toQuaternion(quat);
 			Matrix4f m = context.matrix();
-			m.translation((float) position.x, (float) position.y, (float) position.z);
-			m.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
+			m.translate((float) position.x, (float) position.y, (float) position.z);
+			m.rotateAroundAffine(quat, (float) pivot.x, (float) pivot.y, (float) pivot.z, m);
 			return visitor.visitObject3(this, context);
 		}
 
 		public Matrix4f toMatrix(Matrix4f dest) {
+			orientation.toQuaternion(quat);
 			dest.translation((float) position.x, (float) position.y, (float) position.z);
-			dest.rotateAroundAffine(new Quaternionf(orientation), (float) pivot.x, (float) pivot.y, (float) pivot.z,
+			dest.rotateAroundAffine(quat, (float) pivot.x, (float) pivot.y, (float) pivot.z,
 					dest);
 			return dest;
 		}
