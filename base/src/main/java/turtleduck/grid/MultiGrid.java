@@ -87,7 +87,7 @@ public interface MultiGrid<T> extends Grid<List<T>> {
 	 *             if !isValid(x,y)
 	 */
 	default boolean contains(int x, int y, Predicate<T> predicate) {
-		return contains(this.getArea().location(x, y), predicate);
+		return contains(this.area().location(x, y), predicate);
 	}
 
 	/**
@@ -139,7 +139,7 @@ public interface MultiGrid<T> extends Grid<List<T>> {
 	 *             if !isValid(x,y)
 	 */
 	default List<T> get(int x, int y, Predicate<T> predicate) {
-		return get(this.getArea().location(x, y), predicate);
+		return get(this.area().location(x, y), predicate);
 	}
 
 	/**
@@ -190,7 +190,7 @@ public interface MultiGrid<T> extends Grid<List<T>> {
 	 *             if !isValid(x,y)
 	 */
 	default int remove(int x, int y, Predicate<T> predicate) {
-		return remove(getArea().location(x, y), predicate);
+		return remove(area().location(x, y), predicate);
 	}
 
 	/**

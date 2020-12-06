@@ -42,6 +42,9 @@ public abstract class AbstractChannel implements Channel {
 
 	public void initialize() {
 	}
+	
+	public void reopened() {
+	}
 
 	public void close() {
 		if (callback != null) {

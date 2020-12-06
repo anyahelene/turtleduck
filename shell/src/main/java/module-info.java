@@ -4,4 +4,7 @@ module turtleduck.shell {
 	requires java.logging;
 	requires jdk.jshell;
 	requires transitive turtleduck.base;
+	requires org.objectweb.asm;
+	requires org.objectweb.asm.util;
+	requires org.apache.commons.text;
 }

@@ -22,19 +22,25 @@ public interface Area extends Iterable<Location> {
 	/**
 	 * Check if a (x,y) is inside the area.
 	 * 
-	 * @param x
-	 *            X-coordinate
-	 * @param y
-	 *            Y-coordinate
+	 * @param x X-coordinate
+	 * @param y Y-coordinate
 	 * @return True if the (x,y) position lies within the area
 	 */
 	boolean contains(int x, int y);
+	/**
+	 * Check if a (x,y) is inside the area.
+	 * 
+	 * @param x X-coordinate
+	 * @param y Y-coordinate
+	 * @param z Z-coordinate
+	 * @return True if the (x,y,z) position lies within the area
+	 */
+	boolean contains(int x, int y, int z);
 
 	/**
 	 * Check if a position is inside the area.
 	 * 
-	 * @param pos
-	 *            A position
+	 * @param pos A position
 	 * @return True if the position lies within the area
 	 */
 	boolean contains(Position pos);
@@ -54,17 +60,20 @@ public interface Area extends Iterable<Location> {
 	Location fromIndex(int i);
 
 	/** @return Height of the area */
-	int getHeight();
+	int height();
 
 	/**
 	 * Returns the number of legal positions in the area
 	 *
 	 * @return Same as getWidth()*getHeight()
 	 */
-	int getSize();
+	int size();
 
 	/** @return Width of the area */
-	int getWidth();
+	int width();
+
+	/** @return Depth of the area */
+	int depth();
 
 	@Override
 	int hashCode();
@@ -72,15 +81,27 @@ public interface Area extends Iterable<Location> {
 	/**
 	 * Get a location object corresponding to (x,y)
 	 * 
-	 * @param x
-	 *            X-coordinate
-	 * @param y
-	 *            Y-coordinate
+	 * Equivalent to <code>location(x,y,0)</code>
+	 * 
+	 * @param x X-coordinate
+	 * @param y Y-coordinate
 	 * @return The location object associated with (x,y)
-	 * @throws IndexOutOfBoundsException
-	 *             if {@link #contains(int, int)} returns false for (x,y)
+	 * @throws IndexOutOfBoundsException if {@link #contains(int, int)} returns
+	 *                                   false for (x,y)
 	 */
 	Location location(int x, int y);
+
+	/**
+	 * Get a location object corresponding to (x,y,z)
+	 * 
+	 * @param x X-coordinate
+	 * @param y Y-coordinate
+	 * @param z Z-coordinate
+	 * @return The location object associated with (x,y,z)
+	 * @throws IndexOutOfBoundsException if {@link #contains(int, int, int)} returns
+	 *                                   false for (x,y,z)
+	 */
+	Location location(int x, int y, int z);
 
 	/**
 	 * Get all locations in area
@@ -105,13 +126,11 @@ public interface Area extends Iterable<Location> {
 	 * the same position two or eight times (if the area is wrapped horizontally,
 	 * vertically or both).
 	 *
-	 * @param pos
-	 *            A position in the area
+	 * @param pos A position in the area
 	 * @return An iterable over positions, with {@link #contains(Location)} being
 	 *         true for each position.
 	 * @see #wrapsHorizontally(), {@link #wrapsVertically()}
-	 * @throws IndexOutOfBoundsException
-	 *             if !contains(pos)
+	 * @throws IndexOutOfBoundsException if !contains(pos)
 	 */
 	Iterable<Location> neighboursOf(Location pos);
 
@@ -122,15 +141,14 @@ public interface Area extends Iterable<Location> {
 	Stream<Location> stream();
 
 	/**
-	 * Convert a 2D coordinate to 1D
+	 * Convert a 3D coordinate to 1D
 	 * 
-	 * @param x
-	 *            X-coordinate
-	 * @param y
-	 *            Y-coordinate
-	 * @return x + y*getWidth()
+	 * @param x X-coordinate
+	 * @param y Y-coordinate
+	 * @param z Z-coordinate
+	 * @return x + y*width() + z*width()*height()
 	 */
-	int toIndex(int x, int y);
+	int toIndex(int x, int y, int z);
 
 	@Override
 	String toString();

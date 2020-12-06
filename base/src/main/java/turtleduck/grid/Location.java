@@ -68,9 +68,9 @@ public interface Location extends Position {
 	 */
 	Collection<Location> cardinalNeighbours();
 
-	Area getArea();
+	Area area();
 
-	int getIndex();
+	int index();
 
 	/**
 	 * Return the next location in direction dir.

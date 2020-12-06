@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/nuthatchery/turtleduck#readme",
   "dependencies": {
+    "bootstrap-icons": "^1.1.0",
     "vertx3-eventbus-client": "^3.8.5",
     "xterm": "^4.4.0",
     "xterm-addon-fit": "^0.3.0"

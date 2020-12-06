@@ -7,7 +7,8 @@
 		<artifactId>turtleduck</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-		<properties>
+	<properties>
+		<main.verticle>turtleduck.server.Server</main.verticle>
 		<vertx.version>4.0.0.CR1</vertx.version>
 	</properties>
 	<artifactId>turtleduck-server</artifactId>
@@ -21,6 +22,10 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-shell</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>turtleduck-tea</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.vertx</groupId>
@@ -56,10 +61,37 @@
 
 	<build>
 		<plugins>
-			<!-- Configure Java compiler to use Java 8 syntax -->
-			<!-- plugin> <artifactId>maven-compiler-plugin</artifactId> <version>3.1</version> 
-				<configuration> <source>${java.version}</source> <target>${java.version}</target> 
-				</configuration> </plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.3</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<Main-Class>io.vertx.core.Launcher</Main-Class>
+										<Main-Verticle>${main.verticle}</Main-Verticle>
+									</manifestEntries>
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+							</transformers>
+							<artifactSet>
+							</artifactSet>
+							<outputFile>${project.build.directory}/${project.artifactId}-${project.version}-fat.jar</outputFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>
+
+

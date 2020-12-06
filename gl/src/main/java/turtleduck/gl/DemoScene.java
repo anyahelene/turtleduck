@@ -65,7 +65,7 @@ public class DemoScene implements TurtleDuckApp {
 	}
 
 	private final int GRID_COLS = 48, GRID_ROWS = 32;
-	private Grid<GridTile> grid = new MyGrid<>(GRID_COLS, GRID_ROWS, (l) -> new GridTile(l.getY() < 12 ? 190 : 192));
+	private Grid<GridTile> grid = new MyGrid<>(GRID_COLS, GRID_ROWS, (l) -> new GridTile(l.y() < 12 ? 190 : 192));
 	private List<DemoSprite> sprites = new ArrayList<>();
 	private Layer painter;
 	private Canvas canvas;
@@ -167,7 +167,7 @@ public class DemoScene implements TurtleDuckApp {
 		}
 		if(false)
 		grid.locationParallelStream().forEach((l) -> {
-			tileMap[l.getX() + l.getY() * GRID_COLS] = grid.get(l).background;
+			tileMap[l.x() + l.y() * GRID_COLS] = grid.get(l).background;
 		});
 //		((GLLayer) canvas).drawTileMap(Point.point(0, 0), 48, 32, 32, 32, tileMap, tiles);
 

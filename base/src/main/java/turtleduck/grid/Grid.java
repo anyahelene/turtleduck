@@ -85,10 +85,10 @@ public interface Grid<T> extends Iterable<T> {
 	 */
 	T get(int x, int y);
 
-	Area getArea();
+	Area area();
 
 	/** @return The height of the grid. */
-	int getHeight();
+	int height();
 
 	/**
 	 * Get the contents of the cell in the given x,y location.
@@ -121,7 +121,7 @@ public interface Grid<T> extends Iterable<T> {
 	T getOrDefault(int x, int y, T defaultResult);
 
 	/** @return The width of the grid. */
-	int getWidth();
+	int width();
 
 	/**
 	 * Check if coordinates are valid.
@@ -211,5 +211,6 @@ public interface Grid<T> extends Iterable<T> {
 	 *             if !isValid(x,y)
 	 */
 	void set(int x, int y, T element);
+
 
 }

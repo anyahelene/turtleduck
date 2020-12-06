@@ -86,15 +86,23 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 
 		ConnectMessage msg = Message.createConnect();
 
+		List<Channel> reopened = new ArrayList<>();
 		for (Channel ch : channels.values()) {
+			System.out.println("old channel: " + ch);
 			if (!ch.name().isEmpty()) {
 				OpenMessage opened = Message.createOpened(ch.channelId(), ch.name(), ch.service());
+				reopened.add(ch);
 				msg.addOpened(opened);
 			}
 		}
-		msg.msg(channels.values().isEmpty() ? "Welcome!" : "Welcome back!");
+		msg.msg(channels.values().isEmpty() ? "WELCOME" : "WELCOME_BACK");
+		logger.warn("OPEN: " + msg.toJson());
 		send(msg);
 		socket.handler(this::receive);
+		// trigger reopen listeners after we've connected, since they may want to send
+		// data
+		for (Channel ch : reopened)
+			ch.reopened();
 	}
 
 	public void receive(Buffer buf) {
@@ -159,6 +167,8 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 									});
 									return true;
 								});
+								pty.useHistory(0, true);
+//								pty.reconnectListener(() -> shell.prompt());
 								shell.editorFactory((n, callback) -> {
 									EditorChannel ch = new EditorChannel(n, "editor", callback);
 									open(ch);

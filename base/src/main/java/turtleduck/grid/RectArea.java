@@ -15,6 +15,7 @@ public class RectArea implements Area {
 		protected final int x;
 		/** value of the y-coordinate */
 		protected final int y;
+		protected final int z;
 		protected final int idx;
 		protected final int edgeMask;
 
@@ -22,20 +23,17 @@ public class RectArea implements Area {
 		 * Main constructor. Initializes a new {@link #Location} objects with the
 		 * corresponding values of x and y.
 		 * 
-		 * @param x
-		 *            X coordinate
-		 * @param y
-		 *            Y coordinate
-		 * @param idx
-		 *            1-dimensional index
-		 * @param edgeMask
-		 *            mask with bits {@link RectArea#N}, {@link RectArea#S},
-		 *            {@link RectArea#E}, {@link RectArea#W} set if we're on the
-		 *            corresponding edge of the area
+		 * @param x        X coordinate
+		 * @param y        Y coordinate
+		 * @param idx      1-dimensional index
+		 * @param edgeMask mask with bits {@link RectArea#N}, {@link RectArea#S},
+		 *                 {@link RectArea#E}, {@link RectArea#W} set if we're on the
+		 *                 corresponding edge of the area
 		 */
-		RectLocation(int x, int y, int idx, int edgeMask) {
+		RectLocation(int x, int y, int z, int idx, int edgeMask) {
 			this.x = x;
 			this.y = y;
+			this.z = z;
 			this.idx = idx;
 			this.edgeMask = edgeMask;
 		}
@@ -77,10 +75,10 @@ public class RectArea implements Area {
 				return false;
 			}
 			Position other = (Position) obj;
-			if (x != other.getX()) {
+			if (x != other.x()) {
 				return false;
 			}
-			if (y != other.getY()) {
+			if (y != other.y()) {
 				return false;
 			}
 			return true;
@@ -88,26 +86,26 @@ public class RectArea implements Area {
 
 		@Override
 		public double geometricDistanceTo(Position other) {
-			return Math.sqrt(Math.pow(this.x - other.getX(), 2) + Math.pow(this.y - other.getY(), 2));
+			return Math.sqrt(Math.pow(this.x - other.x(), 2) + Math.pow(this.y - other.y(), 2));
 		}
 
 		@Override
-		public Area getArea() {
+		public Area area() {
 			return RectArea.this;
 		}
 
 		@Override
-		public int getIndex() {
+		public int index() {
 			return idx;
 		}
 
 		@Override
-		public int getX() {
+		public int x() {
 			return x;
 		}
 
 		@Override
-		public int getY() {
+		public int y() {
 			return y;
 		}
 
@@ -118,15 +116,15 @@ public class RectArea implements Area {
 
 		@Override
 		public int gridDistanceTo(Position other) {
-			return Math.max(Math.abs(this.x - other.getX()), Math.abs(this.y - other.getY()));
+			return Math.max(Math.abs(this.x - other.x()), Math.abs(this.y - other.y()));
 		}
 
 		@Override
 		public List<Location> gridLineTo(Location other) {
 			if (!contains(other))
 				throw new IllegalArgumentException();
-			int distX = other.getX() - x;
-			int distY = other.getY() - y;
+			int distX = other.x() - x;
+			int distY = other.y() - y;
 			int length = Math.max(Math.abs(distX), Math.abs(distY));
 			List<Location> line = new ArrayList<>(length);
 			if (length == 0)
@@ -151,22 +149,28 @@ public class RectArea implements Area {
 
 		@Override
 		public int stepDistanceTo(Position other) {
-			return Math.abs(this.x - other.getX()) + Math.abs(this.y - other.getY());
+			return Math.abs(this.x - other.x()) + Math.abs(this.y - other.y());
 		}
 
 		@Override
 		public String toString() {
-			return "(x=" + x + ",y=" + y + ")";
+			return String.format("(%d,%d,%d)", x, y, z);
+		}
+
+		@Override
+		public int z() {
+			return z;
 		}
 
 	}
 
 	protected final int width;
 	protected final int height;
+	protected final int depth;
 	protected final int size;
 	protected final List<Location> locs;
 
-	protected final boolean hWrap, vWrap;
+	protected final boolean hWrap, vWrap, zWrap;
 
 	public RectArea(int width, int height) {
 		this(width, height, false, false);
@@ -178,8 +182,10 @@ public class RectArea implements Area {
 		}
 		this.hWrap = horizWrap;
 		this.vWrap = vertWrap;
+		this.zWrap = false;
 		this.width = width;
 		this.height = height;
+		this.depth = 1;
 		this.size = width * height;
 		List<Location> l = new ArrayList<>(size);
 		for (int y = 0, i = 0; y < height; y++) {
@@ -190,18 +196,17 @@ public class RectArea implements Area {
 				// set W or E bits if we're on the western or eastern edge
 				int e = edge | (x == 0 ? GridDirection.WEST.getMask() : 0)
 						| (x == width - 1 ? GridDirection.EAST.getMask() : 0);
-				l.add(new RectLocation(x, y, i, e));
+				l.add(new RectLocation(x, y, 0, i, e));
 			}
 		}
 		locs = Collections.unmodifiableList(l);
 	}
 
 	/**
-	 * @param x
-	 *            X-coordinate
+	 * @param x X-coordinate
 	 * @return The same x, wrapped to wrapX(x)
-	 * @throws IndexOutOfBoundsException
-	 *             if coordinate is out of range, and wrapping is not enabled
+	 * @throws IndexOutOfBoundsException if coordinate is out of range, and wrapping
+	 *                                   is not enabled
 	 */
 	protected int checkX(int x) {
 		x = wrapX(x);
@@ -213,11 +218,10 @@ public class RectArea implements Area {
 	}
 
 	/**
-	 * @param y
-	 *            Y-coordinate
+	 * @param y Y-coordinate
 	 * @return The same y, wrapped to wrapY(y)
-	 * @throws IndexOutOfBoundsException
-	 *             if coordinate is out of range, and wrapping is not enabled
+	 * @throws IndexOutOfBoundsException if coordinate is out of range, and wrapping
+	 *                                   is not enabled
 	 */
 	protected int checkY(int y) {
 		y = wrapY(y);
@@ -227,16 +231,36 @@ public class RectArea implements Area {
 		return y;
 	}
 
+	/**
+	 * @param z Z-coordinate
+	 * @return The same z, wrapped to wrapZ(z)
+	 * @throws IndexOutOfBoundsException if coordinate is out of range, and wrapping
+	 *                                   is not enabled
+	 */
+	protected int checkZ(int z) {
+		z = wrapZ(z);
+		if (z < 0 || z >= depth) {
+			throw new IndexOutOfBoundsException("z=" + z);
+		}
+		return z;
+	}
+
 	@Override
 	public boolean contains(int x, int y) {
+		return contains(x, y, 0);
+	}
+
+	@Override
+	public boolean contains(int x, int y, int z) {
 		x = wrapX(x);
 		y = wrapY(y);
-		return x >= 0 && x < width && y >= 0 && y < height;
+		z = wrapZ(z);
+		return x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < depth;
 	}
 
 	@Override
 	public boolean contains(Position pos) {
-		return (pos instanceof Location && ((Location) pos).getArea() == this) || contains(pos.getX(), pos.getY());
+		return (pos instanceof Location && ((Location) pos).area() == this) || contains(pos.x(), pos.y());
 	}
 
 	@Override
@@ -248,17 +272,17 @@ public class RectArea implements Area {
 	}
 
 	@Override
-	public int getHeight() {
+	public int height() {
 		return height;
 	}
 
 	@Override
-	public int getSize() {
+	public int size() {
 		return size;
 	}
 
 	@Override
-	public int getWidth() {
+	public int width() {
 		return width;
 	}
 
@@ -269,9 +293,14 @@ public class RectArea implements Area {
 
 	@Override
 	public Location location(int x, int y) {
-		if (x < 0 || x >= width || y < 0 || y >= height)
+		return location(x, y, 0);
+	}
+
+	@Override
+	public Location location(int x, int y, int z) {
+		if (x < 0 || x >= width || y < 0 || y >= height || z < 0 || z >= depth)
 			throw new IndexOutOfBoundsException("(" + x + "," + y + ")");
-		int i = x + y * width;
+		int i = x + y * width + z * width * height;
 		return locs.get(i);
 	}
 
@@ -296,10 +325,11 @@ public class RectArea implements Area {
 	}
 
 	@Override
-	public int toIndex(int x, int y) {
+	public int toIndex(int x, int y, int z) {
 		x = checkX(x);
 		y = checkY(y);
-		return y * width + x;
+		z = checkZ(z);
+		return z * width * height + y * width + x;
 	}
 
 	@Override
@@ -323,9 +353,9 @@ public class RectArea implements Area {
 	protected int wrapX(int x) {
 		if (hWrap) {
 			if (x < 0) {
-				return getWidth() + x % getWidth();
+				return width() + x % width();
 			} else {
-				return x % getWidth();
+				return x % width();
 			}
 		} else {
 			return x;
@@ -335,13 +365,30 @@ public class RectArea implements Area {
 	protected int wrapY(int y) {
 		if (hWrap) {
 			if (y < 0) {
-				return getHeight() + y % getHeight();
+				return height() + y % height();
 			} else {
-				return y % getHeight();
+				return y % height();
 			}
 		} else {
 			return y;
 		}
+	}
+
+	protected int wrapZ(int z) {
+		if (zWrap) {
+			if (z < 0) {
+				return depth() + z % depth();
+			} else {
+				return z % depth();
+			}
+		} else {
+			return z;
+		}
+	}
+
+	@Override
+	public int depth() {
+		return depth;
 	}
 
 }

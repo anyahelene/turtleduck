@@ -1,15 +1,14 @@
 package turtleduck.grid;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+
 /** A Grid contains a set of cells in a square 2D matrix. */
-public class MyGrid<T> implements Grid<T> {
+public class MyGrid<T> implements Grid<T>, Grid3<T> {
 	private final Area area;
-	private final List<T> cells;
+	private final T[] cells;
 
 	/**
 	 * Construct a grid with the given dimensions.
@@ -25,18 +24,18 @@ public class MyGrid<T> implements Grid<T> {
 	 * 
 	 * @param width
 	 * @param height
-	 * @param initialiser
-	 *            The initialiser function
+	 * @param initialiser The initialiser function
 	 */
+	@SuppressWarnings("unchecked")
 	public MyGrid(Area area, Function<Location, T> initialiser) {
 		if (area == null || initialiser == null) {
 			throw new IllegalArgumentException();
 		}
 
 		this.area = area;
-		this.cells = new ArrayList<T>(area.getSize());
+		this.cells = (T[]) new Object[area.size()];
 		for (Location loc : area) {
-			cells.add(initialiser.apply(loc));
+			cells[loc.index()] = initialiser.apply(loc);
 		}
 	}
 
@@ -45,18 +44,18 @@ public class MyGrid<T> implements Grid<T> {
 	 *
 	 * @param width
 	 * @param height
-	 * @param initElement
-	 *            What the cells should initially hold (possibly null)
+	 * @param initElement What the cells should initially hold (possibly null)
 	 */
+	@SuppressWarnings("unchecked")
 	public MyGrid(Area area, T initElement) {
 		if (area == null) {
 			throw new IllegalArgumentException();
 		}
 
 		this.area = area;
-		this.cells = new ArrayList<T>(area.getSize());
-		for (int i = 0; i < area.getSize(); ++i) {
-			cells.add(initElement);
+		this.cells = (T[]) new Object[area.size()];
+		for (int i = 0; i < area.size(); ++i) {
+			cells[i] = initElement;
 		}
 	}
 
@@ -74,8 +73,7 @@ public class MyGrid<T> implements Grid<T> {
 	 * 
 	 * @param width
 	 * @param height
-	 * @param initialiser
-	 *            The initialiser function
+	 * @param initialiser The initialiser function
 	 */
 	public MyGrid(int width, int height, Function<Location, T> initialiser) {
 		this(new RectArea(width, height), initialiser);
@@ -86,8 +84,7 @@ public class MyGrid<T> implements Grid<T> {
 	 *
 	 * @param width
 	 * @param height
-	 * @param initElement
-	 *            What the cells should initially hold (possibly null)
+	 * @param initElement What the cells should initially hold (possibly null)
 	 */
 	public MyGrid(int width, int height, T initElement) {
 		this(new RectArea(width, height), initElement);
@@ -95,19 +92,19 @@ public class MyGrid<T> implements Grid<T> {
 
 	@Override
 	public Grid<T> copy() {
-		MyGrid<T> newGrid = new MyGrid<>(getWidth(), getHeight(), (l) -> get(l));
+		MyGrid<T> newGrid = new MyGrid<>(width(), height(), (l) -> get(l));
 
 		return newGrid;
 	}
 
 	@Override
 	public Stream<T> elementParallelStream() {
-		return cells.parallelStream();
+		return Stream.of(cells).parallel();
 	}
 
 	@Override
 	public Stream<T> elementStream() {
-		return cells.stream();
+		return Stream.of(cells);
 	}
 
 	@Override
@@ -115,59 +112,69 @@ public class MyGrid<T> implements Grid<T> {
 		if (initialiser == null)
 			throw new NullPointerException();
 
-		for (int i = 0; i < area.getSize(); i++) {
-			cells.set(i, initialiser.apply(area.fromIndex(i)));
+		for (int i = 0; i < area.size(); i++) {
+			cells[i] = initialiser.apply(area.fromIndex(i));
 		}
 	}
 
 	@Override
 	public void fill(T element) {
-		for (int i = 0; i < area.getSize(); i++) {
-			cells.set(i, element);
+		for (int i = 0; i < area.size(); i++) {
+			cells[i] = element;
 		}
 	}
 
 	@Override
 	public T get(Location loc) {
-		if (loc.getArea() == area)
-			return cells.get(loc.getIndex());
+		if (loc.area() == area)
+			return cells[loc.index()];
 		else
-			return cells.get(area.toIndex(loc.getX(), loc.getY()));
+			return cells[area.toIndex(loc.x(), loc.y(), loc.z())];
 	}
 
 	@Override
 	public T get(int x, int y) {
-		return cells.get(area.toIndex(x, y));
+		return cells[area.toIndex(x, y, 0)];
 	}
 
 	@Override
-	public Area getArea() {
+	public T get(int x, int y, int z) {
+		return cells[area.toIndex(x, y, z)];
+	}
+
+	@Override
+	public Area area() {
 		return area;
 	}
 
 	@Override
-	public int getHeight() {
-		return area.getHeight();
+	public int height() {
+		return area.height();
 	}
 
 	@Override
 	public T getOrDefault(Location loc, T defaultResult) {
-		if (loc.getArea() == area) {
-			T r = cells.get(loc.getIndex());
+		if (loc.area() == area) {
+			T r = cells[loc.index()];
 			if (r != null)
 				return r;
 			else
 				return defaultResult;
 		} else {
-			return getOrDefault(loc.getX(), loc.getY(), defaultResult);
+			return getOrDefault(loc.x(), loc.y(), loc.y(), defaultResult);
 		}
 	}
 
 	@Override
 	public T getOrDefault(int x, int y, T defaultResult) {
+		return getOrDefault(x, y, 0, defaultResult);
+	}
+
+	@Override
+	public T getOrDefault(int x, int y, int z, T defaultResult) {
 		T r = null;
-		if (isValid(x, y))
-			r = get(x, y);
+		if (isValid(x, y, z))
+			r = get(x, y, z);
 		if (r != null)
 			return r;
 		else
@@ -175,23 +182,28 @@ public class MyGrid<T> implements Grid<T> {
 	}
 
 	@Override
-	public int getWidth() {
-		return area.getWidth();
+	public int width() {
+		return area.width();
 	}
 
 	@Override
 	public boolean isValid(Location loc) {
-		return loc.getArea() == area || area.contains(loc.getX(), loc.getY());
+		return loc.area() == area || area.contains(loc.x(), loc.y());
 	}
 
 	@Override
 	public boolean isValid(int x, int y) {
-		return area.contains(x, y);
+		return area.contains(x, y, 0);
+	}
+
+	@Override
+	public boolean isValid(int x, int y, int z) {
+		return area.contains(x, y, z);
 	}
 
 	@Override
 	public Iterator<T> iterator() {
-		return cells.iterator();
+		return elementStream().iterator();
 	}
 
 	@Override
@@ -211,15 +223,21 @@ public class MyGrid<T> implements Grid<T> {
 
 	@Override
 	public void set(Location loc, T element) {
-		if (loc.getArea() == area) {
-			cells.set(loc.getIndex(), element);
+		if (loc.area() == area) {
+			cells[loc.index()] = element;
 		} else {
-			set(loc.getX(), loc.getY(), element);
+			set(loc.x(), loc.y(), element);
 		}
 	}
 
 	@Override
 	public void set(int x, int y, T elem) {
-		cells.set(area.toIndex(x, y), elem);
+		cells[area.toIndex(x, y, 0)] = elem;
 	}
+
+	@Override
+	public void set(int x, int y, int z, T elem) {
+		cells[area.toIndex(x, y, z)] = elem;
+	}
+
 }

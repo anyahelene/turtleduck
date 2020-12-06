@@ -1,5 +1,6 @@
 package turtleduck.server;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.vertx.core.buffer.Buffer;
@@ -23,6 +24,7 @@ public class MessageRepr implements MessageData {
 	public void put(String key, String val) {
 		data.put(key, val);
 	}
+
 	@Override
 	public void put(String key, int val) {
 		data.put(key, val);
@@ -46,13 +48,22 @@ public class MessageRepr implements MessageData {
 
 	private JsonArray getArray(String key) {
 		JsonArray array = data.getJsonArray(key);
-		if (array == null)
-			array = new JsonArray();		
+		if (array == null) {
+			array = new JsonArray();
+			data.put(key, array);
+		}
 		return array;
 	}
+
 	@Override
 	public <U extends Message> List<U> getList(String key) {
-		return getArray(key).getList();
+		List<U> list = new ArrayList<>();
+		for (Object elt : getArray(key)) {
+			if (elt instanceof JsonObject) {
+				list.add(Message.create(new MessageRepr((JsonObject) elt)));
+			}
+		}
+		return list;
 	}
 
 	@Override
@@ -72,8 +83,9 @@ public class MessageRepr implements MessageData {
 
 	@Override
 	public <U extends Message> void addToList(String key, U msg) {
-		getList(key).add(msg);		
+		getArray(key).add(((MessageRepr) msg.rawData()).data);
 	}
+
 	public String toString() {
 		return data.toString();
 	}

@@ -37,4 +37,13 @@ public interface PtyHostSide extends PtyWriter {
 	 */
 	void resizeListener(BiConsumer<Integer, Integer> listener);
 	
+	/**
+	 * Attach a listener that gets called if the connection is broken and reestablished.
+	 * 
+	 * Might be used to re-issue a prompt, or the current line or something
+	 * 
+	 * @param listener
+	 */
+	void reconnectListener(Runnable listener);
+	
 }

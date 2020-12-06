@@ -25,9 +25,14 @@ public class PseudoTerminal implements PtyHostSide {
 	private List<Predicate<String>> inputListeners = new ArrayList<>();
 	private List<Predicate<KeyEvent>> keyListeners = new ArrayList<>();
 	private List<BiConsumer<Integer, Integer>> resizeListeners = new ArrayList<>();
+	private List<String> history = null;
+	private int historySize = 0;
+	private String historyLine = "";
 	private Graphemizer graphemizer;
 	private Consumer<String> termListener;
 	private int cols = 80, rows = 10;
+	private List<Runnable> reconnectListeners = new ArrayList<>();
+	private boolean historyPlayback;
 
 	public PseudoTerminal() {
 		this(new TermWindowImpl());
@@ -115,6 +120,14 @@ public class PseudoTerminal implements PtyHostSide {
 
 	public void writeToTerminal(String s) {
 		s = s.replace("\n", "\r\n");
+		if (history != null) {
+			history.add(s);
+			historySize += s.length();
+		}
+		doTerminalOut(s);
+	}
+
+	protected void doTerminalOut(String s) {
 		if (termListener != null)
 			termListener.accept(s);
 		else if (stdout != null)
@@ -180,5 +193,50 @@ public class PseudoTerminal implements PtyHostSide {
 	public void resizeListener(BiConsumer<Integer, Integer> listener) {
 		resizeListeners.add(listener);
 		listener.accept(cols, rows);
+	}
+
+	@Override
+	public void reconnectListener(Runnable listener) {
+		reconnectListeners.add(listener);
+	}
+
+	public void reconnectTerminal() {
+		if (history != null && historyPlayback)
+			for (String s : history) {
+				doTerminalOut(s);
+			}
+
+		for (Runnable l : reconnectListeners) {
+			l.run();
+		}
+	}
+
+	public void useHistory(int maxSize, boolean playbackOnReconnect) {
+		if(history == null)
+		history = new ArrayList<>();
+		historySize = maxSize;
+		historyPlayback = playbackOnReconnect;
+	}
+	private void addToLineHistory(String s) {
+		int begin = 0;
+		int end = s.indexOf('\n', 0);
+		System.out.println("History: [");
+		while (end >= 0) {
+			String ss = s.substring(begin, end);
+			if (historyLine == "") {
+				history.add(ss);
+			} else {
+				history.add(historyLine.concat(ss));
+				historyLine = "";
+			}
+			System.out.println("  '" + history.get(history.size() - 1) + "'");
+			begin = end + 1;
+			end = s.indexOf('\n', begin);
+		}
+		if (begin < s.length()) {
+			historyLine = historyLine.concat(s.substring(begin));
+			System.out.println(" +'" + historyLine + "'");
+		}
+		System.out.println("]");
 	}
 }

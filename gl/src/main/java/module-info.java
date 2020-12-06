@@ -1,5 +1,6 @@
 module turtleduck.gl {
 	exports turtleduck.gl;
+	exports turtleduck.gl.objects;
 	requires transitive turtleduck.base;
 	requires org.lwjgl;
 	requires org.lwjgl.glfw;

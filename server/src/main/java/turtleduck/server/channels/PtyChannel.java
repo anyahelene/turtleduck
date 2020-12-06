@@ -24,6 +24,10 @@ public class PtyChannel extends AbstractChannel {
 		super.opened(id, ep);
 	}
 
+	public void reopened() {
+		pty.reconnectTerminal();
+	}
+
 	public void close() {
 		pty.disconnectTerminal();
 	}
@@ -50,7 +54,7 @@ public class PtyChannel extends AbstractChannel {
 		} else {
 			buffer.add(s);
 //			if (flush)
-				flush();
+			flush();
 		}
 	}
 

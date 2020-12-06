@@ -1,6 +1,7 @@
 package turtleduck.comms;
 
 import java.util.List;
+import java.util.Map;
 
 import turtleduck.comms.impl.MessageImpl;
 import turtleduck.events.KeyCodes;
@@ -40,6 +41,9 @@ public interface Message {
 	static StringDataMessage createStringData(int ch, String data) {
 		return new MessageImpl.StringDataImpl(ch, data);
 	}
+	static DictDataMessage createDictData(int ch, Map<String,String> data) {
+		return new MessageImpl.DictDataImpl(ch, data);
+	}
 	static KeyEventMessage createKeyEvent(int ch, int code, String data) {
 		return new MessageImpl.KeyEventMsgImpl(ch, code, data);
 	}
@@ -57,20 +61,23 @@ public interface Message {
 	}
 	
 	
-	static Message create(MessageData data) {
+	@SuppressWarnings("unchecked")
+	static <U extends Message> U create(MessageData data) {
 		String type = data.get("type", "");
 		switch(type) {
 		case "Connect":
-			return new MessageImpl.ConnectMsgImpl(data);
+			return (U)new MessageImpl.ConnectMsgImpl(data);
 		case "Opened":
 		case "Open":
-			return new MessageImpl.OpenMsgImpl(data);
+			return (U)new MessageImpl.OpenMsgImpl(data);
 		case "KeyEvent":
-			return new MessageImpl.KeyEventMsgImpl(data);
+			return (U)new MessageImpl.KeyEventMsgImpl(data);
 		case "Data":
-			return new MessageImpl.StringDataImpl(data);
+			return (U)new MessageImpl.StringDataImpl(data);
+		case "Dict":
+			return (U)new MessageImpl.DictDataImpl(data);
 		default:
-			return new MessageImpl(data);
+			return (U)new MessageImpl(data);
 //			throw new IllegalArgumentException("Illegal message: " + data);
 		}
 	}
@@ -90,7 +97,9 @@ public interface Message {
 
 		int chNum();
 	}
-
+	interface DictDataMessage extends Message {
+		String get(String key);
+	}
 	interface StringDataMessage extends Message {
 		String data();
 	}
@@ -110,6 +119,8 @@ public interface Message {
 
 		KeyEvent keyEvent();
 	}
+
+	MessageData rawData();
 
 
 }

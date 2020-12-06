@@ -25,6 +25,7 @@ public class HostSide implements PtyHostSide {
 	private BiConsumer<Integer, Integer> resizeListener;
 	private Predicate<KeyEvent> keyListener;
 	private Terminal terminal;
+	private Runnable reconnectListener;
 
 	public HostSide(Terminal terminal) {
 		this.terminal = terminal;
@@ -124,5 +125,10 @@ public class HostSide implements PtyHostSide {
 	@Override
 	public void resizeListener(BiConsumer<Integer, Integer> listener) {
 		resizeListener = listener;
+	}
+
+	@Override
+	public void reconnectListener(Runnable listener) {
+		reconnectListener = listener;
 	}
 }

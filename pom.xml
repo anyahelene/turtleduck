@@ -49,6 +49,11 @@
 				<artifactId>turtleduck-shell</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>turtleduck-tea</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -64,7 +69,7 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
-				<dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
 			<version>${slf4j.version}</version>
@@ -107,7 +112,7 @@
 							<configuration>
 								<!-- Directory where TeaVM should put generated files. This configuration 
 									conforms to the settings of the WAR plugin -->
-								<targetDirectory>${project.build.directory}/generated/js/teavm</targetDirectory>
+								<targetDirectory>${project.build.directory}/classes/webroot/teavm</targetDirectory>
 
 								<!-- Main class, containing static void main(String[]) -->
 								<mainClass>turtleduck.tea.Client</mainClass>

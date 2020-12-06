@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +36,7 @@ import jdk.jshell.SourceCodeAnalysis;
 import jdk.jshell.SourceCodeAnalysis.Completeness;
 import jdk.jshell.SourceCodeAnalysis.CompletionInfo;
 import jdk.jshell.SourceCodeAnalysis.Documentation;
+import jdk.jshell.SourceCodeAnalysis.SnippetWrapper;
 import jdk.jshell.SourceCodeAnalysis.Suggestion;
 import jdk.jshell.StatementSnippet;
 import jdk.jshell.TypeDeclSnippet;
@@ -44,8 +46,11 @@ import jdk.jshell.spi.ExecutionControl;
 import jdk.jshell.spi.ExecutionControlProvider;
 import jdk.jshell.spi.ExecutionEnv;
 import turtleduck.colors.Colors;
+import turtleduck.comms.Message;
+import turtleduck.comms.Message.StringDataMessage;
 import turtleduck.colors.Color;
 import turtleduck.display.Screen;
+import turtleduck.shell.control.TShellLocalExecutionControl;
 import turtleduck.terminal.Editor;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
@@ -71,6 +76,8 @@ public class TShell {
 	private int inputY;
 	private final ExecutorService executor;
 	private BiFunction<String, BiConsumer<Boolean, String>, Editor> editorFactory;
+	private final TShellLocalExecutionControl control;
+	private LocalLoaderDelegate delegate;
 
 	public TShell(Screen screen, TextWindow window, TextCursor printer2) {
 		this.window = window;
@@ -79,7 +86,7 @@ public class TShell {
 		executor = Executors.newSingleThreadExecutor();
 
 		printer2.autoScroll(true);
-		LocalLoaderDelegate delegate = new LocalLoaderDelegate(TShell.class.getClassLoader());
+		delegate = new LocalLoaderDelegate(TShell.class.getClassLoader());
 		try {
 			delegate.findClass("turtleduck.shell.TShell");
 		} catch (ClassNotFoundException e) {
@@ -87,25 +94,26 @@ public class TShell {
 			e.printStackTrace();
 		}
 		Builder builder = JShell.builder();
+		control = new TShellLocalExecutionControl(delegate);
 		builder.executionEngine(new ExecutionControlProvider() {
 
 			@Override
 			public String name() {
-				return "local";
+				return "tshell";
 			}
 
 			@Override
 			public ExecutionControl generate(ExecutionEnv env, Map<String, String> parameters) throws Throwable {
-				ExecutionControl control = new LocalExecutionControl();
 //				control.addToClasspath("jshell://");
 				return control;
 			}
 		}, null);
 //		builder.fileManager(fm -> new FileManager(fm));
-		builder.compilerOptions("--module-path", System.getProperty("jdk.module.path", ""), "--add-modules",
+		builder.compilerOptions("-g", "--module-path", System.getProperty("jdk.module.path", ""), "--add-modules",
 				"turtleduck.shell");
 		builder.idGenerator((sn, i) -> currentNS + i);
 		shell = builder.build();
+		sca = shell.sourceCodeAnalysis();
 		Screen findObject = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, screen.id());
 		System.out.println("" + Screen.class.getClassLoader() + ", " + findObject);
 		System.out.println(getClass().getClassLoader());
@@ -115,8 +123,7 @@ public class TShell {
 				"import turtleduck.geometry.Point;", //
 				"import turtleduck.geometry.Direction;", //
 				"import turtleduck.display.Canvas;", //
-				"import turtleduck.turtle.Turtle;",
-				"import turtleduck.turtle.Pen;", //
+				"import turtleduck.turtle.Turtle;", "import turtleduck.turtle.Pen;", //
 				"import turtleduck.text.TextCursor;", //
 				"import turtleduck.colors.Colors;", //
 				"import turtleduck.shell.TShell;", //
@@ -132,12 +139,11 @@ public class TShell {
 //			inputX = printer2.x();
 //			inputY = printer2.y();
 //			printer2.print(s, Colors.GREY);
-			eval(s, true);
+			eval(s, true, null);
 		}
 		currentNS = mainNS;
 		if (screen != null)
 			screen.setPasteHandler(this::paste);
-		sca = shell.sourceCodeAnalysis();
 		printer2.println("testValue = " + testValue);
 		System.out.println(System.getProperties());
 		;
@@ -149,10 +155,10 @@ public class TShell {
 	}
 
 	public void eval(String code) {
-		eval(code, false);
+		eval(code, false, null);
 	}
 
-	public void eval(String code, boolean quiet) {
+	public void eval(String code, boolean quiet, Consumer<Message> reporter) {
 		if (code.startsWith("/")) {
 			String[] split = code.split("\\s+", 2);
 			String cmd = split[0];
@@ -179,8 +185,11 @@ public class TShell {
 			}
 			return;
 		}
+		System.out.println("old result: " + control.lastResult());
 
 		List<SnippetEvent> eval = shell.eval(code);
+		Object result = control.lastResult();
+		System.out.println("result: " + result);
 		for (SnippetEvent e : eval) {
 			Snippet snip = e.snippet();
 			if (!quiet) {
@@ -200,8 +209,18 @@ public class TShell {
 					printer.moveHoriz((int) (inputX + pos));
 					printer.println("^");
 				}
-				printer.println("diag: " + diag.getMessage(null));
-				printer.foreground(Colors.MAGENTA);
+				if (reporter != null) {
+					Map<String, String> data = new HashMap<>();
+					data.put("msg", diag.getMessage(null));
+					data.put("start", String.valueOf(start));
+					data.put("end", String.valueOf(end));
+					data.put("pos", String.valueOf(pos));
+					Message msg = Message.createDictData(0, data);
+					reporter.accept(msg);
+				} else {
+					printer.println("diag: " + diag.getMessage(null));
+					printer.foreground(Colors.MAGENTA);
+				}
 //				for(int i = 0; i < 300; i++) TShell.colorWheel(turtle.turn(15), -i);
 			});
 			Status status = e.status();
@@ -255,6 +274,8 @@ public class TShell {
 				break;
 			}
 			String heading = "";
+			SnippetWrapper wrapper = sca.wrapper(snip);
+			String replClassName = wrapper.fullClassName();
 			switch (snip.kind()) {
 			case ERRONEOUS:
 				heading = "Error: " + ((ErroneousSnippet) snip);
@@ -267,20 +288,58 @@ public class TShell {
 				break;
 			case METHOD:
 				heading = "Defined " + ((MethodSnippet) snip).name();
+				if (reporter != null) {
+					String meths = shell.methods().map(s -> String.format("%s(%s)", s.name(), s.parameterTypes())).collect(Collectors.joining("<li>"));
+					Map<String, String> data = new HashMap<>();
+					data.put("kind", "methods");
+					data.put("text", meths);
+					Message msg = Message.createDictData(0, data);
+					reporter.accept(msg);
+				}
 				break;
 			case STATEMENT:
 				// heading = ((StatementSnippet)snip) + " = ";
 				break;
 			case TYPE_DECL:
 				heading = "Defined " + ((TypeDeclSnippet) snip).name() + " = ";
-				break;
+				replClassName += "$" + ((TypeDeclSnippet) snip).name();
+				if (reporter != null) {
+					System.out.println(shell.types().collect(Collectors.toList()));
+					String types = shell.types().map(s -> s.name()).collect(Collectors.joining("<li>"));
+					Map<String, String> data = new HashMap<>();
+					data.put("kind", "types");
+					data.put("text", types);
+					Message msg = Message.createDictData(0, data);
+					reporter.accept(msg);
+				}
+			break;
 			case VAR:
 				heading = ((VarSnippet) snip).name() + " = ";
+				if (reporter != null) {
+					String vars = shell.variables().filter(s -> !s.id().startsWith("s") && !s.name().contains("$")) //
+							.map(s -> s.typeName() + " " + s.name()).collect(Collectors.joining("<li>"));
+					Map<String, String> data = new HashMap<>();
+					data.put("kind", "vars");
+					data.put("text", vars);
+					Message msg = Message.createDictData(0, data);
+					reporter.accept(msg);
+				}
 				break;
 			default:
 				break;
-
 			}
+
+			if (reporter != null) {
+				String html = delegate.htmlOf(replClassName);
+				if (html != null) {
+					Map<String, String> data = new HashMap<>();
+					data.put("text", html);
+					data.put("kind", "code");
+					Message msg = Message.createDictData(0, data);
+					reporter.accept(msg);
+				}
+			}
+
 			JShellException exception = e.exception();
 			if (exception != null) {
 				exception.printStackTrace();
@@ -364,14 +423,14 @@ public class TShell {
 					content = compInfo.source();
 					break;
 				}
-				eval(content);
+				eval(content, false, (msg) -> editor[0].report(msg));
 
 				content = compInfo.remaining();
 
 			}
 			prompt();
 		});
-	
+
 		System.out.println("Editing: " + snips);
 		System.out.println("Source: " + source);
 	}
@@ -508,8 +567,8 @@ public class TShell {
 			default:
 				break;
 			}
-			printer.begin().beginningOfLine().print(status).end();
-			printer.print(" \b", Colors.WHITE, Colors.BLACK);
+//			printer.begin().beginningOfLine().print(status).end();
+//			printer.print(" \b", Colors.WHITE, Colors.BLACK);
 			System.out.println(info.completeness());
 		}
 	}
@@ -525,7 +584,7 @@ public class TShell {
 			CompletionInfo info = sca.analyzeCompletion(input);
 			System.out.println(info.completeness());
 //		printer.println();
-			eval(input, false);
+			eval(input, false, null);
 			screen.flush();
 			input = "";
 		} else {
@@ -535,7 +594,7 @@ public class TShell {
 	}
 
 	public void prompt() {
-		printer.print("  java> ", Colors.YELLOW);
+		printer.print("java> ", Colors.YELLOW);
 		inputX = printer.x();
 		inputY = printer.y();
 		printer.foreground(Colors.GREEN);
@@ -590,7 +649,7 @@ public class TShell {
 		turtle.done();
 	}
 
-	public void editorFactory(BiFunction<String,BiConsumer<Boolean,String>,Editor> factory) {
+	public void editorFactory(BiFunction<String, BiConsumer<Boolean, String>, Editor> factory) {
 		editorFactory = factory;
 	}
 

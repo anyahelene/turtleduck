@@ -3,8 +3,7 @@ package turtleduck.grid;
 public interface Position {
 
 	/**
-	 * @param obj
-	 *            Another object
+	 * @param obj Another object
 	 * @return true if obj is also an IPosition, and the x and y coordinates are
 	 *         equal
 	 */
@@ -29,14 +28,21 @@ public interface Position {
 	 * 
 	 * @return
 	 */
-	int getX();
+	int x();
 
 	/**
 	 * Gets the y-coordinate
 	 * 
 	 * @return
 	 */
-	int getY();
+	int y();
+
+	/**
+	 * Gets the z-coordinate
+	 * 
+	 * @return
+	 */
+	int z();
 
 	/**
 	 * Find the distance in grid cells to another location.

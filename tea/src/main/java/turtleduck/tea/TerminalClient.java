@@ -1,6 +1,7 @@
 package turtleduck.tea;
 
 import org.teavm.jso.browser.Window;
+import org.teavm.jso.dom.css.CSSStyleDeclaration;
 import org.teavm.jso.dom.html.HTMLElement;
 
 import turtleduck.comms.AbstractChannel;
@@ -18,14 +19,15 @@ import xtermjs.Terminal;
 public class TerminalClient extends AbstractChannel {
 	private Terminal terminal;
 	private ITheme theme;
-	private HTMLElement element;
+	private final HTMLElement element;
 	private KeyHandler keyHandler;
-	private Readline readline;
+	private final Readline readline;
 	private HostSide hostSide;
 
-	public TerminalClient(String elementId, String service) {
-		super(elementId, service, null);
+	public TerminalClient(HTMLElement element, String service) {
+		super(element.getAttribute("id"), service, null);
 		this.readline = new Readline();
+		this.element = element;
 	}
 
 	@Override
@@ -55,15 +57,22 @@ public class TerminalClient extends AbstractChannel {
 	@Override
 	public void initialize() {
 		theme = ITheme.createBrightVGA();
-
+		CSSStyleDeclaration style = element.getStyle();
+		style.setProperty("position", "relative");
+	
+		HTMLElement embedNode = element.getOwnerDocument().createElement("div").withAttr("class", "xtermjs-embed");
+		style = embedNode.getStyle();
+		style.setProperty("height", "100%");
+		style.setProperty("width", "100%");
+		style.setProperty("overflow", "hidden");
+		element.appendChild(embedNode);
 //			theme.setForeground("#0a0");
 
 		ITerminalOptions opts = ITerminalOptions.create();
 		opts.setTheme(theme);
 
-		element = Window.current().getDocument().getElementById(name);
 		terminal = Terminal.create(opts);
-		terminal.open(element);
+		terminal.open(embedNode);
 
 		hostSide = new HostSide(terminal);
 		readline.attach(hostSide);
@@ -72,8 +81,8 @@ public class TerminalClient extends AbstractChannel {
 		FitAddon fitAddon = FitAddon.create();
 		terminal.loadAddon(fitAddon);
 		fitAddon.fit();
-		Client.WINDOW_MAP.set("terminal", terminal);
-		Client.WINDOW_MAP.set("fitAddon", fitAddon);
+		element.addEventListener("onresize", (e) -> fitAddon.fit());
+		Client.WINDOW_MAP.set(name + "-terminal", terminal);
 	}
 
 	@Override

@@ -22,13 +22,12 @@ public class EditorChannel extends AbstractChannel implements Editor {
 	public void initialize() {
 	}
 
-
 	public void receive(Message obj) {
-		if(obj.type().equals("Data")) {
+		if (obj.type().equals("Data")) {
 			Message.StringDataMessage dmsg = (StringDataMessage) obj;
-			if(onSave != null)
+			if (onSave != null)
 				onSave.accept(dmsg.data());
-		}else if (receiver != null)
+		} else if (receiver != null)
 			receiver.accept(obj);
 	}
 
@@ -39,7 +38,7 @@ public class EditorChannel extends AbstractChannel implements Editor {
 
 	@Override
 	public void content(String content) {
-		if(id == 0)
+		if (id == 0)
 			throw new IllegalStateException("channel not open yet");
 		send(Message.createStringData(0, content));
 	}
@@ -47,6 +46,13 @@ public class EditorChannel extends AbstractChannel implements Editor {
 	@Override
 	public void onSave(Consumer<String> saver) {
 		this.onSave = saver;
+	}
+
+	@Override
+	public void report(Message msg) {
+		if (id == 0)
+			throw new IllegalStateException("channel not open yet");
+		send(msg);
 	}
 
 }

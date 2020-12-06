@@ -1,24 +1,129 @@
-
-.subwindow-header .nav-link,
-.subwindow-header .btn {
-	padding: .15rem .3rem;
-}
-
-.subwindow-header .card-header-tabs,
-.subwindow-header .btn-toolbar {
-	margin-top: -.25rem
-}
-
 body {
+	height: 100vh;
+	margin: 0;
 }
-header {
-	background: green;
+
+#page {
+	background:#eeeaea;
+	height:100vh;
+	display: grid;
+	grid-gap:5px;
+	grid-template-columns: 10rem repeat(3, minmax(75px,auto));
+	grid-template-rows: 3rem 1fr 30% 2rem;
+}
+
+#page > header {
+	grid-column: 1/-1; grid-row: 1/2;
+}
+aside {
+	grid-column: 1/2; 
+	grid-row: 2/-2;
+	background: #fffefe;
+}
+
+aside h1, aside h2, aside h3, aside h4, aside h5, aside h6 {
+	font-size: medium;
+	margin-bottom: 0.25rem;
+	font-weight: light;
+	background: #fee;
+	padding: 0.25rem;
+}
+
+aside ul {
+	margin: 4px;
+	padding-left: 1rem;
+}
+aside li {
+	list-style-type: "□ ";
+}
+aside li.closed {
+	list-style-type: "▹ ";
+}
+aside li.package {
+	list-style-type: "📦";
+}
+aside li.java {
+	list-style-type: "☕";
+}
+aside li.opened {
+	list-style-type: "▿ ";
 }
 main {
-	
+	grid-column: 2/-3;
+	grid-row: 2/-3;
+}
+
+#page > figure {
+	grid-column: -3/-1;
+	grid-row: 2/-3;
+	position: relative;
+	height: 100%;
+}
+
+#page > article {
+	grid-column: -3/-1;
+	grid-row: 2/-3;
+	position: relative;
+		height: 100%;
+}
+
+#console {
+	grid-column: 2/-1;
+	grid-row: -3/-2;
+	background: #888;
+}
+#xtermjs-wrap {
+	position: relative;
+		height: 100%;
+	width: 100%;
+}
+
+figure > svg {
+	height: 100%;
+	width: 100%;
+	background: #fff;
+}
+
+header {
+	background: #fff;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+}
+
+header > nav {
+	height: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+}
+a#home {
+	padding: 0px 10px;
+	margin-right: 10px;
+	font-size: large;
+	font-weight: 600;
+}
+a#home:visited, a#home:link, a#home:hover, a#home:active {
+		color: black;
+		text-decoration: none;
+}
+a#home:hover {
+	text-shadow: 0 0 3px #888;
+}
+nav ul {
+	margin: 4px;
+	list-style-type: none;
+}
+
+nav li {
+	display: inline-block;
 }
 footer {
-	background: green;
+	grid-column: 1/-1;
+	grid-row: -2/-1;
+	background:#fff;
 }
 #middle-column {
 	flex: 1 1 auto;
@@ -46,4 +151,154 @@ footer {
 	font-size: 1rem;
 	margin: .5rem -0.5rem;
 	padding: 0 .5rem;
+}
+#editor {
+	height: 100%;
+	display:flex;
+	flex-direction: column;
+}
+#editor-tabs li .nav-link {
+	display: inline-block
+}
+#editor-tabs li .ui-icon-close {
+	margin:0.4em 0.2em 0 0;
+	cursor:pointer;
+	vertical-align: baseline
+}
+#editor-wrap {
+	position: relative;
+	flex-shrink: 0;
+	flex-grow: 2;
+}
+#editor-embed {
+	border: 1px solid #888;
+	border-radius: 0 5px 5px 5px;
+	position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+}
+#jvm {
+	flex-direction: row;
+	display: flex;
+	width: 100%;
+	height: 100%;
+}
+#jvm h2 {
+	padding: 2px;
+	border-bottom: 1px solid grey;
+	font-size: large;
+	font-weight: normal;
+	color: grey;
+	align-self: flex-start;
+}
+.selected {
+	background-color: #ff8;
+	width: 100%;
+	display:inline-block;
+	position: relative;
+}
+.selected::after {
+	content: "⯇";
+	right: 0;
+	margin-right: 1rem;
+	position: absolute;
+}
+.selected::before {
+	content: "⯈";
+	left: 0;
+	margin-left: 1rem;
+	position: absolute;
+}
+.stackframes {
+	display:flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+.stackframe {
+	list-style: none;
+	text-align: center;
+	border-bottom: 1px solid black;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+	display:inline-block;
+	padding: 0px;
+	flex-shrink: 3;
+}
+.stackframe-args {
+	background-color: #ffe;
+}
+.stackframe-locals {
+	background-color: #fef;
+}
+.stackframe-internal {
+	background-color: #eff;
+}
+
+/*
+.stackframe li {
+	border-bottom: 1px solid grey;
+}
+*/
+#stack {
+	width: 12rem;
+	height: 100%;
+	background-color: #eee;
+	position:relative;
+}
+
+#heap {
+	width: 40rem;
+	height: 100%;
+	background-color: #eef;
+}
+
+#program {
+	width: 20rem;
+	height: 100%;
+	background-color: #efe;
+}
+
+#instructions {
+	width: 20rem;
+	height: 100%;
+	background-color: #fee;
+	overflow: auto;
+}
+
+#instructions pre {
+	font-family: monospace;
+	white-space: pre;
+}
+instructions {
+	display: table;
+	width: 100%;
+}
+instruction {
+	display: table-row;
+	font-family: monospace;
+}
+
+instruction.line-even {
+	background-color: #eef;
+}
+
+linenum, label, mnemonic, args, nolabel {
+	display: table-cell;
+	padding: 0px 4px;
+}
+
+linenum {
+	font-size: small;
+	color: grey;
+}
+
+label::after {
+	content: ":";
+}
+
+method h6 {
+	font-size: normal;
+	font-weight: medium;
+	font-style: italic;
 }

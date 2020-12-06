@@ -1,6 +1,8 @@
 package turtleduck.shell;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -10,12 +12,17 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceClassVisitor;
+
 import jdk.jshell.execution.LoaderDelegate;
 import jdk.jshell.spi.ExecutionControl.ClassBytecodes;
 import jdk.jshell.spi.ExecutionControl.ClassInstallException;
 import jdk.jshell.spi.ExecutionControl.EngineTerminationException;
 import jdk.jshell.spi.ExecutionControl.InternalException;
 import jdk.jshell.spi.ExecutionControl.NotImplementedException;
+import turtleduck.shell.bytecode.Htmlifier;
 
 public class LocalLoaderDelegate implements LoaderDelegate {
 	private final Map<String, Class<?>> classes = new HashMap<>();
@@ -99,8 +106,25 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 		return c;
 	}
 
+	public byte[] bytecodeOf(String name) {
+		return loader.bytecodes.get(name);
+	}
+	
+	public String htmlOf(String name) {
+		byte[] bs = loader.bytecodes.get(name);
+		if(bs != null) {
+			ClassReader cr = new ClassReader(bs);
+			Htmlifier htmlifier = new Htmlifier();
+			StringWriter writer = new StringWriter();
+			cr.accept(new TraceClassVisitor(null, htmlifier, new PrintWriter(writer)), //
+					 ClassReader.SKIP_FRAMES);
+			return 	writer.toString();
+		} else {
+			return null;
+		}
+	}
 	static class LocalClassLoader extends URLClassLoader {
-		private final Map<String, byte[]> bytecodes = new HashMap<>();
+		protected final Map<String, byte[]> bytecodes = new HashMap<>();
 
 		public LocalClassLoader(URL url, ClassLoader parent) {
 			super(new URL[] { url }, parent);
@@ -113,6 +137,8 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 		public void load(ClassBytecodes cbc) {
 			byte[] bs = cbc.bytecodes();
 			String name = cbc.name();
+			System.out.println("load:" + name + "(" + bs.length + ")");
+			printByteCode(new ClassReader(bs));
 			bytecodes.put(name, bs);
 		}
 
@@ -159,6 +185,15 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 			}
 			
 			return defineClass(name, bs, 0, bs.length);
+		}
+		
+		public static void printByteCode(ClassReader classReader) {
+			System.out.println("Loaded " + classReader.getClassName());
+			// Textifier takes care of printing the instructions
+			Htmlifier htmlifier = new Htmlifier();
+			// TraceClassVisitor visits the class and calls the textifier
+			classReader.accept(new TraceClassVisitor(null, htmlifier, new PrintWriter(System.out)), //
+					ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
 		}
 	}
 }

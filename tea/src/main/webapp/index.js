@@ -18,6 +18,13 @@ class MessageRepr {
 		return JSON.stringify(this.data);
 	}
 	
+	getArray(key) {
+		console.log(this.data[key]);	
+		if(this.data[key] === undefined)
+			return [];
+		else
+			return this.data[key];
+	}
 	//
 	// @Override
 	// public <U extends Message> List<U> getList(String key) {

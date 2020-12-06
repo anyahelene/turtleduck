@@ -1,6 +1,9 @@
 package turtleduck.comms.impl;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import turtleduck.comms.Message;
@@ -32,6 +35,11 @@ public class MessageImpl implements Message {
 	@Override
 	public String toJson() {
 		return data.toJson();
+	}
+
+	@Override
+	public MessageData rawData() {
+		return data;
 	}
 
 	@Override
@@ -89,7 +97,11 @@ public class MessageImpl implements Message {
 
 		@Override
 		public List<OpenMessage> opened() {
-			return data.getList("opened");
+			List<OpenMessage> list = data.getList("opened");
+			if (list != null)
+				return list;
+			else
+				return Arrays.asList();
 		}
 
 		@Override
@@ -147,6 +159,27 @@ public class MessageImpl implements Message {
 
 		public String data() {
 			return data.get("data", "");
+		}
+
+	}
+
+	public static class DictDataImpl extends MessageImpl implements Message.DictDataMessage {
+		public DictDataImpl(int channel, Map<String, String> data) {
+			this(channel, "Dict", data);
+		}
+
+		public DictDataImpl(MessageData data) {
+			super(data);
+		}
+
+		public DictDataImpl(int channel, String type, Map<String, String> data) {
+			super(channel, type);
+			for (Entry<String, String> e : data.entrySet())
+				this.data.put(e.getKey(), e.getValue());
+		}
+
+		public String get(String key) {
+			return data.get(key, "");
 		}
 
 	}

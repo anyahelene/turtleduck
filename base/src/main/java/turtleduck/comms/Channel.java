@@ -12,6 +12,8 @@ public interface Channel {
 	String name();
 
 	void opened(int chNum, EndPoint endPoint);
+	
+	void reopened();
 
 	void receive(Message msg);
 

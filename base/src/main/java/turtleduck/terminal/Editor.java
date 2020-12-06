@@ -3,6 +3,8 @@ package turtleduck.terminal;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import turtleduck.comms.Message;
+
 public interface Editor {
 
 	String content();
@@ -14,4 +16,6 @@ public interface Editor {
 //	void open(String name, BiConsumer<Boolean, String> callback);
 
 	void onSave(Consumer<String> saver);
+
+	void report(Message msg);
 }
