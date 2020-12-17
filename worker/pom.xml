@@ -8,48 +8,20 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<properties>
-		<main.verticle>turtleduck.server.Server</main.verticle>
+		<main.verticle>turtleduck.worker.Worker</main.verticle>
 		<vertx.version>4.0.0.CR1</vertx.version>
 	</properties>
-	<artifactId>turtleduck-server</artifactId>
+	<artifactId>turtleduck-worker</artifactId>
 	<packaging>jar</packaging>
-	<name>TurtleDuck Server</name>
+	<name>TurtleDuck Worker</name>
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-base</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>turtleduck-shell</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>turtleduck-tea</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-core</artifactId>
-			<version>${vertx.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-web</artifactId>
-			<version>${vertx.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-auth-common</artifactId>
-			<version>${vertx.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-bridge-common</artifactId>
-			<version>${vertx.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-auth-oauth2</artifactId>
 			<version>${vertx.version}</version>
 		</dependency>
 	</dependencies>

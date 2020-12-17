@@ -33,8 +33,7 @@ public interface SockJS extends JSObject {
 	 * page
 	 */
 	static SockJS create(String path) {
-		Location l = Window.current().getLocation();
-		return create(l.getHostName(), Integer.parseInt(l.getPort()), path);
+		return SockJSUtil.create(path, JSObjects.create());
 	}
 
 	static SockJS create(String host, int port, String path) {

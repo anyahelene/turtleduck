@@ -33,18 +33,18 @@ public class EditorServer extends AbstractChannel {
 		HTMLDocument document = Window.current().getDocument();
 		if (msg.type().equals("Data")) {
 			Message.StringDataMessage dmsg = (StringDataMessage) msg;
-			NativeTScreen.consoleLog("Contents: " + dmsg.data());
+			Browser.consoleLog("Contents: " + dmsg.data());
 			session.setValue(dmsg.data());
 		} else if (msg.type().equals("Dict")) {
 			Message.DictDataMessage dmsg = (Message.DictDataMessage) msg;
-			NativeTScreen.consoleLog("Contents1: " + dmsg);
+			Browser.consoleLog("Contents1: " + dmsg);
 			String kind = dmsg.get("kind");
 			if ("mark".equals(kind)) {
 				String err = dmsg.get("msg");
 				int pos = Integer.parseInt(dmsg.get("pos"));
 				int start = Integer.parseInt(dmsg.get("start"));
 				int end = Integer.parseInt(dmsg.get("end"));
-				NativeTScreen.consoleLog("Contents2: " + err + ", " + pos + ", " + start + ", " + end);
+				Browser.consoleLog("Contents2: " + err + ", " + pos + ", " + start + ", " + end);
 			} else if ("code".equals(kind)) {
 				document.getElementById("instructions").getStyle().setProperty("display", "block");
 				HTMLElement disp = document.getElementById("bytecode-display");
@@ -94,20 +94,20 @@ public class EditorServer extends AbstractChannel {
 		saveButton = document.getElementById("tb-save");
 		closeButton = document.getElementById("tb-close");
 		if (tabs != null) {
-			tabItem = document.createElement("li");
-			tabItem.setClassName("nav-item");
-			HTMLElement link = document.createElement("a") //
-					.withAttr("href", "#") //
-					.withAttr("class", "nav-link") //
-					.withText(name);
-			tabItem.appendChild(link);
-			link = document.createElement("span") //
-					.withAttr("class", "ui-icon ui-icon-close") //
-					.withAttr("role", "presentation")//
-					.withText("Remove Tab");
-			tabItem.appendChild(link);
-			NativeTScreen.consoleLog(saveButton);
-			NativeTScreen.consoleLog(tabs);
+			tabItem = document.createElement("span");
+			tabItem.setClassName("title saveable");
+//			HTMLElement link = document.createElement("a") //
+//					.withAttr("href", "#") //
+////					.withAttr("class", "nav-link") //
+					tabItem.withText(name);
+//			tabItem.appendChild(link);
+//			link = document.createElement("span") //
+////					.withAttr("class", "ui-icon ui-icon-close") //
+//					.withAttr("role", "presentation")//
+//					.withText("×");
+//			tabItem.appendChild(link);
+			Browser.consoleLog(saveButton);
+			Browser.consoleLog(tabs);
 
 			tabs.appendChild(tabItem);
 
@@ -122,8 +122,7 @@ public class EditorServer extends AbstractChannel {
 		}
 
 		element = document.getElementById(service + "-embed");
-		NativeTScreen.consoleLog("save: " + service + "-save");
-		NativeTScreen.consoleLog(saveButton);
+		Browser.consoleLog(saveButton);
 		if (saveButton != null)
 			saveButton.addEventListener("click", this::save);
 		if (closeButton != null)
@@ -152,8 +151,8 @@ public class EditorServer extends AbstractChannel {
 	}
 
 	protected void save(Event e) {
-		NativeTScreen.consoleLog("save: ");
-		NativeTScreen.consoleLog(e);
+		Browser.consoleLog("save: ");
+		Browser.consoleLog(e);
 		if (client.editor != null) {
 			AceSession sess = client.editor.getSession();
 			if (sess == session) {
@@ -165,7 +164,7 @@ public class EditorServer extends AbstractChannel {
 	}
 
 	protected void close(Event e) {
-		NativeTScreen.consoleLog("close: ");
-		NativeTScreen.consoleLog(e);
+		Browser.consoleLog("close: ");
+		Browser.consoleLog(e);
 	}
 }

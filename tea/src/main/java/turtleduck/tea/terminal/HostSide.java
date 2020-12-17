@@ -11,6 +11,7 @@ import turtleduck.comms.Message.*;
 import turtleduck.events.JSKeyCodes;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
+import turtleduck.tea.Browser;
 import turtleduck.tea.NativeTScreen;
 import turtleduck.terminal.PtyHostSide;
 import xtermjs.IDisposable;
@@ -65,7 +66,7 @@ public class HostSide implements PtyHostSide {
 				flags |= KeyEvent.KEY_TYPE_REPEAT;
 
 			if (data != null) {
-				NativeTScreen.consoleLog("KeyHandler.onKey: leftover data: '" + data + "'");
+				Browser.consoleLog("KeyHandler.onKey: leftover data: '" + data + "'");
 			}
 			data = ke.getKey();
 			String jsKey = ev.getKey();
@@ -86,7 +87,7 @@ public class HostSide implements PtyHostSide {
 		onData = terminal.onData((String s) -> {
 			if (data != null) {
 				if (!data.equals(s))
-					NativeTScreen.consoleLog("KeyHandler.onData: mismatch with onKey: '" + data + "' != '" + s + "'");
+					Browser.consoleLog("KeyHandler.onData: mismatch with onKey: '" + data + "' != '" + s + "'");
 				data = null;
 			} else if (inputListener != null) {
 				inputListener.test(s);

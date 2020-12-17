@@ -3,10 +3,6 @@ package turtleduck.server;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 import turtleduck.comms.Message;
 import turtleduck.display.Canvas;
 import turtleduck.display.impl.BaseCanvas;
@@ -22,8 +18,6 @@ import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
 public class ServerLayer extends BaseCanvas<ServerScreen> {
-	private int channel;
-	private String name;
 	private TurtleDuckSession session;
 	private PathWriterImpl pathWriter = new PathWriterImpl();
 

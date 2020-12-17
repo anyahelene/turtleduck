@@ -1,0 +1,556 @@
+@use "sass:color";
+@import 'colors.scss';
+@font-face {
+    font-family: "PressStart2P";
+    src: url("../fonts/PressStart2P.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Glasstown-NBP";
+    src: url("../fonts/Glasstown-NBP.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: "TeenyTinyPixls";
+    src: url("../fonts/TeenyTinyPixls.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+@mixin lores-font {
+	font-family: "PressStart2P", monospace;
+	font-size-adjust: .71428;
+}
+
+@mixin hires-font {
+	font-family: "Glasstown-NBP", sans-serif;
+	font-size-adjust: 0.66;	
+}
+
+
+@mixin tiny-font {
+	font-family: "TeenyTinyPixls", sans-serif;
+	font-size-adjust: 0.66;	
+}
+body {
+	@include lores-font;
+	height: 100vh;
+	margin: 0;
+	border-color: $border;
+}
+
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+$head-height: 3rem;
+$foot-height: 2rem;
+#page {
+	background:#eeeaea;
+	height:100vh;
+	display: grid;
+	grid-gap:1fr;
+	grid-template-columns: 10rem repeat(3, minmax(75px,1fr));
+	grid-template-rows: $head-height calc(60% - #{$head-height}) calc(40% - #{$foot-height}) $foot-height;
+}
+
+header {
+	grid-column: 1/-1; 
+	grid-row: 1/2;
+	@include lores-font;
+}
+
+footer {
+	grid-column: 1/-1;
+	grid-row: -2/-1;
+	@include hires-font;
+}
+
+button {
+	@include lores-font;
+}
+.box {
+	margin: 0.25rem;
+	border: 0.1rem solid;
+	padding:0.25rem;
+	box-sizing: border-box;
+	position: relative;
+	transition: display 2s;
+}
+
+.box > div {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+.explorer {
+	grid-column: 1/2; 
+	grid-row: 2/-2;
+	background: #eeeaea;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-size: medium;
+	margin: 0;
+	font-weight: normal;
+	padding:0;
+}
+.box legend {
+	@include hires-font;
+}
+
+.box .toolbar {
+	position: absolute;
+	top: -1.5rem;
+	right: .5rem;
+	display: flex;
+}
+
+.box .toolbar button {
+	@include tiny-font;
+	border: .1rem solid;
+	line-height: 1.1rem;
+	margin: 0 0.25rem;
+}
+.box h1 .title.saveable.unsaved::after {
+	content: "*";
+}
+
+.box .box-foot {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	color: #0004;
+	width: auto;
+	height: auto;
+}
+.explorer ul {
+	margin: 4px;
+	padding-left: 1rem;
+}
+.explorer li {
+	list-style-type: "□ ";
+}
+.explorer li.closed {
+	list-style-type: "▹ ";
+}
+.explorer li.package {
+	list-style-type: "📦";
+}
+.explorer li.java {
+	list-style-type: "☕";
+}
+.explorer li.opened {
+	list-style-type: "▿ ";
+}
+
+.explorer {
+	@include hires-font;
+} 
+
+.explorer h2 {
+	color: #eeeaea;
+	background-color: black;
+	padding: .25rem;
+	margin: 0 -2px;
+}
+.main-alone #editor.box {
+	grid-column: 2/-1;
+	grid-row: 2/-3;
+
+}
+
+.main-alone #figure0.box {
+	grid-column: -1/-1;
+	grid-row: 2/-3;
+	display:none;
+}
+.main-and-figure #editor.box {
+	grid-column: 2/-3;
+	grid-row: 2/-3;
+}
+
+.main-and-figure #figure0.box {
+	grid-column: -3/-1;
+	grid-row: 2/-3;
+}
+#figure0.box {
+	background: white;
+}
+
+#console {
+	grid-column: 2/-1;
+	grid-row: -3/-2;
+	background: #eeeaea;
+}
+#xtermjs-wrap {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	background: #000;
+	padding: 0.25rem;
+}
+
+#figure0 svg {
+	height: 100%;
+	width: 100%;
+	background: #fff;
+}
+
+header, footer {
+	display: flex;
+	flex-direction: row;
+	justify-content: start;
+	align-items: stretch;
+}
+header {
+	background: $page;
+	color: $pen;
+}
+footer {
+	background:$pen;
+	color: $page;
+}
+
+#error, #status {
+	align-self: stretch;
+	display: none;
+	position: relative;
+	padding: .2rem;
+}
+#error button {
+	padding: 0;
+	margin: 0;
+	border-style: none;
+	background: inherit;
+	color: inherit;
+}
+.active {
+	display: block !important;
+}
+#error.active {
+	border: .2rem solid red;
+	background: red;
+	color: black;
+}
+
+#status.online {
+	color: lime;
+}
+#status.online::before{
+	content: "ONLINE";
+}
+#status.offline {
+	color: orange;
+}
+
+#status.offline::after {
+	content: "OFFLINE";
+}
+#error.active:hover {
+	background: black;
+	color: red;
+}
+
+#error > .popup {
+	position: absolute;
+	right: 3.5rem;
+	bottom: 2.5rem;
+	background: black;
+	color: red;
+	border: 0.2rem solid red;
+	padding: 0.2rem;
+	display: none;
+	font-family: "Glasstown-NBP", sans-serif;
+	font-size-adjust: 0.66;
+	width: max-content;
+}
+
+button {
+	background-color: $button-bg-normal;
+	color: $pen;
+	border:  0px solid $water;
+	text-align: end;
+	@include lores-font;
+	line-height: 100%;
+	padding: 0 .2rem;
+	position: relative;
+	transition: all 0.8s;
+
+}
+
+header button {
+	background-color: $button-bg-header;
+}
+
+button:hover {
+	background-color: $button-bg-hover;
+	color: $pen-sharp;
+}
+button:active, button.active {
+	transition: 0s;
+	background-color: $button-bg-active; 
+}
+header button span {
+	vertical-align: center;
+}
+header button span:empty::after {
+	content: "\00a0";
+}
+header button .long {
+	font-size: x-small;
+}
+header button .icon {
+	float: left;
+	font-size: small;
+}
+header button:hover .icon {
+	color: transparent;
+}
+header button:hover::before {
+	position: absolute;
+	left: 0;
+	content: attr(data-shortcut-text);
+	text-transform: uppercase;
+	margin-left: 0.2rem;
+	color: black;
+	font-size: x-small;
+}
+
+
+header button.disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+#top-left {
+	display: flex;
+	justify-content: start;
+	align-items: stretch;
+	flex-shrink: 0;
+	flex-grow: 0;
+	width: max-content;
+	height: $head-height;
+}
+
+#top-menu {
+	flex-shrink: .5;
+	flex-grow: .5;
+	align-items: last baseline;
+	margin: 0 .5em;
+	grid-template-columns: repeat(10, 1fr);
+	grid-template-rows: [row1] 50% [row2] 50%;
+	justify-content: stretch;
+	align-content: stretch;
+	display: grid;
+	gap: 0.1rem;
+	flex-grow: .5;
+	flex-shrink: 0;
+	font-size: small;
+	padding: 0.25rem;
+}
+
+#top-menu .row1 {
+	grid-row: row1;
+	align-self: stretch;
+}
+#top-menu .row2 {
+	grid-row: row2;
+	align-self: stretch;
+}
+
+#logoimg {
+	height: $head-height;
+}
+
+#logotext {
+	font-size: large;
+	font-weight: 600;
+	padding-top: 0.5rem;
+	padding-right: 0.5rem;
+	background-image: linear-gradient(rgba($water,0) 63%, $water 63%);
+}
+#logotext .version{
+	font-size: 0.5rem;
+	line-height: 0.6rem;
+	display:block;
+	padding: 0 2px;
+}
+nav a:visited, nav a:link, nav a:hover, nav a:active {
+		color: black;
+		text-decoration: none;
+}
+nav a:hover {
+	text-shadow: 0 0 3px #888;
+}
+nav ul {
+	padding: 0px;
+	margin: 0 4px;
+	list-style-type: none;
+}
+
+nav li {
+	display: inline-block;
+}
+
+#middle-column {
+	flex: 1 1 auto;
+	display: flex;
+	flex-flow: column;
+} 
+#middle-row {
+	flex: 2 1 auto;
+	display: flex;
+	flex-flow: row;
+} 
+#middle-bottom {
+	flex: 1 1 auto;
+	display: flex;
+	flex-flow: row;
+}
+
+
+#editor {
+	display:flex;
+	flex-direction: column;
+}
+
+
+#editor-wrap {
+	position: relative;
+	flex-shrink: 0;
+	flex-grow: 2;
+}
+#editor-embed {
+	margin: 0 -2px -2px -2px;
+	border: none;
+	position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+}
+#jvm {
+	flex-direction: row;
+	display: flex;
+	width: 100%;
+	height: 100%;
+}
+#jvm h2 {
+	padding: 2px;
+	border-bottom: 1px solid grey;
+	font-size: large;
+	font-weight: normal;
+	color: grey;
+	align-self: flex-start;
+}
+.selected {
+	background-color: #ff8;
+	width: 100%;
+	display:inline-block;
+	position: relative;
+}
+.selected::after {
+	content: "⯇";
+	right: 0;
+	margin-right: 1rem;
+	position: absolute;
+}
+.selected::before {
+	content: "⯈";
+	left: 0;
+	margin-left: 1rem;
+	position: absolute;
+}
+.stackframes {
+	display:flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+.stackframe {
+	list-style: none;
+	text-align: center;
+	border-bottom: 1px solid black;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+	display:inline-block;
+	padding: 0px;
+	flex-shrink: 3;
+}
+.stackframe-args {
+	background-color: #ffe;
+}
+.stackframe-locals {
+	background-color: #fef;
+}
+.stackframe-internal {
+	background-color: #eff;
+}
+
+/*
+.stackframe li {
+	border-bottom: 1px solid grey;
+}
+*/
+#stack {
+	width: 12rem;
+	height: 100%;
+	background-color: #eee;
+	position:relative;
+}
+
+#heap {
+	width: 40rem;
+	height: 100%;
+	background-color: #eef;
+}
+
+#program {
+	width: 20rem;
+	height: 100%;
+	background-color: #efe;
+}
+
+#instructions {
+	width: 20rem;
+	height: 100%;
+	background-color: #fee;
+	overflow: auto;
+}
+
+#instructions pre {
+	font-family: monospace;
+	white-space: pre;
+}
+instructions {
+	display: table;
+	width: 100%;
+}
+instruction {
+	display: table-row;
+	font-family: monospace;
+}
+
+instruction.line-even {
+	background-color: #eef;
+}
+
+linenum, label, mnemonic, args, nolabel {
+	display: table-cell;
+	padding: 0px 4px;
+}
+
+linenum {
+	font-size: small;
+	color: grey;
+}
+
+label::after {
+	content: ":";
+}
+
+method h6 {
+	font-size: normal;
+	font-weight: medium;
+	font-style: italic;
+}
+@import '~xterm/css/xterm.css';

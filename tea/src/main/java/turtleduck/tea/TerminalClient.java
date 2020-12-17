@@ -2,6 +2,8 @@ package turtleduck.tea;
 
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.dom.css.CSSStyleDeclaration;
+import org.teavm.jso.dom.events.Event;
+import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.HTMLElement;
 
 import turtleduck.comms.AbstractChannel;
@@ -23,7 +25,7 @@ public class TerminalClient extends AbstractChannel {
 	private KeyHandler keyHandler;
 	private final Readline readline;
 	private HostSide hostSide;
-
+	private EventListener<Event> onresize;
 	public TerminalClient(HTMLElement element, String service) {
 		super(element.getAttribute("id"), service, null);
 		this.readline = new Readline();
@@ -33,7 +35,7 @@ public class TerminalClient extends AbstractChannel {
 	@Override
 	public void receive(Message obj) {
 		if (obj.type().equals("Data")) {
-			NativeTScreen.consoleLog("«" + Strings.escape(((Message.StringDataMessage) obj).data()) + "»");
+			Browser.consoleLog("«" + Strings.escape(((Message.StringDataMessage) obj).data()) + "»");
 			terminal.write(((Message.StringDataMessage) obj).data());
 		}
 	}
@@ -57,6 +59,7 @@ public class TerminalClient extends AbstractChannel {
 	@Override
 	public void initialize() {
 		theme = ITheme.createBrightVGA();
+		theme.setCursor("#f00");
 		CSSStyleDeclaration style = element.getStyle();
 		style.setProperty("position", "relative");
 	
@@ -70,6 +73,10 @@ public class TerminalClient extends AbstractChannel {
 
 		ITerminalOptions opts = ITerminalOptions.create();
 		opts.setTheme(theme);
+		opts.setFontFamily("PressStart2P");
+		opts.setCursorBlink(true);
+//		opts.setFontSize(16);
+		Browser.consoleLog(opts.getFontFamily());
 
 		terminal = Terminal.create(opts);
 		terminal.open(embedNode);
@@ -81,13 +88,16 @@ public class TerminalClient extends AbstractChannel {
 		FitAddon fitAddon = FitAddon.create();
 		terminal.loadAddon(fitAddon);
 		fitAddon.fit();
-		element.addEventListener("onresize", (e) -> fitAddon.fit());
-		Client.WINDOW_MAP.set(name + "-terminal", terminal);
+		onresize = (e) -> { fitAddon.fit();};
+		Window.current().addEventListener("resize", onresize);
+		Client.WINDOW_MAP.set(name.replace('-', '_') + "_terminal", terminal);
+		Client.WINDOW_MAP.set(name.replace('-', '_') + "_fitAddon", fitAddon);
+		Client.WINDOW_MAP.set(name.replace('-', '_') + "_onresize", onresize);
 	}
 
 	@Override
 	public void opened(int id, EndPoint endPoint) {
-		NativeTScreen.consoleLog("TermialClient: opened £" + id);
+		Browser.consoleLog("TermialClient: opened £" + id);
 		super.opened(id, endPoint);
 		if (hostSide == null)
 			keyHandler = new KeyHandler(terminal, this);

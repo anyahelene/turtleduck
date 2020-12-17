@@ -24,7 +24,8 @@ import turtleduck.text.TextWindow;
 import xtermjs.Terminal;
 
 public class NativeTScreen extends BaseScreen {
-	
+	private HTMLElement mainElement;
+
 
 	public static NativeTScreen create(int config) {
 		Dimensions dim = computeDimensions(NativeTDisplayInfo.INSTANCE, config);
@@ -32,29 +33,11 @@ public class NativeTScreen extends BaseScreen {
 		return new NativeTScreen(dim);
 	}
 
-	private Window window;
-	private HTMLDocument document;
-	private HTMLElement mainElement;
-    @JSBody(params = { "window" }, script = "return window.terminal;")
-    protected static native Terminal getTerminal(Window window);
 
-    @JSBody(params = { "message" }, script = "console.log(message)")
-    protected static native void consoleLog(JSObject message);
-
-    @JSBody(params = { "message" }, script = "console.log(message)")
-	public static native void consoleLog(String string);
-    @JSBody(params = { "message" }, script = "console.log(message)")
-	public static native void consoleLog(Object message);
-
-    protected Terminal getTerminal() {
-    	return getTerminal(window);
-    }
-    
     public NativeTScreen(Dimensions dim) {
 		this.dim = dim;
-		window = Window.current();
-		document = window.getDocument();
-		mainElement = document.getElementById("screen0");
+
+		mainElement = Browser.document.getElementById("screen0");
 		int height = (int) Math.floor(dim.winHeight);
 		this.dim = dim;
 		setupAspects(dim);
@@ -73,7 +56,7 @@ public class NativeTScreen extends BaseScreen {
 
 	@Override
 	public Canvas createCanvas() {
-		HTMLCanvasElement canvas = (HTMLCanvasElement) document.createElement("canvas");
+		HTMLCanvasElement canvas = (HTMLCanvasElement) Browser.document.createElement("canvas");
 		String layerId = newLayerId();
 		canvas.setAttribute("id", layerId);
 //		canvas.setAttribute("width", "1280");

@@ -49,12 +49,42 @@
 	</dependencies>
 
 	<build>
-		<resources>
-			<resource>
-				<directory>src/main/webapp</directory>
-			</resource>
-		</resources>
 		<plugins>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/classes/webroot</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/webroot</directory>
+									<includes>
+										<include>index.html</include>
+									</includes>
+									<filtering>true</filtering>
+								</resource>
+								<resource>
+									<directory>src/main/webroot</directory>
+									<excludes>
+										<exclude>index.html</exclude>
+										<exclude>*.js</exclude>
+										<exclude>*.scss</exclude>
+									</excludes>
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<!-- Configure Java compiler to use Java 8 syntax -->
 			<!-- plugin> <artifactId>maven-compiler-plugin</artifactId> <version>3.1</version> 
 				<configuration> <source>${java.version}</source> <target>${java.version}</target> 
@@ -87,10 +117,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<!-- executions> <execution> <goals> <goal>exec</goal> </goals> </execution> 
-					</executions -->
 				<configuration>
-					<!-- executable>java</executable -->
 					<executableDependency>
 						<groupId>org.teavm</groupId>
 						<artifactId>teavm-cli</artifactId>
@@ -120,8 +147,6 @@
 						<version>${teavm.version}</version>
 						<type>jar</type>
 					</dependency>
-					<!-- dependency> <groupId>org.slf4j</groupId> <artifactId>slf4j-api</artifactId> 
-						<version>1.7.7</version> <type>jar</type> </dependency -->
 				</dependencies>
 			</plugin>
 		</plugins>

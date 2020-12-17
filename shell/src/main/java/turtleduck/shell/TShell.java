@@ -109,8 +109,15 @@ public class TShell {
 			}
 		}, null);
 //		builder.fileManager(fm -> new FileManager(fm));
-		builder.compilerOptions("-g", "--module-path", System.getProperty("jdk.module.path", ""), "--add-modules",
-				"turtleduck.shell");
+		if (getClass().getModule().isNamed()) {
+			builder.compilerOptions("-g", "--module-path", System.getProperty("jdk.module.path", ""), "--add-modules",
+					getClass().getModule().getName());
+			System.out.println("module: " + getClass().getModule().getName());
+		} else {
+			builder.compilerOptions("-g", "--module-path", System.getProperty("jdk.module.path", ""));
+			System.out.println("no module");
+		}
+		System.out.println("builder: " + builder);
 		builder.idGenerator((sn, i) -> currentNS + i);
 		shell = builder.build();
 		sca = shell.sourceCodeAnalysis();
@@ -289,7 +296,8 @@ public class TShell {
 			case METHOD:
 				heading = "Defined " + ((MethodSnippet) snip).name();
 				if (reporter != null) {
-					String meths = shell.methods().map(s -> String.format("%s(%s)", s.name(), s.parameterTypes())).collect(Collectors.joining("<li>"));
+					String meths = shell.methods().map(s -> String.format("%s(%s)", s.name(), s.parameterTypes()))
+							.collect(Collectors.joining("<li>"));
 					Map<String, String> data = new HashMap<>();
 					data.put("kind", "methods");
 					data.put("text", meths);
@@ -312,7 +320,7 @@ public class TShell {
 					Message msg = Message.createDictData(0, data);
 					reporter.accept(msg);
 				}
-			break;
+				break;
 			case VAR:
 				heading = ((VarSnippet) snip).name() + " = ";
 				if (reporter != null) {

@@ -4,47 +4,36 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
-import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
-import org.teavm.jso.core.JSString;
-
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.core.JSNumber;
 import org.teavm.jso.core.JSObjects;
+import org.teavm.jso.core.JSString;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.MessageEvent;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.dom.xml.Element;
-import org.teavm.jso.dom.xml.Node;
 import org.teavm.jso.dom.xml.NodeList;
 import org.teavm.jso.json.JSON;
 import org.teavm.jso.websocket.CloseEvent;
 
-import ace.Ace;
 import ace.AceEditor;
-import turtleduck.colors.Colors;
 import turtleduck.comms.Channel;
 import turtleduck.comms.EndPoint;
 import turtleduck.comms.Message;
-import turtleduck.comms.MessageData;
 import turtleduck.comms.Message.ConnectMessage;
 import turtleduck.comms.Message.OpenMessage;
 import turtleduck.comms.Message.StringDataMessage;
-import turtleduck.display.Canvas;
-import turtleduck.display.Screen;
-import turtleduck.events.KeyEvent;
+import turtleduck.comms.MessageData;
+import org.teavm.jso.browser.Location;
 import turtleduck.tea.net.SockJS;
-import turtleduck.terminal.PtyHostSide;
 import turtleduck.text.TextWindow;
-import turtleduck.turtle.Turtle;
 import xtermjs.Terminal;
+import static turtleduck.tea.Browser.trying;
 
 public class Client implements EndPoint, JSClient {
 
@@ -61,7 +50,7 @@ public class Client implements EndPoint, JSClient {
 	private int nextChannelId = 2;
 
 	public void initialize() {
-		HTMLDocument document = Window.current().getDocument();
+		try {
 //		Screen screen = NativeTDisplayInfo.INSTANCE.startPaintScene(null, 0);
 //		Canvas canvas = screen.createCanvas();
 //		TurtleDuck turtle = canvas.createTurtleDuck();
@@ -70,68 +59,73 @@ public class Client implements EndPoint, JSClient {
 //		turtle.drawTo(300, 100);
 //		turtle.done();
 
-		TextWindow window = new NativeTTextWindow(terminal);
-		JSMapLike<JSObject> widgets = JSObjects.create().cast();
-		int idCounter = 0;
-		NodeList<? extends HTMLElement> nodes = document.querySelectorAll(".widget");
-		for (int i = 0; i < nodes.getLength(); i++) {
-			HTMLElement elt = nodes.item(i);
-			String id = elt.getAttribute("id");
-			String provides = elt.getAttribute("data-provides");
-			String requires = elt.getAttribute("data-requires");
-			String widget = elt.getAttribute("data-widget");
+			TextWindow window = new NativeTTextWindow(terminal);
+			JSMapLike<JSObject> widgets = JSObjects.create().cast();
+			int idCounter = 0;
+			NodeList<? extends HTMLElement> nodes = Browser.document.querySelectorAll(".widget");
+			for (int i = 0; i < nodes.getLength(); i++) {
+				HTMLElement elt = nodes.item(i);
+				String id = elt.getAttribute("id");
+				String provides = elt.getAttribute("data-provides");
+				String requires = elt.getAttribute("data-requires");
+				String widget = elt.getAttribute("data-widget");
 
-			if ((provides == null && requires == null) || widget == "null") {
-				NativeTScreen.consoleLog("Missing required attribute id, requires/provides or widget:");
-				NativeTScreen.consoleLog(elt);
-				continue;
-			}
-			if (id == null) {
-				id = "__" + widget + "_" + idCounter++;
-				elt.setAttribute("id", id);
-			}
-			NativeTScreen.consoleLog(
-					"Setting up " + widget + " for #" + id + " requires " + requires + " provides " + provides);
-			Service srv = new Service();
-			srv.element = elt;
-			srv.widget = widget;
-			switch (widget) {
-			case "xtermjs":
-				TerminalClient tc = new TerminalClient(elt, "jshell");
-				tc.initialize();
-				srv.channel = tc;
-				srv.onOpen = (s) -> {
-					tc.write("CONNECT " + socket.transport() + " " + s + "\r\n");
-				};
-				srv.onClose = (s) -> {
-					tc.write("NO CARRIER " + s + "\r\n");
-				};
-				requiredServices.add(srv);
-				break;
-			case "editor":
-				HTMLElement tabs = document.getElementById("editor-tabs");
-				HTMLElement wrapper = document.getElementById("editor-wrap");
-				EditorServer es = new EditorServer(elt, wrapper, tabs, widget, this);
-				es.initialize();
-				providedServices.add(srv);
-				break;
-			default:
-				NativeTScreen.consoleLog("Unknown widget: " + widget);
-				NativeTScreen.consoleLog(elt);
+				if ((provides == null && requires == null) || widget == "null") {
+					Browser.consoleLog("Missing required attribute id, requires/provides or widget:");
+					Browser.consoleLog(elt);
+					continue;
+				}
+				if (id == null) {
+					id = "__" + widget + "_" + idCounter++;
+					elt.setAttribute("id", id);
+				}
+				Browser.consoleLog(
+						"Setting up " + widget + " for #" + id + " requires " + requires + " provides " + provides);
+				Service srv = new Service();
+				srv.element = elt;
+				srv.widget = widget;
+				switch (widget) {
+				case "xtermjs":
+					TerminalClient tc = new TerminalClient(elt, "jshell");
+					tc.initialize();
+					srv.channel = tc;
+					srv.onOpen = (s) -> {
+						tc.write("CONNECT " + socket.transport() + " " + s + "\r\n");
+					};
+					srv.onClose = (s) -> {
+						tc.write("NO CARRIER " + s + "\r\n");
+					};
+					requiredServices.add(srv);
+					break;
+				case "editor":
+					HTMLElement tabs = Browser.document.getElementById("editor-tabs");
+					HTMLElement wrapper = Browser.document.getElementById("editor-wrap");
+					EditorServer es = new EditorServer(elt, wrapper, tabs, widget, this);
+					es.initialize();
+					srv.channel = es;
+					providedServices.add(srv);
+					break;
+				default:
+					Browser.consoleLog("Unknown widget: " + widget);
+					Browser.consoleLog(elt);
 
+				}
 			}
-		}
 
-		socket = SockJS.create("/terminal");
-		socket.onOpen(this::connect);
-		socket.onClose(this::disconnect);
-		socket.onMessage(this::receive);
-		map.set("socket", socket);
-		map.set("client", this);
+			socket = SockJS.create("socket");
+			socket.onOpen(trying(this::connect));
+			socket.onClose(trying(this::disconnect));
+			socket.onMessage(trying(this::receive));
+			map.set("socket", socket);
+			map.set("client", this);
 //		terminal.onData((d) -> {sockJS.send(d);});
-		WINDOW_MAP.set("turtleduck", map);
+			WINDOW_MAP.set("turtleduck", map);
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
+		} catch (Throwable ex) {
+			Browser.addError(ex);
+			throw ex;
+		}
 	}
 
 	public static void main(String[] args) {
@@ -141,23 +135,31 @@ public class Client implements EndPoint, JSClient {
 		client.initialize();
 	}
 
-	public void connect(Event ev) {
-		NativeTScreen.consoleLog("Connect: " + ev.getType());
+	protected void connect(Event ev) {
+		Browser.consoleLog("Connect: " + ev.getType());
+		HTMLElement status = Browser.document.getElementById("status");
+		if (status != null) {
+			status.setClassName("active online");
+		}
 
 	}
 
-	public void disconnect(CloseEvent ev) {
-		NativeTScreen.consoleLog("Disconnect: " + ev.getReason());
+	protected void disconnect(CloseEvent ev) {
+		Browser.consoleLog("Disconnect: " + ev.getReason());
+		HTMLElement status = Browser.document.getElementById("status");
+		if (status != null) {
+			status.setClassName("active offline");
+		}
 	}
 
-	public void receive(MessageEvent ev) {
-		NativeTScreen.consoleLog("Receive: " + ev.getType());
+	protected void receive(MessageEvent ev) {
+		Browser.consoleLog("Receive: " + ev.getType());
 		JSObject data = JSON.parse(ev.getDataAsString());
-		NativeTScreen.consoleLog(data);
+		Browser.consoleLog(data);
 		MessageRepr repr = new MessageRepr(ev.getDataAsString());
-		NativeTScreen.consoleLog(repr.toJson());
+		Browser.consoleLog(repr.toJson());
 		Message msg = Message.create(repr);
-		NativeTScreen.consoleLog("message £" + msg.channel() + ", type " + msg.type());
+		Browser.consoleLog("message £" + msg.channel() + ", type " + msg.type());
 		receive(msg);
 	}
 
@@ -212,16 +214,16 @@ public class Client implements EndPoint, JSClient {
 				omsg = (OpenMessage) msg;
 				int newch = omsg.chNum();
 				tag = omsg.name() + ":" + omsg.service();
-				NativeTScreen.consoleLog("Opened: " + tag);
+				Browser.consoleLog("Opened: " + tag);
 				channel = channelsByName.get(tag);
 				if (newch != 0) {
 					if (channel != null) {
-						NativeTScreen.consoleLog("Channel: " + channel.hashCode());
+						Browser.consoleLog("Channel: " + channel.hashCode());
 						channelsById.put(newch, channel);
 						channel.opened(newch, this);
 					} else {
 						for (Service srv : requiredServices) {
-							NativeTScreen.consoleLog("Checking: " + srv.widget + ": " + srv.channel.service() + " "
+							Browser.consoleLog("Checking: " + srv.widget + ": " + srv.channel.service() + " "
 									+ srv.channel.channelId());
 							if (srv.channel.channelId() == 0 && srv.channel.service().equals(omsg.service())) {
 								channel = srv.channel;
@@ -233,18 +235,18 @@ public class Client implements EndPoint, JSClient {
 						}
 					}
 					// reject
-					NativeTScreen.consoleLog("Opened Error: not found, rejecting: " + msg.toJson());
+					Browser.consoleLog("Opened Error: not found, rejecting: " + msg.toJson());
 					socket.send(Message.createClosed(omsg.chNum(), omsg.name(), omsg.service()).toJson());
 				} else {
-					NativeTScreen.consoleLog("Opened Error: chNum == 0: " + msg.toJson());
+					Browser.consoleLog("Opened Error: chNum == 0: " + msg.toJson());
 				}
 				break;
 			case "Closed":
 				omsg = (OpenMessage) msg;
 				newch = omsg.chNum();
-				NativeTScreen.consoleLog("Closed: " + newch);
+				Browser.consoleLog("Closed: " + newch);
 				channel = channelsById.remove(newch);
-				NativeTScreen.consoleLog("Channel: " + channel.hashCode());
+				Browser.consoleLog("Channel: " + channel.hashCode());
 				if (newch != 0 && channel != null) {
 					channelsByName.remove(channel.name() + ":" + channel.service());
 					channel.closed("channel closed");
@@ -268,23 +270,23 @@ public class Client implements EndPoint, JSClient {
 				break;
 			case "Connect":
 				Message.ConnectMessage cmsg = (ConnectMessage) msg;
-				NativeTScreen.consoleLog(cmsg.toJson());
-				NativeTScreen.consoleLog(cmsg.opened().toString());
+				Browser.consoleLog(cmsg.toJson());
+				Browser.consoleLog(cmsg.opened().toString());
 				for (OpenMessage o : cmsg.opened())
 					receive(o);
 				for (Service srv : requiredServices) {
 					if (srv.channel.channelId() == 0) {
-						NativeTScreen.consoleLog("Opening required service " + srv.widget);
+						Browser.consoleLog("Opening required service " + srv.widget);
 						open(srv.channel);
 					} else {
-						NativeTScreen.consoleLog("Required service " + srv.widget + " already open");
+						Browser.consoleLog("Required service " + srv.widget + " already open");
 					}
 				}
 				break;
 			}
 		} else {
 			Channel channel = channelsById.get(ch);
-			NativeTScreen.consoleLog("Channel: " + channel.hashCode());
+			Browser.consoleLog("Channel: " + channel.hashCode());
 			if (channel != null) {
 				channel.receive(msg);
 			} else { // ignore

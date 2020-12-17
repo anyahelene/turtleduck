@@ -1,0 +1,11 @@
+$water: #66e;
+$page: #ccd;
+$pen: #222;
+$pen-sharp: #000;
+$sun: color.adjust($page, $hue: 180);
+$button-bg-header: color.scale($page, $lightness: -20%);
+$button-bg-normal: color.scale($sun, $lightness: -20%);
+$button-bg-hover: color.scale($sun, $lightness: +10%);
+$button-bg-active:  color.scale($sun, $lightness: -40%);
+$border-active: $pen-sharp;
+$border: $pen;

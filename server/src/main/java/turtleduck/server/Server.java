@@ -1,13 +1,18 @@
 package turtleduck.server;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import io.vertx.core.AbstractVerticle;
@@ -19,7 +24,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.Cookie;
 import io.vertx.core.http.CookieSameSite;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
@@ -27,21 +31,19 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.Session;
-import io.vertx.ext.web.handler.AuthHandler;
 import io.vertx.ext.web.handler.AuthenticationHandler;
 import io.vertx.ext.web.handler.BasicAuthHandler;
+import io.vertx.ext.web.handler.CSRFHandler;
 import io.vertx.ext.web.handler.LoggerHandler;
 import io.vertx.ext.web.handler.OAuth2AuthHandler;
+import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
-import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
-import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.ext.auth.User;
@@ -49,14 +51,12 @@ import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2Options;
 
 import io.vertx.ext.auth.oauth2.providers.OpenIDConnectAuth;
-import io.vertx.ext.bridge.PermittedOptions;
 import turtleduck.comms.MessageData;
+
 import turtleduck.shell.TShell;
 import turtleduck.terminal.PseudoTerminal;
 import turtleduck.terminal.Readline;
 import turtleduck.util.Strings;
-import com.julienviet.childprocess.Process;
-import com.julienviet.childprocess.ProcessOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,16 +75,18 @@ public class Server extends AbstractVerticle {
 	private LoggerHandler loggerHandler;
 	private OAuth2Auth oAuth2Provider;
 	private AuthenticationHandler authHandler;
+	protected Buffer indexHtml;
+	protected String xAccelRedirect = null;
 
 	/**
 	 * The port clients should send requests to
 	 */
-	private int externalPort = 9090;
+	private int externalPort = -1;
 	/**
 	 * The host address clients should send requests to
 	 */
 	private String externalAddress = "localhost";
-	private boolean externalSsl = !externalAddress.equals("localhost");
+	private String externalScheme = "https";
 	/**
 	 * The port we should bind to
 	 */
@@ -93,7 +95,6 @@ public class Server extends AbstractVerticle {
 	 * The host address we should bind to
 	 */
 	private String bindAddress = "localhost";
-	private boolean bindSsl = !bindAddress.equals("localhost");
 
 	public static void main(String[] args) {
 		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "info");
@@ -119,8 +120,7 @@ public class Server extends AbstractVerticle {
 
 	public URI externalUri(String path) {
 		try {
-			return new URI(externalSsl ? "https" : "http", null, externalAddress, externalPort, pathPrefix + path, null,
-					null);
+			return new URI(externalScheme, null, externalAddress, externalPort, pathPrefix + path, null, null);
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
@@ -139,14 +139,64 @@ public class Server extends AbstractVerticle {
 
 		logger.info("config: " + this.config());
 
-		String root = System.getenv("SERVER_ROOT");
-		if (root == null)
-			root = "/srv/turtleduck/public";
-		serverRoot = Stream.of(root.split(File.pathSeparator)).map((p) -> Path.of(p)).toArray(n -> new Path[n]);
-
+		String ext = System.getenv("EXTERNAL_URL");
+		if (ext != null) {
+			Pattern pat = Pattern.compile("([a-z]+)://([^/:]+)(?::([0-9]+))?(?:/(.*[^/]))?/?");
+			Matcher matcher = pat.matcher(ext.trim());
+			if (!matcher.matches()) {
+				throw new IllegalArgumentException("URL syntax error: " + ext);
+			}
+			String scheme = matcher.group(1);
+			String host = matcher.group(2);
+			String port = matcher.group(3);
+			String path = matcher.group(4);
+			if (scheme != null)
+				externalScheme = scheme;
+			if (host != null)
+				externalAddress = host;
+			if (port != null)
+				externalPort = Integer.parseInt(port);
+			if (path != null)
+				pathPrefix = "/" + path;
+		}
+		String xAccel = System.getenv("X_ACCEL_REDIRECT");
+		if (xAccel != null) {
+			if (xAccel.isEmpty())
+				xAccelRedirect = "/_webroot/";
+			else
+				xAccelRedirect = xAccel.trim();
+			if (!xAccelRedirect.startsWith("/"))
+				xAccelRedirect = "/" + xAccelRedirect;
+			if (!xAccelRedirect.endsWith("/"))
+				xAccelRedirect = xAccelRedirect + "/";
+		}
+		String port = System.getenv("BIND_PORT");
+		if (port != null)
+			bindPort = Integer.parseInt(port);
+		String addr = System.getenv("BIND_ADDRESS");
+		if (addr != null)
+			bindAddress = addr.trim();
+		if (xAccelRedirect == null) {
+			String root = System.getenv("SERVER_ROOT");
+			if (root == null)
+				root = "/srv/turtleduck/webroot";
+			serverRoot = Stream.of(root.trim().split(File.pathSeparator)).filter(p -> p.length() > 0)
+					.map(p -> Path.of(p)).toArray(n -> new Path[n]);
+			ArrayList<Path> pathList = new ArrayList<>(Arrays.asList(serverRoot));
+			pathList.add(Path.of("webroot"));
+			loadFile("index.html", pathList, res -> {
+				if (res.succeeded()) {
+					indexHtml = res.result();
+				} else {
+					logger.error("can't load index.html", res.cause());
+					vertx.close();
+				}
+			});
+		}
 		String prefix = System.getenv("PATH_PREFIX");
 		if (prefix != null)
-			pathPrefix = prefix;
+			pathPrefix = prefix.trim();
+
 		if (System.getenv("USE_BASIC_AUTH") != null) {
 			// JsonObject authInfo = new JsonObject().put("username",
 			// "anya").put("password", "panya");
@@ -156,9 +206,9 @@ public class Server extends AbstractVerticle {
 			});
 			startWebServer(startPromise, (r) -> basicAuthHandler);
 		} else {
-			OAuth2Options oauth2opts = new OAuth2Options().setClientID(System.getenv("OAUTH_CLIENTID")) //
-					.setClientSecret(System.getenv("OAUTH_SECRET")) //
-					.setSite(System.getenv("OAUTH_SITE")) //
+			OAuth2Options oauth2opts = new OAuth2Options().setClientID(System.getenv("OAUTH_CLIENTID").trim()) //
+					.setClientSecret(System.getenv("OAUTH_SECRET").trim()) //
+					.setSite(System.getenv("OAUTH_SITE").trim()) //
 //				.setTokenPath("/oauth/token") //
 //				.setAuthorizationPath("/oauth/authorize") //
 //				.setFlow(OAuth2FlowType.AUTH_CODE)
@@ -186,10 +236,25 @@ public class Server extends AbstractVerticle {
 							})).withScope("openid email"));
 				} else {
 					logger.error("Failed to initialize OpenID Connect", oidcRes.cause());
-					vertx.close();
+					startPromise.fail(oidcRes.cause());
 				}
 			});
 		}
+	}
+
+	private void loadFile(String fileName, List<Path> pathList, Handler<AsyncResult<Buffer>> handler) {
+		if (pathList.isEmpty()) {
+			handler.handle(Future.failedFuture("file not found: " + fileName));
+		}
+		Path path = pathList.remove(0);
+		logger.info("trying " + path.resolve(fileName).toString() + "...");
+		vertx.fileSystem().readFile(path.resolve(fileName).toString(), res -> {
+			if (res.succeeded() || pathList.isEmpty())
+				handler.handle(res);
+			else
+				loadFile(fileName, pathList, handler);
+		});
+
 	}
 
 	private void startWebServer(Promise<Void> startPromise, Function<Router, AuthenticationHandler> auth) {
@@ -259,12 +324,48 @@ public class Server extends AbstractVerticle {
 			});
 		});
 
-		Route statics = router.route(pathPrefix + "/").method(HttpMethod.GET);// .order(2000);
-		if (serverRoot.length > 0) {
-			for (Path p : serverRoot)
-				statics.handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(p.toString()));
+		ResponseContentTypeHandler typeHandler = ResponseContentTypeHandler.create();
+		if (xAccelRedirect != null) {
+			router.routeWithRegex(pathPrefix + "/static/(?<path>(\\w\\.?|\\/)+)").method(HttpMethod.GET)
+					.handler(ctx -> {
+						String path = ctx.pathParam("path");
+						if (path != null && !path.contains("..")) {
+							try {
+								String typeFromName = Files.probeContentType(Path.of(path));
+								if (typeFromName != null)
+									ctx.response().putHeader("Content-Type", typeFromName);
+								else
+									logger.error("unable to guess content type for " + path);
+							} catch (IOException e) {
+								logger.error("unable to guess content type for " + path, e);
+
+							}
+							ctx.response().putHeader("X-Accel-Redirect", xAccelRedirect + path).end();
+						} else {
+							ctx.fail(404);
+						}
+					});
+			router.route(pathPrefix + "/").method(HttpMethod.GET).handler(ctx -> {
+				ctx.response().putHeader("Content-Type", "text/html")
+						.putHeader("X-Accel-Redirect", xAccelRedirect + "index.html").end();
+			});
 		} else {
-			statics.handler(StaticHandler.create());
+			Route root = router.route(pathPrefix + "/").method(HttpMethod.GET).handler(typeHandler).handler(//
+					ctx -> {
+						ctx.reroute(pathPrefix + "/static/index.html");
+					});
+			Route statics = router.route(pathPrefix + "/static/*").method(HttpMethod.GET);
+			if (serverRoot.length > 0) {
+				for (Path p : serverRoot) {
+					logger.info("Adding web root " + p);
+					statics.handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(p.toString()));
+				}
+			} else {
+				logger.info("Adding web root /webroot");
+				statics.handler(StaticHandler.create());// .setAllowRootFileSystemAccess(true).setWebRoot("/webroot"));
+				System.out.println(statics);
+			}
+			statics.handler(typeHandler);
 		}
 		server.requestHandler(router);
 
@@ -317,34 +418,6 @@ public class Server extends AbstractVerticle {
 			return "text/css";
 		else
 			return "text/plain";
-	}
-
-	public void spawn(SockJSSocket sockjs) {
-		ProcessOptions popts = new ProcessOptions();
-		popts.getEnv().put("TERM", "xterm-256color");
-
-		Process process = Process.create(vertx, "/usr/bin/ipython", List.of("-i"), popts);
-		process.stderr().handler((buf) -> {
-			System.out.println("stderr: " + buf);
-			sockjs.write(buf);
-		});
-		process.stdout().handler((buf) -> {
-			System.out.println("stdout: " + buf);
-			sockjs.write(buf);
-		});
-//	sockjs.pipeTo(process.stdin());	
-		process.exitHandler((result) -> {
-			sockjs.close();
-		});
-		process.stdin().write(Buffer.buffer("print('hello')\n"));
-		process.start();
-		sockjs.handler((buf) -> {
-			System.out.println("stdin: " + buf);
-			if (buf.getByte(0) == 4) {
-				process.stdin().close();
-			} else
-				process.stdin().write(buf);
-		});
 	}
 
 	public void stop() {
