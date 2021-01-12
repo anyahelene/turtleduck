@@ -10,6 +10,7 @@
 	<properties>
 		<main.verticle>turtleduck.server.Server</main.verticle>
 		<vertx.version>4.0.0.CR1</vertx.version>
+		<jackson.version>2.12.0</jackson.version>
 	</properties>
 	<artifactId>turtleduck-server</artifactId>
 	<packaging>jar</packaging>
@@ -51,6 +52,21 @@
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-auth-oauth2</artifactId>
 			<version>${vertx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
 	</dependencies>
 

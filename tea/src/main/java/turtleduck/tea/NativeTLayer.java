@@ -16,6 +16,7 @@ import turtleduck.tea.net.SockJS;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
+import turtleduck.turtle.PathStroke;
 import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
@@ -123,7 +124,7 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 
 	public void render(boolean frontToBack) {
 		if(pathWriter.hasNextStroke()) {
-			PathWriter.PathStroke stroke;
+			PathStroke stroke;
 			while((stroke = pathWriter.nextStroke()) != null) {
 				List<PathPoint> points = stroke.points();
 				PathPoint from = points.get(0);

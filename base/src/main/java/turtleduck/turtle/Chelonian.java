@@ -204,4 +204,12 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, 
 	void beginPath();
 
 	Path endPath();
+
+	T turn(Direction dir);
+	T turnTo(Direction dir);
+
+	<U> T annotate(Annotation<U> anno, U value);
+
+	<U> U annotation(Annotation<U> anno);
+
 }

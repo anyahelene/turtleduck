@@ -7,8 +7,8 @@ import org.joml.Quaternionf;
 import turtleduck.geometry.impl.OrientImpl;
 
 public interface Orientation extends Direction {
-	static final Orientation DUE_NORTH = absoluteAz(90), DUE_EAST = absoluteAz(180), DUE_SOUTH = absoluteAz(270),
-			DUE_WEST = absoluteAz(0), DUE_UP = absoluteAlt(90), DUE_DOWN = absoluteAlt(-90);
+	static final Orientation DUE_NORTH = absoluteAz(90), DUE_EAST = absoluteAz(0), DUE_SOUTH = absoluteAz(270),
+			DUE_WEST = absoluteAz(180), DUE_UP = absoluteAlt(90), DUE_DOWN = absoluteAlt(-90);
 	static final Orientation FORWARD = relativeAz(0), RIGHT = relativeAz(-90), BACK = relativeAz(180),
 			LEFT = relativeAz(90), UP = relativeAlt(90), DOWN = relativeAlt(-90);
 

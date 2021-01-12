@@ -156,6 +156,8 @@ public interface Point extends PositionVector {
 		return point(position.x,position.y,position.z);
 	}
 
-
+	static Point point(Vector3f position) {
+		return point(position.x,position.y,position.z);
+	}
 
 }

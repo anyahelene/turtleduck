@@ -19,6 +19,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 		current = new PathPointImpl();
 		current.point = p;
 		current.bearing = b;
+		current.incoming = b;
 		current.type = Path.PointType.POINT;
 	}
 
@@ -39,6 +40,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 	public T go(PositionVector off, RelativeTo rel) {
 		PathPointImpl pp = current.copy();
 		pp.point = findPoint(off, rel);
+		pp.incoming = current.bearing; // current.point.bearingTo(pp.point);
 		addPoint(pp);
 		current = pp;
 		return (T) this;
@@ -107,6 +109,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 		if (!isAt(dest)) {
 			PathPointImpl pp = current.copy();
 			pp.point = dest;
+			pp.incoming = current.bearing; // current.point.bearingTo(pp.point);
 			addPoint(pp);
 			current = pp;
 		}

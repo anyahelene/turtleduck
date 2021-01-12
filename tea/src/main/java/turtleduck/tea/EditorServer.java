@@ -130,7 +130,7 @@ public class EditorServer extends AbstractChannel {
 
 		if (client.editor == null) {
 			client.editor = Ace.edit(element);
-			client.editor.setTheme("ace/theme/dawn");
+			client.editor.setTheme("ace/theme/terminal");
 			session = client.editor.session();
 			session.setMode("ace/mode/java");
 			client.map.set("editor", client.editor);

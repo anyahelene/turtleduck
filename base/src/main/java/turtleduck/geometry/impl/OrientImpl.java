@@ -15,8 +15,8 @@ import turtleduck.geometry.Direction;
 import turtleduck.geometry.Orientation;
 
 public class OrientImpl implements Orientation {
-	public static final Vector3f FORWARD_VEC = new Vector3f(1,0,0);
-	public static final Vector3f UP_VEC = new Vector3f(0, 0,1);
+	public static final Vector3f FORWARD_VEC = new Vector3f(1, 0, 0);
+	public static final Vector3f UP_VEC = new Vector3f(0, 0, 1);
 	public static final Vector3f LEFT_VEC = new Vector3f(1, 0, 0);
 	private static final Quaterniondc ROTATE_YZ = new Quaterniond(new AxisAngle4d(-Math.PI / 2, 1, 0, 0));
 	private final Quaterniondc q;
@@ -40,6 +40,7 @@ public class OrientImpl implements Orientation {
 	public static Orientation relativeVec(double dx, double dy, double dz) {
 		return new OrientImpl(new Quaterniond(new AxisAngle4d(0, dx, dy, dz)), false);
 	}
+
 	public static Orientation absoluteAz(double az) {
 		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(az)), UP_VEC)), true);
 	}
@@ -49,11 +50,11 @@ public class OrientImpl implements Orientation {
 	}
 
 	public static Orientation absoluteAlt(double alt) {
-		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 1, 0, 0)), true);
+		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 0, -1, 0)), true);
 	}
 
 	public static Orientation relativeAlt(double alt) {
-		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 1, 0, 0)), false);
+		return new OrientImpl(new Quaterniond(new AxisAngle4d(Math.toRadians(normalizeDegrees(alt)), 0, -1, 0)), false);
 	}
 
 //	public static Direction3 absoluteVec(double dx, double dy, double dz) {
@@ -101,9 +102,9 @@ public class OrientImpl implements Orientation {
 		xyz.y = Math.atan2(2.0 * (y * z + w * x), w * w - x * x - y * y + z * z); // 1.0 - 2.0 * (x*x + y*y));
 		xyz.x = Math.safeAsin(2.0 * (x * z + y * w));
 //		xyz.z = 
-				double yaw = Math.atan2(2.0 * (z * w - x * y), 1.0 - 2.0 * (y * y + z * z));
+		double yaw = Math.atan2(2.0 * (z * w - x * y), 1.0 - 2.0 * (y * y + z * z));
 //		Vector3d xyz = q.getEulerAnglesXYZ(new Vector3d());
-		return Math.toDegrees(yaw < 0 ? 2*Math.PI + yaw : yaw);
+		return Math.toDegrees(yaw < 0 ? 2 * Math.PI + yaw : yaw);
 	}
 
 	@Override
@@ -148,7 +149,7 @@ public class OrientImpl implements Orientation {
 //		vec.sub(result, result);
 		if (other.is3d()) {
 			OrientImpl o = ((OrientImpl) other);
-			return new OrientImpl(new Quaterniond(q).mul(new Quaterniond(o.q).conjugate()),
+			return new OrientImpl(new Quaterniond(q).conjugate().mul(new Quaterniond(o.q)).conjugate(),
 					absolute && !other.isAbsolute());
 		} else {
 			return new OrientImpl(new Quaterniond(q).rotateLocalY(-other.radians()), absolute && !other.isAbsolute());
@@ -209,22 +210,25 @@ public class OrientImpl implements Orientation {
 //		ROTATE_YZ.transform(dest);
 		return dest; // .set(dest.y, dest.z, dest.x);
 	}
+
 	@Override
 	public Quaternionf toQuaternion(Quaternionf dest) {
 		q.get(dest);
 		return dest;
 	}
+
 	@Override
 	public Quaterniond toQuaternion(Quaterniond dest) {
 		q.get(dest);
 		return dest;
 	}
-	
+
 	@Override
 	public Matrix4f toMatrix(Matrix4f dest) {
 		q.get(dest);
 		return dest;
 	}
+
 	@Override
 	public boolean is3d() {
 		return true;
@@ -239,8 +243,8 @@ public class OrientImpl implements Orientation {
 		xyz.y = Math.atan2(2.0 * (y * z + w * x), w * w - x * x - y * y + z * z); // 1.0 - 2.0 * (x*x + y*y));
 //		xyz.y = Math.atan2(2*(z*w +x*y), -1 + 2*(w*w+x*x));
 		xyz.x = Math.safeAsin(-2.0 * (x * z - w * y));
-		xyz.z = Math.atan2(2.0 * (z * w + x * y),w*w+x*x-y*y-z*z); //1.0 - 2.0 * (y * y + z * z));
-		
+		xyz.z = Math.atan2(2.0 * (z * w + x * y), w * w + x * x - y * y - z * z); // 1.0 - 2.0 * (y * y + z * z));
+
 //		double x = q.x(), y = q.y(), z = q.z(), w = q.w();
 //        euler.x = Math.atan2(2.0 * (x*w - y*z), 1.0 - 2.0 * (x*x + y*y));
 //        euler.y = Math.safeAsin(2.0 * (x*z + y*w));
@@ -250,8 +254,8 @@ public class OrientImpl implements Orientation {
 		if (absolute && degs < 0) {
 			degs += 360;
 		}
-		return String.format("%.2f°,%.2f°,%.2f° / %.2f°,%.2f°,%.2f° %s %s", Math.toDegrees(euler.x), Math.toDegrees(euler.y),
-				Math.toDegrees(euler.z), Math.toDegrees(xyz.x), Math.toDegrees(xyz.y),
+		return String.format("%.2f°,%.2f°,%.2f° / %.2f°,%.2f°,%.2f° %s %s", Math.toDegrees(euler.x),
+				Math.toDegrees(euler.y), Math.toDegrees(euler.z), Math.toDegrees(xyz.x), Math.toDegrees(xyz.y),
 				Math.toDegrees(xyz.z), vec, q);
 //		return String.format(format, toArrow(), Math.toDegrees(euler.x), Math.toDegrees(euler.y),
 //				Math.toDegrees(euler.z), euler.toString() + "/" + xyz.toString() + " vec " + vec.toString());

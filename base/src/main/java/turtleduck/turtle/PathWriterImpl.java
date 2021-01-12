@@ -32,7 +32,7 @@ public class PathWriterImpl implements PathWriter {
 		return stroke;
 	}
 
-	class PathStrokeImpl implements PathWriter.PathStroke {
+	class PathStrokeImpl implements PathStroke {
 		protected List<PathPoint> points = new ArrayList<>();
 		protected boolean updating = false;
 		protected boolean finished = false;

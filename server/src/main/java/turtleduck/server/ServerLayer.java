@@ -12,6 +12,7 @@ import turtleduck.image.Image;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
+import turtleduck.turtle.PathStroke;
 import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
@@ -80,7 +81,7 @@ public class ServerLayer extends BaseCanvas<ServerScreen> {
 
 	public void render(boolean frontToBack) {
 		if (pathWriter.hasNextStroke()) {
-			PathWriter.PathStroke stroke;
+			PathStroke stroke;
 			StringBuilder b = new StringBuilder();
 			while ((stroke = pathWriter.nextStroke()) != null) {
 				List<PathPoint> points = stroke.points();

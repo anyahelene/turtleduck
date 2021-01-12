@@ -5,6 +5,8 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL33C.*;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.PointerBuffer;
+
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
@@ -28,6 +30,7 @@ import org.lwjgl.opengl.GLUtil;
 import org.lwjgl.opengl.GLXSGIVideoSync;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,6 +105,8 @@ public class GLScreen extends BaseScreen implements Screen {
 	private int frameBuf;
 
 	private GLStick joysticks;
+
+	private RuntimeException exception;
 
 	@Override
 	public void clearBackground() {
@@ -367,6 +372,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	protected void init(int width, int height) {
+		glfwSetErrorCallback(this::callbackGlfwError);
 		if (!glfwInit()) {
 			throw new RuntimeException("Failed to initialize OpenGL");
 		}
@@ -411,7 +417,8 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwSetWindowCloseCallback(window, this::callbackWindowClosed);
 		mouse = new GLMouse(this, dim);
 		mouse.registerCallbacks(window);
-		joysticks = new GLStick();
+		joysticks = new GLStick(this);
+		joysticks.init();
 		joysticks.registerCallbacks();
 		long monitor = glfwGetPrimaryMonitor();
 		GLFWVidMode vidmode = glfwGetVideoMode(monitor);
@@ -468,6 +475,8 @@ public class GLScreen extends BaseScreen implements Screen {
 			format3.addField("aPos", Vector3f.class);
 			format3.addField("aColor", Color.class);
 			format3.addField("aNormal", Vector3f.class);
+			format3.addField("aTexCoord", Vector2f.class);
+
 			shader2d.format(format);
 			shader3d.format(format3);
 //			shader3d.uniform("uLightPos", Vector4f.class).set(lightPosition);
@@ -495,6 +504,19 @@ public class GLScreen extends BaseScreen implements Screen {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glfwPollEvents();
 		mouse.callbackMousePosition(0, width / 2, height / 2);
+	}
+
+	public void callbackGlfwError(int error, long description) {
+		String desc = MemoryUtil.memUTF8(description);
+		exception = new RuntimeException("GLFW error " + error + ": " + desc);
+	}
+
+	public void checkError() {
+		if (exception != null) {
+			RuntimeException ex = exception;
+			exception = null;
+			throw ex;
+		}
 	}
 
 	public void callbackFramebufferSize(long window, int width, int height) {
@@ -646,7 +668,7 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	public void updateProjection() {
 		perspectiveProjectionMatrix.setPerspective((float) Math.toRadians(fov), (float) (dim.winWidth / dim.winHeight),
-				.0001f, 100.0f);
+				1f, 1000.0f);
 		perspectiveProjectionMatrix.invertPerspective(perspectiveProjectionMatrixInv);
 		projectionMatrix.setOrtho(0, (float) dim.canvasWidth, 0, (float) dim.canvasHeight, -1, 1);
 		projectionMatrix.invertOrtho(projectionMatrixInv);
@@ -760,9 +782,9 @@ public class GLScreen extends BaseScreen implements Screen {
 
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
-//		glEnable(GL_CULL_FACE);
-		glDepthMask(true);
 		glEnable(GL_CULL_FACE);
+		glDepthMask(true);
+//		glDisable(GL_CULL_FACE);
 		forEachLayer(true, (l) -> ((GLLayer) l).render(true));
 
 		glEnable(GL_DEPTH_TEST);
@@ -818,7 +840,6 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	@Override
 	public <T> InputControl<T> inputControl(Class<T> type, int code, int controller) {
-		// TODO Auto-generated method stub
-		return null;
+		return joysticks.inputControl(type,code,controller);
 	}
 }

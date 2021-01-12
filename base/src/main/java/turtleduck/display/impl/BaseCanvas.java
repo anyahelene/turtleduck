@@ -41,7 +41,7 @@ public abstract class BaseCanvas<S extends Screen> extends BaseLayer<S> implemen
 	public Turtle createTurtle() {
 		String tId = id + "." + nTurtles++;
 		Turtle t = new TurtleImpl.SpecificTurtle(Point.ZERO, Direction.DUE_NORTH, createPen());
-		t.writePathsTo(pathWriter(true));
+		t.writePathsTo(pathWriter(false));
 		turtles.add(t);
 		return t;
 	}

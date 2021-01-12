@@ -46,7 +46,27 @@ void main()
 	vec4 specular = specularStrength * spec * lightColor;
 
     FragColor =  (ambient + diffuse + specular) * fColor; // texture(texture0, fTexCoord/texSize); //vec4(fColor, 1.0);
+    //FragColor = mix(vec4(1,0,0,1), vec4(0,1,0,1), fTexCoord.x);
+ if(false) {
+	 float x = 2*abs(fTexCoord.x-.5);
+    if(fTexCoord.x < 0.025 || fTexCoord.x > 0.975)
+    	FragColor += vec4(1,1,1,1);
+    else if(fTexCoord.x > 0.225 && fTexCoord.x < 0.275)
+    	FragColor += vec4(0,1,0,1);
+    else if(fTexCoord.x > 0.475 && fTexCoord.x < 0.525)
+    	FragColor += vec4(0,0,1,1);
+    else if(fTexCoord.x > 0.725 && fTexCoord.x < 0.775)
+    	FragColor += vec4(1,0,0,1);
+    FragColor /= 2;
+ }
     FragColor.a = fColor.a;
+
+    float near = 20;
+    float far = 30.0;
+    float depth = gl_FragCoord.z/far;
+    float z = depth * 2.0 - 1.0; // back to NDC
+    z = (2.0 * near * far) / (far + near - z * (far - near));
+    //FragColor = vec4(vec3(z), 1.0);
     if(FragColor.a <= 0.1)
          discard;
 }

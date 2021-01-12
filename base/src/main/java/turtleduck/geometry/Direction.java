@@ -6,8 +6,8 @@ import turtleduck.geometry.impl.AngleImpl;
 import turtleduck.geometry.impl.OrientImpl;
 
 public interface Direction {
-	static final Direction DUE_NORTH = absolute(90), DUE_EAST = absolute(180), DUE_SOUTH = absolute(270),
-			DUE_WEST = absolute(0);
+	static final Direction DUE_NORTH = absolute(90), DUE_WEST = absolute(180), DUE_SOUTH = absolute(270),
+			DUE_EAST = absolute(0);
 	static final Direction FORWARD = relative(0), RIGHT = relative(-90), BACK = relative(180), LEFT = relative(90);
 	public static Direction absolute(double a) {
 		return AngleImpl.absolute(a);

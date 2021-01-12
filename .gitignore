@@ -4,3 +4,4 @@ hs_err*.log
 node_modules
 .settings
 base/src/main/resources/events/missing-gl
+*.tmp

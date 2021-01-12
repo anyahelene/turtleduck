@@ -35,6 +35,7 @@ public class TurtleImpl3<THIS extends Chelonian3<THIS, RESULT>, RESULT> extends 
 	@Override
 	public THIS pitch(double angle) {
 		current.bearing = current.bearing.pitch(angle);
+		current.rotation += String.format("[pitch%+.1f°]", angle);
 		return (THIS) this;
 	}
 
@@ -42,6 +43,7 @@ public class TurtleImpl3<THIS extends Chelonian3<THIS, RESULT>, RESULT> extends 
 	@Override
 	public THIS roll(double angle) {
 		current.bearing = current.bearing.roll(angle);
+		current.rotation += String.format("[roll%+.1f°]", angle);
 		return (THIS) this;
 	}
 

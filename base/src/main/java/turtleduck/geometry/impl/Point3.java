@@ -98,7 +98,7 @@ public class Point3 extends Point2 implements IPoint3 {
 	}
 	@Override
 	public Vector3f toVector(Vector3f dest) {
-		return dest.set(x, y, 0);
+		return dest.set(x, y, z);
 	}
 	@Override
 	public Vector3d toVector(Vector3d dest) {

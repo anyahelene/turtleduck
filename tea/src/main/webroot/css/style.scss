@@ -33,6 +33,17 @@
 	font-family: "TeenyTinyPixls", sans-serif;
 	font-size-adjust: 0.66;	
 }
+
+.ace_editor {
+	@include lores-font;
+}
+.ace_gutter {
+	@include lores-font;
+	font-size: x-small;
+}
+.ace_gutter-cell::content {
+	vertical-align: middle;
+}
 body {
 	@include lores-font;
 	height: 100vh;

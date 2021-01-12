@@ -1,5 +1,6 @@
 package turtleduck.turtle.impl;
 
+import java.util.IdentityHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -9,14 +10,14 @@ import turtleduck.display.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
+import turtleduck.turtle.Annotation;
 import turtleduck.turtle.Chelonian;
 import turtleduck.turtle.DrawingBuilder;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
+import turtleduck.turtle.PathStroke;
 import turtleduck.turtle.PathWriter;
-import turtleduck.turtle.PathWriter.PathStroke;
-
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.SpriteBuilder;
@@ -144,7 +145,14 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	@Override
 	public THIS drawTo(Point to) {
-		throw new UnsupportedOperationException();
+		drawing = true;
+		boolean penStatus = penDown;
+		penDown = true;
+		current.pen = pen();
+		super.goTo(to);
+		penDown = penStatus;
+		triggerActions();
+		return (THIS) this;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -195,6 +203,23 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@Override
 	public THIS turn(double angle) {
 		current.bearing = current.bearing.yaw(angle);
+		current.rotation += String.format("[yaw%+.1f°]", angle);
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS turn(Direction dir) {
+		current.bearing = current.bearing.add(dir);
+		current.rotation += String.format("[+%s]", dir);
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS turnTo(Direction dir) {
+		current.bearing = dir;
+		current.rotation += String.format("[=%s]", dir);
 		return (THIS) this;
 	}
 
@@ -202,6 +227,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@Override
 	public THIS turnTo(double angle) {
 		current.bearing = Orientation.absoluteAz(angle);
+		current.rotation += String.format("[yaw=%+.1f°]", angle);
 		return (THIS) this;
 	}
 
@@ -255,6 +281,24 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		} else {
 			return (RESULT) this;
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> THIS annotate(Annotation<T> anno, T value) {
+		if(current.annos == null) {
+			current.annos = new IdentityHashMap<>();
+		}
+		current.annos.put(anno, value);
+		return (THIS) this;
+	}
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T annotation(Annotation<T> anno) {
+		if(current.annos == null) {
+			return null;
+		}
+		return (T) current.annos.get(anno);
 	}
 
 	@SuppressWarnings("unchecked")

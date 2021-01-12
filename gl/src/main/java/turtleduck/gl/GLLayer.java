@@ -38,6 +38,7 @@ import turtleduck.image.Tiles;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
+import turtleduck.turtle.PathStroke;
 import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
@@ -69,6 +70,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	private DataField<Vector3f> aPosVec3;
 	private DataField<Color> aColorVec4;
 	private DataField<Vector3f> a3Normal3;
+	private DataField<Vector2f> a3TexCoord2;
 	private int quadVertices = -1;
 	private VertexArrayFormat format3;
 	private DataField<Vector3f> a3PosVec3;
@@ -89,6 +91,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		a3PosVec3 = format3.setField("aPos", Vector3f.class);
 		a3ColorVec4 = format3.setField("aColor", Color.class);
 		a3Normal3 = format3.setField("aNormal", Vector3f.class);
+		a3TexCoord2 = format3.setField("aTexCoord", Vector2f.class);
 		streamBuffer = new ArrayBuffer(GL_STREAM_DRAW, 2048);
 		streamArray = new VertexArray(format, streamBuffer);
 		streamArray.setFormat();
@@ -519,7 +522,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 
 	protected void drawPaths(GLPathWriter paths) {
 		List<Integer> indices = new ArrayList<>();
-		PathWriter.PathStroke stroke;
+		PathStroke stroke;
 		DrawObject obj = new DrawObject();
 		obj.array = paths instanceof GLPathWriter3 ? streamArray3 : streamArray;
 		obj.shader = paths instanceof GLPathWriter3 ? screen.shader3d : screen.shader2d;
@@ -544,26 +547,32 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		Vector3f toVec = new Vector3f(), tmp2 = new Vector3f();
 		Vector3f offset = new Vector3f();
 		Vector3f normal = new Vector3f();
+		Vector2f texCoord = new Vector2f();
 //		Vector3f tangent = new Vector3f();
 		Vector3f tmp = new Vector3f();
 		boolean first = true;
 		int index = obj.offset;
-		while ((stroke = paths.nextStroke()) != null) {
-			List<PathPoint> points = stroke.points();
+		if (paths instanceof GLPathWriter3) {
+			PathRenderer3 ren = new PathRenderer3(obj.shader);
+			ren.drawPaths(paths, obj);
 
-			if (points.size() > 1) {
-				PathPoint from = points.get(0);
-				PathPoint to = points.get(1);
-				Pen pen = from.pen();
-				Color color = pen.strokePaint();
-				float w = (float) pen.strokeWidth() / 2;
+		} else {
+			while ((stroke = paths.nextStroke()) != null) {
+				List<PathPoint> points = stroke.points();
+
+				if (points.size() > 1) {
+					PathPoint from = points.get(0);
+					PathPoint to = points.get(1);
+					Pen pen = from.pen();
+					Color color = pen.strokePaint();
+					float w = (float) pen.strokeWidth() / 2;
 //				Direction fromDir = from.bearing(); // = tangents.get(line.get(0));
-				from.point().toVector(fromVec);
-				to.point().toVector(toVec);
-				from.bearing().directionVector(fromDir);
-				from.bearing().normalVector(normal);
-				toVec.sub(fromVec, fromDir).normalize();
-				normal.cross(fromDir, offset);
+					from.point().toVector(fromVec);
+					to.point().toVector(toVec);
+					from.bearing().directionVector(fromDir);
+					from.bearing().normalVector(normal);
+					toVec.sub(fromVec, fromDir).normalize();
+					normal.cross(fromDir, offset);
 //				showNormals = true;
 //				if (showNormals) {
 //					streamArray3.begin().put(a3PosVec3, fromVec).put(a3ColorVec4, Colors.BLUE).put(a3Normal3, normal)
@@ -576,97 +585,52 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 //				first = false;
 //				streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, offset)).put(aColorVec4, color).end();
 //				streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, offset)).put(aColorVec4, color).end();
-				for (int i = 1; i < points.size(); i++) {
-					from = points.get(i - 1);
-					to = points.get(i);
-					from.point().toVector(fromVec);
-					to.point().toVector(toVec);
+					for (int i = 1; i < points.size(); i++) {
+						from = points.get(i - 1);
+						to = points.get(i);
+						from.point().toVector(fromVec);
+						to.point().toVector(toVec);
 //					toVec.sub(fromVec, toDir).normalize();
-					from.bearing().directionVector(fromDir).normalize();
+						from.bearing().directionVector(fromDir).normalize();
 
 //					fromDir.add(toDir).mul(.5f);
-					from.bearing().normalVector(normal).normalize();
-					normal.cross(fromDir, offset); // .normalize();
+						from.bearing().normalVector(normal).normalize();
+						normal.cross(fromDir, offset); // .normalize();
+						fromDir.cross(normal, offset);
 
 //					if(Double.isNaN(fromDir.lengthSquared()) || fromDir.lengthSquared() != 1)
 //						System.out.println("fromDir: " + fromDir + ", " + fromDir.length());
 //
-					if (Double.isNaN(fromVec.lengthSquared()))
-						System.out.println("fromVec: " + fromVec);
-					if (Double.isNaN(toVec.lengthSquared()))
-						System.out.println("toVec: " + toVec);
-					if (Double.isNaN(offset.lengthSquared()))
-						System.out.println("offset: " + offset);
+						if (Double.isNaN(fromVec.lengthSquared()))
+							System.out.println("fromVec: " + fromVec);
+						if (Double.isNaN(toVec.lengthSquared()))
+							System.out.println("toVec: " + toVec);
+						if (Double.isNaN(offset.lengthSquared()))
+							System.out.println("offset: " + offset);
 //					showNormals = true;
-					if (showNormals) {
-						System.out.println("from: " + fromVec);
-						System.out.println("to: " + toVec);
-						System.out.println("normal: " + normal);
-						System.out.println("cross: " + offset);
-						streamArray.begin().put(aPosVec3, fromVec).put(aColorVec4, Colors.WHITE)//
-								// .put(a3Normal3, normal)
-								.end();
-						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-3 * w, offset))
-								.put(aColorVec4, Colors.RED)
+						if (showNormals) {
+							System.out.println("from: " + fromVec);
+							System.out.println("to: " + toVec);
+							System.out.println("fromDir: " + fromDir);
+							System.out.println("normal: " + normal);
+							System.out.println("cross: " + offset);
+							streamArray.begin().put(aPosVec3, fromVec).put(aColorVec4, Colors.WHITE)//
+									// .put(a3Normal3, normal)
+									.end();
+							streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(3 * w, offset))
+									.put(aColorVec4, Colors.RED)
 //								.put(a3Normal3, normal)//
-								.end();
+									.end();
 //						streamArray.begin().put(aPosVec3,fromVec).put(aColorVec4, Colors.WHITE)//
 //						//.put(a3Normal3, normal)
 //								.end();
 //						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(3*w, offset)).put(aColorVec4, Colors.RED)
 ////								.put(a3Normal3, normal)//
 //								.end();				
-					}
+						}
 //					off2.add(off1).mul(.5f);
-					obj.blend |= color.opacity() < 1;
-					if (paths instanceof GLPathWriter3) {
-						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(0, offset).fma(w, normal))//
-								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(1, tmp2)).end();
-						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(0, offset).fma(w, normal))//
-								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(1, tmp2)).end();
-						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(w, offset).fma(0, normal))//
-								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(1, tmp2)).end();
-						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(w, offset).fma(0, normal))//
-								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(1, tmp2)).end();
+						obj.blend |= color.opacity() < 1;
 
-						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(0, offset).fma(-w, normal))//
-								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(-1, tmp2)).end();
-						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(0, offset).fma(-w, normal))//
-								.put(a3ColorVec4, color).put(a3Normal3, normal.mul(-1, tmp2)).end();
-						streamArray3.begin().put(a3PosVec3, tmp.set(fromVec).fma(-w, offset).fma(0, normal))//
-								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(-1, tmp2)).end();
-						streamArray3.begin().put(a3PosVec3, tmp.set(toVec).fma(-w, offset).fma(0, normal))//
-								.put(a3ColorVec4, color).put(a3Normal3, offset.mul(-1, tmp2)).end();
-						// front
-						indices.add(index + 0);
-						indices.add(index + 1);
-						indices.add(index + 2);
-						indices.add(index + 2);
-						indices.add(index + 1);
-						indices.add(index + 3);
-						// back
-						indices.add(index + 2);
-						indices.add(index + 3);
-						indices.add(index + 4);
-						indices.add(index + 4);
-						indices.add(index + 3);
-						indices.add(index + 5);
-						// side a
-						indices.add(index + 4);
-						indices.add(index + 5);
-						indices.add(index + 6);
-						indices.add(index + 6);
-						indices.add(index + 5);
-						indices.add(index + 7);
-//						// side b
-						indices.add(index + 6);
-						indices.add(index + 7);
-						indices.add(index + 0);
-						indices.add(index + 0);
-						indices.add(index + 7);
-						indices.add(index + 1);
-						index += 8;
-					} else {
 						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, offset)).put(aColorVec4, color)
 								.end();
 						streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, offset)).put(aColorVec4, color).end();
@@ -680,23 +644,24 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 						indices.add(index + 3);
 
 						index += 4;
-					}
+
 //					if (i == points.size() - 1)
 //						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, offset)).put(aColorVec4, color).end();
 
-					pen = to.pen();
-					color = pen.strokePaint();
-					w = (float) pen.strokeWidth() / 2;
+						pen = to.pen();
+						color = pen.strokePaint();
+						w = (float) pen.strokeWidth() / 2;
 //					fromVec.set(toVec);
 //					fromDir.set(toDir);
 //					from = to;
+					}
 				}
-			}
 //			System.out.println();
 //			pathWriter.clear();
-			obj.nVertices = obj.array.nVertices() - obj.offset;
-			obj.indices = indices.stream().mapToInt(i -> i).toArray();
-			debugObj.nVertices = streamArray.nVertices() - debugObj.offset;
+				obj.nVertices = obj.array.nVertices() - obj.offset;
+				obj.indices = indices.stream().mapToInt(i -> i).toArray();
+				debugObj.nVertices = streamArray.nVertices() - debugObj.offset;
+			}
 		}
 	}
 
