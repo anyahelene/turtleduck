@@ -14,6 +14,7 @@ public abstract class DataField<T> {
 	final int location;
 	final int size;
 	int offset;
+	Type type;
 
 	public DataField(String name, int location, int offset, int size, Type type) {
 		super();
@@ -24,7 +25,6 @@ public abstract class DataField<T> {
 		this.type = type;
 	}
 
-	Type type;
 
 	public String toString() {
 		String s = String.format("%d: %s %s", location, type, name);
@@ -257,5 +257,45 @@ public abstract class DataField<T> {
 			dest.putShort((short) Math.round(w * 65535));
 		}
 
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + location;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + offset;
+		result = prime * result + size;
+		return result;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof DataField)) {
+			return false;
+		}
+		DataField other = (DataField) obj;
+		if (location != other.location) {
+			return false;
+		}
+		if (name == null) {
+			if (other.name != null) {
+				return false;
+			}
+		} else if (!name.equals(other.name)) {
+			return false;
+		}
+		if (offset != other.offset) {
+			return false;
+		}
+		if (size != other.size) {
+			return false;
+		}
+		return true;
 	}
 }

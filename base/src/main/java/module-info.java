@@ -30,4 +30,5 @@ module turtleduck.base {
 	requires java.xml;
 	requires transitive org.joml;
 	requires java.desktop;
+	requires java.base;
 }
