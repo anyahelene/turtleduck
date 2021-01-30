@@ -47,7 +47,7 @@ void main()
 
     FragColor =  (ambient + diffuse + specular) * fColor; // texture(texture0, fTexCoord/texSize); //vec4(fColor, 1.0);
     //FragColor = mix(vec4(1,0,0,1), vec4(0,1,0,1), fTexCoord.x);
- if(false) {
+ if(true) {
 	 float x = 2*abs(fTexCoord.x-.5);
     if(fTexCoord.x < 0.025 || fTexCoord.x > 0.975)
     	FragColor += vec4(1,1,1,1);

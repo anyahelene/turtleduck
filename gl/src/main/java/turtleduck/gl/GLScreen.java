@@ -116,7 +116,7 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	@Override
 	public Canvas createCanvas() {
-		return addLayer(new GLLayer(newLayerId(), this, dim.fbWidth, dim.fbHeight));
+		return addLayer(new GLLayer(newLayerId(), this, dim.winWidth, dim.winHeight));
 	}
 
 	@Override
@@ -368,7 +368,7 @@ public class GLScreen extends BaseScreen implements Screen {
 //						recomputeLayout(false);
 //					});
 
-		init(1920, 1440);
+		init(width, height);
 	}
 
 	protected void init(int width, int height) {

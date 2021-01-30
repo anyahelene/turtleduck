@@ -195,12 +195,12 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		p0.sub(p2, u);
 		p1.sub(p2, v);
 		u.cross(v).normalize();
-		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
 		p0.set(-.5f, .5f, .5f);
 		p1.set(-.5f, .5f, 0f);
 		p2.set(-.5f + 1, .5f, .5f);
@@ -208,12 +208,12 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		p0.sub(p2, u);
 		p1.sub(p2, v);
 		u.cross(v).normalize();
-		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
 		p0.set(-.5f, -.5f, .5f);
 		p1.set(-.5f, -.5f, 0f);
 		p2.set(-.5f, .5f, .5f);
@@ -221,12 +221,12 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		p0.sub(p2, u);
 		p1.sub(p2, v);
 		u.cross(v).normalize();
-		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
 		p0.set(.5f, .5f, .5f);
 		p1.set(.5f, .5f, 0f);
 		p2.set(.5f, -.5f, .5f);
@@ -234,12 +234,12 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		p0.sub(p2, u);
 		p1.sub(p2, v);
 		u.cross(v).normalize();
-		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).end();
-		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).end();
+		streamArray3.begin().put(a3PosVec3, p0).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p2).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
+		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
 		float frows = rows, fcols = cols;
 		float s = 1f;
 		Vector3f normal = new Vector3f();
@@ -257,7 +257,7 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 								(float) data[x + y * cols]) //
 						.put(a3ColorVec4, c)//
 						.put(a3Normal3, normal)//
-						.end();
+						.put(a3TexCoord2, 0, 0).end();
 
 			}
 		}

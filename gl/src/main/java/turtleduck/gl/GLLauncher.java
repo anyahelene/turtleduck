@@ -7,7 +7,7 @@ import turtleduck.TurtleDuckApp;
 import turtleduck.display.Screen;
 
 public class GLLauncher implements Launcher {
-	protected int config = Screen.CONFIG_FLAG_DEBUG;
+	protected int config = Screen.CONFIG_FLAG_DEBUG | Screen.CONFIG_ASPECT_WIDE;
 	protected TurtleDuckApp app;
 	private GLApp glApp;
 

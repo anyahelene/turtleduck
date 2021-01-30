@@ -101,6 +101,7 @@ public class ArrayBuffer {
 			throw new IllegalStateException("Writing after done()");
 		}
 		if (field != current.field(currentField)) {
+			if(!field.equals(current.field(currentField)))
 			throw new IllegalStateException("Expected data for " + current.field(currentField) + " but got " + field);
 		}
 	}
