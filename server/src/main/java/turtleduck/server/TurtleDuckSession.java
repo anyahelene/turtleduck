@@ -35,9 +35,8 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 	private Session session;
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	protected TurtleDuckSession(Session session) {
+	public TurtleDuckSession(Session session, JsonObject userInfo) {
 		this.session = session;
-		JsonObject userInfo = session.get("userInfo");
 		user = userInfo.getString("nickname");
 	}
 
