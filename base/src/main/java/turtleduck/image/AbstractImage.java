@@ -3,10 +3,6 @@ package turtleduck.image;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ServiceLoader;
-
 import javax.imageio.ImageIO;
 
 import turtleduck.colors.Color;

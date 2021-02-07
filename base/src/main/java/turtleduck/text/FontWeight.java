@@ -36,6 +36,10 @@ public enum FontWeight {
 	public String toCss() {
 		return css;
 	}
+	
+	public int weight() {
+		return weight;
+	}
 
 	public int toSGRParam() {
 		return sgrParam;

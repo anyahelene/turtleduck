@@ -2,26 +2,22 @@ package turtleduck.tea;
 
 import java.util.function.Predicate;
 
-import org.teavm.jso.JSBody;
-import org.teavm.jso.JSObject;
-import org.teavm.jso.browser.Window;
+
 import org.teavm.jso.canvas.CanvasRenderingContext2D;
 import org.teavm.jso.dom.css.CSSStyleDeclaration;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
-import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
 
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
+import turtleduck.canvas.CanvasImpl;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
-import turtleduck.display.impl.BaseScreen.Dimensions;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
 import turtleduck.text.TextWindow;
-import xtermjs.Terminal;
 
 public class NativeTScreen extends BaseScreen {
 	private HTMLElement mainElement;
@@ -38,9 +34,9 @@ public class NativeTScreen extends BaseScreen {
 		this.dim = dim;
 
 		mainElement = Browser.document.getElementById("screen0");
-		int height = (int) Math.floor(dim.winHeight);
 		this.dim = dim;
 		setupAspects(dim);
+	
 	}
 	@Override
 	protected void recomputeLayout(boolean b) {
@@ -69,7 +65,7 @@ public class NativeTScreen extends BaseScreen {
 		context.strokeText("Hello, world!", 10, 10);
 		mainElement.appendChild(canvas);
 		NativeTLayer layer = addLayer(new NativeTLayer(layerId, this, dim.fbWidth, dim.fbHeight, canvas));
-		return layer;
+		return new CanvasImpl<Screen>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d));
 	}
 
 	@Override

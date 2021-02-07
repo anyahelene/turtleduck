@@ -15,6 +15,7 @@ public class JfxCursor implements MouseCursor {
 		cursor = c;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T as(Class<T> type) {
 		if (type == Cursor.class)

@@ -151,11 +151,15 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 //								readline.attach(pty);
 								ServerScreen screen = (ServerScreen) ServerDisplayInfo.provider()
 										.startPaintScene(TurtleDuckSession.this);
-								TShell shell = new TShell(screen, null, pty.createCursor());
+								TShell shell = new TShell(screen, null, pty.createCursor(), message -> {
+									message.channel(channel);
+									send(message);
+								});
 								pty.hostInputListener((line) -> {
 									context.executeBlocking((linePromise) -> {
 										try {
-											shell.enter(line);
+											shell.execute(line);
+											shell.prompt();
 											screen.render();
 											linePromise.complete("ok");
 										} catch (Throwable t) {
@@ -166,8 +170,8 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 									});
 									return true;
 								});
-								pty.useHistory(0, true);
-//								pty.reconnectListener(() -> shell.prompt());
+								pty.useHistory(0, false);
+								pty.reconnectListener(() -> {shell.reconnect(); shell.prompt();});
 								shell.editorFactory((n, callback) -> {
 									EditorChannel ch = new EditorChannel(n, "editor", callback);
 									open(ch);

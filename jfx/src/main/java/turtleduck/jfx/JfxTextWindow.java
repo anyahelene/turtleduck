@@ -4,16 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
-import javafx.geometry.Bounds;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
-import turtleduck.display.Layer;
-import turtleduck.drawing.Drawing;
 import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
 import turtleduck.text.impl.WindowImpl;
@@ -21,7 +16,6 @@ import turtleduck.text.Attribute;
 import turtleduck.text.Attributes;
 import turtleduck.text.Region;
 import turtleduck.text.TextFont;
-import turtleduck.turtle.Path;
 
 public class JfxTextWindow extends WindowImpl<JfxScreen> {
 	private final javafx.scene.canvas.Canvas fxCanvas;

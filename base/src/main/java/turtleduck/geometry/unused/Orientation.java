@@ -1,11 +1,8 @@
 package turtleduck.geometry.unused;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 

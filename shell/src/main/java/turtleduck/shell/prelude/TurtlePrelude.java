@@ -1,19 +1,14 @@
 package turtleduck.shell.prelude;
 
 import turtleduck.display.Screen;
-import turtleduck.geometry.Point;
-import turtleduck.geometry.Direction;
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
 import turtleduck.turtle.Turtle;
-import turtleduck.turtle.Pen;
-import turtleduck.text.TextCursor;
 import turtleduck.colors.Colors;
-import turtleduck.shell.TShell;
 
 public class TurtlePrelude {
 	Screen screen = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, "SCREEN_ID");
 	Canvas canvas = screen.createCanvas();
-	Turtle turtle = canvas.createTurtle();
+	Turtle turtle = canvas.turtle();
 
 	void init() {
 		turtle.penChange().strokePaint(Colors.BLACK).done();

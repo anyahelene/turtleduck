@@ -28,6 +28,7 @@ import turtleduck.comms.Message;
 import turtleduck.comms.Message.ConnectMessage;
 import turtleduck.comms.Message.OpenMessage;
 import turtleduck.comms.Message.StringDataMessage;
+import turtleduck.comms.Message.DictDataMessage;
 import turtleduck.comms.MessageData;
 import org.teavm.jso.browser.Location;
 import turtleduck.tea.net.SockJS;
@@ -86,7 +87,7 @@ public class Client implements EndPoint, JSClient {
 				srv.widget = widget;
 				switch (widget) {
 				case "xtermjs":
-					TerminalClient tc = new TerminalClient(elt, "jshell");
+					TerminalClient tc = new TerminalClient(elt, "jshell", this);
 					tc.initialize();
 					srv.channel = tc;
 					srv.onOpen = (s) -> {
@@ -164,6 +165,7 @@ public class Client implements EndPoint, JSClient {
 	}
 
 	public void receive(Message msg) {
+		HTMLDocument document = Window.current().getDocument();
 		int ch = msg.channel();
 		if (ch == 0) {
 			outer: switch (msg.type()) {
@@ -255,7 +257,6 @@ public class Client implements EndPoint, JSClient {
 			case "Data":
 				StringDataMessage dmsg = (StringDataMessage) msg;
 				String path = dmsg.data();
-				HTMLDocument document = Window.current().getDocument();
 				HTMLElement svg = document.getElementById("svg0");
 				svg.getStyle().setProperty("display", "block");
 				String[] split = path.split(" && ");
@@ -268,6 +269,49 @@ public class Client implements EndPoint, JSClient {
 					svg.appendChild(elt);
 				}
 				break;
+			case "Dict": {
+				DictDataMessage mmsg = (DictDataMessage) msg;
+				String kind = mmsg.get("snipkind");
+				int i = kind.indexOf('.');
+				if (i >= 0)
+					kind = kind.substring(0, i);
+				HTMLElement ul = document.getElementById("explorer-" + kind);
+				HTMLElement head = document.getElementById("explorer-head-" + kind);
+				if (ul != null && !mmsg.get("snipkind").equals("var.temp")) {
+					String event = mmsg.get("event");
+					String sid = mmsg.get("sid");
+					String eltId = "snippet-" + sid;
+					HTMLElement elt;
+					elt = document.getElementById(eltId);
+
+					if (event.endsWith("del")) {
+						elt.delete();
+						if (!ul.hasChildNodes()) {
+							ul.setClassName(ul.getClassName().replaceAll("\\s*empty", "") + " empty");
+							head.setClassName(head.getClassName().replaceAll("\\s*empty", "") + " empty");
+						}
+					} else {
+						if (elt == null) {
+							elt = document.createElement("li");
+							elt.setAttribute("id", eltId);
+							ul.appendChild(elt);
+							ul.setClassName(ul.getClassName().replaceAll("\\s*empty", ""));
+							head.setClassName(head.getClassName().replaceAll("\\s*empty", ""));
+						}
+						String sym = mmsg.get("sym");
+						if (sym.equals("✅"))
+							sym = "";
+						String fullname = mmsg.get("fullname");
+						if(fullname != null) {
+							elt.setAttribute("title", fullname);
+						}
+						elt.setAttribute("class",
+								"java " + mmsg.get("category") + (sid.startsWith("s") ? " builtin" : ""));
+						elt.withText(mmsg.get("signature") + sym);
+					}
+				}
+				break;
+			}
 			case "Connect":
 				Message.ConnectMessage cmsg = (ConnectMessage) msg;
 				Browser.consoleLog(cmsg.toJson());

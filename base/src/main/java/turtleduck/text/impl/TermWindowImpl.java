@@ -1,7 +1,6 @@
 package turtleduck.text.impl;
 
 import turtleduck.display.Layer;
-import turtleduck.display.Screen;
 import turtleduck.terminal.PseudoTerminal;
 import turtleduck.text.Attributes;
 import turtleduck.text.CodePoint;

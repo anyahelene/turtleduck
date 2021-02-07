@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Direction;
@@ -91,13 +91,15 @@ public class Demo implements TurtleDuckApp {
 		tree(turtle.spawn().at(850, 200).penColor(Color.color(.5, .3, .0)).penWidth(2).turnTo(90), 10, 10);
 		wheel1(turtle.spawn().at(500, 200).turnTo(-2 * rotation).penColor(Color.color(0.5, 0, 0, 0.5)));
 		rotation += 8 * deltaTime;
-		canvas.drawImage(Point.point(100, 0), image2);
-		canvas.drawImage(Point.point(200, 0), image2);
-		((GLLayer) canvas).plot(Point.point(100, 100), 1000, 1000, Colors.BLACK,
-				"between(cos((x-0.005)*3.14159265),cos((x+0.005)*3.14159265), y) + equal(cos(x*3.14159265), y)"); // "equal(x*x
-																													// +
-																													// y*y,
-																													// 1)");
+//		canvas.drawImage(Point.point(100, 0), image2);
+//		canvas.drawImage(Point.point(200, 0), image2);
+
+		if (false)
+			((GLLayer) canvas).plot(Point.point(100, 100), 1000, 1000, Colors.BLACK,
+					"between(cos((x-0.005)*3.14159265),cos((x+0.005)*3.14159265), y) + equal(cos(x*3.14159265), y)"); // "equal(x*x
+																														// +
+																														// y*y,
+																														// 1)");
 
 //		GLLayer.angle += deltaTime;
 		count = (count + 1) & 0xff;
@@ -162,10 +164,10 @@ public class Demo implements TurtleDuckApp {
 //		turtle.moveTo(500,400);
 			turtle.done();
 		}
-		if(false)
-		grid.locationParallelStream().forEach((l) -> {
-			tileMap[l.x() + l.y() * GRID_COLS] = grid.get(l).background;
-		});
+		if (false)
+			grid.locationParallelStream().forEach((l) -> {
+				tileMap[l.x() + l.y() * GRID_COLS] = grid.get(l).background;
+			});
 //		((GLLayer) canvas).drawTileMap(Point.point(0, 0), 48, 32, 32, 32, tileMap, tiles);
 
 //		System.out.println(deltaTime);
@@ -183,8 +185,8 @@ public class Demo implements TurtleDuckApp {
 		System.out.println(ImageFactory.get("turtleduck.gl"));
 		this.screen = (GLScreen) screen;
 		canvas = screen.createCanvas();
-		pen = canvas.createPen();
-		turtle = canvas.createTurtle();
+		turtle = canvas.turtle();
+		pen = turtle.pen();
 		System.out.println(turtle);
 
 		System.out.println(Color.fromARGB(0xffffffff));

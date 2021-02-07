@@ -4,21 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import turtleduck.comms.Message;
-import turtleduck.display.Canvas;
-import turtleduck.display.impl.BaseCanvas;
-import turtleduck.drawing.Drawing;
+import turtleduck.display.Layer;
+import turtleduck.display.impl.BaseLayer;
 import turtleduck.geometry.Point;
-import turtleduck.image.Image;
-import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
 import turtleduck.turtle.PathStroke;
 import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
-import turtleduck.turtle.Stroke;
 
-public class ServerLayer extends BaseCanvas<ServerScreen> {
+public class ServerLayer extends BaseLayer<ServerScreen> {
 	private TurtleDuckSession session;
 	private PathWriterImpl pathWriter = new PathWriterImpl();
 
@@ -28,32 +24,21 @@ public class ServerLayer extends BaseCanvas<ServerScreen> {
 	}
 
 	@Override
-	public Canvas clear() {
+	public Layer clear() {
 		return this;
 	}
 
 	@Override
-	public Canvas show() {
+	public Layer show() {
 		return this;
 	}
 
 	@Override
-	public Canvas hide() {
+	public Layer hide() {
 		return this;
 	}
 
-	protected void drawLine(Stroke pen, Point from, Point to) {
-
-	}
-
-	@Override
-	public Canvas clear(Fill fill) {
-		// TODO Auto-generated method stub
-		return this;
-	}
-
-	@Override
-	public Canvas draw(Path path) {
+	public void draw(Path path) {
 		Point from = path.first();
 		Pen lastPen = null;
 		Pen pen = path.pointPen(0);
@@ -76,7 +61,6 @@ public class ServerLayer extends BaseCanvas<ServerScreen> {
 		}
 
 		session.send(Message.createStringData(0, b.toString()));
-		return this;
 	}
 
 	public void render(boolean frontToBack) {
@@ -113,21 +97,13 @@ public class ServerLayer extends BaseCanvas<ServerScreen> {
 		}
 	}
 
-	@Override
-	public Canvas draw(Drawing drawing) {
-		// TODO Auto-generated method stub
-		return this;
-	}
-
-	@Override
-	public void drawImage(Point at, Image img) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	protected PathWriter pathWriter(boolean use3d) {
 		return pathWriter;
+	}
+
+	@Override
+	public Layer flush() {
+		return this;
 	}
 
 }

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import turtleduck.comms.impl.MessageImpl;
-import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 
 public interface Message {

@@ -5,8 +5,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL33C.*;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.PointerBuffer;
-
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
@@ -23,7 +21,6 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL33C;
 //import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.GLUtil;
@@ -37,26 +34,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
+import turtleduck.canvas.CanvasImpl;
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
-import turtleduck.geometry.Orientation;
 import turtleduck.gl.objects.CubeModel;
 import turtleduck.gl.objects.ShaderObject;
 import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Uniform;
 import turtleduck.gl.objects.VertexArrayFormat;
 import turtleduck.scene.Camera;
-import turtleduck.scene.SceneGroup3;
 import turtleduck.scene.SceneNode;
 import turtleduck.scene.SceneObject2;
 import turtleduck.scene.SceneObject3;
-import turtleduck.scene.SceneTransform2;
 import turtleduck.scene.SceneVisitor;
 import turtleduck.scene.SceneWorld;
 import turtleduck.text.TextWindow;
@@ -108,6 +103,8 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	private RuntimeException exception;
 
+	private GLLayer layer;
+
 	@Override
 	public void clearBackground() {
 		// TODO Auto-generated method stub
@@ -116,7 +113,9 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	@Override
 	public Canvas createCanvas() {
-		return addLayer(new GLLayer(newLayerId(), this, dim.winWidth, dim.winHeight));
+		Canvas canvas = new CanvasImpl<>(newLayerId(), this, dim.winWidth, dim.winHeight,
+				use3d -> layer.pathWriter(use3d));
+		return canvas;
 	}
 
 	@Override
@@ -504,6 +503,9 @@ public class GLScreen extends BaseScreen implements Screen {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glfwPollEvents();
 		mouse.callbackMousePosition(0, width / 2, height / 2);
+
+		layer = new GLLayer(newLayerId(), this, dim.winWidth, dim.winHeight);
+		addLayer(layer);
 	}
 
 	public void callbackGlfwError(int error, long description) {
@@ -840,6 +842,6 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	@Override
 	public <T> InputControl<T> inputControl(Class<T> type, int code, int controller) {
-		return joysticks.inputControl(type,code,controller);
+		return joysticks.inputControl(type, code, controller);
 	}
 }

@@ -1,6 +1,5 @@
 package turtleduck.turtle.impl;
 
-import java.util.IdentityHashMap;
 import java.util.Map;
 
 import turtleduck.geometry.Direction;
@@ -11,17 +10,31 @@ import turtleduck.turtle.PathPoint;
 import turtleduck.turtle.Pen;
 
 public class PathPointImpl implements PathPoint, Cloneable {
-	protected Point point;
-	protected Direction bearing;
+	public Point point;
+	public Direction bearing;
 	public Pen pen;
-	protected PointType type;
-	protected Direction incoming;
-	protected String rotation = "";
-	protected Map<Annotation, Object> annos;
+	public PointType type;
+	public Direction incoming;
+	public String rotation = "";
+	public Map<Annotation<?>, Object> annos;
 
 //	public String toString() {
 //		return point.toString();
 //	}
+	public PathPointImpl() {
+	}
+
+	public PathPointImpl(Point point, Pen pen) {
+		this.point = point;
+		this.pen = pen;
+	}
+
+	public PathPointImpl(Point point, Pen pen, Direction bearing, Direction incoming) {
+		this.point = point;
+		this.pen = pen;
+		this.bearing = bearing;
+		this.incoming = incoming;
+	}
 
 	public PathPointImpl copy() {
 		try {
@@ -68,6 +81,7 @@ public class PathPointImpl implements PathPoint, Cloneable {
 	public double z() {
 		return point.z();
 	}
+
 	public String toString() {
 		return rotation;
 	}
@@ -75,11 +89,10 @@ public class PathPointImpl implements PathPoint, Cloneable {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T annotation(Annotation<T> anno) {
-		if(annos == null) {
+		if (annos == null) {
 			return null;
 		}
 		return (T) annos.get(anno);
 	}
-	
 
 }

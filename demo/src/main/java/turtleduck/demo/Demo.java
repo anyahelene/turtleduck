@@ -4,7 +4,7 @@ import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Direction;
@@ -161,9 +161,7 @@ public class Demo implements TurtleDuckApp {
 		}
 //		System.err.println("Draw:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
 		long t = System.currentTimeMillis();
-		canvas.flush();
-		debugCanvas.flush();
-		duckCanvas.flush();
+
 //		System.err.println("Flush:   " + ((System.currentTimeMillis() - t) / 1000.0) + " s");
 //		System.err.println("Total:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
 		step++;
@@ -181,12 +179,12 @@ public class Demo implements TurtleDuckApp {
 		screen.clearBackground();
 		canvas = screen.createCanvas();
 		debugCanvas = screen.debugCanvas();
-		debugPen = debugCanvas.createPen().change().strokePaint(Colors.GREEN).strokeWidth(1).done();
+		debugPen = debugCanvas.pen().change().strokePaint(Colors.GREEN).strokeWidth(1).done();
 		duckCanvas = screen.createCanvas();
 
-		debugTurtle = debugCanvas.createTurtle().pen(debugPen);
+		debugTurtle = debugCanvas.turtle().pen(debugPen);
 		long startMillis = System.currentTimeMillis();
-		turtle = canvas.createTurtle();
+		turtle = canvas.turtle();
 		double t = System.currentTimeMillis();
 
 		turtle.jumpTo(300, 350).turnTo(0);//.draw(50).turn(90).draw(50).turn(90).draw(50).move(0);
@@ -257,9 +255,7 @@ public class Demo implements TurtleDuckApp {
 //		anim = ((CommandRecorder) recorder).playbackAnimation(turtle);
 		System.err.println("Draw:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
 		t = System.currentTimeMillis();
-		canvas.flush();
-		debugCanvas.flush();
-		duckCanvas.flush();
+	
 		System.err.println("Flush:   " + ((System.currentTimeMillis() - t) / 1000.0) + " s");
 		System.err.println("Total:   " + ((System.currentTimeMillis() - startMillis) / 1000.0) + " s");
 	}

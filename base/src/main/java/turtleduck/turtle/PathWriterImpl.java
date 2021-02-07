@@ -7,6 +7,7 @@ import java.util.Queue;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
+import turtleduck.turtle.impl.PathPointImpl;
 
 public class PathWriterImpl implements PathWriter {
 	protected boolean use3d = false;
@@ -15,6 +16,7 @@ public class PathWriterImpl implements PathWriter {
 	public boolean hasNextStroke() {
 		return !strokes.isEmpty();
 	}
+
 	public PathStroke nextStroke() {
 		if (strokes.isEmpty())
 			return null;
@@ -41,11 +43,42 @@ public class PathWriterImpl implements PathWriter {
 		protected int lengthSq = 0;
 		protected PathPoint current;
 
+		@Override
 		public void addLine(PathPoint from) {
 			addLine(from, from);
 			updating = true;
 		}
 
+		@Override
+		public void addPoint(PathPoint point) {
+			if (current == null) {
+				current = point;
+			} else {
+				addLine(current, point);
+			}
+		}
+
+		@Override
+		public void addPoint(Point point) {
+			if (current == null) {
+				throw new IllegalStateException();
+			} else {
+				PathPointImpl from = (PathPointImpl) current;
+				PathPointImpl to = from.copy();
+				if (!from.point.equals(point))
+					from.bearing = from.point.bearingTo(point);
+				else if(from.bearing == null)
+					from.bearing = Direction.DUE_NORTH;
+				if(from.incoming == null)
+					from.incoming = from.bearing;
+				to.point = point;
+				to.incoming = from.bearing;
+				to.bearing = from.bearing;
+				addLine(from, to);
+			}
+		}
+
+		@Override
 		public void addLine(PathPoint from, PathPoint to) {
 			if (from.pen() == null || to.pen() == null)
 				throw new IllegalArgumentException();

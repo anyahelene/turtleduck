@@ -49,7 +49,7 @@ function meta(key) {
 function handleKey(key, button, event) {
 	switch (key) {
 		case "f6":
-			if(jquery("#page").hasClass('figure-alone')) {
+			if (jquery("#page").hasClass('figure-alone')) {
 				jquery("#page").toggleClass('main-alone', false);
 				jquery("#page").toggleClass('figure-alone', false);
 				jquery("#page").toggleClass('main-and-figure', true);
@@ -60,7 +60,7 @@ function handleKey(key, button, event) {
 			window.xtermjs_wrap_terminal.focus();
 			break;
 		case "f8":
-			if(jquery("#page").hasClass('main-alone')) {
+			if (jquery("#page").hasClass('main-alone')) {
 				jquery("#page").toggleClass('main-alone', false);
 				jquery("#page").toggleClass('figure-alone', false);
 				jquery("#page").toggleClass('main-and-figure', true);
@@ -70,6 +70,9 @@ function handleKey(key, button, event) {
 			var alone = jquery("#page").hasClass('main-alone');
 			jquery("#page").toggleClass('main-alone', !alone);
 			jquery("#page").toggleClass('main-and-figure', alone);
+			break;
+		case "help":
+			jquery("#page").toggleClass('show-splash-help');
 			break;
 		default:
 			console.log(key, button, event);
@@ -104,6 +107,51 @@ jquery(function() {
 		jquery(this).attr('data-shortcut-text', shortcut.replace('ctrl+', '⌘').replace('shift+', '↑'));
 		Mousetrap.bindGlobal(shortcut, keyHandler);
 		jquery(this).click(handler);
+	});
+
+	jquery('[data-toggle]').each(function(index) {
+		const button = this;
+		const toggleType = jquery(this).attr('data-toggle');
+		const ref = jquery(this).attr('href') || jquery(this).attr('data-target');
+		const target = jquery(ref);
+		if (toggleType == 'collapse') {
+			jquery(button).click(function(e) {
+				var active = jquery(button).hasClass('open');
+				jquery(button).toggleClass('open', !active);
+				target.toggleClass('open', !active);
+				return false;
+			});
+		} else if (toggleType == 'button') {
+			jquery(button).click(function(e) {
+				var active = jquery(button).hasClass('active');
+				jquery(button).toggleClass('active', !active);
+				target.toggleClass('active', !active);
+				return false;
+			});
+		}
+	});
+
+	jquery('[data-reset-onclick]').each(function() {
+		console.log("data-reset-onclick");
+		console.log(this);
+		const cls = jquery(this).attr('data-reset-onclick');
+		jquery(this).find('a').each(function() {
+			jquery(this).click(function(e) {
+				jquery('#page').removeClass(cls);
+			});
+		});
+	});
+
+	jquery('[data-paste]').each(function(index) {
+		const link = this;
+		const ref = jquery(this).attr('href').replace('#', '') || jquery(this).attr('data-target');
+		jquery(link).click(function(e) {
+			const target = window.turtleduck[ref];;
+			const text = jquery(link).attr('data-paste');
+			target.paste(text);
+			target.focus();
+			return false;
+		});
 	});
 });
 window.SockJS = SockJS;

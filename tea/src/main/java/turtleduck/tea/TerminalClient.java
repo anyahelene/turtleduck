@@ -19,6 +19,7 @@ import xtermjs.ITheme;
 import xtermjs.Terminal;
 
 public class TerminalClient extends AbstractChannel {
+	private Client client;
 	private Terminal terminal;
 	private ITheme theme;
 	private final HTMLElement element;
@@ -26,10 +27,11 @@ public class TerminalClient extends AbstractChannel {
 	private final Readline readline;
 	private HostSide hostSide;
 	private EventListener<Event> onresize;
-	public TerminalClient(HTMLElement element, String service) {
+	public TerminalClient(HTMLElement element, String service, Client client) {
 		super(element.getAttribute("id"), service, null);
 		this.readline = new Readline();
 		this.element = element;
+		this.client = client;
 	}
 
 	@Override
@@ -90,9 +92,9 @@ public class TerminalClient extends AbstractChannel {
 		fitAddon.fit();
 		onresize = (e) -> { fitAddon.fit();};
 		Window.current().addEventListener("resize", onresize);
-		Client.WINDOW_MAP.set(name.replace('-', '_') + "_terminal", terminal);
-		Client.WINDOW_MAP.set(name.replace('-', '_') + "_fitAddon", fitAddon);
-		Client.WINDOW_MAP.set(name.replace('-', '_') + "_onresize", onresize);
+		client.map.set(name.replace("-wrap", "").replace('-', '_'), terminal);
+		client.map.set(name.replace("-wrap", "").replace('-', '_') + "_fitAddon", fitAddon);
+		client.map.set(name.replace("-wrap", "").replace('-', '_') + "_onresize", onresize);
 	}
 
 	@Override

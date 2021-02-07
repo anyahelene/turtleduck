@@ -7,7 +7,7 @@ import java.util.function.Function;
 import turtleduck.colors.Color;
 import turtleduck.text.Attribute.AttributeImpl;
 
-public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
+public class AttributesImpl<U> implements Attributes, Attributes.AttributeBuilder<U> {
 	private static final int DEFAULT_ATTRS = AttributeImpl.MASK_EMULATION;
 	private static final double DEFAULT_OPACITY = 1.0, DEFAULT_BRIGHTNESS = 1.0;
 	private FontStyle style = null;
@@ -18,6 +18,11 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 	private Map<Attribute<?>, Object> map;
 	private boolean frozen = false;
 	private TextFont font = null;
+	private Function<Attributes, U> builder;
+
+	public AttributesImpl(Function<Attributes, U> build) {
+		builder = build;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -81,8 +86,8 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 	}
 
 	@Override
-	public AttributeBuilder change() {
-		AttributesImpl change = new AttributesImpl();
+	public AttributeBuilder<Attributes> change() {
+		AttributesImpl<Attributes> change = new AttributesImpl<Attributes>(null);
 		change.attrs = attrs;
 		change.back = back;
 		change.brightness = brightness;
@@ -97,7 +102,7 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 	}
 
 	@Override
-	public <T> AttributeBuilder set(Attribute<T> attr, T value) {
+	public <T> AttributeBuilder<U> set(Attribute<T> attr, T value) {
 		if (frozen)
 			throw new IllegalStateException("Attributes not changeable");
 		if (attr instanceof AttributeImpl<?>) {
@@ -141,7 +146,7 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 	}
 
 	@Override
-	public <T> AttributeBuilder unset(Attribute<T> attr) {
+	public <T> AttributeBuilder<U> unset(Attribute<T> attr) {
 		if (frozen)
 			throw new IllegalStateException("Attributes not changeable");
 		if (attr instanceof AttributeImpl<?>) {
@@ -181,36 +186,39 @@ public class AttributesImpl implements Attributes, Attributes.AttributeBuilder {
 	}
 
 	@Override
-	public <T> AttributeBuilder transform(Attribute<T> attr, Function<T, T> change) {
+	public <T> AttributeBuilder<U> transform(Attribute<T> attr, Function<T, T> change) {
 		if (frozen)
 			throw new IllegalStateException("Attributes not changeable");
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Attributes done() {
+	public U done() {
 		if (frozen)
 			throw new IllegalStateException("Attributes not changeable");
 		frozen = true;
-		return this;
+		if (builder == null)
+			return (U) this;
+		else
+			return builder.apply(this);
 	}
 
 	@Override
 	public String toCss() {
 		StringBuilder sb = new StringBuilder();
-		if(weight != null && weight != FontWeight.NORMAL) {
+		if (weight != null && weight != FontWeight.NORMAL) {
 			sb.append("font-weight:").append(weight.toCss()).append(";");
 		}
-		if(style != null && style != FontStyle.NORMAL) {
+		if (style != null && style != FontStyle.NORMAL) {
 			sb.append("font-style:").append(style.toCss()).append(";");
 		}
-		if(fore != null) {
+		if (fore != null) {
 			sb.append("color:").append(fore.toCss()).append(";");
 		}
-		if(back != null) {
+		if (back != null) {
 			sb.append("background-color:").append(back.toCss()).append(";");
 		}
-		if(opacity != 1.0) {
+		if (opacity != 1.0) {
 			sb.append("opacity:").append(opacity).append(";");
 		}
 

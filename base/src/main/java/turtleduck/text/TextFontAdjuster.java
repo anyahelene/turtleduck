@@ -3,7 +3,6 @@ package turtleduck.text;
 import turtleduck.display.Screen;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
-import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 

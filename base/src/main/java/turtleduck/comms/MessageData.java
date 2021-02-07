@@ -3,7 +3,6 @@ package turtleduck.comms;
 import java.util.List;
 import java.util.function.Supplier;
 
-import turtleduck.comms.Message.OpenMessage;
 import turtleduck.comms.impl.MessageImpl;
 
 public interface MessageData {

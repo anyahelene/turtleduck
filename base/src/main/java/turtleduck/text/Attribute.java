@@ -67,12 +67,12 @@ public interface Attribute<T> {
 	/**
 	 * Foreground colour
 	 */
-	Attribute<Color> ATTR_FOREGROUND = new AttributeImpl<>("foreground", Colors.BLUE, 0x00, (c) -> m(c.toSGRParam(30)));
+	Attribute<Color> ATTR_FOREGROUND = new AttributeImpl<>("foreground", Colors.BLUE, 0x00, (c) -> m(c != null ? c.toSGRParam(30) : "30"));
 	/**
 	 * Background colour
 	 */
 	Attribute<Color> ATTR_BACKGROUND = new AttributeImpl<>("background", Colors.TRANSPARENT, 0x00,
-			(c) -> m(c.toSGRParam(40)));
+			(c) -> m(c != null ? c.toSGRParam(40) : "40"));
 	/**
 	 * Font
 	 */

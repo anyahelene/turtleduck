@@ -1,7 +1,5 @@
 package turtleduck.image;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -10,7 +8,6 @@ import javax.imageio.ImageIO;
 
 import turtleduck.colors.Color;
 import turtleduck.image.impl.AwtPixelData;
-import turtleduck.image.impl.PixelData;
 
 public interface Image {
 	enum Transpose {

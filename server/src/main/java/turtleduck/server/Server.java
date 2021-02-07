@@ -311,6 +311,7 @@ public class Server extends AbstractVerticle {
 		sessionHandler = SessionHandler.create(sessionStore);
 		sessionHandler.setCookieHttpOnlyFlag(true);
 		sessionHandler.setCookieSameSite(CookieSameSite.LAX);
+		sessionHandler.setSessionTimeout(24*60*60*1000);
 		loggerHandler = LoggerHandler.create(false, LoggerHandler.DEFAULT_FORMAT);
 		tdsHandler = new TDSHandler(this);
 		MessageData.setDataConstructor(() -> new MessageRepr());

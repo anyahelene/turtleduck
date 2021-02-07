@@ -13,7 +13,7 @@ import turtleduck.text.TextFont;
 import turtleduck.text.TextWindow;
 
 public class CursorImpl implements TextCursor, SubTextCursor {
-	protected Attributes attrs = new AttributesImpl();
+	protected Attributes attrs = new AttributesImpl<Attributes>(null);
 	protected int x = 1, y = 1;
 	protected TextFont font;
 	protected final TextWindow page;

@@ -5,19 +5,16 @@ import java.util.concurrent.BlockingQueue;
 
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
-import turtleduck.display.Canvas;
-import turtleduck.display.impl.BaseCanvas;
+import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
-import turtleduck.drawing.Drawing;
 import turtleduck.geometry.Point;
-import turtleduck.image.Image;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
-public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
+public class JfxLayer extends BaseLayer<JfxScreen> implements Layer {
 	private static final int QUEUE_SIZE = 100;
 	private final javafx.scene.canvas.Canvas fxCanvas;
 	private final BlockingQueue<Path> queue = new ArrayBlockingQueue<>(QUEUE_SIZE);
@@ -31,31 +28,26 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 	}
 
 	@Override
-	public Canvas clear() {
+	public Layer clear() {
 		fxCanvas.getGraphicsContext2D().clearRect(0, 0, fxCanvas.getWidth(), fxCanvas.getHeight());
 		return this;
 	}
 
-	@Override
-	public Canvas clear(Fill fill) {
-		fxCanvas.getGraphicsContext2D().clearRect(0, 0, fxCanvas.getWidth(), fxCanvas.getHeight());
-		return this;
-	}
 
 	@Override
-	public Canvas hide() {
+	public Layer hide() {
 		fxCanvas.setVisible(false);
 		return this;
 	}
 
 	@Override
-	public Canvas show() {
+	public Layer show() {
 		fxCanvas.setVisible(true);
 		return this;
 	}
 
 	@Override
-	public Canvas flush() {
+	public Layer flush() {
 		if (Platform.isFxApplicationThread()) {
 			for (Path p = queue.poll(); p != null; p = queue.poll()) {
 				drawPath(p);
@@ -64,8 +56,7 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 		return this;
 	}
 
-	@Override
-	public Canvas draw(Path path) {
+	public void draw(Path path) {
 		if (Platform.isFxApplicationThread()) {
 			drawPath(path);
 		} else {
@@ -75,7 +66,6 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 				throw new RuntimeException(e);
 			}
 		}
-		return this;
 	}
 
 	protected void drawPath(Path path) {
@@ -93,11 +83,6 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 		}
 	}
 
-	@Override
-	public Canvas draw(Drawing drawing) {
-		// TODO Auto-generated method stub
-		return this;
-	}
 
 	protected void changeFill(Fill fill) {
 		context.setFill(JfxColor.toJfxPaint(fill.fillPaint()));
@@ -108,19 +93,7 @@ public class JfxLayer extends BaseCanvas<JfxScreen> implements Canvas {
 		context.setLineWidth(stroke.strokeWidth());
 	}
 
-	@Override
-	public void drawImage(Point at, Image img) {
-		// TODO Auto-generated method stub
 
-	}
-
-	@Override
-	protected void drawLine(Stroke stroke, Point from, Point to) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	protected PathWriter pathWriter(boolean use3d) {
 		// TODO Auto-generated method stub
 		return null;

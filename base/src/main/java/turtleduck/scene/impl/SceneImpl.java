@@ -132,14 +132,14 @@ public abstract class SceneImpl implements SceneNode {
 
 		@Override
 		public SceneObject3<?> createObject() {
-			SceneObject3<?> obj =  new Object3();
+			SceneObject3<?> obj =  new Object3<>();
 			add(obj);
 			return obj;
 		}
 
 		@Override
 		public SceneGroup3<?> createGroup() {
-			SceneGroup3<?> obj = new Group();
+			SceneGroup3<?> obj = new Group<>();
 			add(obj);
 			return obj;
 		}

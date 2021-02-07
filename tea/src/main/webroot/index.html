@@ -31,7 +31,7 @@
 </head>
 <body onload="main()">
 
-	<div id="page" class="main-and-figure">
+	<div id="page" class="main-and-figure show-splash-help">
 		<header>
 			<nav id="top-left">
 				<img id="logoimg" src="static/images/turtleduck.svg" /> <a
@@ -105,6 +105,10 @@
 					type=button>
 					<span class="">Java ↓</span><span class="icon">☕</span>
 				</button>
+				<button id="help" data-shortcut="ctrl+?" class="rows"
+					type=button>
+					<span class="" style="font-size: x-large">?</span>
+				</button>
 			</nav>
 			<nav id="top-right"></nav>
 		</header>
@@ -113,17 +117,28 @@
 			<legend>
 				<span class="title">Explorer</span>
 			</legend>
-			<h2>Imports</h2>
-			<ul id="explorer-imports" data-role="listview">
-				<li class="package">java.util</li>
-				<li class="java">TShell</li>
-			</ul>
-			<h2>Types</h2>
-			<ul id="explorer-types"></ul>
-			<h2>Methods</h2>
-			<ul id="explorer-methods"></ul>
-			<h2>Variables</h2>
-			<ul id="explorer-variables"></ul>
+			<div class="body">
+				<h2>
+					<a id="explorer-head-var" href="#explorer-var" class="empty"
+						data-toggle="collapse">Variables</a>
+				</h2>
+				<ul id="explorer-var" class="collapse empty" data-role="listview"></ul>
+				<h2>
+					<a id="explorer-head-method" href="#explorer-method" class="empty"
+						data-toggle="collapse">Methods</a>
+				</h2>
+				<ul id="explorer-method" class="collapse empty" data-role="listview"></ul>
+				<h2>
+					<a id="explorer-head-type" href="#explorer-type" class="empty"
+						data-toggle="collapse">Types</a>
+				</h2>
+				<ul id="explorer-type" class="collapse empty" data-role="listview"></ul>
+				<h2>
+					<a id="explorer-head-import" href="#explorer-import" class="empty"
+						data-toggle="collapse">Imports</a>
+				</h2>
+				<ul id="explorer-import" class="collapse empty" data-role="listview"></ul>
+			</div>
 		</fieldset>
 
 		<fieldset id="editor" class="box widget" data-widget="editor"
@@ -132,6 +147,16 @@
 			<div id="editor-wrap">
 				<div id="editor-embed"></div>
 			</div>
+			<section data-reset-onclick="show-splash-help" class="splashhelp">
+				<h2>Code Editor</h2>
+				<p>Try..
+				<ul class="shell-sample">
+					<li><a href="#xtermjs" data-paste="/edit">/edit</a>
+					<li><a href="#xtermjs" data-paste="/edit 2">/edit 2</a>
+					<li><a href="#xtermjs" data-paste="/edit twice">/edit twice</a>
+				</ul>
+				<p>to open shell snippets in editor.
+			</section>
 		</fieldset>
 
 		<!--div id="right-size" style="position:absolute;left:0px;margin-left:-5px;height:100%;width:5px;background:#ccc;z-index:100" ></div-->
@@ -144,10 +169,23 @@
 				<button id="gfx-save" type="button">Save</button>
 			</nav>
 			<div>
-				<svg id="svg0" viewBox="0 0 1280 720"
-					preserveAspectRatio="xMinYMin slice"></svg>
+				<!-- svg id="svg0" viewBox="0 0 1280 720" preserveAspectRatio="xMinYMin slice"></svg-->
+				<svg id="svg0" viewBox="-640 -360 1280 720" preserveAspectRatio="xMidYMid slice"></svg>
 			</div>
+			<div class="footnote" id="coordinates-svg0">(0,0)</div>
 			<div class="box-foot">SVG</div>
+			<section data-reset-onclick="show-splash-help" class="splashhelp">
+				<h2>Graphics</h2>
+				<p>For example, try...
+				<ul class="shell-sample">
+					<li><a href="#xtermjs" data-paste="turtle.draw(50);">turtle.draw(50);</a>
+					<li><a href="#xtermjs"
+						data-paste="for(int i = 0; i &lt; 360; i++) turtle.draw(2).turn(1);">for(int
+							i = 0; i &lt; 360; i++)
+							<br>&#x2000;&#x2000; turtle.draw(2).turn(1);
+					</a>
+				</ul>
+			</section>
 		</fieldset>
 		<fieldset id="instructions" class="box widget figure"
 			data-widget="instructions" data-provides="instructions"
@@ -160,11 +198,21 @@
 			draggable="true"></div-->
 		<fieldset id="console" class="box console">
 			<legend>
-				<span class="title">Console</span>
+				<span class="title">Shell</span>
 			</legend>
 			<!--div id="code-size" style="position:relative;top:0px;margin-top:-5px;width:100%;height:5px;background:#ccc;z-index:100"></div-->
 			<div id="xtermjs-wrap" class="widget" data-widget="xtermjs"
 				data-requires="jshell"></div>
+			<section data-reset-onclick="show-splash-help"  class="splashhelp">
+				<h2>Shell</h2>
+				<p>Evaluate expressions and declare variables, methods and
+					classes
+				<ul class="shell-sample">
+					<li><a href="#xtermjs" data-paste="var x = 1 + 2">var x = 1 + 2</a>
+					<li><a href="#xtermjs" data-paste="x * 2">x * 2</a>
+					<li><a href="#xtermjs" data-paste="int twice(int a) { return a + a; }">int twice(int a) { return a + a; }</a>
+				</ul>
+			</section>
 		</fieldset>
 
 		<footer id="bottom">
@@ -177,60 +225,74 @@
 		</footer>
 	</div>
 	<script>
-function resizable(element,handle,direction,callback) {
-	var start, size = 0;
-	handle.onmousedown = mouseDown;
-	function mouseDown(e) {
-		e = e || window.event;
-		console.log("resize start: ")
-		console.log(e);
-		e.preventDefault();
-		if(direction == 'h') {
-			start = e.clientX;
-			size = element.clientWidth;
-		} else {
-			start = e.clientY;
-			size = element.clientHeight;			
-		}
-		document.onmouseup = mouseUp;
-		document.onmousemove = mouseMove;
-	}
-	
-	function mouseMove(e) {
-		e = e || window.event;
-		console.log("resize move: ");
-		console.log(e);
-		e.preventDefault();
-		if(e.buttons != 1) {
-			mouseUp(e);
-		}
-		if(direction == 'h') {
-			size = size + (start - e.clientX);
-			start = e.clientX;
-			element.style.width = size + "px";
-		} else {
-			size = size + (start - e.clientY);
-			start = e.clientY;
-			element.style.height = size + "px";
-		}
-		console.log("resize to: " + size);
-	}
-	
-	function mouseUp(e) {
-		console.log("resize done: ")
-		console.log(e);
-		e.preventDefault();
-		document.onmouseup = null;
-		document.onmousemove = null;
-		console.log(callback);
-		if(callback) {
-			callback();
-		}
-	}
-}
-resizable(document.getElementById("code-box"), document.getElementById("code-size"), "v", () => window.fitAddon.fit());
-resizable(document.getElementById("right"), document.getElementById("right-size"), "h");
+		function resizable(element, handle, direction, callback) {
+			var start, size = 0;
+			handle.onmousedown = mouseDown;
+			function mouseDown(e) {
+				e = e || window.event;
+				console.log("resize start: ")
+				console.log(e);
+				e.preventDefault();
+				if (direction == 'h') {
+					start = e.clientX;
+					size = element.clientWidth;
+				} else {
+					start = e.clientY;
+					size = element.clientHeight;
+				}
+				document.onmouseup = mouseUp;
+				document.onmousemove = mouseMove;
+			}
 
-</script>
+			function mouseMove(e) {
+				e = e || window.event;
+				console.log("resize move: ");
+				console.log(e);
+				e.preventDefault();
+				if (e.buttons != 1) {
+					mouseUp(e);
+				}
+				if (direction == 'h') {
+					size = size + (start - e.clientX);
+					start = e.clientX;
+					element.style.width = size + "px";
+				} else {
+					size = size + (start - e.clientY);
+					start = e.clientY;
+					element.style.height = size + "px";
+				}
+				console.log("resize to: " + size);
+			}
+
+			function mouseUp(e) {
+				console.log("resize done: ")
+				console.log(e);
+				e.preventDefault();
+				document.onmouseup = null;
+				document.onmousemove = null;
+				console.log(callback);
+				if (callback) {
+					callback();
+				}
+			}
+		}
+		//resizable(document.getElementById("code-box"), document.getElementById("code-size"), "v", () => window.fitAddon.fit());
+		//resizable(document.getElementById("right"), document.getElementById("right-size"), "h");
+		function trackMouse(element) {
+			footnote = document.getElementById("coordinates-" + element.id)
+			element.onmousemove = mouseMove;
+
+			function mouseMove(e) {
+				e = e || window.event;
+				e.preventDefault();
+				var p = new DOMPoint(e.clientX, e.clientY);
+				var m = element.getScreenCTM().inverse();
+				p = p.matrixTransform(m);
+				footnote.textContent = "(" + Math.round(p.x) + ","
+						+ Math.round(p.y) + ")";
+			}
+		}
+		trackMouse(document.getElementById("svg0"));
+	</script>
 </body>
 </html>

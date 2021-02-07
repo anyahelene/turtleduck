@@ -2,20 +2,14 @@ package turtleduck.text.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
-import turtleduck.colors.Colors;
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.text.Attribute;
-import turtleduck.text.Attributed;
 import turtleduck.text.Attributes;
 import turtleduck.text.AttributesImpl;
 import turtleduck.text.CodePoint;
@@ -221,7 +215,7 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 
 	}
 
-	protected static final Attributes DEFAULT_ATTRS = new AttributesImpl();
+	protected static final Attributes DEFAULT_ATTRS = new AttributesImpl<Attributes>(null);
 
 	protected static final TextMode DEFAULT_MODE = TextMode.MODE_40X22;
 	protected static final boolean DEBUG_REDRAW = false;

@@ -1,6 +1,6 @@
 package turtleduck.sprites;
 
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
 import turtleduck.turtle.Navigator;
 
 public interface Sprite extends Navigator<Sprite> {

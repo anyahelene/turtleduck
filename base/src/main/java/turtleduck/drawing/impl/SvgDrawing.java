@@ -5,15 +5,11 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
-import turtleduck.display.impl.BaseCanvas;
 import turtleduck.drawing.Drawing;
 import turtleduck.geometry.BoundingBox;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.impl.BoundingBoxImpl;
-import turtleduck.objects.IdentifiedObject;
 import turtleduck.turtle.Fill;
-import turtleduck.turtle.IShape;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.Stroke;
 

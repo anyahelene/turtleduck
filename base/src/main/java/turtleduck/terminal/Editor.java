@@ -1,6 +1,5 @@
 package turtleduck.terminal;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import turtleduck.comms.Message;

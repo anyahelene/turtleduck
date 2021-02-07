@@ -1,14 +1,10 @@
 package turtleduck.jfx;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
-
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
@@ -23,6 +19,7 @@ import javafx.scene.input.DataFormat;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import turtleduck.canvas.CanvasImpl;
 import turtleduck.colors.Color;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
@@ -31,7 +28,6 @@ import turtleduck.display.MouseCursor;
 import turtleduck.events.KeyEvent;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyCodes;
-import turtleduck.turtle.Pen;
 import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
 
@@ -179,11 +175,11 @@ public class JfxScreen extends BaseScreen {
 	}
 
 	@Override
-	public turtleduck.display.Canvas createCanvas() {
+	public turtleduck.canvas.Canvas createCanvas() {
 		Canvas canvas = newCanvas();
-		var layer = addLayer(new JfxLayer(newLayerId(), width(), getHeight(), this, canvas));
+		JfxLayer layer = addLayer(new JfxLayer(newLayerId(), width(), getHeight(), this, canvas));
 		layerCanvases.put(layer, canvas);
-		return layer;
+		return new CanvasImpl<>(layer.id(),this, width(), getHeight(), use3d -> layer.pathWriter(use3d));
 	}
 
 	@Override

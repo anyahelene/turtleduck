@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.text.Graphemizer;
-import turtleduck.text.TextCursor;
 import turtleduck.util.Strings;
 
 public class Readline {

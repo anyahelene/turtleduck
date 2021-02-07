@@ -2,6 +2,8 @@ $water: #66e;
 $page: #ccd;
 $pen: #222;
 $pen-sharp: #000;
+$prompt: #880;
+$terminal: #080;
 $sun: color.adjust($page, $hue: 180);
 $button-bg-header: color.scale($page, $lightness: -20%);
 $button-bg-normal: color.scale($sun, $lightness: -20%);

@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
-
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -20,10 +18,9 @@ import org.joml.Vector4f;
 import turtleduck.buffer.DataField;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
-import turtleduck.display.Canvas;
-import turtleduck.display.impl.BaseCanvas;
+import turtleduck.display.Layer;
+import turtleduck.display.impl.BaseLayer;
 import turtleduck.drawing.Drawing;
-import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.gl.objects.ArrayBuffer;
 import turtleduck.gl.objects.ShaderObject;
@@ -31,7 +28,6 @@ import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Texture;
 import turtleduck.gl.objects.Uniform;
 import turtleduck.gl.objects.VertexArray;
-import turtleduck.gl.objects.VertexArrayBuilder;
 import turtleduck.gl.objects.VertexArrayFormat;
 import turtleduck.image.Image;
 import turtleduck.image.Tiles;
@@ -44,11 +40,9 @@ import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
-public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
+public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 	public static double angle = 0;
-	private static Map<Color, Vector4f> colors = new HashMap<>();
 	private final List<Texture> textures = new ArrayList<>();
-	private int nVertices;
 	private int imageVbo = 0;
 
 	private ArrayBuffer streamBuffer;
@@ -60,7 +54,6 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 
 //	private VertexArrayBuilder vab;
 //	private VertexArrayBuilder vab2;
-	private DrawObject lineObject;
 //	private List<Point> currentPath = new ArrayList<>();
 //	private List<Stroke> currentPathStrokes = new ArrayList<>();
 	private List<DrawObject> drawObjects = new ArrayList<>();
@@ -112,28 +105,28 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 	}
 
 	@Override
-	public Canvas show() {
+	public Layer show() {
 		// TODO Auto-generated method stub
 		return this;
 
 	}
 
 	@Override
-	public Canvas hide() {
+	public Layer hide() {
 		// TODO Auto-generated method stub
 		return this;
 
 	}
 
 	@Override
-	public Canvas flush() {
+	public Layer flush() {
 		// TODO Auto-generated method stub
 		return this;
 
 	}
 
-	@Override
-	public Canvas draw(Path path) {
+	
+	public Layer draw(Path path) {
 		Point from = path.first();
 		Pen pen = path.pointPen(0);
 		for (int i = 1; i < path.size(); i++) {
@@ -146,26 +139,22 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 
 	}
 
-	@Override
-	public Canvas draw(Drawing drawing) {
+	public Layer draw(Drawing drawing) {
 		// TODO Auto-generated method stub
 		return this;
 
 	}
 
-	@Override
-	public Canvas clear() {
+	public Layer clear() {
 		// TODO Auto-generated method stub
 		return this;
 	}
 
-	@Override
-	public Canvas clear(Fill fill) {
+	public Layer clear(Fill fill) {
 		// TODO Auto-generated method stub
 		return this;
 	}
 
-	@Override
 	public void drawImage(Point at, Image img) {
 		drawImage(at, img, 0);
 	}
@@ -241,7 +230,6 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		streamArray3.begin().put(a3PosVec3, p1).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
 		streamArray3.begin().put(a3PosVec3, p3).put(a3ColorVec4, color).put(a3Normal3, u).put(a3TexCoord2, 0, 0).end();
 		float frows = rows, fcols = cols;
-		float s = 1f;
 		Vector3f normal = new Vector3f();
 		for (int y = 0; y < rows; y++) {
 			for (int x = 0; x < cols; x++) {
@@ -779,7 +767,6 @@ public class GLLayer extends BaseCanvas<GLScreen> implements Canvas {
 		}
 	}
 
-	@Override
 	protected PathWriter pathWriter(boolean use3d) {
 		if (use3d)
 			return pathWriter3;

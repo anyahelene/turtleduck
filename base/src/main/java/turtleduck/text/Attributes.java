@@ -9,84 +9,84 @@ public interface Attributes {
 
 	boolean isSet(Attribute<?> attr);
 
-	AttributeBuilder change();
+	AttributeBuilder<Attributes> change();
 
-	public interface AttributeBuilder {
-		<T> AttributeBuilder set(Attribute<T> attr, T value);
+	public interface AttributeBuilder<U> {
+		<T> AttributeBuilder<U>  set(Attribute<T> attr, T value);
 
-		<T> AttributeBuilder unset(Attribute<T> attr);
+		<T> AttributeBuilder<U>  unset(Attribute<T> attr);
 
-		<T> AttributeBuilder transform(Attribute<T> attr, Function<T, T> change);
+		<T> AttributeBuilder<U>  transform(Attribute<T> attr, Function<T, T> change);
 
-		Attributes done();
+		U done();
 		
-		default AttributeBuilder weight(FontWeight w) {
+		default AttributeBuilder<U>  weight(FontWeight w) {
 			return set(Attribute.ATTR_WEIGHT, w);
 		}
 
-		default AttributeBuilder style(FontStyle s) {
+		default AttributeBuilder<U>  style(FontStyle s) {
 			return set(Attribute.ATTR_STYLE, s);
 		}
 
-		default AttributeBuilder brightness(double b) {
+		default AttributeBuilder<U>  brightness(double b) {
 			return set(Attribute.ATTR_BRIGHTNESS, (float) b);
 		}
 
-		default AttributeBuilder opacity(double o) {
+		default AttributeBuilder<U>  opacity(double o) {
 			if (o < 0 || o > 1)
 				throw new IllegalArgumentException(String.valueOf(o));
 			return set(Attribute.ATTR_OPACITY, (float) o);
 		}
 
-		default AttributeBuilder inverse(boolean enabled) {
+		default AttributeBuilder<U>  inverse(boolean enabled) {
 			return set(Attribute.ATTR_INVERSE, enabled);
 		}
 
-		default AttributeBuilder underline(boolean enabled) {
+		default AttributeBuilder<U>  underline(boolean enabled) {
 			return set(Attribute.ATTR_UNDERLINE, enabled);
 		}
 
-		default AttributeBuilder overline(boolean enabled) {
+		default AttributeBuilder<U>  overline(boolean enabled) {
 			return set(Attribute.ATTR_OVERLINE, enabled);
 		}
 
-		default AttributeBuilder lineThrough(boolean enabled) {
+		default AttributeBuilder<U> lineThrough(boolean enabled) {
 			return set(Attribute.ATTR_LINE_THROUGH, enabled);
 		}
 
-		default AttributeBuilder overstrike(boolean enabled) {
+		default AttributeBuilder<U>  overstrike(boolean enabled) {
 			return set(Attribute.ATTR_OVERSTRIKE, enabled);
 		}
 
-		default AttributeBuilder blink(boolean enabled) {
+		default AttributeBuilder<U>  blink(boolean enabled) {
 			return set(Attribute.ATTR_BLINK, enabled);
 		}
 
-		default AttributeBuilder bold(boolean enabled) {
+		default AttributeBuilder<U>  bold(boolean enabled) {
 			if (enabled) {
 				return set(Attribute.ATTR_WEIGHT, FontWeight.BOLD);
 			} else {
 				return unset(Attribute.ATTR_WEIGHT);
 			}
 		}
-		default AttributeBuilder italic(boolean enabled) {
+		default AttributeBuilder<U>  italic(boolean enabled) {
 			if (enabled) {
 				return set(Attribute.ATTR_STYLE, FontStyle.ITALIC);
 			} else {
 				return unset(Attribute.ATTR_STYLE);
 			}
 		}
-		default AttributeBuilder emph(boolean enabled) {
+		default AttributeBuilder<U>  emph(boolean enabled) {
 			return italic(enabled);
 		}
 
-		default AttributeBuilder foreground(Color foreColor) {
+		default AttributeBuilder<U>  foreground(Color foreColor) {
 			if(foreColor != null)
 				return set(Attribute.ATTR_FOREGROUND, foreColor);
 			else
 				return this;
 		}
-		default AttributeBuilder background(Color backColor) {
+		default AttributeBuilder<U>  background(Color backColor) {
 			if(backColor != null)
 				return set(Attribute.ATTR_BACKGROUND, backColor);
 			else

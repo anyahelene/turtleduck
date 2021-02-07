@@ -1,6 +1,5 @@
 package turtleduck.display;
 
-import turtleduck.display.Display.DisplayLayout;
 
 public final class Display {
 	protected static final int HEADER = 0, FOOTER = 1, EDITOR = 2, NAVIGATOR = 3, GRAPHICS = 4, TERMINAL = 5;

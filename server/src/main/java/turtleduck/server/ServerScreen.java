@@ -2,16 +2,13 @@ package turtleduck.server;
 
 import java.util.function.Predicate;
 
-import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 import turtleduck.colors.Color;
-import turtleduck.comms.Channel;
-import turtleduck.comms.Message;
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
+import turtleduck.canvas.CanvasImpl;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
-import turtleduck.display.impl.BaseScreen.Dimensions;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
 import turtleduck.text.TextWindow;
@@ -29,7 +26,6 @@ public class ServerScreen extends BaseScreen {
 
 	public ServerScreen(TurtleDuckSession session, Dimensions dim) {
 		this.dim = dim;
-		int height = (int) Math.floor(dim.winHeight);
 		this.session = session;
 		setupAspects(dim);
 	}
@@ -50,7 +46,7 @@ public class ServerScreen extends BaseScreen {
 	public Canvas createCanvas() {
 		String layerId = newLayerId();
 		ServerLayer layer = addLayer(new ServerLayer(layerId, this, dim.fbWidth, dim.fbHeight, session));
-		return layer;
+		return new CanvasImpl<>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d));
 	}
 
 	@Override
@@ -203,9 +199,10 @@ public class ServerScreen extends BaseScreen {
 			l.flush();
 		}
 	}
+
 	public void render() {
 		for (Layer l : layerMap.values()) {
-			((ServerLayer)l).render(false);
+			((ServerLayer) l).render(false);
 		}
 	}
 

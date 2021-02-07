@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
@@ -143,6 +143,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		return drawTo(to);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public THIS drawTo(Point to) {
 		drawing = true;

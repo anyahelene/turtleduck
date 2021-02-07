@@ -88,6 +88,7 @@ public class AuthProvider {
 				oauth2opts.setUserInfoPath(options.userinfo_endpoint);
 			if (options.jwks_uri != null)
 				oauth2opts.setJwkPath(options.jwks_uri);
+			
 			logger.info("oauth2opts: " + oauth2opts);
 
 			if (options.oauth_discover) {

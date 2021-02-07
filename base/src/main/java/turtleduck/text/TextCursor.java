@@ -3,7 +3,6 @@ package turtleduck.text;
 import java.util.function.BiFunction;
 
 import turtleduck.colors.Color;
-import turtleduck.text.Attributes.AttributeBuilder;
 
 /**
  * @author anya

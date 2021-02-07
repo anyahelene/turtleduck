@@ -1,7 +1,5 @@
 package turtleduck.turtle;
 
-import java.util.Map;
-
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Path.PointType;

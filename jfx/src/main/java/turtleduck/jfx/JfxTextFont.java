@@ -23,7 +23,6 @@ import javafx.scene.transform.Affine;
 import javafx.scene.transform.Transform;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.text.BlocksAndBoxes;
 import turtleduck.text.TextFont;

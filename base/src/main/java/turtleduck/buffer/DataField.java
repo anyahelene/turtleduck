@@ -279,7 +279,7 @@ public abstract class DataField<T> {
 		if (!(obj instanceof DataField)) {
 			return false;
 		}
-		DataField other = (DataField) obj;
+		DataField<?> other = (DataField<?>) obj;
 		if (location != other.location) {
 			return false;
 		}

@@ -10,10 +10,7 @@ import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-import java.text.NumberFormat;
-
 import org.joml.Vector2f;
-import org.joml.Vector2fc;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 

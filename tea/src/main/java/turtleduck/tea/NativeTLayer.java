@@ -7,8 +7,8 @@ import org.teavm.jso.canvas.CanvasRenderingContext2D;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
 
 import turtleduck.comms.Message;
-import turtleduck.display.Canvas;
-import turtleduck.display.impl.BaseCanvas;
+import turtleduck.display.Layer;
+import turtleduck.display.impl.BaseLayer;
 import turtleduck.drawing.Drawing;
 import turtleduck.geometry.Point;
 import turtleduck.image.Image;
@@ -22,7 +22,7 @@ import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Stroke;
 
-public class NativeTLayer extends BaseCanvas<NativeTScreen> {
+public class NativeTLayer extends BaseLayer<NativeTScreen> {
 
 	protected HTMLCanvasElement element;
 	protected CanvasRenderingContext2D context;
@@ -38,25 +38,25 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 	}
 
 	@Override
-	public Canvas clear() {
+	public Layer clear() {
 		element.clear();
 		return this;
 	}
 
 	@Override
-	public Canvas show() {
+	public Layer show() {
 		element.setHidden(false);
 		return this;
 	}
 
 	@Override
-	public Canvas hide() {
+	public Layer hide() {
 		element.setHidden(true);
 		return this;
 	}
 
 	@Override
-	public Canvas flush() {
+	public Layer flush() {
 		// TODO Auto-generated method stub
 		return this;
 
@@ -66,14 +66,7 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 
 	}
 
-	@Override
-	public Canvas clear(Fill fill) {
-		// TODO Auto-generated method stub
-		return this;
-	}
-
-	@Override
-	public Canvas draw(Path path) {
+	public Layer draw(Path path) {
 		Point from = path.first();
 		Pen pen = path.pointPen(0);
 		context.moveTo(from.x(), from.y());
@@ -95,12 +88,6 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 		return this;
 	}
 
-	@Override
-	public Canvas draw(Drawing drawing) {
-		// TODO Auto-generated method stub
-		return this;
-	}
-
 	protected void changeFill(Fill fill) {
 		context.setFillStyle(fill.fillPaint().toString());
 	}
@@ -116,16 +103,10 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 		}
 	}
 
-	@Override
-	public void drawImage(Point at, Image img) {
-		// TODO Auto-generated method stub
-		
-	}
-
 	public void render(boolean frontToBack) {
-		if(pathWriter.hasNextStroke()) {
+		if (pathWriter.hasNextStroke()) {
 			PathStroke stroke;
-			while((stroke = pathWriter.nextStroke()) != null) {
+			while ((stroke = pathWriter.nextStroke()) != null) {
 				List<PathPoint> points = stroke.points();
 				PathPoint from = points.get(0);
 				Pen pen = from.pen();
@@ -148,11 +129,11 @@ public class NativeTLayer extends BaseCanvas<NativeTScreen> {
 			}
 		}
 	}
-	@Override
+
 	protected PathWriter pathWriter(boolean use3d) {
 		return pathWriter;
 	}
-	
+
 	class TeaPathWriter extends PathWriterImpl {
 	}
 

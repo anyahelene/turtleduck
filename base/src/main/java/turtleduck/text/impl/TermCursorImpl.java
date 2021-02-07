@@ -14,7 +14,7 @@ import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
 
 public class TermCursorImpl implements TextCursor, SubTextCursor {
-	private static Attributes DEFAULT_ATTRS = new AttributesImpl();
+	private static Attributes DEFAULT_ATTRS = new AttributesImpl<Attributes>(null);
 	private Attributes currentAttrs = DEFAULT_ATTRS;
 	private PseudoTerminal terminal;
 	private List<Attributes> stack = new ArrayList<>();

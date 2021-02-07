@@ -1,7 +1,6 @@
 package turtleduck.display;
 
 import turtleduck.objects.IdentifiedObject;
-import turtleduck.text.TextWindow;
 
 public interface Layer extends IdentifiedObject {
 	/**

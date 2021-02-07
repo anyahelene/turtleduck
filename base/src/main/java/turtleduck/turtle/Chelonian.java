@@ -4,7 +4,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import turtleduck.colors.Color;
-import turtleduck.display.Canvas;
+import turtleduck.canvas.Canvas;
 import turtleduck.drawing.Functional;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
@@ -157,7 +157,7 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, 
 	/**
 	 * Start painting a stroke.
 	 * 
-	 * Call {@link #done()} when you're doe
+	 * Call {@link #done()} when you're done
 	 * 
 	 * @return {@code this}, for sending more draw commands
 	 */

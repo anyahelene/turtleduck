@@ -73,4 +73,9 @@ public interface PathStroke {
 	 * @return A list of all points in the path
 	 */
 	List<PathPoint> points();
+
+	void addPoint(PathPoint point);
+
+	void addPoint(Point point);
+
 }

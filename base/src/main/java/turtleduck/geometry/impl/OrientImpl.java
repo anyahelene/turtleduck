@@ -250,7 +250,7 @@ public class OrientImpl implements Orientation {
 //        euler.y = Math.safeAsin(2.0 * (x*z + y*w));
 //        euler.y = Math.atan2(2.0 * (y*w - x*x), 1.0 - 2.0 * (z*z + x*x));
 //        euler.z = Math.atan2(2.0 * (z*w - x*y), 1.0 - 2.0 * (y*y + z*z));
-		String format = absolute ? "%s%.2f°,%.2f°,%.2f° %s" : "%s%+.2f°,%+.2f°,%+.2f° %s";
+	// format = absolute ? "%s%.2f°,%.2f°,%.2f° %s" : "%s%+.2f°,%+.2f°,%+.2f° %s";
 		if (absolute && degs < 0) {
 			degs += 360;
 		}

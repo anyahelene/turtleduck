@@ -4,7 +4,6 @@ import java.lang.Character.UnicodeBlock;
 import java.lang.Character.UnicodeScript;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 public class CodePointImpl implements CodePoint {
 	protected static final CodePoint LATIN1[] = makeBlock(0);

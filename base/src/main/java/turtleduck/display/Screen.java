@@ -2,7 +2,7 @@ package turtleduck.display;
 
 import java.util.function.Predicate;
 
-import turtleduck.turtle.Pen;
+import turtleduck.canvas.Canvas;
 import turtleduck.colors.Color;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;

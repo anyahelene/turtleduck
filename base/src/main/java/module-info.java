@@ -10,7 +10,9 @@ module turtleduck.base {
 	exports turtleduck.drawing;
 	exports turtleduck.geometry;
 	exports turtleduck.comms;
+	exports turtleduck.canvas;
 	exports turtleduck.sprites;
+	exports turtleduck.shapes;
 	exports turtleduck.grid;
 	exports turtleduck.scene.impl;
 	exports turtleduck.scene;
@@ -19,13 +21,17 @@ module turtleduck.base {
 	exports turtleduck.text;
 	exports turtleduck.text.impl;
 	exports turtleduck.turtle;
+	exports turtleduck.turtle.impl;
+
 	exports turtleduck.util;
+
 	uses turtleduck.display.DisplayInfo;
 	uses turtleduck.display.MouseCursor;
 	uses turtleduck.events.KeyEvent;
 	uses turtleduck.Launcher;
 	uses turtleduck.comms.MessageData;
 	uses turtleduck.image.ImageFactory;
+
 	requires java.logging;
 	requires java.xml;
 	requires transitive org.joml;

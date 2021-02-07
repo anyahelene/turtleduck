@@ -51,6 +51,18 @@ body {
 	border-color: $border;
 }
 
+code,pre {
+	@include lores-font;
+}
+
+a:link, a:visited {
+	color: $pen;
+	text-decoration: none;
+}
+
+a:hover {
+	color: $water;
+}
 *, *::before, *::after {
 	box-sizing: border-box;
 }
@@ -99,6 +111,9 @@ button {
 	grid-row: 2/-2;
 	background: #eeeaea;
 }
+.explorer > div {
+	overflow: scroll;
+}
 
 h1, h2, h3, h4, h5, h6 {
 	font-size: medium;
@@ -134,13 +149,29 @@ h1, h2, h3, h4, h5, h6 {
 	color: #0004;
 	width: auto;
 	height: auto;
+	padding: 0.125rem 0.25rem;
+}
+
+.box .footnote {
+	@include tiny-font;
+	font-size: smaller;
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	color: #0004;
+	width: auto;
+	height: auto;
+	padding: 0.125rem 0.25rem;
 }
 .explorer ul {
-	margin: 4px;
+	margin: 0.25rem 0.125rem;
 	padding-left: 1rem;
 }
+
 .explorer li {
 	list-style-type: "□ ";
+	padding-left: 0.25rem;
+	transition: all 2s;
 }
 .explorer li.closed {
 	list-style-type: "▹ ";
@@ -154,7 +185,9 @@ h1, h2, h3, h4, h5, h6 {
 .explorer li.opened {
 	list-style-type: "▿ ";
 }
-
+.explorer li::marker {
+	font-size: smaller;
+}
 .explorer {
 	@include hires-font;
 } 
@@ -164,6 +197,32 @@ h1, h2, h3, h4, h5, h6 {
 	background-color: black;
 	padding: .25rem;
 	margin: 0 -2px;
+}
+
+.explorer a, .explorer a:visited, .explorer a:link {
+	color: #eeeaea;
+	text-decoration: none;
+}
+
+.collapse {
+	display: none;
+	transition: all 2s;
+}
+
+.collapse.open {
+	display: block;
+}
+.collapse.open.empty {
+	display: none;
+}
+.explorer h2 a::before {
+	content: "▸ ";
+}
+.explorer h2 a.empty::before {
+	content: "▿ ";
+}
+.explorer h2 a.open::before {
+	content: "▾ ";
 }
 .main-alone #editor.box {
 	grid-column: 2/-1;
@@ -206,6 +265,7 @@ h1, h2, h3, h4, h5, h6 {
 	height: 100%;
 	width: 100%;
 	background: #fff;
+	cursor: crosshair;
 }
 
 header, footer {
@@ -370,6 +430,12 @@ header button.disabled {
 	align-self: stretch;
 }
 
+#top-menu .rows {
+	grid-row: span 2/3;
+	align-self: stretch;
+	width: 60%;
+}
+
 #logoimg {
 	height: $head-height;
 }
@@ -383,7 +449,7 @@ header button.disabled {
 }
 #logotext .version{
 	font-size: 0.5rem;
-	line-height: 0.6rem;
+	line-height: 1rem;
 	display:block;
 	padding: 0 2px;
 }
@@ -563,5 +629,108 @@ method h6 {
 	font-size: normal;
 	font-weight: medium;
 	font-style: italic;
+}
+
+.show-splash-help .splashhelp {
+	width: 70%;
+	height: 75%;
+	opacity: 100%;
+	left: 15%;
+	top: 15%;
+	transition: all 0s;
+//	border: .25rem solid $border-active;
+	z-index: 2000;
+}
+
+.show-splash-help #help {
+	background: $button-bg-hover;
+	color: $pen-sharp;
+	animation: none;
+}
+@keyframes bouncy-button {
+  0% {background: $button-bg-hover; color: $pen-sharp; transform: rotate(0deg)}
+  10% {color: $water}
+  20% { color: $pen-sharp; transform: rotate(5deg)}
+  30% { background: $button-bg-active; color:$water}
+  40% { color: $pen-sharp; transform: rotate(-3deg)}
+  50% {background: $button-bg-hover; color: $water}
+  60% { color: $pen-sharp; transform: rotate(2deg)}
+  70% { color:$water}
+  80% {background: $button-bg-normal;  color: $pen; transform: rotate(-1deg)}
+  90% { color: $water}
+  100% { color: $pen; transform: rotate(0deg)}
+}
+
+#help {
+	background: $button-bg-header;
+	color: $pen;
+animation-name: bouncy-button;
+animation-duration: 1s;
+//animation-iteration-count: 1;
+//animation-direction: alternate-reverse;
+animation-timing-function: ease-out;
+}
+.splashhelp {
+	box-shadow: 0px 0px 1rem $page;
+	//border-width: 0;
+	overflow: hidden;
+	background-color: $sun;
+	opacity: 0%;
+	color: $pen;
+	padding: .25rem;
+	width: 0;
+	height: 0;
+	left: 85%;
+	top: 0%;
+	position: absolute;	
+	@include lores-font;
+	transition: opacity .5s ease-out, height .25s ease-out, width .25s ease-out .125s, left .25s ease-out .125s, top .25s ease-out .125s, border 1s ease-out;
+	z-index: -1000;
+}
+
+.splashhelp h2 {
+	padding: .25rem;
+	margin: -.25rem -.25rem 0 -.25rem;
+	@include lores-font;
+	background-color: $page;
+	color: $pen-sharp;
+	text-align: center;
+}
+.splashhelp a:hover {
+	color: $pen-sharp;
+	background: $water;
+}
+
+.splashhelp code {
+	color: $terminal;
+}
+.shell-sample li, .shell-sample a:link, .shell-sample a:visited {
+	color: $terminal;
+}
+
+.shell-sample a:hover {
+	background: $terminal;
+	color: $sun;
+}
+
+ul.shell-sample {
+	padding-left: 1rem;
+}
+.shell-sample li {
+	list-style-type: "";
+	text-indent: -2rem;
+	padding-left: 2rem;
+}
+
+.shell-sample li::before {
+	content: "> ";
+	color: $prompt;
+}
+.shell-sample li li {
+	padding-left: 2rem;
+}
+.shell-sample li li::before {
+	content: "";
+	color: $prompt;
 }
 @import '~xterm/css/xterm.css';
