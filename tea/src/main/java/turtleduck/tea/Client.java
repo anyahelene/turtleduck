@@ -22,6 +22,7 @@ import org.teavm.jso.json.JSON;
 import org.teavm.jso.websocket.CloseEvent;
 
 import ace.AceEditor;
+import turtleduck.async.Async;
 import turtleduck.comms.Channel;
 import turtleduck.comms.EndPoint;
 import turtleduck.comms.Message;
@@ -30,28 +31,52 @@ import turtleduck.comms.Message.OpenMessage;
 import turtleduck.comms.Message.StringDataMessage;
 import turtleduck.comms.Message.DictDataMessage;
 import turtleduck.comms.MessageData;
-import org.teavm.jso.browser.Location;
+import turtleduck.messaging.generated.CodeServiceProxy;
+import turtleduck.messaging.ShellService;
+import turtleduck.messaging.HelloService;
+import turtleduck.messaging.generated.HelloServiceProxy;
+import turtleduck.messaging.generated.ShellServiceProxy;
+
+import org.teavm.jso.browser.Storage;
+
+import turtleduck.tea.generated.TerminalDispatch;
 import turtleduck.tea.net.SockJS;
 import turtleduck.text.TextWindow;
+import turtleduck.util.Dict;
 import xtermjs.Terminal;
 import static turtleduck.tea.Browser.trying;
 
 public class Client implements EndPoint, JSClient {
 
 	public static JSMapLike<JSObject> WINDOW_MAP;
-	protected JSMapLike<JSObject> map = JSObjects.create().cast();
+	protected JSMapLike<JSObject> map;
+	protected TeaRouter router;
 	SockJS socket;
 	private Terminal terminal;
 	private Map<Integer, Channel> channelsById = new HashMap<>();
 	private Map<String, Channel> channelsByName = new HashMap<>();
 	private List<Service> requiredServices = new ArrayList<>();
 	private List<Service> providedServices = new ArrayList<>();
-
+	public ShellService shellService;
+	public HelloService welcomeService;
 	protected AceEditor editor;
 	private int nextChannelId = 2;
+	private String sessionName;
+	private TerminalClient terminalClient;
 
 	public void initialize() {
 		try {
+			JSObject jsobj = WINDOW_MAP.get("turtleduck");
+			if (jsobj != null) {
+				Browser.consoleLog("Found turtleduck map:");
+				Browser.consoleLog(jsobj);
+				map = jsobj.cast();
+			} else {
+				map = JSObjects.create().cast();
+				Browser.consoleLog("Created turtleduck map:");
+				Browser.consoleLog(map);
+			}
+			Storage localStorage = Storage.getLocalStorage();
 //		Screen screen = NativeTDisplayInfo.INSTANCE.startPaintScene(null, 0);
 //		Canvas canvas = screen.createCanvas();
 //		TurtleDuck turtle = canvas.createTurtleDuck();
@@ -87,14 +112,14 @@ public class Client implements EndPoint, JSClient {
 				srv.widget = widget;
 				switch (widget) {
 				case "xtermjs":
-					TerminalClient tc = new TerminalClient(elt, "jshell", this);
-					tc.initialize();
-					srv.channel = tc;
+					terminalClient = new TerminalClient(elt, "jshell", this);
+					terminalClient.initialize();
+					srv.channel = terminalClient;
 					srv.onOpen = (s) -> {
-						tc.write("CONNECT " + socket.transport() + " " + s + "\r\n");
+						terminalClient.write("CONNECT " + socket.transport() + " " + s + "\r\n");
 					};
 					srv.onClose = (s) -> {
-						tc.write("NO CARRIER " + s + "\r\n");
+						terminalClient.write("NO CARRIER " + s + "\r\n");
 					};
 					requiredServices.add(srv);
 					break;
@@ -113,12 +138,19 @@ public class Client implements EndPoint, JSClient {
 				}
 			}
 
+			sessionName = ((JSString) map.get("sessionName")).stringValue();
 			socket = SockJS.create("socket");
+			router = new TeaRouter(sessionName, "", socket);
+			router.route(new TerminalDispatch(terminalClient));
 			socket.onOpen(trying(this::connect));
 			socket.onClose(trying(this::disconnect));
 			socket.onMessage(trying(this::receive));
 			map.set("socket", socket);
 			map.set("client", this);
+			welcomeService = new HelloServiceProxy("turtleduck.server", router::send);
+			shellService = new ShellServiceProxy("turtleduck.shell.server", router::send);
+//			Route route = router.route();
+//			route.registerHandler("welcome", (msg,r) -> Welcome.accept(msg, this));
 //		terminal.onData((d) -> {sockJS.send(d);});
 			WINDOW_MAP.set("turtleduck", map);
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
@@ -137,16 +169,22 @@ public class Client implements EndPoint, JSClient {
 	}
 
 	protected void connect(Event ev) {
-		Browser.consoleLog("Connect: " + ev.getType());
+		Browser.consoleLog("Connect: " + ev.getType() + ", " + router);
+		router.connect(socket);
 		HTMLElement status = Browser.document.getElementById("status");
 		if (status != null) {
 			status.setClassName("active online");
 		}
+		welcomeService.hello(sessionName, Dict.create()).onSuccess(msg -> {
+			Browser.consoleLog("Received welcome: " + msg);
+			username(msg.get(HelloService.USERNAME));
+		});
 
 	}
 
 	protected void disconnect(CloseEvent ev) {
-		Browser.consoleLog("Disconnect: " + ev.getReason());
+		Browser.consoleLog("Disconnect: " + ev.getReason() + ", " + router);
+		router.disconnect();
 		HTMLElement status = Browser.document.getElementById("status");
 		if (status != null) {
 			status.setClassName("active offline");
@@ -155,13 +193,20 @@ public class Client implements EndPoint, JSClient {
 
 	protected void receive(MessageEvent ev) {
 		Browser.consoleLog("Receive: " + ev.getType());
-		JSObject data = JSON.parse(ev.getDataAsString());
-		Browser.consoleLog(data);
-		MessageRepr repr = new MessageRepr(ev.getDataAsString());
-		Browser.consoleLog(repr.toJson());
-		Message msg = Message.create(repr);
-		Browser.consoleLog("message £" + msg.channel() + ", type " + msg.type());
-		receive(msg);
+		JSMapLike<?> data = (JSMapLike<?>) JSON.parse(ev.getDataAsString());
+		if (!JSObjects.isUndefined(data.get("type"))) {
+			Browser.consoleLog(data.get("type"));
+			Browser.consoleLog(data);
+			MessageRepr repr = new MessageRepr(ev.getDataAsString());
+			Browser.consoleLog(repr.toJson());
+			Message msg = Message.create(repr);
+			Browser.consoleLog("message £" + msg.channel() + ", type " + msg.type());
+			receive(msg);
+		} else {
+			Dict d = JSUtil.decodeDict(data);
+			turtleduck.messaging.Message msg = turtleduck.messaging.Message.fromDict(d);
+			router.receive(msg);
+		}
 	}
 
 	public void receive(Message msg) {
@@ -302,7 +347,7 @@ public class Client implements EndPoint, JSClient {
 						if (sym.equals("✅"))
 							sym = "";
 						String fullname = mmsg.get("fullname");
-						if(fullname != null) {
+						if (fullname != null) {
 							elt.setAttribute("title", fullname);
 						}
 						elt.setAttribute("class",
@@ -314,6 +359,8 @@ public class Client implements EndPoint, JSClient {
 			}
 			case "Connect":
 				Message.ConnectMessage cmsg = (ConnectMessage) msg;
+				String username = cmsg.getInfo("username", "");
+			
 				Browser.consoleLog(cmsg.toJson());
 				Browser.consoleLog(cmsg.opened().toString());
 				for (OpenMessage o : cmsg.opened())
@@ -339,6 +386,14 @@ public class Client implements EndPoint, JSClient {
 		}
 	}
 
+	public void username(String name) {
+		map.set("username", JSString.valueOf(name));
+		router.init(sessionName, name);
+		Storage sess = map.get("sessionStorage").cast();
+		if (sess != null) {
+			sess.setItem("turtleduck.username", name);
+		}
+	}
 	public void send(Message msg) {
 		socket.send(msg.toJson());
 	}
@@ -408,4 +463,5 @@ public class Client implements EndPoint, JSClient {
 		Consumer<String> onOpen;
 		Consumer<String> onClose;
 	}
+
 }

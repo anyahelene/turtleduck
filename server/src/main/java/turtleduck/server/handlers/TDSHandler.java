@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.http.Cookie;
 import io.vertx.core.impl.NoStackTraceThrowable;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
@@ -36,10 +37,18 @@ public class TDSHandler implements Handler<RoutingContext> {
 		logger.info("route: " + ctx.currentRoute());
 		logger.info("path: " + ctx.normalizedPath());
 		if (user == null || session == null) {
+//			ctx.removeCookie("turtleduck.login.attempt", true);
+//			ctx.removeCookie("turtleduck.login.success", true);
 			ctx.redirect(server.uriPath("/login", new JsonObject().put("redirect", ctx.normalizedPath())));
 		} else {
 			turtleDuckSession(user, session) //
-					.onSuccess(tds -> ctx.next()) //
+					.onSuccess(tds -> {
+//						if (ctx.getCookie("turtleduck.login.attempt") != null)
+//							ctx.removeCookie("turtleduck.login.attempt", true);
+//						if (ctx.getCookie("turtleduck.login.success") == null)
+//							ctx.addCookie(Cookie.cookie("turtleduck.login.success", "true"));
+						ctx.next();
+					}) //
 					.onFailure(ex -> {
 						logger.warn("Session failure", ex);
 						JsonObject params = new JsonObject();
@@ -51,6 +60,8 @@ public class TDSHandler implements Handler<RoutingContext> {
 							params.put("error", "Internal server error");
 						}
 						session.destroy();
+//						ctx.removeCookie("turtleduck.login.attempt", true);
+//						ctx.removeCookie("turtleduck.login.success", true);
 						ctx.redirect(server.uriPath("/login", params));
 					});
 		}
@@ -96,8 +107,11 @@ public class TDSHandler implements Handler<RoutingContext> {
 				Function<JsonObject, Future<JsonObject>> authz = (userInfo) -> provider.authorizor
 						.authorize(user, session, provider).compose(auth -> {
 							logger.info("userInfo: " + userInfo);
-							if (auth != null && auth.length() != 0) {
+							String nick = provider.options().userinfo_nick;
+							String userNick = userInfo.getString(nick);
+							if (userNick != null && auth != null && auth.length() != 0) {
 								logger.info("User " + user.attributes() + " authorized: " + auth);
+								userInfo.put("usernick", userNick);
 								return Future.succeededFuture(userInfo);
 							} else {
 								return Future.failedFuture("User not authorized");

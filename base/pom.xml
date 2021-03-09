@@ -8,7 +8,6 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<properties>
-		<joml.version>1.9.25</joml.version>
 	</properties>
 	<artifactId>turtleduck-base</artifactId>
 	<packaging>jar</packaging>
@@ -19,5 +18,39 @@
 			<artifactId>joml</artifactId>
 			<version>${joml.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>turtleduck-anno</artifactId>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<compilerArgs>
+						<!-- arg>-verbose</arg -->
+						<arg>-Xlint:all,-options,-path</arg>
+						<arg>-parameters</arg>
+						<arg>-g</arg>
+					</compilerArgs>
+					<generatedSourcesDirectory>${project.build.directory}/generated-sources/</generatedSourcesDirectory>
+					<annotationProcessorPaths>
+						<annotationProcessorPath>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>turtleduck-anno</artifactId>
+							<version>${project.version}</version>
+						</annotationProcessorPath>
+					</annotationProcessorPaths>
+					<annotationProcessors>
+						<annotationProcessor>
+							turtleduck.annotations.ProcessAnnotations
+						</annotationProcessor>
+					</annotationProcessors>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -60,18 +60,21 @@ import io.vertx.ext.auth.oauth2.OAuth2Options;
 import io.vertx.ext.auth.oauth2.impl.OAuth2API;
 import io.vertx.ext.auth.oauth2.providers.OpenIDConnectAuth;
 import turtleduck.comms.MessageData;
+import turtleduck.messaging.CodeService;
+import turtleduck.messaging.Reply;
+import turtleduck.messaging.HelloService;
 import turtleduck.server.data.AuthOptions;
 import turtleduck.server.handlers.TDSHandler;
 import turtleduck.server.services.AuthProvider;
 import turtleduck.shell.TShell;
 import turtleduck.terminal.PseudoTerminal;
 import turtleduck.terminal.Readline;
+import turtleduck.util.Logging;
 import turtleduck.util.Strings;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Server extends AbstractVerticle {
-	protected final Logger logger = LoggerFactory.getLogger(Server.class);
+	protected final Logger logger = Logging.getLogger(Server.class);
 	protected SessionStore sessionStore;
 	protected TShell shell;
 	private HttpServer server;
@@ -88,15 +91,8 @@ public class Server extends AbstractVerticle {
 	protected Buffer indexHtml;
 	protected String xAccelRedirect = null;
 	protected List<AuthProvider> authProviders = new ArrayList<>();
-	// location: https://discord.com/api/oauth2/authorize?
-	// state=k3hr_bPc&
-	// redirect_uri=http%3A%2F%2Flocalhost%3A9090%2Fauth_callback%2Fdiscord&
-	// redirect_uri=http%3A%2F%2Flocalhost%3A9090%2Fauth_callback%2Fdiscord&
-	// scope=openid+email&response_type=code&c
-	// client_id=799954449543331860
-	// client_id=799954449543331860&
-	// https://discord.com/api/oauth2/authorize?
-	// response_type=code&scope=identify%20email
+	protected List<Path> pathList;
+
 	/**
 	 * The port clients should send requests to
 	 */
@@ -149,7 +145,7 @@ public class Server extends AbstractVerticle {
 	}
 
 	public void send(String s) {
-		logger.info("Output: " + Strings.escape(s));
+		logger.info("Output: " + Strings.termEscape(s));
 		if (webSocket != null) {
 			webSocket.writeTextMessage(s);
 		}
@@ -203,10 +199,10 @@ public class Server extends AbstractVerticle {
 			root = "/srv/turtleduck/webroot";
 		serverRoot = Stream.of(root.trim().split(File.pathSeparator)).filter(p -> p.length() > 0).map(p -> Path.of(p))
 				.toArray(n -> new Path[n]);
-		ArrayList<Path> pathList = new ArrayList<>(Arrays.asList(serverRoot));
+		pathList = new ArrayList<>(Arrays.asList(serverRoot));
 		pathList.add(Path.of("webroot"));
 		if (xAccelRedirect == null) {
-			loadFile("index.html", pathList, res -> {
+			loadFile("index.html", res -> {
 				if (res.succeeded()) {
 					indexHtml = res.result();
 				} else {
@@ -216,7 +212,7 @@ public class Server extends AbstractVerticle {
 			});
 
 		}
-		loadFile("login.html", pathList, res -> {
+		loadFile("login.html", res -> {
 			if (res.succeeded()) {
 				loginHtml = res.result();
 			} else {
@@ -275,6 +271,10 @@ public class Server extends AbstractVerticle {
 		}
 	}
 
+	private void loadFile(String fileName, Handler<AsyncResult<Buffer>> handler) {
+		loadFile(fileName, new ArrayList<>(pathList), handler);
+	}
+
 	private void loadFile(String fileName, List<Path> pathList, Handler<AsyncResult<Buffer>> handler) {
 		if (pathList.isEmpty()) {
 			handler.handle(Future.failedFuture("file not found: " + fileName));
@@ -293,9 +293,11 @@ public class Server extends AbstractVerticle {
 	private Route route() {
 		return router.route().handler(loggerHandler).handler(sessionHandler).handler(tdsHandler);
 	}
+
 	private Route routeNoAuth() {
 		return router.route().handler(loggerHandler).handler(sessionHandler);
 	}
+
 	private Route route(String path) {
 		return router.route(path).handler(loggerHandler).handler(sessionHandler).handler(tdsHandler);
 	}
@@ -303,15 +305,22 @@ public class Server extends AbstractVerticle {
 	private Route get(String path) {
 		return router.get(path).handler(loggerHandler).handler(sessionHandler).handler(tdsHandler);
 	}
+
 	private Route getNoAuth(String path) {
 		return router.get(path).handler(loggerHandler).handler(sessionHandler);
 	}
+
 	private void startWebServer(Promise<Void> startPromise, Consumer<Supplier<Route>> auth) {
 		sessionStore = LocalSessionStore.create(vertx);
 		sessionHandler = SessionHandler.create(sessionStore);
 		sessionHandler.setCookieHttpOnlyFlag(true);
 		sessionHandler.setCookieSameSite(CookieSameSite.LAX);
-		sessionHandler.setSessionTimeout(24*60*60*1000);
+		sessionHandler.setSessionTimeout(24 * 60 * 60 * 1000);
+		sessionHandler.setSessionCookieName("turtleduck-auth.session");
+		if (externalScheme.equals("https"))
+			sessionHandler.setCookieSecureFlag(true);
+		if (!pathPrefix.isEmpty())
+			sessionHandler.setSessionCookiePath(pathPrefix);
 		loggerHandler = LoggerHandler.create(false, LoggerHandler.DEFAULT_FORMAT);
 		tdsHandler = new TDSHandler(this);
 		MessageData.setDataConstructor(() -> new MessageRepr());
@@ -325,8 +334,8 @@ public class Server extends AbstractVerticle {
 			System.out.println("path: " + ctx.normalizedPath());
 			ctx.next();
 		});
-		router.route("/_public/*").subRouter(publicRouter);
-		get("/favicon.ico").handler((ctx) -> ctx.fail(404));
+		router.get(pathPrefix + "/_public/*").subRouter(publicRouter);
+		router.get(pathPrefix + "/favicon.ico").handler(loggerHandler).handler((ctx) -> ctx.fail(404));
 		auth.accept(this::routeNoAuth);
 
 		SockJSHandlerOptions options = new SockJSHandlerOptions(); // .setHeartbeatInterval(10000);
@@ -374,11 +383,34 @@ public class Server extends AbstractVerticle {
 			ctx.response().end("Hello, " + ui.getString("name") + "\n" + ui.encode());
 		});
 		router.get(pathPrefix + "/login").handler(loggerHandler).handler(sessionHandler).handler(ctx -> {
-			String links = "";
-			for (AuthProvider p : authProviders) {
-				links += "<a href=\"login/" + p.providerId() + "\">Log in with " + p.name() + "</a>\n";
+			String last = AuthProvider.lastProvider(ctx, true);
+			if (last != null)
+				ctx.redirect(pathPrefix + "/login/" + last);
+			else {
+				loadFile("terms-no.html", res2 -> {
+					if (res2.succeeded()) {
+						loadFile("login.html", res -> {
+							if (res.succeeded()) {
+								loginHtml = res.result();
+								String links = "<ul>\n";
+								for (AuthProvider p : authProviders) {
+									links += "<li><a href=\"login/" + p.providerId() + "\">Log in with " + p.name()
+											+ "</a>\n";
+								}
+								links += "</ul>\n";
+								ctx.end(loginHtml.toString().replace("<!-- LOGIN -->", links).replace("<!-- TERMS -->",
+										res2.result().toString()));
+							} else {
+								logger.error("can't load login.html", res.cause());
+								ctx.fail(res.cause());
+							}
+						});
+					} else {
+						logger.error("can't load terms-no.html", res2.cause());
+						ctx.fail(res2.cause());
+					}
+				});
 			}
-			ctx.end(loginHtml.toString().replace("<!-- LOGIN -->", links));
 		});
 		router.get(pathPrefix + "/login/*").handler(loggerHandler).handler(sessionHandler).handler(ctx -> {
 			System.out.println(ctx.session());

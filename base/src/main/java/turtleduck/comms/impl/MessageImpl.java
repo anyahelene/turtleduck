@@ -109,6 +109,16 @@ public class MessageImpl implements Message {
 			data.addToList("opened", msg);
 		}
 
+		@Override
+		public void addInfo(String key, String value) {
+			data.put(key, value);
+		}
+		
+		@Override
+		public String  getInfo(String key, String defaultValue) {
+			return data.get(key,defaultValue);
+		}
+
 	}
 
 	public static class OpenMsgImpl extends MessageImpl implements Message.OpenMessage {

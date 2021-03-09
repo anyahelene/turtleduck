@@ -37,56 +37,68 @@ public interface Message {
 	public static ConnectMessage createConnect() {
 		return new MessageImpl.ConnectMsgImpl();
 	}
+
 	static StringDataMessage createStringData(int ch, String data) {
 		return new MessageImpl.StringDataImpl(ch, data);
 	}
-	static DictDataMessage createDictData(int ch, Map<String,String> data) {
+
+	static DictDataMessage createDictData(int ch, Map<String, String> data) {
 		return new MessageImpl.DictDataImpl(ch, data);
 	}
+
 	static KeyEventMessage createKeyEvent(int ch, int code, String data) {
 		return new MessageImpl.KeyEventMsgImpl(ch, code, data);
 	}
+
 	static OpenMessage createOpened(int ch, String name, String service) {
 		return new MessageImpl.OpenMsgImpl("Opened", ch, name, service);
 	}
+
 	static OpenMessage createOpen(String name, String service) {
 		return new MessageImpl.OpenMsgImpl("Open", 0, name, service);
 	}
+
 	static OpenMessage createClosed(int ch, String name, String service) {
 		return new MessageImpl.OpenMsgImpl("Closed", ch, name, service);
 	}
+
 	static OpenMessage createClose(String name, String service) {
 		return new MessageImpl.OpenMsgImpl("Close", 0, name, service);
 	}
-	
-	
+
 	@SuppressWarnings("unchecked")
 	static <U extends Message> U create(MessageData data) {
 		String type = data.get("type", "");
-		switch(type) {
+		switch (type) {
 		case "Connect":
-			return (U)new MessageImpl.ConnectMsgImpl(data);
+			return (U) new MessageImpl.ConnectMsgImpl(data);
 		case "Opened":
 		case "Open":
-			return (U)new MessageImpl.OpenMsgImpl(data);
+			return (U) new MessageImpl.OpenMsgImpl(data);
 		case "KeyEvent":
-			return (U)new MessageImpl.KeyEventMsgImpl(data);
+			return (U) new MessageImpl.KeyEventMsgImpl(data);
 		case "Data":
-			return (U)new MessageImpl.StringDataImpl(data);
+			return (U) new MessageImpl.StringDataImpl(data);
 		case "Dict":
-			return (U)new MessageImpl.DictDataImpl(data);
+			return (U) new MessageImpl.DictDataImpl(data);
 		default:
-			return (U)new MessageImpl(data);
+			return (U) new MessageImpl(data);
 //			throw new IllegalArgumentException("Illegal message: " + data);
 		}
 	}
+
 	interface ConnectMessage extends Message {
 		String msg();
 
 		List<OpenMessage> opened();
+
 		void addOpened(OpenMessage msg);
 
+		void addInfo(String key, String value);
+
 		void msg(String msg);
+
+		String getInfo(String key, String defaultValue);
 	}
 
 	interface OpenMessage extends Message {
@@ -96,9 +108,11 @@ public interface Message {
 
 		int chNum();
 	}
+
 	interface DictDataMessage extends Message {
 		String get(String key);
 	}
+
 	interface StringDataMessage extends Message {
 		String data();
 	}
@@ -120,6 +134,5 @@ public interface Message {
 	}
 
 	MessageData rawData();
-
 
 }

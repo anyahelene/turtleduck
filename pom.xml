@@ -20,10 +20,17 @@
 		<junit.jupiter.version>5.5.2</junit.jupiter.version>
 		<teavm.version>0.6.1</teavm.version>
 		<slf4j.version>1.7.30</slf4j.version>
+		<vertx.version>4.0.0.CR1</vertx.version>
+		<joml.version>1.9.25</joml.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>turtleduck-anno</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>turtleduck-base</artifactId>
@@ -74,6 +81,11 @@
 			<artifactId>slf4j-simple</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.spotbugs</groupId>
+			<artifactId>spotbugs-annotations</artifactId>
+			<version>4.2.1</version>
+		</dependency>
 	</dependencies>
 
 
@@ -81,11 +93,15 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<!-- Do not upgrade past 3.1 to avoid triggering https://issues.apache.org/jira/browse/MSOURCES-95 -->
-				<!-- Unless you use annotation processors, then upgrade to 3.5.1 at a 
-					minimum -->
-				<!-- <version>3.1</version> -->
 				<version>3.8.1</version>
+				<configuration>
+					<compilerArgs>
+						<!-- arg>-verbose</arg -->
+						<arg>-Xlint:all,-options,-path</arg>
+						<arg>-parameters</arg>
+						<arg>-g</arg>
+					</compilerArgs>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -133,6 +149,7 @@
 
 								<!-- Optimization level. Valid values are: SIMPLE, ADVANCED, FULL -->
 								<optimizationLevel>ADVANCED</optimizationLevel>
+								<stopOnErrors>false</stopOnErrors>
 							</configuration>
 						</execution>
 					</executions>
@@ -151,6 +168,7 @@
 	</build>
 
 	<modules>
+		<module>anno</module>
 		<module>base</module>
 		<module>jfx</module>
 		<module>demo</module>

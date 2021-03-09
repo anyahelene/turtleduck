@@ -1,5 +1,7 @@
 const path = require('path');
 //const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const marked = require("marked");
+const renderer = new marked.Renderer();
 
 module.exports = {
   mode: 'development',
@@ -7,9 +9,9 @@ module.exports = {
   //plugins: [ new CleanWebpackPlugin() ],
   stats: 'normal',
   entry: { 
-      bundle: { import: ['./webroot/index.js', './webroot/css/style.scss'], filename: 'js/bundle.js' },
+      bundle: { import: ['./webroot/index.js', './webroot/css/style.scss', './webroot/terms-no.md'], filename: 'js/bundle.js' },
 	  // path.join(__dirname, 'src', 'main', 'webroot','css', 'style.scss'),
-	  //html: ['./webroot/foobar.html', './webroot/index.html'],
+	 //html: ['./webroot/terms-no.md'],
   },
   output: {
     path: path.resolve(__dirname, 'target', 'classes', 'webroot'),
@@ -49,12 +51,40 @@ module.exports = {
         ]
       },
       {
+        test: /\.md$/,
+	//exclude: /node_modules/,
+        use: [ 
+            { loader: 'file-loader', options: { name: '[name].html', publicPath: '' } },
+            { loader: 'extract-loader', options: {} }, 
+		    {
+                loader: 'html-loader',
+                options: { 
+                    attributes: { list: [
+                       { tag: 'img', attribute: 'src', type: 'src' },
+                       { tag: 'link', attribute: 'href', type: 'src' },
+                      //  { tag: 'script', attribute: 'src', type: 'src' },
+                    ] },
+                }
+            },
+			{
+                 loader: "markdown-loader",
+                 options: {
+                    pedantic: true,
+                    renderer
+                 }
+            }
+        ]
+      },      {
         test: /\.css$/,
 	//exclude: /node_modules/,
         use: [ { loader: 'file-loader', options: { name: '[name].[ext]' } },
 		'extract-loader', 
 		{ loader: 'css-loader', options: { importLoaders: 1 } },
 		]
+      },
+      {
+        test: /\.txt$/,
+        use: [{loader: 'raw-loader'}]
       },
       {
           test: /\.s[ac]ss$/i,

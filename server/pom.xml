@@ -10,12 +10,16 @@
 	<properties>
 		<main.verticle>turtleduck.server.Server</main.verticle>
 		<vertx.version>4.0.0.CR1</vertx.version>
-		<jackson.version>2.12.0</jackson.version>
+		<jackson.version>2.11.3</jackson.version>
 	</properties>
 	<artifactId>turtleduck-server</artifactId>
 	<packaging>jar</packaging>
 	<name>TurtleDuck Server</name>
 	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>turtleduck-anno</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-base</artifactId>
@@ -100,6 +104,31 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<compilerArgs>
+						<!-- arg>-verbose</arg -->
+						<arg>-Xlint:all,-options,-path</arg>
+						<arg>-parameters</arg>
+						<arg>-g</arg>
+					</compilerArgs>
+					<generatedSourcesDirectory>${project.build.directory}/generated-sources/</generatedSourcesDirectory>
+					<annotationProcessorPaths>
+						<annotationProcessorPath>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>turtleduck-anno</artifactId>
+							<version>${project.version}</version>
+						</annotationProcessorPath>
+					</annotationProcessorPaths>
+					<annotationProcessors>
+						<annotationProcessor>
+							turtleduck.annotations.ProcessAnnotations
+						</annotationProcessor>
+					</annotationProcessors>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

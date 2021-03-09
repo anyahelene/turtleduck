@@ -2,6 +2,8 @@ package turtleduck.server.services;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerResponse;
@@ -28,12 +31,14 @@ import io.vertx.ext.auth.oauth2.impl.OAuth2Response;
 import io.vertx.ext.auth.oauth2.providers.OpenIDConnectAuth;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.OAuth2AuthHandler;
 import turtleduck.server.Server;
 import turtleduck.server.data.AuthOptions;
 
 public class AuthProvider {
+	private static final Map<String, AuthProvider> providers = new HashMap<>();
 	protected final Logger logger = LoggerFactory.getLogger(AuthProvider.class);
 	private AuthOptions options;
 	private OAuth2Auth oAuth2Provider;
@@ -57,10 +62,14 @@ public class AuthProvider {
 		this.options = opts;
 		this.callbackUri = uri.resolve(options.provider_id);
 		System.out.println(this.callbackUri + ", " + callbackUri.getPath());
-		if(opts.provider_id.equals("discord"))
+		if (opts.provider_id.equals("discord"))
 			authorizor = new DiscordValidator();
 		else
 			authorizor = new DefaultValidator();
+	}
+
+	public AuthOptions options() {
+		return options;
 	}
 
 	public String name() {
@@ -88,7 +97,6 @@ public class AuthProvider {
 				oauth2opts.setUserInfoPath(options.userinfo_endpoint);
 			if (options.jwks_uri != null)
 				oauth2opts.setJwkPath(options.jwks_uri);
-			
 			logger.info("oauth2opts: " + oauth2opts);
 
 			if (options.oauth_discover) {
@@ -99,6 +107,9 @@ public class AuthProvider {
 							api = new OAuth2API(vertx, oauth2opts);
 
 							authHandler = OAuth2AuthHandler.create(vertx, oAuth2Provider, callbackUri.toString());
+							if (options.prompt != null)
+								authHandler.prompt(options.prompt);
+							providers.put(options.provider_id, this);
 							return Future.succeededFuture(this);
 						}, //
 						(ex) -> {
@@ -110,6 +121,9 @@ public class AuthProvider {
 				oAuth2Provider = OAuth2Auth.create(vertx, oauth2opts);
 				api = new OAuth2API(vertx, oauth2opts);
 				authHandler = OAuth2AuthHandler.create(vertx, oAuth2Provider, callbackUri.toString());
+				if (options.prompt != null)
+					authHandler.prompt(options.prompt);
+				providers.put(options.provider_id, this);
 				return Future.succeededFuture(this);
 			}
 		} else {
@@ -142,9 +156,37 @@ public class AuthProvider {
 			})).withScope(options.scope);
 
 			route.get().path(options.login_path).handler(ctx -> {
+				logger.warn("login attempt with " + options.provider_id + " uri " + ctx.request().uri() + " "
+						+ ctx.request().cookieMap());
+				ctx.addCookie(Cookie.cookie("turtleduck.login.provider", options.provider_id).setMaxAge(24 * 60 * 60 * 1000).setSecure(true));
 				ctx.next();
 			}).handler(authHandler);
 		}
+	}
+
+	public static int authAttempt(RoutingContext ctx) {
+		int attempt = 0;
+		Cookie cookie = ctx.getCookie("turtleduck.login.attempt");
+		if (cookie != null) {
+			String value = cookie.getValue();
+			if (value.matches("^[0-9]+$")) {
+				attempt = Integer.parseInt(value) + 1;
+			}
+		}
+		return attempt;
+	}
+
+	public static String lastProvider(RoutingContext ctx, boolean delete) {
+		Cookie cookie = ctx.getCookie("turtleduck.login.provider");
+		if (cookie != null) {
+			if (delete)
+				ctx.removeCookie("turtleduck.login.provider", true);
+			String value = cookie.getValue();
+			if (providers.containsKey(value)) {
+				return value;
+			}
+		}
+		return null;
 	}
 
 	public OAuth2Auth provider() {
@@ -197,13 +239,13 @@ public class AuthProvider {
 			});
 		});
 	}
-	
+
 	static class DefaultValidator implements Authorizor {
 
 		@Override
 		public Future<String> authorize(User user, Session session, AuthProvider provider) {
 			return Future.succeededFuture("always");
 		}
-		
+
 	}
 }

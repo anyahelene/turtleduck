@@ -13,9 +13,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>turtleduck-anno</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-base</artifactId>
 		</dependency>
-
 		<!-- Emulator of Java class library for TeaVM -->
 		<dependency>
 			<groupId>org.teavm</groupId>
@@ -51,6 +54,31 @@
 	<build>
 		<plugins>
 			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<compilerArgs>
+						<!-- arg>-verbose</arg -->
+						<arg>-Xlint:all,-options,-path</arg>
+						<arg>-parameters</arg>
+						<arg>-g</arg>
+					</compilerArgs>
+					<generatedSourcesDirectory>${project.build.directory}/generated-sources/</generatedSourcesDirectory>
+					<annotationProcessorPaths>
+						<annotationProcessorPath>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>turtleduck-anno</artifactId>
+							<version>${project.version}</version>
+						</annotationProcessorPath>
+					</annotationProcessorPaths>
+					<annotationProcessors>
+						<annotationProcessor>
+							turtleduck.annotations.ProcessAnnotations
+						</annotationProcessor>
+					</annotationProcessors>
+				</configuration>
+			</plugin>
+			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>3.2.0</version>
 				<executions>
@@ -67,6 +95,7 @@
 									<directory>src/main/webroot</directory>
 									<includes>
 										<include>index.html</include>
+										<include>login.html</include>
 									</includes>
 									<filtering>true</filtering>
 								</resource>
@@ -76,6 +105,7 @@
 										<exclude>index.html</exclude>
 										<exclude>*.js</exclude>
 										<exclude>*.scss</exclude>
+										<exclude>*.txt</exclude>
 									</excludes>
 									<filtering>false</filtering>
 								</resource>

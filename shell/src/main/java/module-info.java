@@ -8,4 +8,5 @@ module turtleduck.shell {
 	requires org.objectweb.asm.util;
 	requires org.apache.commons.text;
 	requires org.slf4j;
+	requires turtleduck.anno;
 }

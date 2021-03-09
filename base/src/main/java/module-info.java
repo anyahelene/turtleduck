@@ -1,5 +1,6 @@
 module turtleduck.base {
 	exports turtleduck;
+	exports turtleduck.async;
 	exports turtleduck.buffer;
 	exports turtleduck.colors;
 	exports turtleduck.objects;
@@ -10,6 +11,8 @@ module turtleduck.base {
 	exports turtleduck.drawing;
 	exports turtleduck.geometry;
 	exports turtleduck.comms;
+	exports turtleduck.messaging;
+	exports turtleduck.messaging.generated;
 	exports turtleduck.canvas;
 	exports turtleduck.sprites;
 	exports turtleduck.shapes;
@@ -32,9 +35,14 @@ module turtleduck.base {
 	uses turtleduck.comms.MessageData;
 	uses turtleduck.image.ImageFactory;
 
+	requires turtleduck.anno;
 	requires java.logging;
 	requires java.xml;
 	requires transitive org.joml;
 	requires java.desktop;
 	requires java.base;
+	requires transitive org.slf4j;
+	requires transitive com.github.spotbugs.annotations;
+	requires java.compiler;
+	
 }

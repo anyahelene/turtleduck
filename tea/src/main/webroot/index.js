@@ -4,6 +4,69 @@ import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import jquery from 'jquery';
+import animals from './animals.txt';
+
+var turtleduck = window['turtleduck'] || {};
+window['turtleduck'] = turtleduck;
+const animalList = animals.split(/\s+/).filter(function(a) { return a.length > 0; })
+turtleduck.animals = {
+	pranimals: animalList.filter(function(a) { return !a.startsWith("-"); }),
+	postimals: animalList.filter(function(a) { return !(a.endsWith("-") || a.endsWith(":")); }),
+
+	random: function() {
+		const a = this.pranimals[Math.floor(Math.random() * this.pranimals.length)];
+		const b = this.postimals[Math.floor(Math.random() * this.postimals.length)];
+		return (a + " " + b).replaceAll(/(:|- -?| -)/g, '');
+	}
+}
+
+function storageAvailable(type) {
+	var storage;
+	try {
+		storage = window[type];
+		var x = '__storage_test__';
+		storage.setItem(x, x);
+		storage.removeItem(x);
+		return true;
+	}
+	catch (e) {
+		return e instanceof DOMException && (
+			// everything except Firefox
+			e.code === 22 ||
+			// Firefox
+			e.code === 1014 ||
+			// test name field too, because code might not be present
+			// everything except Firefox
+			e.name === 'QuotaExceededError' ||
+			// Firefox
+			e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+			// acknowledge QuotaExceededError only if there's something already stored
+			(storage && storage.length !== 0);
+	}
+}
+
+turtleduck.hasLocalStorage = storageAvailable('localStorage');
+turtleduck.hasSessionStorage = storageAvailable('sessionStorage');
+
+turtleduck.sessionStorage = storageAvailable('sessionStorage') ? window.sessionStorage : {
+	dict: {},
+	getItem: function(key) { return dict[key]; },
+	setItem: function(key, value) { dict[key] = value; },
+	removeItem: function(key) { dict[key] = undefined; },
+};
+
+turtleduck.generateSessionName = function(regen = false) {
+	if (regen) {
+		turtleduck.sessionName = turtleduck.animals.random();
+	}
+	else {
+		turtleduck.sessionName = turtleduck.sessionStorage.getItem('turtleduck.sessionName') || turtleduck.animals.random();
+		turtleduck.sessionStorage.setItem('turtleduck.sessionName', turtleduck.sessionName);
+	}
+	return turtleduck.sessionName;
+}
+
+turtleduck.generateSessionName();
 
 class MessageRepr {
 	constructor(json) {
@@ -79,6 +142,8 @@ function handleKey(key, button, event) {
 	}
 }
 
+turtleduck.handleKey = handleKey;
+
 jquery(function() {
 	jquery('[data-shortcut]').each(function(index) {
 		const button = this;
@@ -153,6 +218,11 @@ jquery(function() {
 			return false;
 		});
 	});
+
+	jquery('[data-from]').each(function() {
+		jquery(this).text(turtleduck.sessionStorage.getItem(jquery(this).attr('data-from')) || "");
+	});
+
 });
 window.SockJS = SockJS;
 window.Terminal = Terminal;

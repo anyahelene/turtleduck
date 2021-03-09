@@ -52,7 +52,7 @@ public class ShellDemo implements TurtleDuckApp {
 		printer.foreground(Colors.GREEN);
 		printer.clearPage();
 		screen.useAlternateShortcut(true);
-		tshell = new TShell(screen, window, printer);
+		tshell = new TShell(screen, window, printer, null);
 		screen.setKeyPressedHandler((KeyEvent event) -> {
 		int code = event.getCode();
 			if ((event.keyType() & KeyEvent.KEY_TYPE_MODIFIER) != 0) {

@@ -16,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -33,7 +32,6 @@ import jdk.jshell.JShellException;
 import jdk.jshell.MethodSnippet;
 import jdk.jshell.PersistentSnippet;
 import jdk.jshell.Snippet;
-import jdk.jshell.ExpressionSnippet;
 import jdk.jshell.ImportSnippet;
 import jdk.jshell.Snippet.Kind;
 import jdk.jshell.Snippet.Status;
@@ -43,7 +41,6 @@ import jdk.jshell.SourceCodeAnalysis;
 import jdk.jshell.SourceCodeAnalysis.Completeness;
 import jdk.jshell.SourceCodeAnalysis.CompletionInfo;
 import jdk.jshell.SourceCodeAnalysis.Documentation;
-import jdk.jshell.SourceCodeAnalysis.SnippetWrapper;
 import jdk.jshell.SourceCodeAnalysis.Suggestion;
 import jdk.jshell.TypeDeclSnippet;
 import jdk.jshell.VarSnippet;
@@ -51,10 +48,14 @@ import jdk.jshell.spi.ExecutionControl;
 import jdk.jshell.spi.ExecutionControlProvider;
 import jdk.jshell.spi.ExecutionEnv;
 import turtleduck.colors.Colors;
-import turtleduck.comms.Message;
-import turtleduck.comms.Message.DictDataMessage;
+import turtleduck.annotations.MessageDispatch;
+import turtleduck.async.Async;
 import turtleduck.colors.Color;
 import turtleduck.display.Screen;
+import turtleduck.messaging.Dispatch;
+import turtleduck.messaging.ExplorerService;
+import turtleduck.messaging.Router;
+import turtleduck.messaging.ShellService;
 import turtleduck.shell.control.TShellLocalExecutionControl;
 import turtleduck.terminal.Editor;
 import turtleduck.text.Attribute;
@@ -62,8 +63,12 @@ import turtleduck.text.FontStyle;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
 import turtleduck.turtle.Turtle;
+import turtleduck.util.Dict;
+import turtleduck.shell.generated.TShellDispatch;
 
-public class TShell {
+@MessageDispatch("turtleduck.shell.generated.TShellDispatch")
+public class TShell implements ShellService {
+	private final TShellDispatch dispatch;
 	protected final Logger logger = LoggerFactory.getLogger(TShell.class);
 	private final SnippetNS startupNS = new SnippetNS("Startup", "s");
 	private final SnippetNS errorNS = new SnippetNS("Error", "e");
@@ -87,14 +92,15 @@ public class TShell {
 	private final TShellLocalExecutionControl control;
 	private LocalLoaderDelegate delegate;
 	private String startupCode;
-	private final List<Message> messageQueue = new ArrayList<>();
-	private final Consumer<Message> channel;
+	private final Router router;
+	private ExplorerService explorerService;
 
-	public TShell(Screen screen, TextWindow window, TextCursor printer2, Consumer<Message> channel) {
+	public TShell(Screen screen, TextWindow window, TextCursor printer2, Router router) {
+		this.dispatch = new TShellDispatch(this);
 		this.window = window;
 		this.screen = screen;
 		this.printer = printer2;
-		this.channel = channel;
+		this.router = router;
 		executor = Executors.newSingleThreadExecutor();
 
 		printer2.autoScroll(true);
@@ -158,10 +164,12 @@ public class TShell {
 	}
 
 	public void reconnect() {
-		for (SnippetData data : snippets.values()) {
-			Message.DictDataMessage msg = data.reconnect();
-			if (msg != null && !msg.get("signature").isBlank() && channel != null)
-				channel.accept(msg);
+		if (explorerService != null) {
+			for (SnippetData data : snippets.values()) {
+				Dict info = data.reconnect();
+				if (info != null && !info.get("signature", String.class).isBlank())
+					explorerService.update(info);
+			}
 		}
 	}
 
@@ -182,14 +190,15 @@ public class TShell {
 			data.snippet = snip;
 			snippets.put(data.id, data);
 		}
-		Message.DictDataMessage msg = data.update(ev);
+		Dict msg = data.update(ev);
 		if (msg != null) {
-			String sig = msg.get("signature");
+			String sig = msg.get("signature", String.class);
 			if (!sig.isEmpty()) {
-				printer.print("[" + snip.id() + "] " + msg.get("sym") + " " + msg.get("verb") + " " + msg.get("title")
-						+ " " + sig + "\n", BLUE);
-				if (channel != null)
-					channel.accept(msg);
+				printer.print("[" + snip.id() + "] " + msg.get("sym", String.class) + " "
+						+ msg.get("verb", String.class) + " " + msg.get("title", String.class) + " " + sig + "\n",
+						BLUE);
+				if (explorerService != null)
+					explorerService.update(msg);
 			}
 		}
 		logger.info("  history: ");
@@ -220,7 +229,7 @@ public class TShell {
 	}
 
 	public void eval(String code) {
-		eval(code, false, null);
+		eval(code, false);
 	}
 
 	public void run(String script) {
@@ -237,7 +246,7 @@ public class TShell {
 			if (info.completeness() != Completeness.CONSIDERED_INCOMPLETE //
 					&& info.completeness() != Completeness.DEFINITELY_INCOMPLETE) {
 				System.out.println("" + info.completeness() + info.source());
-				eval(info.source(), true, channel);
+				eval(info.source(), true);
 			} else {
 				System.out.println(info.completeness() + "… " + info.remaining());
 			}
@@ -247,12 +256,20 @@ public class TShell {
 	public void execute(String command) {
 		while (!command.isBlank()) {
 			CompletionInfo info = sca.analyzeCompletion(command);
+			int cmdLen = command.length();
 			command = info.remaining();
 //			if (info.completeness() != Completeness.CONSIDERED_INCOMPLETE //
 //					&& info.completeness() != Completeness.DEFINITELY_INCOMPLETE) {
+			String source = info.source();
+			if (source == null) {
+				source = command;
+				command = "";
+			} else if (cmdLen == command.length()) { // we're not moving forward
+				throw new IllegalStateException("execute stuck: '" + command + "'");
+			}
 			System.out.println("" + info.completeness() + info.source());
 			try {
-				eval(info.source(), false, channel);
+				eval(source, false);
 			} catch (Throwable t) {
 				logger.error("eval error", t);
 			}
@@ -263,7 +280,10 @@ public class TShell {
 
 	}
 
-	public void eval(String code, boolean quiet, Consumer<Message> reporter) {
+	public Dispatch<TShell> dispatch() {
+		return dispatch;
+	}
+	public void eval(String code, boolean quiet) {
 		if (code.startsWith("/")) {
 			String[] split = code.split("\\s+", 2);
 			String cmd = split[0];
@@ -306,18 +326,15 @@ public class TShell {
 					printer.moveHoriz((int) (inputX + pos));
 					printer.println("^");
 				}
-				if (reporter != null) {
-					Map<String, String> data = new HashMap<>();
-					data.put("msg", diag.getMessage(null));
-					data.put("start", String.valueOf(start));
-					data.put("end", String.valueOf(end));
-					data.put("pos", String.valueOf(pos));
-					Message msg = Message.createDictData(0, data);
-					reporter.accept(msg);
-				} else {
-					printer.println("diag: " + diag.getMessage(null));
-					printer.foreground(Colors.MAGENTA);
-				}
+				Dict data = Dict.create();
+				data.put("msg", diag.getMessage(null));
+				data.put("start", String.valueOf(start));
+				data.put("end", String.valueOf(end));
+				data.put("pos", String.valueOf(pos));
+				System.out.println(data);
+				printer.println("diag: " + diag.getMessage(null));
+				printer.foreground(Colors.MAGENTA);
+
 //				for(int i = 0; i < 300; i++) TShell.colorWheel(turtle.turn(15), -i);
 			});
 
@@ -391,7 +408,7 @@ public class TShell {
 				snips.add(snippets.get(arg).snippet);
 			} else {
 				for (Entry<String, SnippetData> e : snippets.entrySet()) {
-					if(e.getValue().name.equals(arg))
+					if (e.getValue().name.equals(arg))
 						snips.add(e.getValue().snippet);
 				}
 			}
@@ -427,7 +444,7 @@ public class TShell {
 					content = compInfo.source();
 					break;
 				}
-				eval(content, false, (msg) -> editor[0].report(msg));
+				eval(content, false);
 
 				content = compInfo.remaining();
 
@@ -577,11 +594,6 @@ public class TShell {
 		}
 	}
 
-	public void enter(String s) {
-		input += s;
-		enterKey();
-	}
-
 	public void enterKey() {
 		completions = null;
 		if (input != "") {
@@ -589,7 +601,7 @@ public class TShell {
 			System.out.println("Completeness: " + info.completeness() + " – " + input);
 //		printer.println();
 			try {
-				eval(input, false, null);
+				eval(input, false);
 			} catch (Throwable t) {
 				logger.error("eval error", t);
 			}
@@ -705,9 +717,9 @@ public class TShell {
 		protected String status;
 		protected String title;
 		protected List<String> history = new ArrayList<>();
-		protected DictDataMessage lastMsg;
+		protected Dict lastMsg;
 
-		public DictDataMessage update(SnippetEvent ev) {
+		public Dict update(SnippetEvent ev) {
 			String event = "";
 
 			String previous;
@@ -736,7 +748,7 @@ public class TShell {
 			switch (ev.status()) {
 			case DROPPED:
 				status = "del";
-				Map<String, String> data = new HashMap<>();
+				Dict data = Dict.create();
 				data.put("kind", "snippet");
 				data.put("event", previous + "→del");
 				data.put("sid", snippet.id());
@@ -745,7 +757,7 @@ public class TShell {
 				data.put("name", name);
 				data.put("signature", signature);
 				data.put("title", title);
-				return Message.createDictData(0, data);
+				return data;
 			case NONEXISTENT:
 			case OVERWRITTEN:
 				// ignore
@@ -786,7 +798,7 @@ public class TShell {
 			else
 				verb = "updated";
 
-			Map<String, String> data = new HashMap<>();
+			Dict data = Dict.create();
 			data.put("kind", "snippet");
 			data.put("event", previous + "→" + status);
 			data.put("verb", verb);
@@ -810,19 +822,19 @@ public class TShell {
 				MethodSnippet msnip = (MethodSnippet) snippet;
 				data.put("valtype", msnip.signature().replaceAll("^.*\\)", ""));
 				signature = name + "(" + msnip.parameterTypes() + ")";
-				data.put("fullname", data.get("valtype") + " " + signature);
-			} else if(snippet instanceof VarSnippet) {
-				VarSnippet vsnip = (VarSnippet)snippet;
+				data.put("fullname", data.get("valtype", String.class) + " " + signature);
+			} else if (snippet instanceof VarSnippet) {
+				VarSnippet vsnip = (VarSnippet) snippet;
 				data.put("valtype", vsnip.typeName());
 				signature = name;
-				data.put("fullname", data.get("valtype") + " " + name);
-			} else if(snippet instanceof ImportSnippet) {
-				ImportSnippet isnip = (ImportSnippet)snippet;
+				data.put("fullname", data.get("valtype", String.class) + " " + name);
+			} else if (snippet instanceof ImportSnippet) {
+				ImportSnippet isnip = (ImportSnippet) snippet;
 				data.put("fullname", isnip.fullname());
 				name = isnip.name().replaceAll("^.*?([^.]+\\.\\*)$", "$1");
 				signature = name;
-			} else if(snippet instanceof TypeDeclSnippet) {
-				TypeDeclSnippet tsnip = (TypeDeclSnippet)snippet;
+			} else if (snippet instanceof TypeDeclSnippet) {
+				TypeDeclSnippet tsnip = (TypeDeclSnippet) snippet;
 				data.put("fullname", title + " " + name);
 			}
 			source = snippet.source();
@@ -834,11 +846,11 @@ public class TShell {
 			data.put("signature", signature);
 			data.put("category", title);
 
-			lastMsg = Message.createDictData(0, data);
+			lastMsg = data;
 			return lastMsg;
 		}
 
-		public DictDataMessage reconnect() {
+		public Dict reconnect() {
 			return lastMsg;
 		}
 
@@ -914,10 +926,9 @@ public class TShell {
 				sub = ".other";
 				title = "expr";
 				break;
-			case RECORD_SUBKIND:
-				sub = ".record";
-				title = "record";
-				break;
+			/*
+			 * case RECORD_SUBKIND: sub = ".record"; title = "record"; break;
+			 */
 			case SINGLE_STATIC_IMPORT_SUBKIND:
 				sub = ".static.type";
 				title = "import";
@@ -992,5 +1003,30 @@ public class TShell {
 				break;
 			}
 		}
+	}
+
+	public void close() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Async<Dict> inspect(String code, int cursorPos, int detailLevel) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Async<Dict> executeRequest(String code, boolean silent, boolean store_history, Dict user_expressions,
+			boolean allow_stdin, boolean stop_on_error) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Async<Dict> enter(String line) {
+		input += line;
+		enterKey();
+		return null;
 	}
 }

@@ -25,8 +25,8 @@
 </head>
 <body>
 
-	<div id="page" class="main-and-figure">
-		<header>
+	<div id="page" class="login main-and-figure">
+		<header id="top">
 			<nav id="top-left">
 				<img id="logoimg" src="static/images/turtleduck.svg" /> <a
 					id="logotext" href="#"> TurtleDuck <span class="version">v${project.version}</span>
@@ -35,10 +35,19 @@
 
 			</nav>
 		</header>
-		<main>
-			<!-- LOGIN -->
-		</main>
-
+		<fieldset id="login" class="box widget" data-widget="login"
+			data-provides="login">
+			<legend id="login-head" class="">TurtleDuck Login</legend>
+			<main>
+				<!-- LOGIN -->
+			</main>
+		</fieldset>
+		<fieldset id="terms" class="box">
+			<legend class="">TurtleDuck Terms &amp; Privacy Notice</legend>
+			<main>
+				<!-- TERMS -->
+			</main>
+		</fieldset>
 		<footer id="bottom">
 			<div id="foot-left"></div>
 			<div id="status" class="active"></div>

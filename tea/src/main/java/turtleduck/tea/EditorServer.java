@@ -12,6 +12,7 @@ import turtleduck.comms.Message;
 import turtleduck.comms.Message.StringDataMessage;
 
 public class EditorServer extends AbstractChannel {
+	public static final String ENDPOINT_ID = "turtleduck.editor";
 	private HTMLElement element;
 	private Client client;
 	private AceSession session;

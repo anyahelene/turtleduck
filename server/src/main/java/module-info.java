@@ -4,6 +4,7 @@ module turtleduck.server {
 	exports turtleduck.server.services;
 	requires transitive turtleduck.base;
 	requires transitive turtleduck.shell;
+	requires turtleduck.anno;
 	requires io.vertx.core;
 	requires io.vertx.web;
 	requires io.vertx.auth.common;

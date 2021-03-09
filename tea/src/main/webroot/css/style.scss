@@ -76,14 +76,16 @@ $foot-height: 2rem;
 	grid-template-columns: 10rem repeat(3, minmax(75px,1fr));
 	grid-template-rows: $head-height calc(60% - #{$head-height}) calc(40% - #{$foot-height}) $foot-height;
 }
-
-header {
+#page.login {
+	grid-template-rows: $head-height calc(40% - #{$head-height}) calc(60% - #{$foot-height}) $foot-height;
+}
+#top {
 	grid-column: 1/-1; 
 	grid-row: 1/2;
 	@include lores-font;
 }
 
-footer {
+#bottom {
 	grid-column: 1/-1;
 	grid-row: -2/-1;
 	@include hires-font;
@@ -230,6 +232,31 @@ h1, h2, h3, h4, h5, h6 {
 
 }
 
+#login.box {
+	grid-column: 2/-2;
+	grid-row: 2/-3;
+	padding: 1rem;
+}
+#login main, #terms main {
+	height: 100%;
+}
+#terms iframe {
+	width: 100%;
+	height: 100%;
+}
+#terms main {
+	overflow-y: scroll;
+}
+
+#terms li, #terms p {
+	@include hires-font;	
+}
+
+#terms.box {
+	grid-column: 2/-2;
+	grid-row: 3/-2;
+	padding: 1rem;
+}
 .main-alone #figure0.box {
 	grid-column: -1/-1;
 	grid-row: 2/-3;
@@ -268,27 +295,30 @@ h1, h2, h3, h4, h5, h6 {
 	cursor: crosshair;
 }
 
-header, footer {
+#top, #bottom {
 	display: flex;
 	flex-direction: row;
-	justify-content: start;
 	align-items: stretch;
 }
-header {
+#top {
 	background: $page;
 	color: $pen;
+	justify-content: start;
 }
-footer {
+#bottom {
 	background:$pen;
 	color: $page;
+	justify-content: space-between;
+}
+#bottom #foot-left, #bottom #foot-mid, #bottom #foot-right {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	padding: .2rem;
+	flex-basis: 25%;
+	justify-content: space-between;
 }
 
-#error, #status {
-	align-self: stretch;
-	display: none;
-	position: relative;
-	padding: .2rem;
-}
 #error button {
 	padding: 0;
 	margin: 0;
@@ -299,7 +329,11 @@ footer {
 .active {
 	display: block !important;
 }
+#error {
+	visibility: hidden;
+}
 #error.active {
+	visibility: visible;
 	border: .2rem solid red;
 	background: red;
 	color: black;
@@ -350,7 +384,7 @@ button {
 
 }
 
-header button {
+#top button {
 	background-color: $button-bg-header;
 }
 
@@ -362,23 +396,23 @@ button:active, button.active {
 	transition: 0s;
 	background-color: $button-bg-active; 
 }
-header button span {
+#top button span {
 	vertical-align: center;
 }
-header button span:empty::after {
+#top button span:empty::after {
 	content: "\00a0";
 }
-header button .long {
+#top button .long {
 	font-size: x-small;
 }
-header button .icon {
+#top button .icon {
 	float: left;
 	font-size: small;
 }
-header button:hover .icon {
+#top button:hover .icon {
 	color: transparent;
 }
-header button:hover::before {
+#top button:hover::before {
 	position: absolute;
 	left: 0;
 	content: attr(data-shortcut-text);
@@ -389,7 +423,7 @@ header button:hover::before {
 }
 
 
-header button.disabled {
+#top button.disabled {
 	opacity: 0.6;
 	cursor: not-allowed;
 }
@@ -732,5 +766,20 @@ ul.shell-sample {
 .shell-sample li li::before {
 	content: "";
 	color: $prompt;
+}
+
+blockquote p:first-child::before {
+	content: "“";
+	font-size: 2rem;
+	initial-letter: 2;
+}
+blockquote p:last-child::after {
+	content: "“";
+	font-size: 2rem;
+	initial-letter: 2;
+}
+blockquote footer {
+	font-style: italic;
+	text-align: right;
 }
 @import '~xterm/css/xterm.css';

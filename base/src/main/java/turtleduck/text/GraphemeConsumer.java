@@ -18,7 +18,7 @@ public interface GraphemeConsumer {
 
 		@Override
 		public void accept(String s, int flags) {
-			System.out.printf("%s<%s>%s%n", ((flags & FLAG_START) != 0) ? "" : "…", Strings.escape(s), ((flags & FLAG_END) != 0) ? "" : "…");
+			System.out.printf("%s<%s>%s%n", ((flags & FLAG_START) != 0) ? "" : "…", Strings.termEscape(s), ((flags & FLAG_END) != 0) ? "" : "…");
 		}
 	}
 }

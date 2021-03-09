@@ -7,7 +7,6 @@ import turtleduck.canvas.Canvas;
 import turtleduck.canvas.CanvasImpl;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
-import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;

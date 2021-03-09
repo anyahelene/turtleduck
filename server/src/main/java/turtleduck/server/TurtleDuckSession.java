@@ -13,19 +13,30 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
+import turtleduck.annotations.MessageDispatch;
+import turtleduck.async.Async;
 import turtleduck.comms.Channel;
 import turtleduck.comms.EndPoint;
 import turtleduck.comms.Message;
 import turtleduck.comms.Message.ConnectMessage;
 import turtleduck.comms.Message.OpenMessage;
-import turtleduck.display.Screen;
+import turtleduck.messaging.HelloService;
+import turtleduck.messaging.Router;
+import turtleduck.messaging.TerminalService;
+import turtleduck.messaging.generated.TerminalServiceProxy;
 import turtleduck.server.channels.EditorChannel;
 import turtleduck.server.channels.PtyChannel;
+import turtleduck.server.generated.TDSDispatch;
 import turtleduck.shell.TShell;
 import turtleduck.terminal.PseudoTerminal;
+import turtleduck.util.Array;
+import turtleduck.util.Dict;
 import io.vertx.core.Handler;
 
-public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
+@MessageDispatch("turtleduck.server.generated.TDSDispatch")
+public class TurtleDuckSession extends AbstractVerticle implements EndPoint, HelloService {
+	private TShell shell;
+	private TDSDispatch dispatch;
 	private SockJSSocket socket;
 	private Map<Integer, Channel> channels = new HashMap<>();
 	private Map<String, Channel> names = new HashMap<>();
@@ -33,16 +44,24 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 	private final List<Handler<Void>> todo = new ArrayList<>();
 	private String user;
 	private Session session;
-	private Logger logger = LoggerFactory.getLogger(getClass());
+	private final static Logger logger = LoggerFactory.getLogger(TurtleDuckSession.class);
+	private VertxRouter router;
+	private String sessionId;
+	private ServerScreen screen;
+	private TerminalService terminalService;
 
 	public TurtleDuckSession(Session session, JsonObject userInfo) {
 		this.session = session;
-		user = userInfo.getString("nickname");
+		user = userInfo.getString("usernick");
+		dispatch = new TDSDispatch(this);
 	}
 
 	public void start() {
 		context.put("verticle", "session-" + user);
-
+		sessionId = "";
+		router = new VertxRouter(sessionId, user);
+		router.route("hello", msg -> dispatch.dispatch(msg));
+		terminalService = new TerminalServiceProxy("terminal.server", router::send);
 		logger.info("Starting TurtleDuck " + context.deploymentID() + " for user " + user);
 		synchronized (todo) {
 			for (Handler<Void> h : todo) {
@@ -62,6 +81,10 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 			}
 	}
 
+	public Router router() {
+		return router;
+	}
+
 	public void connect(SockJSSocket sockjs) {
 		logger.info("connect({}), socket={}", sockjs, socket);
 		if (socket == sockjs) {
@@ -70,8 +93,9 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 			logger.warn("Already connected, closing old socket");
 			socket.close();
 			socket = null;
+			router.disconnect();
 		}
-
+		router.connect(sockjs);
 		socket = sockjs;
 		socket.exceptionHandler((e) -> {
 			logger.error("Socket error", e);
@@ -95,8 +119,11 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 			}
 		}
 		msg.msg(channels.values().isEmpty() ? "WELCOME" : "WELCOME_BACK");
+		msg.addInfo("username", user);
 		logger.warn("OPEN: " + msg.toJson());
+		createShell();
 		send(msg);
+//		router.send(Welcome.create("turtleduck.client", sessionId, user, Dict.create()), null);
 		socket.handler(this::receive);
 		// trigger reopen listeners after we've connected, since they may want to send
 		// data
@@ -109,6 +136,10 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 			logger.info("recv context: " + vertx.getOrCreateContext().get("verticle"));
 			logger.info("RECV: " + buf);
 			JsonObject obj = buf.toJsonObject();
+			if (!obj.containsKey("type")) {
+				router.receive(turtleduck.messaging.Message.fromDict(VertxJson.decodeDict(obj)));
+				return;
+			}
 			MessageRepr repr = new MessageRepr(obj);
 			Message msg = Message.create(repr);
 			int channel = msg.channel();
@@ -142,57 +173,6 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 						OpenMessage reply = Message.createOpened(names.get(service + ":" + name).channelId(), name,
 								service);
 						send(reply);
-					} else if (service.equals("jshell")) {
-						PseudoTerminal pty = new PseudoTerminal();
-						// TODO: do async
-						context.executeBlocking((promise) -> {
-							try {
-//								Readline readline = new Readline();
-//								readline.attach(pty);
-								ServerScreen screen = (ServerScreen) ServerDisplayInfo.provider()
-										.startPaintScene(TurtleDuckSession.this);
-								TShell shell = new TShell(screen, null, pty.createCursor(), message -> {
-									message.channel(channel);
-									send(message);
-								});
-								pty.hostInputListener((line) -> {
-									context.executeBlocking((linePromise) -> {
-										try {
-											shell.execute(line);
-											shell.prompt();
-											screen.render();
-											linePromise.complete("ok");
-										} catch (Throwable t) {
-											linePromise.fail(t);
-										}
-									}, (r) -> {
-										System.out.println(r);
-									});
-									return true;
-								});
-								pty.useHistory(0, false);
-								pty.reconnectListener(() -> {shell.reconnect(); shell.prompt();});
-								shell.editorFactory((n, callback) -> {
-									EditorChannel ch = new EditorChannel(n, "editor", callback);
-									open(ch);
-									return ch;
-								});
-								promise.complete("ok");
-							} catch (Throwable t) {
-								t.printStackTrace();
-								promise.fail(t);
-							}
-						}, (result) -> {
-							logger.info("Shell started: " + result);
-						});
-						int id = nextChannelId();
-						Channel ch = new PtyChannel(name, service, pty);
-						ch.initialize();
-						ch.opened(id, this);
-						channels.put(id, ch);
-						names.put(service + ":" + name, ch);
-						OpenMessage reply = Message.createOpened(id, name, service);
-						send(reply);
 					}
 				} else if (type.equals("Opened")) {
 					OpenMessage omsg = (OpenMessage) msg;
@@ -210,6 +190,36 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 		} catch (Throwable t) {
 			t.printStackTrace();
 		}
+	}
+
+	private void createShell() {
+		PseudoTerminal pty = new PseudoTerminal();
+		pty.terminalListener(s -> {
+			terminalService.print(s);
+			System.out.println("Terminal: " + s);
+		});
+		screen = (ServerScreen) ServerDisplayInfo.provider().startPaintScene(TurtleDuckSession.this);
+		shell = new TShell(screen, null, pty.createCursor(), router);
+		router.route(shell.dispatch());
+		pty.hostInputListener((line) -> {
+			context.executeBlocking((linePromise) -> {
+				shell.enter(line);
+				linePromise.complete();
+			}, (r) -> {
+				System.out.println(r);
+			});
+			return true;
+		});
+		pty.useHistory(0, false);
+		pty.reconnectListener(() -> {
+			shell.reconnect();
+			shell.prompt();
+		});
+		shell.editorFactory((n, callback) -> {
+			EditorChannel ch = new EditorChannel(n, "editor", callback);
+			open(ch);
+			return ch;
+		});
 	}
 
 	void sendError() {
@@ -242,4 +252,18 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint {
 		nextChannelId += 2;
 		return id;
 	}
+
+	@Override
+	public Async<Dict> hello(String sessionName, Dict endPoints) {
+		sessionId = sessionName;
+		router.init(sessionName, user);
+		Dict myEndPoints = Dict.create();
+		myEndPoints.put("turtleduck.server", Array.of("hello"));
+		myEndPoints.put("turtleduck.shell.server", Array.of("inspect_request"));
+		Dict reply = Dict.create();
+		reply.put(HelloService.ENDPOINTS, myEndPoints);
+		reply.put(HelloService.USERNAME, user);
+		return Async.succeeded(reply);
+	}
+
 }

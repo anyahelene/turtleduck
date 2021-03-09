@@ -4,4 +4,5 @@ module turtleduck.tea {
 	requires teavm.interop;
 	requires teavm.jso;
 	requires teavm.jso.apis;
+	requires turtleduck.anno;
 }

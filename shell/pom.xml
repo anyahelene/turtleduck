@@ -14,6 +14,10 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>turtleduck-anno</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-base</artifactId>
 		</dependency>
 		<dependency>
@@ -51,4 +55,33 @@
 			<version>9.0</version>
 		</dependency>
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<compilerArgs>
+						<!-- arg>-verbose</arg -->
+						<arg>-Xlint:all,-options,-path</arg>
+						<arg>-parameters</arg>
+						<arg>-g</arg>
+					</compilerArgs>
+					<generatedSourcesDirectory>${project.build.directory}/generated-sources/</generatedSourcesDirectory>
+					<annotationProcessorPaths>
+						<annotationProcessorPath>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>turtleduck-anno</artifactId>
+							<version>${project.version}</version>
+						</annotationProcessorPath>
+					</annotationProcessorPaths>
+					<annotationProcessors>
+						<annotationProcessor>
+							turtleduck.annotations.ProcessAnnotations
+						</annotationProcessor>
+					</annotationProcessors>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
