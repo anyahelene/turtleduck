@@ -1,0 +1,18 @@
+{
+	"$schema": "http://json-schema.org/schema#",
+	"$id": "http://yourdomain.com/schemas/myschema.json",
+	"type": "object",
+	"properties" : {
+		"uid" : { "type" : "number"},
+		"provider" : { 
+			"type" : "array",
+			"items" : {
+				"type" : "object",
+				"properties" : {
+					"provider_id" : { "type" : "string", "pattern" : "^[a-zA-Z0-9_-]$" },
+					"provider_uid" : { "type" : "string" }
+				}
+			}
+		}
+	}
+}
