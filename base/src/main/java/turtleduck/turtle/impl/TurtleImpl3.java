@@ -1,5 +1,6 @@
 package turtleduck.turtle.impl;
 
+import turtleduck.canvas.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.turtle.Chelonian3;
@@ -10,8 +11,8 @@ public class TurtleImpl3<THIS extends Chelonian3<THIS, RESULT>, RESULT> extends 
 		implements Chelonian3<THIS, RESULT> {
 	public static class SpecificTurtle3 extends TurtleImpl3<Turtle3, Turtle3> implements Turtle3 {
 
-		public SpecificTurtle3(Point p, Direction b, Pen pen) {
-			super(p, b, pen);
+		public SpecificTurtle3(Point p, Direction b, Pen pen, Canvas canvas) {
+			super(p, b, pen, canvas);
 		}
 
 		public SpecificTurtle3(SpecificTurtle3 parent) {
@@ -23,8 +24,8 @@ public class TurtleImpl3<THIS extends Chelonian3<THIS, RESULT>, RESULT> extends 
 		}
 	}
 
-	public TurtleImpl3(Point p, Direction b, Pen pen) {
-		super(p, b, pen);
+	public TurtleImpl3(Point p, Direction b, Pen pen, Canvas canvas) {
+		super(p, b, pen, canvas);
 	}
 
 	public TurtleImpl3(TurtleImpl<THIS, RESULT> parent) {

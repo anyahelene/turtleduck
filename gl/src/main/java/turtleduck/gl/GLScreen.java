@@ -114,7 +114,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	@Override
 	public Canvas createCanvas() {
 		Canvas canvas = new CanvasImpl<>(newLayerId(), this, dim.winWidth, dim.winHeight,
-				use3d -> layer.pathWriter(use3d));
+				use3d -> layer.pathWriter(use3d), null);
 		return canvas;
 	}
 

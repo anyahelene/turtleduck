@@ -1,10 +1,12 @@
 package turtleduck.turtle;
 
+import turtleduck.annotations.Icon;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
 
+@Icon("🧭")
 public interface BasicNavigator<T extends BasicNavigator<T>> extends PositionVector, DirectionVector {
 	enum RelativeTo {
 		/**

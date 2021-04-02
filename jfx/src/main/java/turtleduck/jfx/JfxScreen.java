@@ -179,7 +179,7 @@ public class JfxScreen extends BaseScreen {
 		Canvas canvas = newCanvas();
 		JfxLayer layer = addLayer(new JfxLayer(newLayerId(), width(), getHeight(), this, canvas));
 		layerCanvases.put(layer, canvas);
-		return new CanvasImpl<>(layer.id(),this, width(), getHeight(), use3d -> layer.pathWriter(use3d));
+		return new CanvasImpl<>(layer.id(),this, width(), getHeight(), use3d -> layer.pathWriter(use3d), null);
 	}
 
 	@Override

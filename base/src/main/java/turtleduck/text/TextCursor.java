@@ -416,5 +416,12 @@ public interface TextCursor {
 	};
 
 	TextCursor write(CodePoint codePoint, Attributes attrs);
-	
+
+	/**
+	 * Flush the underlying IO stream
+	 * 
+	 * @return <code>this</code>, for further calls
+	 */
+	TextCursor flush();
+
 }

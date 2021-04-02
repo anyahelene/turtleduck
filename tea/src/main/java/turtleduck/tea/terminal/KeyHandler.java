@@ -1,18 +1,13 @@
 package turtleduck.tea.terminal;
 
 import org.teavm.jso.dom.events.KeyboardEvent;
-import org.teavm.jso.json.JSON;
 
-import turtleduck.comms.Channel;
-import turtleduck.comms.Message;
-import turtleduck.comms.Message.*;
 import turtleduck.events.JSKeyCodes;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
+import turtleduck.messaging.InputService;
 import turtleduck.tea.Browser;
-import turtleduck.tea.NativeTScreen;
-import turtleduck.tea.net.SockJS;
-import turtleduck.tea.teavm.Dict;
+
 import xtermjs.IDisposable;
 import xtermjs.Terminal;
 
@@ -21,7 +16,7 @@ public class KeyHandler {
 	private IDisposable onKey;
 	private IDisposable onData;
 
-	public KeyHandler(Terminal terminal, Channel channel) {
+	public KeyHandler(Terminal terminal, InputService remote) {
 		onKey = terminal.onKey((ke) -> {
 			KeyboardEvent ev = ke.getDomEvent();
 			int mods = 0;
@@ -72,21 +67,18 @@ public class KeyHandler {
 			data = ke.getKey();
 			String jsKey = ev.getKey();
 			int code = JSKeyCodes.toKeyCode(jsKey);
-			if(code == KeyCodes.Special.UNDEFINED) {
-				if(jsKey.length() == 1) {
+			if (code == KeyCodes.Special.UNDEFINED) {
+				if (jsKey.length() == 1) {
 					char c = jsKey.charAt(0);
-					if(Character.isLowerCase(c) && Character.toLowerCase(Character.toUpperCase(c)) == c) {
+					if (Character.isLowerCase(c) && Character.toLowerCase(Character.toUpperCase(c)) == c) {
 						c = Character.toUpperCase(c);
 					}
 					code = c;
 				}
 			}
-			KeyEventMessage msg = Message.createKeyEvent(0, code, ke.getKey());
-			if(mods != 0)
-			msg.modifiers(mods);
-			if(flags != 0)
-			msg.flags(flags);
-			channel.send(msg); // String.format("E%s:%d:%d:%s:%s", type, mods, flags, ev.getKey(), ke.getKey()));
+			KeyEvent tdEvent = KeyEvent.create(code, ke.getKey(), mods, flags);
+
+			remote.keyEvent(tdEvent.toDict());
 		});
 		onData = terminal.onData((String s) -> {
 			if (data != null) {
@@ -94,7 +86,7 @@ public class KeyHandler {
 					Browser.consoleLog("KeyHandler.onData: mismatch with onKey: '" + data + "' != '" + s + "'");
 				data = null;
 			} else {
-				channel.send(Message.createStringData(0, s));
+				remote.dataEvent(s);
 			}
 		});
 

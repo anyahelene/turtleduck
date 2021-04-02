@@ -1,6 +1,10 @@
 package turtleduck.messaging;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -15,11 +19,12 @@ import turtleduck.util.Logging;
 
 public abstract class Router {
 	protected final static Logger logger = Logging.getLogger(Router.class);
-	protected Map<String, Function<Message, Async<Message>>> routes = new HashMap<>();
+	protected Map<String, List<Function<Message, Async<Message>>>> routes = new HashMap<>();
 	protected Map<String, Long> cancels = new HashMap<>();
 	protected Map<String, Monitor> outstandingRequests = new HashMap<>();
 	protected String session;
 	protected String username;
+	protected boolean useJupyter = false;
 
 	public Router(String session, String username) {
 		this.session = session;
@@ -34,16 +39,33 @@ public abstract class Router {
 	}
 
 	public void route(String msgType, Function<Message, Async<Message>> handler) {
-		routes.put(msgType, handler);
+		if (msgType == null || handler == null)
+			throw new IllegalArgumentException();
+		List<Function<Message, Async<Message>>> funs = routes.get(msgType);
+		if (funs == null) {
+			funs = new ArrayList<>();
+			routes.put(msgType, funs);
+		}
+		funs.add(handler);
 	}
 
 	public void route(Dispatch<?> dispatch) {
-		for (String s : dispatch.requestTypes())
-			routes.put(s, dispatch::dispatch);
+		if (dispatch == null)
+			throw new IllegalArgumentException();
+
+		for (String s : dispatch.requestTypes()) {
+			List<Function<Message, Async<Message>>> funs = routes.get(s);
+			if (funs == null) {
+				funs = new ArrayList<>();
+				routes.put(s, funs);
+			}
+			funs.add(dispatch::dispatch);
+			System.out.println("Handlers for " + s + ": " + funs);
+		}
 	}
 
 	public void receive(Message msg) {
-		if (session != null && !session.equals(msg.header(Message.SESSION))) {
+		if (useJupyter && session != null && !session.equals(msg.header(Message.SESSION))) {
 			logger.warn("Expected session {}: {}", session, msg);
 			// return;
 		}
@@ -57,10 +79,16 @@ public abstract class Router {
 			}
 			Monitor req = outstandingRequests.remove(ref);
 			if (req != null) {
-				req.replied = true;
-				logger.info("Received reply to {}: {}", req.msgId, msg);
-				if (req.successHandler != null) {
-					req.successHandler.accept(msg.content());
+				req.reply = msg;
+				if (!msg.msgType().equals("error_reply")) {
+					logger.info("Received success reply to {}: {}", req.msgId, msg);
+					if (req.successHandler != null)
+						req.successHandler.accept(msg.content());
+					return;
+				} else {
+					logger.info("Received error reply to {}: {}", req.msgId, msg);
+					if (req.failHandler != null)
+						req.failHandler.accept(msg.content());
 					return;
 				}
 			}
@@ -70,29 +98,24 @@ public abstract class Router {
 //			Route route = routes.get(addr);
 //			System.out.println("found: " + route);
 //			if (route != null) {
-		Function<Message, Async<Message>> handler = routes.get(msg.msgType());
-		if (handler != null) {
-			logger.info("found handler: {}", handler);
-			try {
-				Async<Message> async = handler.apply(msg);
-				if (async != null) {
-					async.onSuccess(this::send);
-				}
-			} catch (Throwable t) {
-				MessageWriter reply = msg.reply("failure");
-				reply.putContent(Reply.STATUS, "error");
-				reply.putContent(Reply.ENAME, t.getClass().getName());
-				reply.putContent(Reply.EVALUE, t.getMessage());
-				Array a = Array.of(String.class);
+		List<Function<Message, Async<Message>>> handlers = routes.get(msg.msgType());
+		if (handlers != null) {
+			logger.info("found handlers: {}", handlers);
+			for (Function<Message, Async<Message>> handler : handlers) {
 				try {
-					for (StackTraceElement e : t.getStackTrace()) {
-						a.add(e.toString());
+					Async<Message> async = handler.apply(msg);
+					if (async != null) {
+						async.onSuccess(this::send);
+						async.onFailure(fail -> {
+							logger.error("Handler failed: {}", fail);
+							send(msg.reply("error_reply").content(fail).done());
+						});
 					}
-				} catch (Throwable u) {
-					// ignore missing stacktrace on TeaVM
+				} catch (Throwable t) {
+					logger.error("Message handler threw exception", t);
+					t.printStackTrace();
+					send(msg.errorReply(t).putContent(Reply.ENAME, handler.toString()).done());
 				}
-				reply.putContent(Reply.TRACEBACK, a);
-				send(reply.done());
 			}
 //			}
 //		}
@@ -103,24 +126,49 @@ public abstract class Router {
 
 	public Async<Dict> send(Message msg) {
 		Dict header = msg.header();
-		if (session != null && !session.equals("") && !session.equals(header.get(Message.SESSION))) {
-			logger.warn("Expected session {}: {}", session, msg);
-			header.put(Message.SESSION, session);
-		}
+		if (useJupyter) {
+			if (session != null && !session.equals("") && !session.equals(header.get(Message.SESSION))) {
+				logger.warn("Expected session {}: {}", session, msg);
+				header.put(Message.SESSION, session);
+			}
 //		if ("".equals(header.get(Message.SESSION)))
-		if (!"".equals(session))
-			header.put(Message.SESSION, session);
+			if (!"".equals(session))
+				header.put(Message.SESSION, session);
 //		if ("".equals(header.get(Message.USERNAME)))
-		if (!"".equals(username))
-			header.put(Message.USERNAME, username);
-
+			if (!"".equals(username))
+				header.put(Message.USERNAME, username);
+		}
 		Monitor m = new Monitor(msg.msgId());
 		socketSend(msg.toJson());
 		m.sent = true;
 		return m;
 	}
 
+	public Async<Dict> send(Message msg, ByteBuffer... buffers) {
+		Dict header = msg.header();
+		if (useJupyter) {
+			if (session != null && !session.equals("") && !session.equals(header.get(Message.SESSION))) {
+				logger.warn("Expected session {}: {}", session, msg);
+				header.put(Message.SESSION, session);
+			}
+//		if ("".equals(header.get(Message.SESSION)))
+			if (!"".equals(session))
+				header.put(Message.SESSION, session);
+//		if ("".equals(header.get(Message.USERNAME)))
+			if (!"".equals(username))
+				header.put(Message.USERNAME, username);
+		}
+		Monitor m = new Monitor(msg.msgId());
+
+		socketSend(msg.toJson(), buffers);
+		m.sent = true;
+		return m;
+	}
+
+	protected abstract void socketSend(String json, ByteBuffer[] buffers);
+
 	class Monitor implements MessageMonitor {
+		public Message reply;
 		Consumer<Dict> successHandler;
 		Consumer<Dict> failHandler;
 		protected String msgId;
@@ -145,7 +193,7 @@ public abstract class Router {
 
 		@Override
 		public boolean isReplied() {
-			return replied;
+			return reply != null;
 		}
 
 		@Override
@@ -155,14 +203,22 @@ public abstract class Router {
 
 		@Override
 		public Async<Dict> onSuccess(Consumer<Dict> successHandler) {
-			this.successHandler = successHandler;
+			if (reply != null && !reply.msgType().equals("error_reply")) {
+				successHandler.accept(reply.content());
+			} else {
+				this.successHandler = successHandler;
+			}
 			register();
 			return this;
 		}
 
 		@Override
 		public Async<Dict> onFailure(Consumer<Dict> failHandler) {
-			this.failHandler = failHandler;
+			if (reply != null && reply.msgType().equals("error_reply")) {
+				failHandler.accept(reply.content());
+			} else {
+				this.failHandler = failHandler;
+			}
 			register();
 			return this;
 		}
@@ -186,6 +242,15 @@ public abstract class Router {
 			successHandler = (v -> sub.success(f.apply(v)));
 			if (failHandler == null)
 				failHandler = (v -> sub.fail(v));
+			register();
+			return sub;
+		}
+
+		@Override
+		public Async<Dict> mapFailure(Function<Dict, Dict> f) {
+			AsyncImpl<Dict> sub = new AsyncImpl<>();
+			failHandler = (t -> sub.success(f.apply(t)));
+			successHandler = (v -> sub.success(v));
 			register();
 			return sub;
 		}

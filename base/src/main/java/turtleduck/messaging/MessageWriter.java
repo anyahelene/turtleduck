@@ -8,7 +8,6 @@ import turtleduck.util.Key;
 public interface MessageWriter {
 	MessageWriter header(String session, String username, String msg_type);
 
-	MessageWriter header(String msg_type);
 
 	MessageWriter parent_header(Message parent);
 
@@ -23,4 +22,8 @@ public interface MessageWriter {
 //	MessageWriter buffer(Buffer buffer);
 
 	Message done();
+
+	MessageWriter header(Message parent, String msg_type);
+
+	MessageWriter header(String msg_type);
 }

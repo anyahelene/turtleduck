@@ -7,3 +7,5 @@ base/src/main/resources/events/missing-gl
 *.tmp
 authsecrets.json
 */bin
+*.mp3
+users.db

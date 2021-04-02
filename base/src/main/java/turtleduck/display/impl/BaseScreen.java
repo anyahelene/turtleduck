@@ -38,6 +38,11 @@ public abstract class BaseScreen implements Screen {
 		return id;
 	}
 
+	public Screen clear() {
+		for(Layer l : layers)
+			l.clear();
+		return this;
+	}
 	protected String newLayerId() {
 		return id + "." + nLayers++;
 	}

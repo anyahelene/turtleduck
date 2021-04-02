@@ -5,9 +5,16 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import jquery from 'jquery';
 import animals from './animals.txt';
+import ace from "ace-builds";
+import "ace-builds/webpack-resolver";
+//var ace = require('ace-builds/src-noconflict/ace')
 
 var turtleduck = window['turtleduck'] || {};
 window['turtleduck'] = turtleduck;
+
+ace.config.loadModule("ace/ext/language_tools", function(m) { turtleduck.editor_language_tools = m; });
+ace.config.loadModule('ace/ext/options', function(m) { turtleduck.editor_options = m; });
+
 const animalList = animals.split(/\s+/).filter(function(a) { return a.length > 0; })
 turtleduck.animals = {
 	pranimals: animalList.filter(function(a) { return !a.startsWith("-"); }),
@@ -47,6 +54,12 @@ function storageAvailable(type) {
 
 turtleduck.hasLocalStorage = storageAvailable('localStorage');
 turtleduck.hasSessionStorage = storageAvailable('sessionStorage');
+turtleduck.localStorage = storageAvailable('localStorage') ? window.localStorage : {
+	dict: {},
+	getItem: function(key) { return dict[key]; },
+	setItem: function(key, value) { dict[key] = value; },
+	removeItem: function(key) { dict[key] = undefined; },
+};
 
 turtleduck.sessionStorage = storageAvailable('sessionStorage') ? window.sessionStorage : {
 	dict: {},
@@ -67,7 +80,7 @@ turtleduck.generateSessionName = function(regen = false) {
 }
 
 turtleduck.generateSessionName();
-
+/*
 class MessageRepr {
 	constructor(json) {
 		this.data = json === undefined ? {} : JSON.parse(json);
@@ -103,6 +116,7 @@ class MessageRepr {
 			return this.data[key];
 	}
 }
+*/
 function ctrl(key) {
 	return ['ctrl+' + key, 'command+' + key];
 }
@@ -120,7 +134,7 @@ function handleKey(key, button, event) {
 			jquery('#editor textarea').focus();
 			break;
 		case "f7":
-			window.xtermjs_wrap_terminal.focus();
+			turtleduck.jshell.focus();
 			break;
 		case "f8":
 			if (jquery("#page").hasClass('main-alone')) {
@@ -130,15 +144,23 @@ function handleKey(key, button, event) {
 			}
 			break;
 		case "f9":
-			var alone = jquery("#page").hasClass('main-alone');
-			jquery("#page").toggleClass('main-alone', !alone);
-			jquery("#page").toggleClass('main-and-figure', alone);
+			//var alone = jquery("#page").hasClass('main-alone');
+			//jquery("#page").toggleClass('main-alone', !alone);
+			//jquery("#page").toggleClass('main-and-figure', alone);
+			var coding = jquery("#page").hasClass('mainly-coding');
+			jquery("#page").toggleClass('mainly-coding', !coding);
+			jquery("#page").toggleClass('mainly-figure', coding);
+			jquery("#page").toggleClass('main-alone', false);
+			jquery("#page").toggleClass('main-and-figure', false);
+			turtleduck.editor.resize();
+			turtleduck.jshell_fitAddon.fit();
 			break;
 		case "help":
 			jquery("#page").toggleClass('show-splash-help');
 			break;
 		default:
 			console.log(key, button, event);
+			turtleduck.actions.handle(key, event);
 	}
 }
 
@@ -224,9 +246,13 @@ jquery(function() {
 	});
 
 });
+
+
 window.SockJS = SockJS;
 window.Terminal = Terminal;
 window.FitAddon = FitAddon;
-window.MessageRepr = MessageRepr;
+//window.MessageRepr = MessageRepr;
 window.Mousetrap = Mousetrap;
 window.$ = jquery;
+window.ace = ace;
+

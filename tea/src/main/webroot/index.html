@@ -5,35 +5,22 @@
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link rel="icon" href="static/images/turtleduck-icon.png" type="image/png" />
-
-<!-- script
-	src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
-	integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
-	crossorigin="anonymous"></script>
-<script
-	src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
-	integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
-	crossorigin="anonymous"></script-->
-<!-- link rel="stylesheet"
-	href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" /-->
-<!--  link rel="stylesheet"
-	href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
-	integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
-	crossorigin="anonymous" -->
+<link rel="icon" href="static/images/turtleduck-icon.png"
+	type="image/png" />
 
 <script type="text/javascript" charset="utf-8" src="static/js/bundle.js"></script>
 <script type="text/javascript" charset="utf-8"
 	src="static/js/classes.js"></script>
+<!-- 
 <script type="text/javascript" charset="utf-8"
 	src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
 <script type="text/javascript" charset="utf-8"
-	src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-java.min.js"></script>
+	src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-java.min.js"></script> -->
 <link rel="stylesheet" href="static/style.css" />
 </head>
 <body onload="main()">
 
-	<div id="page" class="main-and-figure show-splash-help">
+	<div id="page" class="main-and-figure">
 		<header id="top">
 			<nav id="top-left">
 				<img id="logoimg" src="static/images/turtleduck.svg" /> <a
@@ -120,25 +107,25 @@
 			</legend>
 			<div class="body">
 				<h2>
-					<a id="explorer-head-var" href="#explorer-var" class="empty"
+					<a id="explorer-head-var" href="#explorer-var" class="open empty"
 						data-toggle="collapse">Variables</a>
 				</h2>
-				<ul id="explorer-var" class="collapse empty" data-role="listview"></ul>
+				<ul id="explorer-var" class="collapse open empty" data-role="listview"></ul>
 				<h2>
-					<a id="explorer-head-method" href="#explorer-method" class="empty"
+					<a id="explorer-head-method" href="#explorer-method" class="open empty"
 						data-toggle="collapse">Methods</a>
 				</h2>
-				<ul id="explorer-method" class="collapse empty" data-role="listview"></ul>
+				<ul id="explorer-method" class="collapse open empty" data-role="listview"></ul>
 				<h2>
-					<a id="explorer-head-type" href="#explorer-type" class="empty"
+					<a id="explorer-head-type" href="#explorer-type" class="open empty"
 						data-toggle="collapse">Types</a>
 				</h2>
-				<ul id="explorer-type" class="collapse empty" data-role="listview"></ul>
+				<ul id="explorer-type" class="collapse open empty" data-role="listview"></ul>
 				<h2>
-					<a id="explorer-head-import" href="#explorer-import" class="empty"
+					<a id="explorer-head-import" href="#explorer-import" class="open empty"
 						data-toggle="collapse">Imports</a>
 				</h2>
-				<ul id="explorer-import" class="collapse empty" data-role="listview"></ul>
+				<ul id="explorer-import" class="collapse open empty" data-role="listview"></ul>
 			</div>
 		</fieldset>
 
@@ -172,7 +159,8 @@
 			</nav>
 			<div>
 				<!-- svg id="svg0" viewBox="0 0 1280 720" preserveAspectRatio="xMinYMin slice"></svg-->
-				<svg id="svg0" viewBox="-640 -360 1280 720"
+			<div id="excavator"></div>
+					<svg id="svg0" tabindex="0" viewBox="-640 -360 1280 720"
 					preserveAspectRatio="xMidYMid slice"></svg>
 			</div>
 			<div class="footnote" id="coordinates-svg0">(0,0)</div>
@@ -225,7 +213,10 @@
 			<div id="foot-mid"></div>
 			<div id="foot-right">
 				<div id="sessionName" data-from="turtleduck.sessionName"></div>
-				<div id="status" class="active"></div>
+				<div id="status" class="active">
+					<ul id="status-pop" class="popup"></ul>
+					<span id="status-button" type="button">OFFLINE</span>
+				</div>
 				<div id="error">
 					<ul id="error-pop" class="popup"></ul>
 					<button id="error-button" type="button">ERR!</button>
@@ -233,6 +224,7 @@
 			</div>
 		</footer>
 	</div>
+	<audio id="music" src="static/images/desert-of-lost-souls-by-kevin-macleod-from-filmmusic-io.mp3"></audio>
 	<script>
 		function resizable(element, handle, direction, callback) {
 			var start, size = 0;

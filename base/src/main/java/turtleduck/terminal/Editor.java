@@ -2,7 +2,7 @@ package turtleduck.terminal;
 
 import java.util.function.Consumer;
 
-import turtleduck.comms.Message;
+import turtleduck.messaging.Message;
 
 public interface Editor {
 

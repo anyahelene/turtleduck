@@ -94,7 +94,7 @@ public class TermWindowImpl implements TextWindow {
 
 	@Override
 	public TextCursor cursor() {
-		return new TermCursorImpl(this.terminal);
+		return new TermCursorImpl(terminal, terminal::writeToHost);
 	}
 
 	@Override

@@ -3,19 +3,34 @@ package turtleduck.colors;
 import java.util.stream.IntStream;
 
 public class Colors {
-	public static final Color TRANSPARENT = Color.color(0, 0, 0, 0);
-	public static final Color RED = Color.color(1, 0, 0, 1);
+	public static final Color TRANSPARENT = new ColorRGB(0, 0, 0, 0, true);
+	public static final Color WHITE = new ColorRGB(1, 1, 1, 1, true, 15);
+	public static final Color GRAY = new ColorRGB(.5f, .5f, .5f, 1, true, 8);
+	public static final Color GREY = GRAY;
+	public static final Color BLACK = new ColorRGB(0, 0, 0, 1, true, 0);
+	public static final Color SILVER = new ColorRGB(.5f, .5f, .5f, 1, true, 7);
 
-	public static final Color GREEN = Color.color(0, 1, 0, 1);
-	public static final Color BLUE = Color.color(0, 0, 1, 1);
-	public static final Color YELLOW = Color.color(1, 1, 0, 1);
-	public static final Color MAGENTA = Color.color(1, 0, 1, 1);
-	public static final Color CYAN = Color.color(0, 1, 1, 1);
-	public static final Color GREY = Color.color(.5, .5, .5, 1);
-	public static final Color WHITE = Color.color(1, 1, 1, 1);
-	public static final Color BLACK = Color.color(0, 0, 0, 1);
-	public static final Color PINK = Color.color(1, .5, .5, 1);
-	public static final Color FORESTGREEN = Color.color(.3, 1, 0, 1);
+	public static final Color RED = new ColorRGB(1, 0, 0, 1, true, 9);
+	public static final Color MAROON = new ColorRGB(.5f, 0, 0, 1, true, 1);
+	public static final Color PINK = new ColorRGB(1, .5f, .5f, 1, true, 210);
+
+	public static final Color LIME = new ColorRGB(0, 1, 0, 1, true, 10);
+	public static final Color GREEN = new ColorRGB(0, .5f, 0, 1, true, 2);
+	public static final Color FORESTGREEN = new ColorRGB(.3f, 1, 0, 1, true, 82);
+	public static final Color LIGHT_GREEN = new ColorRGB(.5f, .5f, 1, 1, true, 120);
+
+	public static final Color BLUE = new ColorRGB(0, 0, 1, 1, true, 12);
+	public static final Color NAVY = new ColorRGB(0, 0, .5f, 1, true, 4);
+	public static final Color LIGHT_BLUE = new ColorRGB(.5f, .5f, 1, 1, true, 105);
+
+	public static final Color YELLOW = new ColorRGB(1, 1, 0, 1, true, 11);
+	public static final Color OLIVE = new ColorRGB(.5f, .5f, 0, 1, true, 3);
+
+	public static final Color MAGENTA = new ColorRGB(1, 0, 1, 1, true, 13);
+	public static final Color PURPLE = new ColorRGB(.5f, 0, .5f, 1, true, 5);
+
+	public static final Color CYAN = new ColorRGB(0, 1, 1, 1, true, 14);
+	public static final Color TEAL = new ColorRGB(0, .5f, .5f, 1, true, 6);
 
 	public static class Gamma {
 		public static final short LINEAR_MAX = 4095, COMPRESSED_MAX = 255;
@@ -36,6 +51,7 @@ public class Colors {
 			else
 				return Math.pow((srgbComponent + 0.055) / 1.055, 2.4);
 		}
+
 		public static float gammaExpand(float srgbComponent) {
 			srgbComponent = Math.max(0, Math.min(srgbComponent, 1.0f));
 			return srgbExpand(srgbComponent);
@@ -45,7 +61,7 @@ public class Colors {
 			if (srgbComponent <= 0.04045f)
 				return srgbComponent / 12.92f;
 			else
-				return (float)Math.pow((srgbComponent + 0.055) / 1.055, 2.4);
+				return (float) Math.pow((srgbComponent + 0.055) / 1.055, 2.4);
 		}
 
 		public static double gammaCompress(double linearComponent) {
@@ -72,8 +88,8 @@ public class Colors {
 				return (short) INV_GAMMA_TABLE[srgbComponent];
 			} else {
 				double c = srgbComponent / (double) maxVal;
-				int r = (int)(.5 + LINEAR_MAX_D * gammaExpand(c)) & LINEAR_MAX;
-				return (short)r;
+				int r = (int) (.5 + LINEAR_MAX_D * gammaExpand(c)) & LINEAR_MAX;
+				return (short) r;
 			}
 		}
 
@@ -99,15 +115,15 @@ public class Colors {
 			if (USE_TABLE) {
 				if (GAMMA_TABLE == null) {
 					GAMMA_TABLE = IntStream.range(0, LINEAR_MAX + 1) //
-							.map((i) -> (short) (.5 + COMPRESSED_MAX_D * srgbCompress(i/LINEAR_MAX_D)) & 0xff) //
+							.map((i) -> (short) (.5 + COMPRESSED_MAX_D * srgbCompress(i / LINEAR_MAX_D)) & 0xff) //
 							.toArray();
 				}
 				linearComponent = scaleAndClamp(linearComponent, 0, maxVal, LINEAR_MAX);
-				return (short)GAMMA_TABLE[linearComponent];
+				return (short) GAMMA_TABLE[linearComponent];
 			} else {
 				double c = linearComponent / (double) maxVal;
 				int r = (int) (.5 + COMPRESSED_MAX_D * gammaCompress(c)) & COMPRESSED_MAX;
-				return (short)r;
+				return (short) r;
 			}
 		}
 

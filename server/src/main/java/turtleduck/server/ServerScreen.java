@@ -13,6 +13,7 @@ import turtleduck.events.KeyEvent;
 import turtleduck.text.TextWindow;
 
 public class ServerScreen extends BaseScreen {
+	String currentGroup = null;
 
 	public static ServerScreen create(TurtleDuckSession session, int config) {
 		Dimensions dim = computeDimensions(ServerDisplayInfo.INSTANCE, config);
@@ -27,6 +28,12 @@ public class ServerScreen extends BaseScreen {
 		this.dim = dim;
 		this.session = session;
 		setupAspects(dim);
+	}
+
+	public void group(String group) {
+		synchronized (this) {
+			currentGroup = group;
+		}
 	}
 
 	@Override
@@ -45,7 +52,7 @@ public class ServerScreen extends BaseScreen {
 	public Canvas createCanvas() {
 		String layerId = newLayerId();
 		ServerLayer layer = addLayer(new ServerLayer(layerId, this, dim.fbWidth, dim.fbHeight, session));
-		return new CanvasImpl<>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d));
+		return new CanvasImpl<>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d), layer.canvas);
 	}
 
 	@Override
@@ -194,9 +201,10 @@ public class ServerScreen extends BaseScreen {
 
 	@Override
 	public void flush() {
-		for (Layer l : layerMap.values()) {
-			l.flush();
-		}
+		render();
+//		for (Layer l : layerMap.values()) {
+//			l.flush();
+//		}
 	}
 
 	public void render() {

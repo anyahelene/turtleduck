@@ -10,7 +10,6 @@ module turtleduck.base {
 	exports turtleduck.image;
 	exports turtleduck.drawing;
 	exports turtleduck.geometry;
-	exports turtleduck.comms;
 	exports turtleduck.messaging;
 	exports turtleduck.messaging.generated;
 	exports turtleduck.canvas;
@@ -32,7 +31,6 @@ module turtleduck.base {
 	uses turtleduck.display.MouseCursor;
 	uses turtleduck.events.KeyEvent;
 	uses turtleduck.Launcher;
-	uses turtleduck.comms.MessageData;
 	uses turtleduck.image.ImageFactory;
 
 	requires turtleduck.anno;

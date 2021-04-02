@@ -94,7 +94,7 @@ public interface Terminal extends JSObject, IDisposable {
 	 * buffer or the alt buffer depending on what's running in the terminal.
 	 */
 	@JSProperty
-	IBuffer getBuffer();
+	IBufferNamespace getBuffer();
 
 	/**
 	 * (EXPERIMENTAL) Get all markers registered against the buffer. If the alt

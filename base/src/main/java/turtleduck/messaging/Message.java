@@ -8,17 +8,21 @@ import turtleduck.util.Key;
 
 public interface Message {
 	Key<Array> TO = Key.arrayKey("to", () -> Array.of(String.class));
-	Key<String> MSG_ID = Key.strKey("msg_id");
-	Key<String> SESSION = Key.strKey("session");
-	Key<String> USERNAME = Key.strKey("username");
-	Key<String> DATE = Key.strKey("date");
-	Key<String> MSG_TYPE = Key.strKey("msg_type");
-	Key<String> VERSION = Key.strKey("version");
-	Key<Dict> HEADER = Key.dictKey("header");
-	Key<Dict> PARENT_HEADER = Key.dictKey("parent_header", Dict::create);
-	Key<Dict> METADATA = Key.dictKey("metadata", Dict::create);
-	Key<Dict> CONTENT = Key.dictKey("content", Dict::create);
-	Key<Array> BUFFERS = Key.arrayKey("buffers", Array::create);
+	Key<String> MSG_ID = Key.strKey("msg_id:MID");
+	Key<String> REF_ID = Key.strKey("ref_id:RID");
+	Key<String> TOPIC_ID = Key.strKey("topic_id:TID");
+	Key<String> SESSION = Key.strKey("session:SESS");
+	Key<String> USERNAME = Key.strKey("username:USER");
+	Key<String> DATE = Key.strKey("date:DATE");
+	Key<String> MSG_TYPE = Key.strKey("msg_type:TYPE");
+	Key<String> VERSION = Key.strKey("version:VER");
+	Key<Dict> HEADER = Key.dictKey("header:HEAD");
+	Key<Dict> PARENT_HEADER = Key.dictKey("parent_header:REF", Dict::create);
+	Key<Dict> METADATA = Key.dictKey("metadata:META", Dict::create);
+	Key<Dict> CONTENT = Key.dictKey("content:DATA", Dict::create);
+	Key<Array> BUFFERS = Key.arrayKey("buffers:BUF", Array::create);
+	final int BINARY_HEAD = 0x4455434B;
+	final int BINARY_DATA = 0x44415441;
 
 	public static MessageWriter writeTo(String to) {
 		return new MessageImpl(to);
@@ -32,15 +36,33 @@ public interface Message {
 		return new MessageImpl(msg);
 	}
 
-	public static MessageWriter reply(Message msg, String reply_msg_type) {
+//	public static MessageWriter reply(Message msg, String reply_msg_type) {
+//		MessageImpl impl = new MessageImpl();
+//		impl.header(msg, reply_msg_type);
+//		return impl;
+//	}
+
+	default MessageWriter reply(String reply_msg_type) {
 		MessageImpl impl = new MessageImpl();
-		impl.header(msg.header(SESSION), msg.header(USERNAME), reply_msg_type);
-		impl.parent_header(msg);
+		impl.header(this, reply_msg_type);
 		return impl;
 	}
 
-	default MessageWriter reply(String reply_msg_type) {
-		return reply(this, reply_msg_type);
+	default MessageWriter errorReply(Throwable t) {
+		MessageWriter reply = reply("failure");
+		reply.putContent(Reply.STATUS, "error");
+		reply.putContent(Reply.ENAME, t.getClass().getName());
+		reply.putContent(Reply.EVALUE, t.getMessage());
+		Array a = Array.of(String.class);
+		try {
+			for (StackTraceElement e : t.getStackTrace()) {
+				a.add(e.toString());
+			}
+		} catch (Throwable u) {
+			// ignore missing stacktrace on TeaVM
+		}
+		reply.putContent(Reply.TRACEBACK, a);
+		return reply;
 	}
 
 	<T> T header(Key<T> key);
@@ -73,7 +95,7 @@ public interface Message {
 
 	Dict content();
 
-//	List<Buffer> buffers();
+	Array buffers();
 
 	String toJson();
 

@@ -33,6 +33,7 @@ public class PseudoTerminal implements PtyHostSide {
 	private int cols = 80, rows = 10;
 	private List<Runnable> reconnectListeners = new ArrayList<>();
 	private boolean historyPlayback;
+	private StringBuilder buffer;
 
 	public PseudoTerminal() {
 		this(new TermWindowImpl());
@@ -118,13 +119,51 @@ public class PseudoTerminal implements PtyHostSide {
 		termListener = listener;
 	}
 
-	public void writeToTerminal(String s) {
-		s = s.replace("\n", "\r\n");
-		if (history != null) {
-			history.add(s);
-			historySize += s.length();
+	/**
+	 * Enable or disable terminal output buffering.
+	 * 
+	 * The buffer (if any) is flushed before disabling.
+	 * 
+	 * @param enable Whether to enable or disable
+	 * @return The previous status
+	 */
+	public boolean buffering(boolean enable) {
+		boolean was = buffer != null;
+		if (enable != was) {
+			if (enable) {
+				buffer = new StringBuilder(1024);
+			} else {
+				flushToTerminal();
+				buffer = null;
+			}
 		}
-		doTerminalOut(s);
+		return was;
+	}
+
+	public void writeToTerminal(String s) {
+		if (buffer != null && s.indexOf('\n') < 0) {
+			buffer.append(s);
+		} else {
+			s = s.replace("\n", "\r\n");
+			if (buffer != null && buffer.length() > 0) {
+				s = buffer.append(s).toString();
+				buffer = new StringBuilder(1024);
+			}
+			if (history != null) {
+				history.add(s);
+				historySize += s.length();
+			}
+			doTerminalOut(s);
+		}
+	}
+
+	@Override
+	public void flushToTerminal() {
+		if (buffer != null && buffer.length() > 0) {
+			String s = buffer.toString();
+			buffer = new StringBuilder(1024);
+			doTerminalOut(s);
+		}
 	}
 
 	protected void doTerminalOut(String s) {
@@ -212,11 +251,12 @@ public class PseudoTerminal implements PtyHostSide {
 	}
 
 	public void useHistory(int maxSize, boolean playbackOnReconnect) {
-		if(history == null)
-		history = new ArrayList<>();
+		if (history == null)
+			history = new ArrayList<>();
 		historySize = maxSize;
 		historyPlayback = playbackOnReconnect;
 	}
+
 	private void addToLineHistory(String s) {
 		int begin = 0;
 		int end = s.indexOf('\n', 0);
@@ -239,4 +279,5 @@ public class PseudoTerminal implements PtyHostSide {
 		}
 		System.out.println("]");
 	}
+
 }

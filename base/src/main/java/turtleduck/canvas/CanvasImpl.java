@@ -12,6 +12,7 @@ import turtleduck.geometry.Direction;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.impl.Point3;
+import turtleduck.messaging.CanvasService;
 import turtleduck.shapes.Ellipse.EllipseBuilder;
 import turtleduck.shapes.Image.ImageBuilder;
 import turtleduck.shapes.Path.PathBuilder;
@@ -29,6 +30,7 @@ import turtleduck.turtle.Pen.SmoothType;
 import turtleduck.turtle.impl.BasePen;
 import turtleduck.turtle.impl.TurtleImpl;
 import turtleduck.turtle.impl.TurtleImpl3;
+import turtleduck.util.Dict;
 
 public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas {
 	protected Canvas parent = null;
@@ -39,13 +41,16 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	protected PathWriter pathWriter;
 	protected Function<Boolean, PathWriter> pathWriterFactory;
 	protected int nChildren = 0;
+	protected CanvasService canvasService;
 
-	public CanvasImpl(String layerId, S screen, double width, double height, Function<Boolean, PathWriter> pwFactory) {
+	public CanvasImpl(String layerId, S screen, double width, double height, Function<Boolean, PathWriter> pwFactory,
+			CanvasService service) {
 		super(layerId, screen, width, height);
 		this.pen = new BasePen();
 		this.matrix = new Matrix3x2d();
 		this.pathWriterFactory = pwFactory;
 		this.pathWriter = pwFactory.apply(false);
+		this.canvasService = service;
 	}
 
 	public CanvasImpl(CanvasImpl<S> parent) {
@@ -249,27 +254,32 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	@Override
 	public Canvas drawRectangle(Point p0, Point p1) {
 		Point diff = p1.sub(p0);
-		return rectangle().at(p0.add(diff.x() / 2, diff.y() / 2)).width(diff.x()).height(diff.y()).stroke();
+		rectangle().at(p0.add(diff.x() / 2, diff.y() / 2)).width(diff.x()).height(diff.y()).strokeAndFill();
+		return this;
 	}
 
 	@Override
 	public Canvas drawRectangle(Point center, double width, double height) {
-		return rectangle().at(center).width(width).height(height).stroke();
+		rectangle().at(center).width(width).height(height).strokeAndFill();
+		return this;
 	}
 
 	@Override
 	public Canvas drawCircle(Point center, double radius) {
-		return ellipse().at(center).radius(radius).stroke();
+		ellipse().at(center).radius(radius).stroke();
+		return this;
 	}
 
 	@Override
 	public Canvas drawEllipse(Point center, double width, double height) {
-		return ellipse().at(center).width(width).height(height).stroke();
+		ellipse().at(center).width(width).height(height).stroke();
+		return this;
 	}
 
 	@Override
 	public Canvas drawPoint(Point center) {
-		return ellipse().at(center).radius(1).stroke();
+		ellipse().at(center).radius(1).stroke();
+		return this;
 	}
 
 	@Override
@@ -318,21 +328,22 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 
 	@Override
 	public Turtle turtle() {
-		Turtle t = new TurtleImpl.SpecificTurtle(Point.ZERO, Direction.DUE_NORTH, new BasePen());
+		Turtle t = new TurtleImpl.SpecificTurtle(Point.ZERO, Direction.DUE_NORTH, new BasePen(), this);
 		t.writePathsTo(pathWriterFactory.apply(false));
 		return t;
 	}
 
 	@Override
 	public Turtle3 turtle3() {
-		Turtle3 t = new TurtleImpl3.SpecificTurtle3(Point3.ZERO, Orientation.DUE_NORTH, new BasePen());
+		Turtle3 t = new TurtleImpl3.SpecificTurtle3(Point3.ZERO, Orientation.DUE_NORTH, new BasePen(), this);
 		t.writePathsTo(pathWriterFactory.apply(true));
 		return t;
 	}
 
 	@Override
 	public Canvas drawLine(Point from, Point to) {
-		return polyline().at(from).to(to).stroke();
+		polyline().at(from).to(to).stroke();
+		return this;
 	}
 
 	@Override
@@ -353,5 +364,39 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	@Override
 	public Layer flush() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Transformation<Canvas> transform(String id) {
+		return new TransformationImpl<>(t -> {
+			if (canvasService != null) {
+				canvasService.styleObject(id, t.toCSS());
+			}
+			return this;
+		});
+	}
+
+	@Override
+	public CanvasService service() {
+		return canvasService;
+	}
+	
+	@Override
+	public void onKeyPress(String javaScript) {
+		if(canvasService != null) {
+			canvasService.onKeyPress(javaScript);
+		}
+	}
+	@Override
+	public void evalScript(String javaScript) {
+		if(canvasService != null) {
+			canvasService.evalScript(javaScript);
+		}
+	}
+	
+	@Override
+	public void setText(String id, String newText) {
+		if(canvasService != null)
+			canvasService.setText(id, newText);
 	}
 }

@@ -1,6 +1,9 @@
 package turtleduck.canvas;
 
+import turtleduck.annotations.Icon;
+import turtleduck.display.Layer;
 import turtleduck.geometry.Point;
+import turtleduck.messaging.CanvasService;
 import turtleduck.shapes.Ellipse;
 import turtleduck.shapes.Image;
 import turtleduck.shapes.Path;
@@ -15,7 +18,9 @@ import turtleduck.turtle.Turtle3;
  * @author anya
  *
  */
+@Icon("🖼️")
 public interface Canvas extends PenContext<Canvas>, TransformContext2<Canvas> {
+
 	/**
 	 * Create a new sub-canvas with its own drawing context.
 	 * 
@@ -40,6 +45,10 @@ public interface Canvas extends PenContext<Canvas>, TransformContext2<Canvas> {
 	Ellipse.EllipseBuilder ellipse();
 
 	Text.TextBuilder text();
+
+	default Text.TextBuilder text(String text) {
+		return text().text(text);
+	}
 
 	Image.ImageBuilder image();
 
@@ -103,4 +112,14 @@ public interface Canvas extends PenContext<Canvas>, TransformContext2<Canvas> {
 	Canvas drawPolygon(Point first, Point... points);
 
 	Canvas drawShape(Point position, Shape shape);
+	
+	Transformation<Canvas> transform(String id);
+	
+	CanvasService service();
+
+	void onKeyPress(String javaScript);
+
+	void setText(String id, String newText);
+
+	void evalScript(String javaScript);
 }

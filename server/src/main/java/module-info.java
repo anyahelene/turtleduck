@@ -1,7 +1,6 @@
 module turtleduck.server {
 	exports turtleduck.server;
 	exports turtleduck.server.data;
-	exports turtleduck.server.services;
 	requires transitive turtleduck.base;
 	requires transitive turtleduck.shell;
 	requires turtleduck.anno;
@@ -13,4 +12,5 @@ module turtleduck.server {
 	requires com.fasterxml.jackson.core;
 	requires com.fasterxml.jackson.annotation;
 	requires com.fasterxml.jackson.databind;
+	requires io.netty.codec.http;
 }

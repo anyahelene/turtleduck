@@ -151,4 +151,6 @@ public interface SubTextCursor extends TextCursor, AutoCloseable {
 	@Override
 	SubTextCursor write(CodePoint codePoint, Attributes attrs);
 
+	SubTextCursor flush();
+
 }

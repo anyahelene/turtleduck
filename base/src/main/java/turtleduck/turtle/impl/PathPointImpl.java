@@ -1,5 +1,6 @@
 package turtleduck.turtle.impl;
 
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import turtleduck.geometry.Direction;
@@ -93,6 +94,13 @@ public class PathPointImpl implements PathPoint, Cloneable {
 			return null;
 		}
 		return (T) annos.get(anno);
+	}
+	
+	public <T> void annotation(Annotation<T> anno, T val) {
+		if(annos == null) {
+			annos = new IdentityHashMap<>();
+		}
+		annos.put(anno, val);
 	}
 
 }

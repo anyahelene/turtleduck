@@ -8,11 +8,11 @@ public interface Shape {
 	Point position();
 
 	public interface Builder<T> extends PenContext<T> {
-		Canvas stroke();
+		String stroke();
 
-		Canvas fill();
+		String fill();
 
-		Canvas strokeAndFill();
+		String strokeAndFill();
 
 		T at(Point p);
 

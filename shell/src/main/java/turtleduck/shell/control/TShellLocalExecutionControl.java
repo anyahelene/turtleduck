@@ -164,4 +164,8 @@ public class TShellLocalExecutionControl extends DirectExecutionControl {
     	lastResult = null;
     	return o;
     }
+    
+    public void lastResult(Object o) {
+    	lastResult = o;
+    }
 }

@@ -6,12 +6,17 @@ public class ColorRGB implements Color {
 	private final float green;
 	private final float blue;
 	private final float alpha;
+	private final short sgr;
+
 	/*
 	 * protected ColorRGB(int r, int g, int b, int a) { this(r/255f, g/255f, b/255f,
 	 * a/255f, false); }
 	 */
-
 	protected ColorRGB(float r, float g, float b, float a, boolean linear) {
+		this(r, g, b, a, linear, -1);
+	}
+
+	protected ColorRGB(float r, float g, float b, float a, boolean linear, int sgr) {
 		assert r >= 0.0 && r <= 1.0;
 		assert g >= 0.0 && g <= 1.0;
 		assert b >= 0.0 && b <= 1.0;
@@ -21,6 +26,50 @@ public class ColorRGB implements Color {
 		this.green = linear ? g : Colors.Gamma.gammaExpand(g);
 		this.blue = linear ? b : Colors.Gamma.gammaExpand(b);
 		this.alpha = a;
+		this.sgr = (short) sgr;
+	}
+
+	public static ColorRGB hsv(float h, float s, float v, float a) {
+		h = h % 360f;
+		if (h < 0)
+			h += 360f;
+		s = Math.max(0, Math.min(1, s));
+		v = Math.max(0, Math.min(1, v));
+
+		float c = v * s;
+		float h2 = h / 60f;
+		float x = c * (1 - Math.abs(h2 % 2f - 1));
+		float r1, g1, b1;
+		if (h2 <= 1) {
+			r1 = c;
+			g1 = x;
+			b1 = 0;
+		} else if (h2 <= 2) {
+			r1 = x;
+			g1 = c;
+			b1 = 0;
+		} else if (h2 <= 3) {
+			r1 = 0;
+			g1 = c;
+			b1 = x;
+		} else if (h2 <= 4) {
+			r1 =0;
+			g1 = x;
+			b1 = c;
+		} else if (h2 <= 5) {
+			r1 = x;
+			g1 = 0;
+			b1 = c;
+		} else if (h2 <= 6) {
+			r1 = c;
+			g1 = 0;
+			b1 = x;
+		} else {
+			throw new IllegalStateException("this shouldn't happen, h=" + h + ", h2=" + h2);
+		}
+		float m = v - c;
+		return new ColorRGB(r1+m, g1+m, b1+m, a, true);
+
 	}
 
 	@Override
@@ -286,24 +335,42 @@ public class ColorRGB implements Color {
 
 	@Override
 	public String toSGRParam(int i) {
-		if (this == Colors.TRANSPARENT)
-			return (i + 8) + ";2";
-		else if (this == Colors.BLACK)
-			return String.valueOf(i + 0);
-		else if (this == Colors.RED)
-			return String.valueOf(i + 1);
-		else if (this == Colors.GREEN)
-			return String.valueOf(i + 2);
-		else if (this == Colors.YELLOW)
-			return String.valueOf(i + 3);
-		else if (this == Colors.BLUE)
-			return String.valueOf(i + 4);
-		else if (this == Colors.MAGENTA)
-			return String.valueOf(i + 5);
-		else if (this == Colors.CYAN)
-			return String.valueOf(i + 6);
-		else if (this == Colors.WHITE)
-			return String.valueOf(i + 7);
-		return String.valueOf(i + 9);
+		if (sgr < 0) {
+			if (this == Colors.TRANSPARENT) {
+				return String.format("%d;2;", i + 8);
+			} else {
+				return String.format("%d;2;%d;%d;%d", i + 8, Math.round(red * 255), Math.round(green * 255),
+						Math.round(blue * 255));
+			}
+		} else if (sgr < 8) {
+			return String.valueOf(i + sgr);
+		} else {
+			return String.format("%d;5;%d", i + 8, sgr);
+		}
+	}
+
+	@Override
+	public String applyFg(String s) {
+		return String.format("\u001b[%sm%s\u001b[0m", toSGRParam(30), s);
+	}
+
+	@Override
+	public String applyBg(String s) {
+		return String.format("\u001b[%sm%s\u001b[0m", toSGRParam(40), s);
+	}
+
+	@Override
+	public Color perturb() {
+		return perturb(.1);
+	}
+
+	@Override
+	public Color perturb(double factor) {
+		float r = (float) Math.random();
+		float f = (float) factor;
+		return new ColorRGB(red + (r - red) * f, //
+				green + (r - green) * f, //
+				blue + (r - blue) * f, //
+				alpha, true);
 	}
 }

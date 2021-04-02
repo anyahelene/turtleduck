@@ -65,7 +65,8 @@ public class NativeTScreen extends BaseScreen {
 		context.strokeText("Hello, world!", 10, 10);
 		mainElement.appendChild(canvas);
 		NativeTLayer layer = addLayer(new NativeTLayer(layerId, this, dim.fbWidth, dim.fbHeight, canvas));
-		return new CanvasImpl<Screen>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d));
+		return new CanvasImpl<Screen>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d), 
+				Client.client.canvas);
 	}
 
 	@Override

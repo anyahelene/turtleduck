@@ -277,4 +277,10 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 		return parent;
 	}
 
+	@Override
+	public SubTextCursor flush() {
+		page.flush();
+		return this;
+	}
+
 }

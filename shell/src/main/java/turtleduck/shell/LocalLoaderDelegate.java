@@ -15,6 +15,8 @@ import java.util.Map;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.util.Textifier;
 import org.objectweb.asm.util.TraceClassVisitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jdk.jshell.execution.LoaderDelegate;
 import jdk.jshell.spi.ExecutionControl.ClassBytecodes;
@@ -22,9 +24,11 @@ import jdk.jshell.spi.ExecutionControl.ClassInstallException;
 import jdk.jshell.spi.ExecutionControl.EngineTerminationException;
 import jdk.jshell.spi.ExecutionControl.InternalException;
 import jdk.jshell.spi.ExecutionControl.NotImplementedException;
+import turtleduck.annotations.Icon;
 import turtleduck.shell.bytecode.Htmlifier;
 
 public class LocalLoaderDelegate implements LoaderDelegate {
+	protected final static Logger logger = LoggerFactory.getLogger(LocalLoaderDelegate.class);
 	private final Map<String, Class<?>> classes = new HashMap<>();
 	private final LocalClassLoader loader;
 	private final URL url;
@@ -34,7 +38,7 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 			url = new URL(null, "jshell://", new URLStreamHandler() {
 				@Override
 				protected URLConnection openConnection(URL u) throws IOException {
-					System.out.println("open: " + u);
+					logger.info("open: " + u);
 					return null;
 				}
 			});
@@ -48,11 +52,10 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 	@Override
 	public void load(ClassBytecodes[] cbcs)
 			throws ClassInstallException, NotImplementedException, EngineTerminationException {
-		System.out.println("Loading bytecode for " + Arrays.toString(cbcs));
 		boolean[] installed = new boolean[cbcs.length];
 		try {
 			for (ClassBytecodes cbc : cbcs) {
-				System.out.println("Loading bytecode for " + cbc.name());
+				logger.info("Loading bytecode for " + cbc.name());
 				loader.load(cbc);
 			}
 			int i = 0;
@@ -69,12 +72,12 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 
 	@Override
 	public void classesRedefined(ClassBytecodes[] cbcs) {
-		System.out.println("Reoading bytecode for " + Arrays.toString(cbcs));
+		logger.info("Reoading bytecode for " + Arrays.toString(cbcs));
 		for (ClassBytecodes cbc : cbcs) {
-			System.out.println("Reloading bytecode for " + cbc.name());
+			logger.info("Reloading bytecode for " + cbc.name());
 			loader.load(cbc);
 			/*
-			 * if (classes.containsKey(cbc.name())) { System.out.println("Removing class " +
+			 * if (classes.containsKey(cbc.name())) { logger.info("Removing class " +
 			 * cbc.name()); }
 			 */
 		}
@@ -82,7 +85,7 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 
 	@Override
 	public void addToClasspath(String path) throws EngineTerminationException, InternalException {
-		System.out.println("adding class path: " + path);
+		logger.info("adding class path: " + path);
 		try {
 			loader.addToClasspath(url);
 		} catch (MalformedURLException e) {
@@ -93,7 +96,7 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 
 	@Override
 	public Class<?> findClass(String name) throws ClassNotFoundException {
-		System.out.println("finding class: " + name);
+		logger.info("finding class: " + name);
 		Class<?> c = classes.get(name);
 		if (c == null) {
 			c = Class.forName(name, true, loader);
@@ -123,8 +126,13 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 			return null;
 		}
 	}
+	
+	public String iconOf(String name) {
+		return loader.icons.get(name);
+	}
 	static class LocalClassLoader extends URLClassLoader {
 		protected final Map<String, byte[]> bytecodes = new HashMap<>();
+		protected final Map<String, String> icons = new HashMap<>();
 
 		public LocalClassLoader(URL url, ClassLoader parent) {
 			super(new URL[] { url }, parent);
@@ -137,21 +145,28 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 		public void load(ClassBytecodes cbc) {
 			byte[] bs = cbc.bytecodes();
 			String name = cbc.name();
-			System.out.println("load:" + name + "(" + bs.length + ")");
-			printByteCode(new ClassReader(bs));
+			logger.info("load: " + name + " (" + bs.length + ")");
+//			printByteCode(new ClassReader(bs));
 			bytecodes.put(name, bs);
 		}
 
 		@Override
 		public Class<?> loadClass(String name) throws ClassNotFoundException {
-			System.out.println("loadClass: " + name);
+			logger.info("loadClass: " + name);
 			Class<?> cls = super.loadClass(name);
-			System.out.println("         → " + cls);
+			logger.info("         → " + cls);
+			Icon iconAnno = cls.getAnnotation(Icon.class);
+			if(iconAnno != null) {
+				logger.info("        * found icon: " + iconAnno.value());
+				icons.put(name.replaceFirst("^.*\\.",  ""), iconAnno.value());
+				icons.put(name, iconAnno.value());
+				logger.info(""+icons);
+			}
 			return cls;
 		}
 
 	    protected Class<?> findClass(String moduleName, String name) {
-			System.out.println("loadClass: " + moduleName + "." + name);
+			logger.info("loadClass: " + moduleName + "." + name);
 	        if (moduleName == null) {
 	            try {
 	                return findClass(name);
@@ -162,25 +177,25 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 		@Override
 		public Package[] getPackages() {
 			Package[] packages = super.getPackages();
-			System.out.println("getPackages: " + Arrays.toString(packages));
+			logger.info("getPackages: " + Arrays.toString(packages));
 			return packages;
 		}
 		
 
 		@Override
 		public URL findResource(String name) {
-			System.out.println("findResource: " + name);
+			logger.info("findResource: " + name);
 			URL url = super.findResource(name);
-			System.out.println("         → " + url);
+			logger.info("         → " + url);
 			return url;
 		}
 
 		@Override
 		public Class<?> findClass(String name) throws ClassNotFoundException {
-			System.out.println("loader.findClass: " + name);
+			logger.info("loader.findClass: " + name);
 			byte[] bs = bytecodes.get(name);
 			if (bs == null) {
-				System.out.println("loader.super.findClass: " + name);
+				logger.info("loader.super.findClass: " + name);
 				return super.findClass(name);
 			}
 			
@@ -188,11 +203,11 @@ public class LocalLoaderDelegate implements LoaderDelegate {
 		}
 		
 		public static void printByteCode(ClassReader classReader) {
-			System.out.println("Loaded " + classReader.getClassName());
+			logger.info("Loaded " + classReader.getClassName());
 			// Textifier takes care of printing the instructions
 			Htmlifier htmlifier = new Htmlifier();
 			// TraceClassVisitor visits the class and calls the textifier
-			classReader.accept(new TraceClassVisitor(null, htmlifier, new PrintWriter(System.out)), //
+			classReader.accept(new TraceClassVisitor(null, new Textifier(), new PrintWriter(System.out)), //
 					ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
 		}
 	}

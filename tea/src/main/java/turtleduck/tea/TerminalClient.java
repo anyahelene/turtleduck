@@ -1,35 +1,52 @@
 package turtleduck.tea;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.teavm.jso.browser.Storage;
 import org.teavm.jso.browser.Window;
-import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.dom.css.CSSStyleDeclaration;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
+import org.teavm.jso.dom.events.KeyboardEvent;
 import org.teavm.jso.dom.html.HTMLElement;
-import org.teavm.jso.json.JSON;
+import org.teavm.jso.dom.html.HTMLInputElement;
+import org.teavm.jso.dom.html.HTMLOptionElement;
+import org.teavm.jso.dom.html.HTMLTextAreaElement;
+import org.teavm.jso.dom.html.TextRectangle;
 
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
-import turtleduck.comms.AbstractChannel;
-import turtleduck.comms.EndPoint;
-import turtleduck.comms.Message;
+import turtleduck.colors.Color;
+import turtleduck.colors.Colors;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
-import turtleduck.messaging.Dispatch;
+import turtleduck.messaging.CodeService;
+import turtleduck.messaging.ExplorerService;
+import turtleduck.messaging.Reply;
+import turtleduck.messaging.ShellService;
 import turtleduck.messaging.TerminalService;
 import turtleduck.tea.terminal.HostSide;
 import turtleduck.tea.terminal.KeyHandler;
 import turtleduck.terminal.LineInput;
+import turtleduck.terminal.LineInput.Line;
 import turtleduck.terminal.Readline;
+import turtleduck.text.TextCursor;
+import turtleduck.text.impl.TermCursorImpl;
+import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Strings;
 import xtermjs.FitAddon;
+import xtermjs.IBuffer;
 import xtermjs.ITerminalOptions;
 import xtermjs.ITheme;
 import xtermjs.Terminal;
 
 @MessageDispatch("turtleduck.tea.generated.TerminalDispatch")
-public class TerminalClient extends AbstractChannel implements TerminalService {
+public class TerminalClient implements TerminalService, ExplorerService {
+	public static final Color VARCOLOR = Colors.OLIVE;
+	public static final Color TYPECOLOR = Colors.LIGHT_BLUE;
+	public static final Color TEXTCOLOR = Colors.LIME;
 	public static final String ENDPOINT_ID = "turtleduck.terminal";
 	private Client client;
 	private Terminal terminal;
@@ -39,66 +56,245 @@ public class TerminalClient extends AbstractChannel implements TerminalService {
 	private final Readline readline;
 	private HostSide hostSide;
 	private EventListener<Event> onresize;
+	private String service;
+	protected int lineNum = 0;
+	private TextCursor cursor;
+	private Async<Dict> completionPending;
 
 	public TerminalClient(HTMLElement element, String service, Client client) {
-		super(element.getAttribute("id"), service, null);
-		this.readline = new Readline();
+		this.service = service;
+		Storage storage = client.storage();
+		Readline rl;
+		if (storage != null && storage.getItem("terminal.history") != null) {
+			Dict hist = JSUtil.decodeDict(storage.getItem("terminal.history"));
+			Browser.consoleLog("loading history: " + hist);
+			rl = new Readline(hist);
+		} else {
+			rl = new Readline();
+		}
+		this.readline = rl;
 		this.element = element;
 		this.client = client;
 		readline.customKeyHandler(this::keyHandler);
 	}
 
-	@Override
-	public void receive(Message obj) {
-		if (obj.type().equals("Data")) {
-			Browser.consoleLog("«" + Strings.termEscape(((Message.StringDataMessage) obj).data()) + "»");
-			terminal.write(((Message.StringDataMessage) obj).data());
-		}
-	}
-
 	public void lineHandler(String s) {
 //		if (id > 0) { // we're open for business!
-		client.shellService.enter(s).onSuccess(msg -> {
-			Browser.consoleLog("exec result: " + msg);
-		});
+		Dict dict = readline.toDict();
+		Browser.consoleLog("saving history: " + dict);
+		client.withStorage(storage -> storage.setItem("terminal.history", dict.toJson()));
+		client.shellService.eval(s, lineNum++, Dict.create())//
+				.onSuccess(msg -> {
+					Browser.consoleLog("exec result: " + msg);
+					if (msg.get(ShellService.COMPLETE)) {
+						for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
+							Array diags = result.get(ShellService.DIAG);
+							for (Dict diag : diags.toListOf(Dict.class)) {
+								cursor.println(diag.get(Reply.ENAME) + " at " + diag.get(ShellService.LOC),
+										Colors.MAROON);
+								cursor.println(diag.get(Reply.EVALUE), Colors.MAROON);
+							}
+							String value = result.get(ShellService.VALUE);
+							String name = result.get(ShellService.NAME);
+							String type = result.get(ShellService.TYPE);
+							if (value != null) {
+								String v = TEXTCOLOR.applyFg(value) + "\n";
+								if (name != null) {
+									v = VARCOLOR.applyFg(name) + " = " + v;
+								}
+								if (type != null) {
+									v = TYPECOLOR.applyFg(type) + " " + v;
+								}
+								cursor.print(v);
+							}
+						}
+						prompt1();
+						readline.prompt();
+					} else {
+//				String code = msg.get(ShellService.CODE);
+						prompt2();
+						readline.prompt();
+//				terminal.paste(code);
+//				if (code.endsWith(";"))
+//					readline.keyHandler(KeyEvent.create(KeyCodes.Navigation.ARROW_LEFT, "", 0, 0));
+					}
+				})//
+				.onFailure(msg -> {
+					Browser.consoleLog("exec error: " + msg);
+					String ename = msg.get(Reply.ENAME);
+					String evalue = msg.get(Reply.EVALUE, null);
+					Array trace = msg.get(Reply.TRACEBACK);
+					cursor.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""), Colors.RED);
+					for (String frame : trace.toListOf(String.class)) {
+						cursor.println(frame, Colors.MAROON);
+					}
+					prompt1();
+					readline.prompt();
+				});
 //		}
 	}
 
 	public boolean keyHandler(KeyEvent ev, LineInput li) {
 		if (!ev.isModified() && ev.getCode() == '.') {
-			handleCompletion(ev, li);
-			return false;
+			readline.inputHandler(ev.character());
+			handleDotSuggestion(ev, li);
+			return true;
 		} else if (!ev.isModified() && ev.getCode() == KeyCodes.Whitespace.TAB) {
-			handleCompletion(ev, li);
+			handleTabCompletion(ev, li);
+			return true;
+		} else if (ev.isControlDown() && ev.getCode() >= '0' && ev.getCode() <= '9') {
+			if (ev.isShiftDown())
+				JSUtil.handleKey("f1" + (ev.getCode() - '0'));
+			else
+				JSUtil.handleKey("f" + (ev.getCode() - '0'));
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	private void handleCompletion(KeyEvent ev, LineInput li) {
+	private void handleTabCompletion(KeyEvent ev, LineInput li) {
 		String line = li.line();
 		int pos = li.pos();
 		Browser.consoleLog(line + " @ " + pos);
 		Browser.consoleLog(line.substring(0, pos) + "|" + line.substring(pos));
 		Async<Dict> inspect = client.shellService.inspect(line, pos, 0);
+		completionPending = inspect;
 		inspect.onSuccess(msg -> {
 			Browser.consoleLog("Inspect reply: " + msg);
 		});
+		Async<Dict> complete = client.shellService.complete(line, pos, 0);
+		complete.onSuccess(msg -> {
+			if (completionPending == inspect && msg.get(CodeService.FOUND)) { // we're still interested
+				Line current = li.current();
+				completionPending = null;
+				boolean matches = msg.get(CodeService.MATCHES);
+				Array comps = msg.get(CodeService.COMPLETES);
+				String selected = null;
+				for (String comp : comps.toListOf(String.class)) {
+					if (selected == null) {
+						selected = comp;
+					}
+					cursor.println(comp);
+				}
+			}
+		});
 	}
 
-	@Override
-	public void closed(String reason) {
-		if (keyHandler != null) {
-			keyHandler.destroy();
-			keyHandler = null;
-		}
-		terminal.write("NO CARRIER " + reason + "\r\n");
-		super.closed(reason);
+	private void handleDotSuggestion(KeyEvent ev, LineInput li) {
+		if (true)
+			return;
+		String line = li.line();
+		int pos = li.pos();
+		Browser.consoleLog(line + " @ " + pos);
+		Browser.consoleLog(line.substring(0, pos) + "|" + line.substring(pos));
+		Async<Dict> inspect = client.shellService.inspect(line, pos, 0);
+		completionPending = inspect;
+		inspect.onSuccess(msg -> {
+			Browser.consoleLog("Inspect reply: " + msg);
+		});
+		Async<Dict> complete = client.shellService.complete(line, pos, 0);
+		complete.onSuccess(msg -> {
+			if (completionPending == inspect && msg.get(CodeService.FOUND)) { // we're still interested
+				completionPending = null;
+				int anchor = msg.get(CodeService.ANCHOR);
+				boolean matches = msg.get(CodeService.MATCHES);
+				Array comps = msg.get(CodeService.COMPLETES);
+//				current.strPos(anchor);
+				HTMLTextAreaElement textarea = terminal.getTextarea();
+				TextRectangle rect = textarea.getBoundingClientRect();
+				HTMLElement popup = Browser.document.createElement("div").withAttr("class", "completion");
+				HTMLElement list = Browser.document.createElement("datalist")//
+						.withAttr("id", "");
+				// .withAttr("id", "completion-list");
+
+				HTMLInputElement input = (HTMLInputElement) Browser.document.createElement("input") //
+						.withAttr("id", "completion-input")//
+						.withAttr("list", "completion-list")//
+						.withAttr("type", "text")//
+						.withAttr("name", "completion")//
+						.withAttr("autocomplete", "off");
+//				cursor.println();
+				String selected = null;
+				for (String comp : comps.toListOf(String.class)) {
+					if (selected == null) {
+						selected = comp;
+						input.setValue(comp);
+					}
+					HTMLElement option = Browser.document.createElement("option").withText(comp);
+					option.listenClick((click) -> {
+						input.setValue(comp);
+						Browser.consoleLog("Selected: " + input.getValue());
+						readline.inputHandler(input.getValue().substring(pos - anchor));
+						Browser.document.getElementById("page").removeChild(popup);
+						terminal.focus();
+					});
+					list.appendChild(option);
+				}
+				int choice[] = { 0, comps.size() };
+				CSSStyleDeclaration style = popup.getStyle();
+				Browser.consoleLog("x=" + textarea.getOffsetLeft() + ", y=" + textarea.getOffsetTop());
+				style.setProperty("top", "" + rect.getTop() + "px");
+				style.setProperty("left", "" + rect.getLeft() + "px");
+				style.setProperty("position", "absolute");
+				style.setProperty("background", "white");
+				style.setProperty("z-index", "2000");
+				list.getStyle().setProperty("display", "block");
+//				popup.appendChild(input);
+				popup.appendChild(list);
+				Browser.document.getElementById("page").appendChild(popup);
+				input.listenKeyUp(kev -> {
+					Browser.consoleLog(kev);
+					if (kev.getKeyCode() == 13) {
+						Browser.consoleLog("Selected: " + input.getValue());
+						readline.inputHandler(input.getValue().substring(pos - anchor));
+						Browser.document.getElementById("page").removeChild(popup);
+						terminal.focus();
+					} else if (kev.getKeyCode() == 27) {
+						Browser.consoleLog("Aborted: " + input.getValue());
+						Browser.document.getElementById("page").removeChild(popup);
+						terminal.focus();
+					} else if (kev.getKeyCode() == 38) {
+						((HTMLOptionElement) list.getChildNodes().get(choice[0])).setSelected(false);
+						if (choice[0] > 0)
+							choice[0]--;
+						((HTMLOptionElement) list.getChildNodes().get(choice[0])).setSelected(true);
+						input.setValue((String) comps.get(choice[0]));
+					} else if (kev.getKeyCode() == 40) {
+						((HTMLOptionElement) list.getChildNodes().get(choice[0])).setSelected(false);
+						if (choice[0] + 1 < choice[1])
+							choice[0]++;
+						((HTMLOptionElement) list.getChildNodes().get(choice[0])).setSelected(true);
+						input.setValue((String) comps.get(choice[0]));
+					}
+				});
+				input.focus();
+//				prompt1();
+//				readline.redraw();
+//				readline.inputHandler(selected.substring(pos-anchor));
+				IBuffer buffer = terminal.getBuffer().getActive();
+				int x = buffer.getCursorX(), y = buffer.getCursorY();
+				Browser.consoleLog("x=" + x + ", y=" + y + ", x%1" + (x % 1.0) + ", y%1=" + (y % 1.0) + ", pos=" + pos
+						+ ", anchor=" + anchor + ", len=" + selected.length());
+				terminal.select(x - (pos - anchor), y, selected.length());
+			}
+			Browser.consoleLog("complete reply: " + msg);
+		});
 	}
 
-	@Override
+	public void disconnected(String reason) {
+		cursor.println("\nDISCONNECTED", Colors.MAROON);
+	}
+
+	public void connected(String user, String newOrExisting, String session) {
+		cursor.println("Welcome " + Colors.LIME.applyFg(user) + "! Using " + newOrExisting + " session "
+				+ Colors.LIME.applyFg(session), Colors.GREEN);
+		prompt1();
+		readline.redraw();
+	}
+
 	public void initialize() {
+		String name = service;
 		theme = ITheme.createBrightVGA();
 		theme.setCursor("#f00");
 		CSSStyleDeclaration style = element.getStyle();
@@ -123,9 +319,12 @@ public class TerminalClient extends AbstractChannel implements TerminalService {
 		terminal.open(embedNode);
 
 		hostSide = new HostSide(terminal);
+		cursor = new TermCursorImpl(hostSide, terminal::paste);
 		readline.attach(hostSide);
 		readline.handler(this::lineHandler);
-
+		prompt1();
+		if (readline.hasHistory())
+			readline.redraw();
 		FitAddon fitAddon = FitAddon.create();
 		terminal.loadAddon(fitAddon);
 		fitAddon.fit();
@@ -138,16 +337,24 @@ public class TerminalClient extends AbstractChannel implements TerminalService {
 		client.map.set(name.replace("-wrap", "").replace('-', '_') + "_onresize", onresize);
 	}
 
-	@Override
-	public void opened(int id, EndPoint endPoint) {
+	public void opened(int id) {
 		Browser.consoleLog("TermialClient: opened £" + id);
-		super.opened(id, endPoint);
 		if (hostSide == null)
-			keyHandler = new KeyHandler(terminal, this);
+			keyHandler = new KeyHandler(terminal, client.inputService);
 	}
 
-	public void write(String s) {
-		terminal.write(s);
+//	public void write(String s) {
+//		terminal.write(s);
+//	}
+	public void prompt() {
+		readline.prompt();
+	}
+	private void prompt1() {
+		readline.prompt("\u001b[33mjava> \u001b[38;5;82m");
+	}
+
+	private void prompt2() {
+		readline.prompt("\u001b[33m  --> \u001b[38;5;82m");
 	}
 
 	@Override
@@ -158,8 +365,8 @@ public class TerminalClient extends AbstractChannel implements TerminalService {
 	}
 
 	@Override
-	public Async<Dict> print(String text) {
-		Browser.consoleLog("«" + Strings.termEscape(text) + "»");
+	public Async<Dict> write(String text) {
+//		Browser.consoleLog("«" + Strings.termEscape(text) + "»");
 		terminal.write(text);
 		return null;
 	}
@@ -167,6 +374,21 @@ public class TerminalClient extends AbstractChannel implements TerminalService {
 	@Override
 	public Async<Dict> readline(String prompt) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Async<Dict> update(Dict msg) {
+		if (!msg.get(ShellService.PERSISTENT))
+			return null;
+		String sig = msg.get("signature", String.class);
+		if (!sig.isEmpty() && !sig.contains("$")) {
+			if ("main".equals(msg.get(ShellService.SNIP_NS))) {
+				cursor.println("[" + msg.get(ShellService.SNIP_ID) + "] " + msg.get("sym", String.class) + " "
+						+ msg.get("verb", String.class) + " " + msg.get("category", String.class)//
+						+ " " + sig + " : " + msg.get(ShellService.TYPE), Colors.LIGHT_BLUE);
+			}
+		}
 		return null;
 	}
 }

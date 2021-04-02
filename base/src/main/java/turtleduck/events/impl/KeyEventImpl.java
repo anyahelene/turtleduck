@@ -2,11 +2,18 @@ package turtleduck.events.impl;
 
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
+import turtleduck.util.Dict;
+import turtleduck.util.Key;
 
 public class KeyEventImpl implements KeyEvent {
+	private static final Key<Integer> KEY_CODE = Key.intKey("code");
+	private static final Key<String> KEY_CHAR = Key.strKey("char");
+	private static final Key<Integer> KEY_MODS = Key.intKey("mods");
+	private static final Key<Integer> KEY_FLAGS = Key.intKey("flags");
+
 	private final int modifiers;
 	private final int keyType;
-	
+
 	private String keyTypeString;
 	private String modString;
 	private int code;
@@ -46,7 +53,7 @@ public class KeyEventImpl implements KeyEvent {
 
 	@Override
 	public int getCode() {
-	return code;
+		return code;
 	}
 
 	@Override
@@ -90,7 +97,8 @@ public class KeyEventImpl implements KeyEvent {
 	}
 
 	public String toString() {
-		return "key (" + KeyCodes.keyName(code, "'" + character + "'") + ", code="+ code + ", mods=" + modifiers + ", type=" + keyType + ")";
+		return "key (" + KeyCodes.keyName(code, "'" + character + "'") + ", code=" + code + ", mods=" + modifiers
+				+ ", type=" + keyType + ")";
 	}
 
 	@Override
@@ -101,5 +109,16 @@ public class KeyEventImpl implements KeyEvent {
 	@Override
 	public int shortcutModifiers() {
 		return modifiers;
+	}
+
+	@Override
+	public Dict toDict() {
+		return Dict.create().put(KEY_CODE, code).put(KEY_CHAR, character).put(KEY_MODS, modifiers).put(KEY_FLAGS,
+				keyType);
+	}
+
+	@Override
+	public KeyEvent fromDict(Dict dict) {
+		return new KeyEventImpl(dict.get(KEY_CODE), dict.get(KEY_CHAR), dict.get(KEY_MODS), dict.get(KEY_FLAGS));
 	}
 }

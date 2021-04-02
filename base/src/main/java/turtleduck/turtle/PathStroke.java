@@ -78,4 +78,12 @@ public interface PathStroke {
 
 	void addPoint(Point point);
 
+	String text();
+
+	void addText(PathPoint at, String text);
+
+	void group(String group);
+	
+	String group();
+
 }

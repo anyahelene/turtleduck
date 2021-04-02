@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/nuthatchery/turtleduck#readme",
   "dependencies": {
+    "ace-builds": "^1.4.12",
     "bootstrap-icons": "^1.2.1",
     "jquery": "^3.5.1",
     "jquery-ui": "^1.12.1",

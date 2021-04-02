@@ -1,10 +1,13 @@
 package turtleduck.text.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import turtleduck.terminal.PseudoTerminal;
+import turtleduck.terminal.PtyWriter;
 import turtleduck.text.Attribute;
 import turtleduck.text.Attributes;
 import turtleduck.text.AttributesImpl;
@@ -16,11 +19,13 @@ import turtleduck.text.TextWindow;
 public class TermCursorImpl implements TextCursor, SubTextCursor {
 	private static Attributes DEFAULT_ATTRS = new AttributesImpl<Attributes>(null);
 	private Attributes currentAttrs = DEFAULT_ATTRS;
-	private PseudoTerminal terminal;
+	private PtyWriter terminal;
 	private List<Attributes> stack = new ArrayList<>();
+	private Consumer<String> host;
 
-	public TermCursorImpl(PseudoTerminal term) {
-		terminal = term;
+	public TermCursorImpl(PtyWriter writeToTerminal, Consumer<String> writeToHost) {
+		terminal = writeToTerminal;
+		host = writeToHost;
 	}
 
 	@Override
@@ -69,7 +74,7 @@ public class TermCursorImpl implements TextCursor, SubTextCursor {
 		return this;
 	}
 
-	List<Attribute<?>> RELEVANT_ATTRS = List.of(Attribute.ATTR_FOREGROUND, Attribute.ATTR_BACKGROUND,
+	List<Attribute<?>> RELEVANT_ATTRS = Arrays.asList(Attribute.ATTR_FOREGROUND, Attribute.ATTR_BACKGROUND,
 			Attribute.ATTR_BRIGHTNESS, Attribute.ATTR_STYLE, Attribute.ATTR_WEIGHT, Attribute.ATTR_UNDERLINE);
 
 	private void setAttrs(Attributes attrs) {
@@ -213,7 +218,7 @@ public class TermCursorImpl implements TextCursor, SubTextCursor {
 
 	@Override
 	public SubTextCursor sendInput(String string) {
-		terminal.writeToHost(string);
+		host.accept(string);
 		return this;
 	}
 
@@ -233,6 +238,12 @@ public class TermCursorImpl implements TextCursor, SubTextCursor {
 	public TextCursor end() {
 		terminal.writeToTerminal("\u001b[u");
 		currentAttrs = stack.remove(0);
+		return this;
+	}
+
+	@Override
+	public SubTextCursor flush() {
+		terminal.flushToTerminal();
 		return this;
 	}
 

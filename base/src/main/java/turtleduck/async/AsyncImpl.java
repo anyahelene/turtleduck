@@ -5,6 +5,7 @@ import java.util.Deque;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import turtleduck.messaging.Reply;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 
@@ -34,9 +35,10 @@ public class AsyncImpl<T> implements Async<T>, Async.Sink<T> {
 			errName = split[0];
 			errVal = split[1];
 		}
-		d.put("ENAME", errName);
-		d.put("EVALUE", errVal);
-		d.put("TRACEBACK", Array.of(String.class));
+		d.put(Reply.ENAME, errName);
+		d.put(Reply.EVALUE, errVal);
+		d.put(Reply.TRACEBACK, Array.of(String.class));
+		d.put(Reply.STATUS, "error");
 		if (failHandler != null) {
 			failHandler.accept(d);
 		} else {
@@ -107,7 +109,43 @@ public class AsyncImpl<T> implements Async<T>, Async.Sink<T> {
 	}
 
 	@Override
+	public synchronized Async<T> mapFailure(Function<Dict, T> f) {
+		failHandler = (t -> success(f.apply(t)));
+		if (failure != null) {
+			failHandler.accept(failure);
+			failure = null;
+		}
+		return this;
+	}
+
+	@Override
 	public Async<T> async() {
+		return this;
+	}
+
+	@Override
+	public Async<T> fail(Throwable ex) {
+		Dict d = Dict.create();
+		String errName = ex.getClass().getName();
+		d.put(Reply.ENAME, errName);
+		d.put(Reply.EVALUE, ex.getMessage());
+		d.put(Reply.STATUS, "error");
+
+		Array a = Array.of(String.class);
+		try {
+			for (StackTraceElement e : ex.getStackTrace()) {
+				a.add(e.toString());
+			}
+		} catch (Throwable u) {
+			// ignore missing stacktrace on TeaVM
+		}
+		d.put(Reply.TRACEBACK, a);
+		if (failHandler != null) {
+			failHandler.accept(d);
+		} else {
+			this.failure = d;
+		}
+		expecting = false;
 		return this;
 	}
 

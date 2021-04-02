@@ -44,7 +44,7 @@ public interface Array extends Iterable<Object> {
 			a.add(e);
 		return a;
 	}
-
+	
 	Class<?> elementType();
 
 	Object get(int index);

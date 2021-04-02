@@ -16,21 +16,16 @@
 	<packaging>jar</packaging>
 	<name>TurtleDuck Auth</name>
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>turtleduck-anno</artifactId>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.34.0</version>
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>turtleduck-base</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>turtleduck-shell</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>turtleduck-tea</artifactId>
+			<groupId>commons-validator</groupId>
+			<artifactId>commons-validator</artifactId>
+			<version>1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>io.vertx</groupId>
@@ -40,6 +35,16 @@
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-web</artifactId>
+			<version>${vertx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-web-sstore-redis</artifactId>
+			<version>${vertx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-redis-client</artifactId>
 			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
@@ -55,6 +60,11 @@
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-auth-oauth2</artifactId>
+			<version>${vertx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-jdbc-client</artifactId>
 			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
@@ -91,8 +101,8 @@
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
-										<Main-Class>io.vertx.core.Launcher</Main-Class>
-										<Main-Verticle>${main.verticle}</Main-Verticle>
+										<Main-Class>turtleduck.auth.AuthServer</Main-Class>
+										<!-- <Main-Class>io.vertx.core.Launcher</Main-Class> <Main-Verticle>${main.verticle}</Main-Verticle> -->
 									</manifestEntries>
 								</transformer>
 								<transformer
@@ -116,18 +126,6 @@
 						<arg>-g</arg>
 					</compilerArgs>
 					<generatedSourcesDirectory>${project.build.directory}/generated-sources/</generatedSourcesDirectory>
-					<annotationProcessorPaths>
-						<annotationProcessorPath>
-							<groupId>${project.groupId}</groupId>
-							<artifactId>turtleduck-anno</artifactId>
-							<version>${project.version}</version>
-						</annotationProcessorPath>
-					</annotationProcessorPaths>
-					<annotationProcessors>
-						<annotationProcessor>
-							turtleduck.annotations.ProcessAnnotations
-						</annotationProcessor>
-					</annotationProcessors>
 				</configuration>
 			</plugin>
 		</plugins>

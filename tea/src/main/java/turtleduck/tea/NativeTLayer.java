@@ -2,16 +2,12 @@ package turtleduck.tea;
 
 import java.util.List;
 
-import org.joml.Matrix4f;
 import org.teavm.jso.canvas.CanvasRenderingContext2D;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
 
-import turtleduck.comms.Message;
 import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
-import turtleduck.drawing.Drawing;
 import turtleduck.geometry.Point;
-import turtleduck.image.Image;
 import turtleduck.tea.net.SockJS;
 import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
@@ -27,8 +23,7 @@ public class NativeTLayer extends BaseLayer<NativeTScreen> {
 	protected HTMLCanvasElement element;
 	protected CanvasRenderingContext2D context;
 	private Pen lastPen = null;
-	private int channel;
-	private SockJS socket;
+
 	protected TeaPathWriter pathWriter = new TeaPathWriter();
 
 	public NativeTLayer(String layerId, NativeTScreen screen, double width, double height, HTMLCanvasElement element) {
@@ -97,10 +92,8 @@ public class NativeTLayer extends BaseLayer<NativeTScreen> {
 		context.setLineWidth(stroke.strokeWidth());
 	}
 
-	public void receive(Message obj) {
-		if (obj.type().equals("Data")) {
-			context.fillText(((Message.StringDataMessage) obj).data(), 50, 50);
-		}
+	public void receive(String obj) {
+		context.fillText(obj, 50, 50);
 	}
 
 	public void render(boolean frontToBack) {

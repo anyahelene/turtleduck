@@ -3,7 +3,7 @@ package ace;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.JSProperty;
 
-public interface AceEditor extends JSObject {
+public interface AceEditor extends JSObject, OptionProvider {
 
 	@JSProperty("session")
 	AceSession session();

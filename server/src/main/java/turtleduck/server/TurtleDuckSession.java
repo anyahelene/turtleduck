@@ -1,9 +1,8 @@
 package turtleduck.server;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,21 +10,18 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Session;
+import io.vertx.core.shareddata.LocalMap;
+import io.vertx.core.shareddata.Shareable;
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
-import turtleduck.comms.Channel;
-import turtleduck.comms.EndPoint;
-import turtleduck.comms.Message;
-import turtleduck.comms.Message.ConnectMessage;
-import turtleduck.comms.Message.OpenMessage;
+import turtleduck.async.Async.Sink;
 import turtleduck.messaging.HelloService;
+import turtleduck.messaging.Message;
 import turtleduck.messaging.Router;
+import turtleduck.messaging.ShellService;
 import turtleduck.messaging.TerminalService;
 import turtleduck.messaging.generated.TerminalServiceProxy;
-import turtleduck.server.channels.EditorChannel;
-import turtleduck.server.channels.PtyChannel;
 import turtleduck.server.generated.TDSDispatch;
 import turtleduck.shell.TShell;
 import turtleduck.terminal.PseudoTerminal;
@@ -34,51 +30,36 @@ import turtleduck.util.Dict;
 import io.vertx.core.Handler;
 
 @MessageDispatch("turtleduck.server.generated.TDSDispatch")
-public class TurtleDuckSession extends AbstractVerticle implements EndPoint, HelloService {
-	private TShell shell;
-	private TDSDispatch dispatch;
-	private SockJSSocket socket;
-	private Map<Integer, Channel> channels = new HashMap<>();
-	private Map<String, Channel> names = new HashMap<>();
-	private int nextChannelId = 1;
-	private final List<Handler<Void>> todo = new ArrayList<>();
-	private String user;
-	private Session session;
-	private final static Logger logger = LoggerFactory.getLogger(TurtleDuckSession.class);
-	private VertxRouter router;
-	private String sessionId;
-	private ServerScreen screen;
-	private TerminalService terminalService;
+public class TurtleDuckSession extends AbstractVerticle implements HelloService, ShellService, Shareable {
+	protected TShell shell;
+	protected TDSDispatch dispatch;
+	protected SockJSSocket socket;
+	protected String user;
+	protected final static Logger logger = LoggerFactory.getLogger(TurtleDuckSession.class);
+	protected VertxRouter router;
+	protected String sessionId;
+	protected ServerScreen screen;
+	protected TerminalService terminalService;
+	protected Dict userInfo;
+	protected Server server;
+	protected boolean used = false;
 
-	public TurtleDuckSession(Session session, JsonObject userInfo) {
-		this.session = session;
-		user = userInfo.getString("usernick");
-		dispatch = new TDSDispatch(this);
+	protected TurtleDuckSession(JsonObject userInfo, Server server) {
+		this.user = userInfo.getString("username");
+		this.dispatch = new TDSDispatch(this);
+		this.userInfo = VertxJson.decodeDict(userInfo);
+		this.server = server;
 	}
 
 	public void start() {
 		context.put("verticle", "session-" + user);
 		sessionId = "";
 		router = new VertxRouter(sessionId, user);
-		router.route("hello", msg -> dispatch.dispatch(msg));
+//		router.route("hello", msg -> dispatch.dispatch(msg));
+		router.route(dispatch);
 		terminalService = new TerminalServiceProxy("terminal.server", router::send);
 		logger.info("Starting TurtleDuck " + context.deploymentID() + " for user " + user);
-		synchronized (todo) {
-			for (Handler<Void> h : todo) {
-				logger.info("running delayed startup job: " + h);
-				context.runOnContext(h);
-			}
-			todo.clear();
-		}
-	}
-
-	public void runOnContext(Handler<Void> action) {
-		if (context != null)
-			context.runOnContext(action);
-		else
-			synchronized (todo) {
-				todo.add(action);
-			}
+//		createShell();
 	}
 
 	public Router router() {
@@ -107,163 +88,110 @@ public class TurtleDuckSession extends AbstractVerticle implements EndPoint, Hel
 			}
 		});
 
-		ConnectMessage msg = Message.createConnect();
-
-		List<Channel> reopened = new ArrayList<>();
-		for (Channel ch : channels.values()) {
-			System.out.println("old channel: " + ch);
-			if (!ch.name().isEmpty()) {
-				OpenMessage opened = Message.createOpened(ch.channelId(), ch.name(), ch.service());
-				reopened.add(ch);
-				msg.addOpened(opened);
-			}
-		}
-		msg.msg(channels.values().isEmpty() ? "WELCOME" : "WELCOME_BACK");
-		msg.addInfo("username", user);
-		logger.warn("OPEN: " + msg.toJson());
-		createShell();
-		send(msg);
-//		router.send(Welcome.create("turtleduck.client", sessionId, user, Dict.create()), null);
 		socket.handler(this::receive);
-		// trigger reopen listeners after we've connected, since they may want to send
-		// data
-		for (Channel ch : reopened)
-			ch.reopened();
+		socket.resume();
 	}
 
 	public void receive(Buffer buf) {
-		try {
-			logger.info("recv context: " + vertx.getOrCreateContext().get("verticle"));
-			logger.info("RECV: " + buf);
-			JsonObject obj = buf.toJsonObject();
-			if (!obj.containsKey("type")) {
-				router.receive(turtleduck.messaging.Message.fromDict(VertxJson.decodeDict(obj)));
-				return;
-			}
-			MessageRepr repr = new MessageRepr(obj);
-			Message msg = Message.create(repr);
-			int channel = msg.channel();
-			String type = msg.type();
-			if (channel > 0) {
-				Channel ch = channels.get(channel);
-				if (ch == null) {
-					logger.warn("  dropped msg to nonexistent channel " + channel);
-					return;
-				}
+		logger.info("recv context: " + vertx.getOrCreateContext().get("verticle"));
+		logger.info("RECV: " + buf);
+		JsonObject obj = buf.toJsonObject();
+		router.receive(Message.fromDict(VertxJson.decodeDict(obj)));
 
-				if (type.equals("Close")) {
+	}
 
-					Channel removed = channels.remove(channel);
-					if (removed != null)
-						names.remove(removed.service() + ":" + removed.name());
-					ch.close();
-					return;
-				}
-				ch.receive(msg);
-			} else {
-				if (type.equals("Open")) {
-					OpenMessage omsg = (OpenMessage) msg;
-					String service = omsg.service();
-					String name = omsg.name();
-					if (!name.matches("^[a-zA-Z0-9_-]*$")) {
-						sendError();
-						return;
-					}
-					if (names.containsKey(service + ":" + name)) {
-						OpenMessage reply = Message.createOpened(names.get(service + ":" + name).channelId(), name,
-								service);
-						send(reply);
-					}
-				} else if (type.equals("Opened")) {
-					OpenMessage omsg = (OpenMessage) msg;
-					int newch = omsg.chNum();
-					String tag = omsg.name() + ":" + omsg.service();
-					logger.info("Opened: " + tag);
-					Channel ch = names.get(tag);
-					logger.info("Channel: " + ch.hashCode());
-					if (newch != 0 && ch != null) {
-						channels.put(newch, ch);
-						ch.opened(newch, this);
-					}
-				}
+	<T> Async<T> enqueue(Supplier<T> fun) {
+		Sink<T> async = Async.create();
+		context.executeBlocking((promise) -> {
+			try {
+				promise.complete(fun.get());
+			} catch (Throwable t) {
+				promise.fail(t);
 			}
-		} catch (Throwable t) {
-			t.printStackTrace();
-		}
+		}, res -> {
+			if (res.succeeded())
+				async.success((T) res.result());
+			else
+				async.fail(res.cause());
+		});
+		return async.async();
 	}
 
 	private void createShell() {
 		PseudoTerminal pty = new PseudoTerminal();
 		pty.terminalListener(s -> {
-			terminalService.print(s);
-			System.out.println("Terminal: " + s);
+			terminalService.write(s);
 		});
+		pty.buffering(true);
 		screen = (ServerScreen) ServerDisplayInfo.provider().startPaintScene(TurtleDuckSession.this);
 		shell = new TShell(screen, null, pty.createCursor(), router);
-		router.route(shell.dispatch());
-		pty.hostInputListener((line) -> {
-			context.executeBlocking((linePromise) -> {
-				shell.enter(line);
-				linePromise.complete();
-			}, (r) -> {
-				System.out.println(r);
-			});
-			return true;
-		});
+		shell.enqueueWith(this::enqueue);
+//		router.route(shell.dispatch());
+//		pty.hostInputListener((line) -> {
+//			context.executeBlocking((linePromise) -> {
+//				logger.info("executeBlocking(): {}", line);
+//				shell.enter(line);
+//				linePromise.complete();
+//			}, (r) -> {
+//				logger.info("executeBlocking() result: {}", r);
+//				pty.flushToTerminal();
+//			});
+//			return true;
+//		});
 		pty.useHistory(0, false);
 		pty.reconnectListener(() -> {
 			shell.reconnect();
 			shell.prompt();
 		});
-		shell.editorFactory((n, callback) -> {
-			EditorChannel ch = new EditorChannel(n, "editor", callback);
-			open(ch);
-			return ch;
-		});
-	}
-
-	void sendError() {
-		if (socket != null) {
-			socket.write(new JsonObject().put("type", "ERR").toBuffer());
-		}
-	}
-
-	public void send(Message msg) {
-		if (socket != null) {
-			logger.info("send context: " + vertx.getOrCreateContext().get("verticle"));
-			Buffer buffer = msg.encodeAs(Buffer.class);
-			String string = msg.toString();
-			if (string.length() < 80)
-				logger.info("SEND: " + msg);
-			else
-				logger.info("SEND: " + string.substring(0, 75) + "… [" + buffer.length() + " bytes]");
-			socket.write(buffer);
-		}
-	}
-
-	public void open(Channel channel) {
-		names.put(channel.name() + ":" + channel.service(), channel);
-		Message.OpenMessage msg = Message.createOpen(channel.name(), channel.service());
-		send(msg);
-	}
-
-	protected int nextChannelId() {
-		int id = nextChannelId;
-		nextChannelId += 2;
-		return id;
+//		shell.editorFactory((n, callback) -> {
+//			EditorChannel ch = new EditorChannel(n, "editor", callback);
+////			open(ch);
+//			return ch;
+//		});
 	}
 
 	@Override
 	public Async<Dict> hello(String sessionName, Dict endPoints) {
+		LocalMap<String, TurtleDuckSession> sessions = vertx.sharedData().getLocalMap("sessions");
+		if (sessionId != null)
+			sessions.removeIfPresent(sessionId, this);
 		sessionId = sessionName;
+		sessions.put(sessionId, this);
 		router.init(sessionName, user);
+		if(shell == null)
+			createShell();
 		Dict myEndPoints = Dict.create();
 		myEndPoints.put("turtleduck.server", Array.of("hello"));
 		myEndPoints.put("turtleduck.shell.server", Array.of("inspect_request"));
 		Dict reply = Dict.create();
 		reply.put(HelloService.ENDPOINTS, myEndPoints);
 		reply.put(HelloService.USERNAME, user);
+		reply.put(HelloService.USER, userInfo);
+		reply.put(HelloService.EXISTING, used);
+		used = true;
 		return Async.succeeded(reply);
+	}
+
+	@Override
+	public Async<Dict> executeRequest(String code, boolean silent, boolean store_history, Dict user_expressions,
+			boolean allow_stdin, boolean stop_on_error) {
+		return shell.executeRequest(code, silent, store_history, user_expressions, allow_stdin, stop_on_error);
+	}
+
+	@Override
+	public Async<Dict> inspect(String code, int cursorPos, int detailLevel) {
+		return shell.inspect(code, cursorPos, detailLevel);
+	}
+
+	@Override
+	public Async<Dict> eval(String code, int ref, Dict opts) {
+		screen.group("g" + ref);
+		return shell.eval(code, ref, opts);
+	}
+
+	@Override
+	public Async<Dict> complete(String code, int cursorPos, int detailLevel) {
+		return shell.complete(code, cursorPos, detailLevel);
 	}
 
 }

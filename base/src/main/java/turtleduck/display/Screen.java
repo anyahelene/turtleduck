@@ -2,6 +2,7 @@ package turtleduck.display;
 
 import java.util.function.Predicate;
 
+import turtleduck.annotations.Icon;
 import turtleduck.canvas.Canvas;
 import turtleduck.colors.Color;
 import turtleduck.events.InputControl;
@@ -10,6 +11,7 @@ import turtleduck.objects.IdentifiedObject;
 import turtleduck.scene.SceneWorld;
 import turtleduck.text.TextWindow;
 
+@Icon("📺")
 public interface Screen extends IdentifiedObject {
 
 	/** 16:9 */
@@ -92,7 +94,14 @@ public interface Screen extends IdentifiedObject {
 	int CONFIG_FLAG_DEBUG = 4 << _CONFIG_FLAG_SHIFT;
 
 	void clearBackground();
-
+	/**
+	 * Clear the screen.
+	 * 
+	 * <p>
+	 * Everything on all layers is removed, leaving only transparency.
+	 */
+	Screen clear();
+	
 	Canvas createCanvas();
 
 	TextWindow createTextWindow();

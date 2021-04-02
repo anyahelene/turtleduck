@@ -11,7 +11,7 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 	protected boolean recordTurns = false;
 	protected PathPointImpl current;
 
-	public NavigatorImpl(NavigatorImpl<T> old) {
+	public NavigatorImpl(NavigatorImpl<?> old) {
 		current = old.current.copy();
 	}
 

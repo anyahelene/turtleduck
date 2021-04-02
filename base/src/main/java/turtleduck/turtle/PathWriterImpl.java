@@ -42,6 +42,8 @@ public class PathWriterImpl implements PathWriter {
 		protected int read = 0;
 		protected int lengthSq = 0;
 		protected PathPoint current;
+		String text;
+		protected  String group = null;
 
 		@Override
 		public void addLine(PathPoint from) {
@@ -67,9 +69,9 @@ public class PathWriterImpl implements PathWriter {
 				PathPointImpl to = from.copy();
 				if (!from.point.equals(point))
 					from.bearing = from.point.bearingTo(point);
-				else if(from.bearing == null)
+				else if (from.bearing == null)
 					from.bearing = Direction.DUE_NORTH;
-				if(from.incoming == null)
+				if (from.incoming == null)
 					from.incoming = from.bearing;
 				to.point = point;
 				to.incoming = from.bearing;
@@ -120,11 +122,13 @@ public class PathWriterImpl implements PathWriter {
 
 		public void endPath() {
 			PathPoint first = points.get(0);
-			if (first.point().distanceToSq(current.point()) < 0.1) {
-			}
-			if (!added) {
-				added = true;
-				strokes.add(this);
+			if (first != null) {
+				if (first.point().distanceToSq(current.point()) < 0.1) {
+				}
+				if (!added) {
+					added = true;
+					strokes.add(this);
+				}
 			}
 		}
 
@@ -145,12 +149,63 @@ public class PathWriterImpl implements PathWriter {
 
 		@Override
 		public void clear() {
-
+			points.clear();
+			added = false;
+			read = 0;
 		}
 
 		@Override
 		public List<PathPoint> points() {
-			return points;
+			List<PathPoint> list = new ArrayList<>(points.subList(read, points.size()));
+			read += list.size();
+			return list;
+		}
+
+		public String text() {
+			return text;
+		}
+
+		@Override
+		public void addText(PathPoint at, String text) {
+			if (at.pen() == null)
+				throw new IllegalArgumentException();
+			current = at;
+			points.add(at);
+
+			this.text = text;
+			if (!added) {
+				added = true;
+				strokes.add(this);
+			}
+		}
+
+		public void text(String text) {
+			if (points.isEmpty()) {
+				if (current == null)
+					throw new IllegalStateException();
+				points.add(current);
+			}
+			this.text = text;
+			if (!added) {
+				added = true;
+				strokes.add(this);
+			}
+		}
+		
+		@Override
+		public void group(String group) {
+			this.group = group;
+		}
+		
+		public String group() {
+			return group;
 		}
 	}
+
+	public void clear() {
+		for (PathStrokeImpl stroke = strokes.poll(); stroke != null; stroke = strokes.poll()) {
+			stroke.clear();
+		}
+	}
+	
 }

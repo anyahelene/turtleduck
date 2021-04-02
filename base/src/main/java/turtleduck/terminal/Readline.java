@@ -9,6 +9,8 @@ import java.util.function.Consumer;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.text.Graphemizer;
+import turtleduck.util.Array;
+import turtleduck.util.Dict;
 import turtleduck.util.Strings;
 
 public class Readline implements LineInput {
@@ -20,10 +22,44 @@ public class Readline implements LineInput {
 	private Graphemizer graphemizer;
 	private Consumer<String> lineHandler;
 	private BiPredicate<KeyEvent, LineInput> customKeyHandler;
+	private String prompt;
 
 	public Readline() {
 		graphemizer = new Graphemizer(this::acceptGrapheme);
 		graphemizer.csiEnabled(false);
+	}
+
+	public Readline(Dict history) {
+		graphemizer = new Graphemizer(this::acceptGrapheme);
+		graphemizer.csiEnabled(false);
+		Array array = history.get(HISTORY);
+		for (Dict l : array.toListOf(Dict.class)) {
+			String str = l.get(TEXT);
+//			int pos = l.get(CURSOR_POS);
+			inputHandler(str);
+//			if (pos >= 0)
+//				line.pos = pos;
+			System.out.println("added: " + line.toString());
+			keyHandler(KeyEvent.create(KeyCodes.Whitespace.ENTER, "\r", 0, 0));
+		}
+		Dict dict = history.get(CURRENT);
+		if (dict != null) {
+			String str = dict.get(TEXT);
+			int pos = dict.get(CURSOR_POS);
+			inputHandler(str);
+//			if (pos >= 0 && pos <= line.cells.size())
+//				line.pos = pos;
+			System.out.println("current: " + line.toString());
+		}
+	}
+
+	public void prompt() {
+		if (prompt != null)
+			pty.writeToTerminal(prompt);
+	}
+
+	public void prompt(String prompt) {
+		this.prompt = prompt;
 	}
 
 	public void attach(PtyWriter writer) {
@@ -50,9 +86,11 @@ public class Readline implements LineInput {
 
 	}
 
-	public boolean keyHandler(KeyEvent ev) {
-		System.out.println("Key: " + ev);
+	public boolean hasHistory() {
+		return !history.isEmpty();
+	}
 
+	public boolean keyHandler(KeyEvent ev) {
 		if (customKeyHandler != null && customKeyHandler.test(ev, this))
 			return true;
 
@@ -115,21 +153,18 @@ public class Readline implements LineInput {
 			bell();
 		} else if (code == KeyCodes.Whitespace.ENTER || (ev.isControlDown() && (code == 'J' || code == 'M'))) {
 			histPos = history.size();
-			StringBuilder b = new StringBuilder();
-			line.toRawString(b);
-			b.append("\n");
-			String s = b.toString();
+			String s = line.toRawString(new StringBuilder()).append("\n").toString();
 
 			if (line.id >= 0) { // already in history
-				lastLine = new Line();
-				if (line.oldCells != null) {
+				lastLine = new Line(); // make a new line to add to history
+				if (line.oldCells != null) { // preserve old version of original line in hiostry
 					lastLine.cells = line.cells;
 					line.cells = line.oldCells;
 					line.oldCells = null;
 				}
 				lastLine.atEnd();
 			}
-			if (!s.replaceAll("\\s", "").isEmpty()) {
+			if (!Strings.isBlank(s)) {
 				lastLine.line = s;
 				lastLine.id = histPos;
 				if (histPos > 0 && history.get(histPos - 1).line.equals(lastLine.line)) {
@@ -141,9 +176,10 @@ public class Readline implements LineInput {
 				}
 			}
 			line = lastLine = new Line();
-			pty.writeToTerminal("\r\n");
+			if (pty != null) {
+				pty.writeToTerminal("\r\n");
+			}
 			xPos = 0;
-			System.out.println("ENTER: " + debugHist());
 
 			if (lineHandler != null)
 				lineHandler.accept(s);
@@ -185,6 +221,11 @@ public class Readline implements LineInput {
 	}
 
 	@Override
+	public LineInput.Line current() {
+		return line;
+	}
+
+	@Override
 	public int pos() {
 		return line.strPos();
 	}
@@ -194,22 +235,26 @@ public class Readline implements LineInput {
 		return Collections.unmodifiableList(line.cells);
 	}
 
-	private void redraw() {
+	public void redraw() {
 		StringBuilder b = new StringBuilder();
-		if (xPos > 0) {
-			b.append("\u001b[");
-			b.append(xPos);
-			b.append("D");
+		if (prompt == null) {
+			if (xPos > 0) {
+				b.append("\u001b[");
+				b.append(xPos);
+				b.append("D");
+			}
+		} else {
+			b.append("\r");
+			b.append(prompt);
 		}
 		b.append("\u001b[0K");
 		System.out.println("Redraw: ");
 		System.out.println(
 				line.cells.subList(0, line.pos).toString() + " | " + line.cells.subList(line.pos, line.cells.size()));
 		String str = line.asString();
-		System.out.println(str.substring(0, xPos) + " | " + (xPos < str.length() ? str.substring(xPos) : ""));
+		xPos = 0;
 		System.out.println("  line=" + line.toString());
 		System.out.println("  xPos=" + xPos);
-		xPos = 0;
 		int i = 0, back = 0;
 		for (Cell c : line.cells) {
 			xPos += c.len;
@@ -219,6 +264,7 @@ public class Readline implements LineInput {
 			b.append(Strings.termEscape(c.data));
 		}
 		System.out.println("  xPos_end=" + xPos);
+		System.out.println(str.substring(0, xPos) + " | " + (xPos < str.length() ? str.substring(xPos) : ""));
 		System.out.println("  back=" + back);
 
 		if (back > 0) {
@@ -246,16 +292,30 @@ public class Readline implements LineInput {
 	}
 
 	public void put(String raw, String escaped, int len) {
-		System.out.println("Input: " + escaped + " : " + len);
 		line.add(new Cell(raw, escaped, len));
 		xPos += len;
 		if (!line.isAtEnd())
 			escaped = "\u001b[" + len + "@" + escaped; // insert blanks, then string
-		pty.writeToTerminal(escaped);
+		if (pty != null)
+			pty.writeToTerminal(escaped);
 	}
 
 	protected void bell() {
-		pty.writeToTerminal("\u0007");
+		if (pty != null)
+			pty.writeToTerminal("\u0007");
+	}
+
+	public Dict toDict() {
+		Dict dict = Dict.create();
+		Array arr = Array.of(Dict.class);
+		for (Line l : history) {
+			arr.add(l.toDict());
+		}
+		dict.put("HISTORY", arr);
+		if (!line.isEmpty())
+			dict.put("CURRENT", line.toDict());
+
+		return dict;
 	}
 
 	protected String debugHist() {
@@ -372,15 +432,19 @@ public class Readline implements LineInput {
 			}
 			return b.toString();
 		}
-		public void toRawString(StringBuilder b) {
+
+		public StringBuilder toRawString(StringBuilder b) {
 			for (Cell c : cells) {
 				b.append(c.raw);
 			}
+			return b;
 		}
-		public void toString(StringBuilder b) {
+
+		public StringBuilder toString(StringBuilder b) {
 			for (Cell c : cells) {
 				b.append(c.data);
 			}
+			return b;
 		}
 
 		public String toString() {
@@ -389,6 +453,22 @@ public class Readline implements LineInput {
 			toString(b);
 			b.append("')");
 			return Strings.termEscape(b.toString());
+		}
+
+		public Dict toDict() {
+			Dict dict = Dict.create();
+			String l = line;
+			if (l != null && l.endsWith("\n")) {
+				l = l.substring(0, l.length() - 1);
+			} else {
+				StringBuilder b = new StringBuilder();
+				toRawString(b);
+				l = b.toString();
+			}
+			dict.put(TEXT, l);
+			dict.put(REF, id);
+			dict.put(CURSOR_POS, pos);
+			return dict;
 		}
 
 		@Override
@@ -437,6 +517,12 @@ public class Readline implements LineInput {
 			for (int i = 0; i < pos; i++)
 				p += cells.get(i).raw.length();
 			return p;
+		}
+
+		@Override
+		public void strPos(int p) {
+			for (pos = 0; p > 0 && pos <= cells.size(); pos++)
+				p -= cells.get(pos).raw.length();
 		}
 
 		@Override

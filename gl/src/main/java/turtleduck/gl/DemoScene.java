@@ -23,9 +23,11 @@ import turtleduck.grid.MyGrid;
 import turtleduck.image.Image;
 import turtleduck.image.ImageFactory;
 import turtleduck.image.Tiles;
+import turtleduck.messaging.CanvasService;
 import turtleduck.scene.Camera;
 import turtleduck.scene.SceneWorld;
 import turtleduck.sprites.AbstractSprite;
+import turtleduck.sprites.Sprite;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.Turtle;
 import turtleduck.turtle.Turtle;
@@ -46,7 +48,6 @@ public class DemoScene implements TurtleDuckApp {
 //			System.out.println("rotation: " + rotation + " → " + this.rotation);
 		}
 
-		@Override
 		public void draw(Canvas canvas) {
 			((GLLayer) canvas).drawImage(offset, img, (float) bearing().radians());
 		}
@@ -61,6 +62,24 @@ public class DemoScene implements TurtleDuckApp {
 			}
 			forward(speed);
 
+		}
+
+		@Override
+		public Sprite update(CanvasService service) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Sprite transition(String spec) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public String id() {
+			// TODO Auto-generated method stub
+			return null;
 		}
 	}
 

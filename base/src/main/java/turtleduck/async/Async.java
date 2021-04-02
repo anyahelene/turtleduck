@@ -14,6 +14,8 @@ public interface Async<T> {
 
 	<U> Async<U> map(Function<T, U> f);
 
+	Async<T> mapFailure(Function<Dict, T> f);
+
 	static <T> Async<T> failed(String format, Object... args) {
 		return new AsyncImpl<T>().fail(format, args);
 	}
@@ -25,6 +27,7 @@ public interface Async<T> {
 	static <T> Sink<T> create() {
 		return new AsyncImpl<T>();
 	}
+
 	static <T> Async<T> nothing() {
 		return new AsyncImpl<T>().success(null);
 	}
@@ -37,6 +40,8 @@ public interface Async<T> {
 		Async<T> fail(Dict value);
 
 		Async<T> async();
+
+		Async<T> fail(Throwable ex);
 
 	}
 }

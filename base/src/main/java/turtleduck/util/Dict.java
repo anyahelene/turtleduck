@@ -84,7 +84,9 @@ public interface Dict extends Iterable<Key<?>> {
 				public Key<?> next() {
 					Entry<String, Object> next = it.next();
 					if (next.getValue() != null)
-						return new KeyImpl<>(next.getKey(), next.getValue().getClass(), null);
+						return new KeyImpl<>(next.getKey(), next.getValue().getClass(), null); // TODO: is perhaps the
+																								// source of lots of
+																								// extra KeyImpl objects
 					else
 						return new KeyImpl<>(next.getKey(), Void.class, null);
 
@@ -95,6 +97,8 @@ public interface Dict extends Iterable<Key<?>> {
 		@Override
 		public <T> T get(Key<T> key) {
 			Object obj = dict.get(key.key());
+			if (obj == null)
+				obj = key.defaultValue();
 			return check(obj, key.type());
 		}
 
@@ -103,9 +107,24 @@ public interface Dict extends Iterable<Key<?>> {
 			if (type != null && obj != null) {
 				if (type.isInstance(obj))
 					return (T) obj;
-				else
+				else if (Number.class.isAssignableFrom(type) && Number.class.isInstance(obj)) {
+					Number n = (Number) obj;
+					if (type == Byte.TYPE)
+						return (T)(Byte)n.byteValue();
+					else if (type == Short.TYPE)
+						return (T)(Short)n.shortValue();
+					else if (type == Integer.TYPE)
+						return (T)(Integer)n.intValue();
+					else if (type == Long.TYPE)
+						return (T)(Long)n.longValue();
+					else if (type == Float.TYPE)
+						return (T)(Float)n.floatValue();
+					else if (type == Double.TYPE)
+						return (T)(Double)n.doubleValue();
+					else
+						return (T) obj;
+				} else
 					throw new ClassCastException("expected " + type.getName() + ", got " + obj.getClass().getName());
-
 			} else {
 				return (T) obj;
 			}
@@ -150,14 +169,19 @@ public interface Dict extends Iterable<Key<?>> {
 
 		@Override
 		public <T> Dict put(Key<T> key, T value) {
-
-			dict.put(key.key(), value);
+			if (value == null)
+				dict.remove(key.key());
+			else
+				dict.put(key.key(), value);
 			return this;
 		}
 
 		@Override
 		public <T> Dict put(String key, T value) {
-			dict.put(key, value);
+			if (value == null)
+				dict.remove(key);
+			else
+				dict.put(key, value);
 			return this;
 		}
 
@@ -197,7 +221,7 @@ public interface Dict extends Iterable<Key<?>> {
 
 		@Override
 		public String toJson() {
-			return dict.toString();
+			return JsonUtil.encode(this);
 		}
 
 		@Override

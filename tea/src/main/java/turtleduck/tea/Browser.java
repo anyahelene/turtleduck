@@ -33,6 +33,8 @@ public class Browser {
 
 	@JSBody(params = { "message" }, script = "console.log(message)")
 	public static native void consoleLog(Object message);
+	@JSBody(params = { "message", "object" }, script = "console.log(message, object)")
+	public static native void consoleLog(String message, JSObject object);
 
 	@JSBody(params = { "message" }, script = "console.log(message)")
 	public static native void consoleLog(String string);
@@ -40,6 +42,8 @@ public class Browser {
 	@JSBody(params = { "message" }, script = "console.error(message)")
 	public static native void consoleError(String string);
 
+	@JSBody(params = {}, script = "return document.visibilityState")
+	public static native String visibilityState();
 	static {
 		window = Window.current();
 		document = window.getDocument();
@@ -67,6 +71,7 @@ public class Browser {
 			errPop.appendChild(document.createElement("li").withText(wr.toString()));
 			errPop.getStyle().setProperty("display", "block");
 		}
+		ex.printStackTrace();
 	}
 
 	protected static void errorToggle(Event e) {

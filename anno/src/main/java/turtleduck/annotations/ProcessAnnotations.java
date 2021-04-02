@@ -58,7 +58,7 @@ public class ProcessAnnotations extends AbstractProcessor {
 						TypeElement te = (TypeElement) elt;
 						ProtocolProcessor pp = new ProtocolProcessor(te.getAnnotation(MessageProtocol.class), te);
 						pp.process();
-						System.out.println(pp.generateProxy());
+//						System.out.println(pp.generateProxy());
 						Filer filer = processingEnv.getFiler();
 						JavaFileObject fobj;
 						try {
@@ -79,7 +79,7 @@ public class ProcessAnnotations extends AbstractProcessor {
 						TypeElement te = (TypeElement) elt;
 						ProtocolProcessor pp = new ProtocolProcessor(te.getAnnotation(MessageDispatch.class), te);
 						pp.process();
-						System.out.println(pp.generateDispatch());
+//						System.out.println(pp.generateDispatch());
 						Filer filer = processingEnv.getFiler();
 						JavaFileObject fobj;
 						try {
@@ -238,7 +238,8 @@ public class ProcessAnnotations extends AbstractProcessor {
 			cls.append(handlers.values().stream().map(h -> "\"" + h.msgType + "\"").collect(Collectors.joining(", ")));
 			cls.append(");\n");
 			cls.append("\tprotected final List<String> replyTypes = Arrays.asList(");
-			cls.append(handlers.values().stream().map(h -> "\"" + h.replyType + "\"").collect(Collectors.joining(", ")));
+			cls.append(
+					handlers.values().stream().map(h -> "\"" + h.replyType + "\"").collect(Collectors.joining(", ")));
 			cls.append(");\n\n");
 			cls.append("\tpublic ").append(className).append("(").append(origClass).append(" handler) {\n");
 			cls.append("\t\tthis.handler = handler;\n");
@@ -246,18 +247,24 @@ public class ProcessAnnotations extends AbstractProcessor {
 			cls.append("\tpublic Async<Message> dispatch(Message msg) {\n");
 			cls.append("\t\tAsync<Dict> reply = null;\n");
 			cls.append("\t\tString replyType = \"ok_reply\";\n");
-			cls.append("\t\tswitch(msg.msgType()) {\n");
+			cls.append("\t\ttry {\n");
+			cls.append("\t\t\tswitch(msg.msgType()) {\n");
 			for (HandlerMethod h : handlers.values()) {
 				cls.append(h.decoder());
 			}
-			cls.append("\t\t  default:\n");
-			cls.append("\t\t\treturn Async.failed(\"No handler for %s\", msg.msgType());\n");
-			cls.append("\t\t}\n");
-			cls.append("\t\tif(reply != null) {\n");
-			cls.append("\t\t\treturn reply.map(content -> msg.reply(replyType).content(content).done());\n");
-			cls.append("\t\t} else {\n");
-			cls.append("\t\t\treturn Async.nothing();\n");
-			cls.append("\t\t}\n");
+			cls.append("\t\t\t  default:\n");
+			cls.append("\t\t\t\treturn Async.failed(\"No handler for %s\", msg.msgType());\n");
+			cls.append("\t\t\t}\n");
+			cls.append("\t\t\tif(reply != null) {\n");
+			cls.append("\t\t\tString type = replyType;\n");
+			cls.append("\t\t\t\treturn reply.map(content -> msg.reply(type).content(content).done()) //\n");
+			cls.append("\t\t\t\t\t.mapFailure(content -> msg.reply(\"error_reply\").content(content).done());\n");
+			cls.append("\t\t\t} else {\n");
+			cls.append("\t\t\t\treturn Async.nothing();\n");
+			cls.append("\t\t\t}\n");
+			cls.append("\t\t} catch (Throwable t) {\n");
+			cls.append("\t\t\treturn Async.succeeded(msg.errorReply(t).done());\n");
+			cls.append("\t\t}\n\n");
 			cls.append("\t}\n\n");
 			cls.append("\tpublic List<String> requestTypes() {\n\t\treturn requestTypes;\n\t}\n\n");
 			cls.append("\tpublic List<String> replyTypes() {\n\t\treturn replyTypes;\n\t}\n");
@@ -353,9 +360,10 @@ public class ProcessAnnotations extends AbstractProcessor {
 		}
 
 		public String decoder() {
-			return String.format("\t\t  case \"%s\":\n\t\t\treply = handler.%s(%s);\n\t\t\tbreak;\n", //
+			return String.format(
+					"\t\t\t  case \"%s\":\n\t\t\t\treply = handler.%s(%s);\n\t\t\t\treplyType = \"%s\";\n\t\t\t\tbreak;\n", //
 					msgType, method.getSimpleName(), //
-					params.stream().map(p -> p.decoder).collect(Collectors.joining(", ")));
+					params.stream().map(p -> p.decoder).collect(Collectors.joining(", ")), replyType);
 		}
 
 		public String encoder() {

@@ -169,6 +169,7 @@
 
 	<modules>
 		<module>anno</module>
+		<module>auth</module>
 		<module>base</module>
 		<module>jfx</module>
 		<module>demo</module>

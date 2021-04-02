@@ -17,7 +17,7 @@ public interface TerminalService {
 	Async<Dict> prompt(@MessageField("PROMPT") String prompt, @MessageField("LANGUAGE") String language);
 
 	@Request(type = "print", noReply = true)
-	Async<Dict> print(@MessageField("TEXT") String text);
+	Async<Dict> write(@MessageField("TEXT") String text);
 
 	@Request(type = "read_request", replyType = "read_reply", replyFields = { "TEXT" })
 	Async<Dict> readline(@MessageField("PROMPT") String prompt);

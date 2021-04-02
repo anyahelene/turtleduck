@@ -104,7 +104,7 @@ module.exports = {
         //exclude: /fonts/,
         loader: 'url-loader',
         options: {
-            limit: 20000, outputPath: '',
+            limit: 200000, outputPath: '',
         }
       }
     ]

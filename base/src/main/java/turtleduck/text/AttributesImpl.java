@@ -87,7 +87,11 @@ public class AttributesImpl<U> implements Attributes, Attributes.AttributeBuilde
 
 	@Override
 	public AttributeBuilder<Attributes> change() {
-		AttributesImpl<Attributes> change = new AttributesImpl<Attributes>(null);
+		return change(null);
+	}
+
+	public <A> AttributeBuilder<A> change(Function<Attributes, A> build) {
+		AttributesImpl<A> change = new AttributesImpl<A>(build);
 		change.attrs = attrs;
 		change.back = back;
 		change.brightness = brightness;

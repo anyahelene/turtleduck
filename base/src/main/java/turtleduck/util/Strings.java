@@ -1,6 +1,9 @@
 package turtleduck.util;
 
+import java.util.regex.Pattern;
+
 public class Strings {
+	public static final Pattern NON_SPACE = Pattern.compile("\\S");
 	public static String termEscape(String s) {
 		StringBuffer b = new StringBuffer(s.length());
 //		s.codePoints().forEach((cp) -> {
@@ -53,5 +56,9 @@ public class Strings {
 		}
 
 		return b.toString();
+	}
+	
+	public static boolean isBlank(String s) {
+		return !NON_SPACE.matcher(s).find();
 	}
 }

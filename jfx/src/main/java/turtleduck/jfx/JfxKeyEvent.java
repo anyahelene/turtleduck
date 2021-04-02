@@ -2,6 +2,7 @@ package turtleduck.jfx;
 
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
+import turtleduck.util.Dict;
 
 public class JfxKeyEvent implements KeyEvent {
 	private final javafx.scene.input.KeyEvent ev;
@@ -152,5 +153,17 @@ public class JfxKeyEvent implements KeyEvent {
 	@Override
 	public int shortcutModifiers() {
 		return shortcutMods;
+	}
+
+	@Override
+	public Dict toDict() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public KeyEvent fromDict(Dict dict) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

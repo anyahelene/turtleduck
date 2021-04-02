@@ -3,6 +3,8 @@ package turtleduck.turtle.impl;
 import java.util.IdentityHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import turtleduck.colors.Color;
@@ -10,6 +12,8 @@ import turtleduck.canvas.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
+import turtleduck.sprites.Sprite;
+import turtleduck.sprites.SpriteImpl;
 import turtleduck.turtle.Annotation;
 import turtleduck.turtle.Chelonian;
 import turtleduck.turtle.DrawingBuilder;
@@ -28,8 +32,8 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		implements Chelonian<THIS, RESULT> {
 	public static class SpecificTurtle extends TurtleImpl<Turtle, Turtle> implements Turtle {
 
-		public SpecificTurtle(Point p, Direction b, Pen pen) {
-			super(p, b, pen);
+		public SpecificTurtle(Point p, Direction b, Pen pen, Canvas canvas) {
+			super(p, b, pen, canvas);
 		}
 
 		public SpecificTurtle(SpecificTurtle parent) {
@@ -38,6 +42,25 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 		protected SpecificTurtle copy() {
 			return new SpecificTurtle(this);
+		}
+	}
+
+	public static class SpriteTurtle extends TurtleImpl<SpriteBuilder, Sprite> implements SpriteBuilder {
+
+		public SpriteTurtle(Point p, Direction b, Pen pen, Canvas canvas) {
+			super(p, b, pen, canvas);
+		}
+
+		public SpriteTurtle(SpriteTurtle parent) {
+			super(parent);
+		}
+
+		public SpriteTurtle(TurtleImpl<?, ?> parent, Function<TurtleImpl<SpriteBuilder, Sprite>, Sprite> result) {
+			super(parent, result);
+		}
+
+		protected SpriteTurtle copy() {
+			return new SpriteTurtle(this);
 		}
 	}
 
@@ -61,15 +84,18 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 //	protected List<PathPointImpl> points = new ArrayList<>();
 	protected PathPointImpl last;
 //	protected List<TurtleImpl<THIS, RESULT>> children = new ArrayList<>();
-	protected TurtleImpl<THIS, RESULT> parent = null;
+	protected TurtleImpl<?, ?> parent = null;
 	protected PenBuilder<Pen> penBuilder;
 	private PathWriter writer;
 	private PathStroke currentStroke;
 	private double stepSize = 0;
 	private BiConsumer<PathPoint, PathPoint> drawAction;
 	private Consumer<PathPoint> moveAction;
+	private Function<TurtleImpl<THIS, RESULT>, RESULT> result;
+	private String objId = null;
+	private Canvas canvas;
 
-	public TurtleImpl(TurtleImpl<THIS, RESULT> parent) {
+	public TurtleImpl(TurtleImpl<?, ?> parent) {
 		super(parent);
 		this.pen = parent.pen;
 //		this.points = new ArrayList<>();
@@ -78,11 +104,28 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		this.moveAction = parent.moveAction;
 		this.parent = parent;
 		this.writer = parent.writer;
+		this.objId = parent.objId;
+		this.canvas = parent.canvas;
 	}
 
-	public TurtleImpl(Point p, Direction b, Pen pen) {
+	public TurtleImpl(TurtleImpl<?, ?> parent, Function<TurtleImpl<THIS, RESULT>, RESULT> result) {
+		super(parent);
+		this.pen = parent.pen;
+//		this.points = new ArrayList<>();
+//		this.points.add(parent.current);
+		this.drawAction = parent.drawAction;
+		this.moveAction = parent.moveAction;
+		this.parent = parent;
+		this.writer = parent.writer;
+		this.result = result;
+		this.objId = "path@" + System.identityHashCode(this);
+		this.canvas = parent.canvas;
+	}
+
+	public TurtleImpl(Point p, Direction b, Pen pen, Canvas canvas) {
 		super(p, b);
 		this.pen = pen;
+		this.canvas = canvas;
 	}
 
 	protected void addPoint(PathPointImpl point) {
@@ -262,6 +305,13 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	@SuppressWarnings("unchecked")
 	@Override
+	public THIS fillColor(Color color) {
+		pen = pen.change().fillPaint(color).done();
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
 	public THIS penWidth(double width) {
 		pen = pen.change().strokeWidth(width).done();
 		return (THIS) this;
@@ -277,7 +327,14 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@SuppressWarnings("unchecked")
 	@Override
 	public RESULT done() {
-		if (parent != null) {
+		if (currentStroke != null) {
+			currentStroke.endPath();
+			currentStroke = null;
+			drawing = false;
+		}
+		if (result != null) {
+			return result.apply(this);
+		} else if (parent != null) {
 			return (RESULT) parent;
 		} else {
 			return (RESULT) this;
@@ -287,16 +344,17 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> THIS annotate(Annotation<T> anno, T value) {
-		if(current.annos == null) {
+		if (current.annos == null) {
 			current.annos = new IdentityHashMap<>();
 		}
 		current.annos.put(anno, value);
 		return (THIS) this;
 	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T annotation(Annotation<T> anno) {
-		if(current.annos == null) {
+		if (current.annos == null) {
 			return null;
 		}
 		return (T) current.annos.get(anno);
@@ -331,7 +389,12 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	@Override
 	public SpriteBuilder sprite() {
-		throw new UnsupportedOperationException();
+		Point here = current.point;
+		Direction b = current.bearing;
+		SpriteBuilder spawn = new SpriteTurtle(this, t -> {
+			return new SpriteImpl(here, b, t.objId, canvas);
+		}).at(0, 0).turnTo(0);
+		return spawn;
 	}
 
 	@Override
@@ -353,8 +416,10 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		}
 		if (writer != null) {
 			if (drawing) {
-				if (currentStroke == null)
+				if (currentStroke == null) {
 					currentStroke = writer.addStroke();
+					currentStroke.group(objId);
+				}
 				if (stepSize > 0) {
 					double len = last.point().distanceTo(current.point());
 					currentStroke.addLine(last);

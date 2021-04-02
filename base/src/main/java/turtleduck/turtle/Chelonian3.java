@@ -1,7 +1,9 @@
 package turtleduck.turtle;
 
+import turtleduck.annotations.Icon;
 import turtleduck.geometry.Point;
 
+@Icon("🐢")
 public interface Chelonian3<T extends Chelonian3<T, C>, C> extends Chelonian<T,C> {
 	/**
 	 * Move to a new position, without drawing.

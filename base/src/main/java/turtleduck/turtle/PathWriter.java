@@ -8,4 +8,5 @@ public interface PathWriter {
 	 * @return A stroke object to write the next sub-path to
 	 */
 	PathStroke addStroke();
+
 }

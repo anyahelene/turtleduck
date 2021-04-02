@@ -7,11 +7,13 @@ import org.joml.Matrix3x2dc;
 import turtleduck.canvas.Canvas;
 
 import turtleduck.colors.Color;
+import turtleduck.colors.Colors;
 import turtleduck.geometry.Point;
 import turtleduck.shapes.Poly.LineBuilder;
 import turtleduck.shapes.Text.TextBuilder;
 import turtleduck.text.Attributes;
 import turtleduck.text.Attributes.AttributeBuilder;
+import turtleduck.text.AttributesImpl;
 import turtleduck.turtle.PathStroke;
 import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.Pen;
@@ -59,22 +61,19 @@ public abstract class ShapeImpl<T> implements Shape {
 		return (T) this;
 	}
 
-	public Canvas stroke() {
-		writePath(pathWriter, true, false);
-		return canvas;
+	public String stroke() {
+		return writePath(pathWriter, true, false);
 	}
 
-	public Canvas fill() {
-		writePath(pathWriter, false, true);
-		return canvas;
+	public String fill() {
+		return writePath(pathWriter, false, true);
 	}
 
-	public Canvas strokeAndFill() {
-		writePath(pathWriter, true, true);
-		return canvas;
+	public String strokeAndFill() {
+		return writePath(pathWriter, true, true);
 	}
 
-	protected abstract void writePath(PathWriter writer, boolean stroke, boolean fill);
+	protected abstract String writePath(PathWriter writer, boolean stroke, boolean fill);
 
 	public static abstract class ShapeWxH<T> extends ShapeImpl<T> implements WxHBuilder<T> {
 		protected double width = 1, height = 1;
@@ -110,7 +109,7 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected void writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
 			PathStroke ps = writer.addStroke();
 			double w = width / 2, h = height / 2;
 			PathPointImpl start = new PathPointImpl(position.add(w, 0), pen);
@@ -120,7 +119,10 @@ public abstract class ShapeImpl<T> implements Shape {
 				double a = (2.0 * Math.PI * i) / 360.0;
 				ps.addPoint(position.add(Math.cos(a) * w, Math.sin(a) * h));
 			}
+			String id = String.format("ellipse@%x", System.identityHashCode(this));
+			ps.group(id);
 			ps.endPath();
+			return id;
 		}
 
 	}
@@ -133,16 +135,24 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected void writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
 			Point p0 = position.add(-width / 2, -height / 2);
 			PathStroke ps = writer.addStroke();
+			if (!stroke)
+				pen = pen.change().strokePaint(Colors.TRANSPARENT).done();
+			if (!fill)
+				pen = pen.change().fillPaint(Colors.TRANSPARENT).done();
 			PathPointImpl start = new PathPointImpl(p0, pen);
+			String id = String.format("rect@%x", System.identityHashCode(this));
+			ps.group(id);
 			ps.addPoint(start);
 			ps.addPoint(p0.add(0, height));
 			ps.addPoint(p0.add(width, height));
 			ps.addPoint(p0.add(width, 0));
 			ps.addPoint(p0);
 			ps.endPath();
+
+			return id;
 		}
 
 	}
@@ -154,14 +164,23 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected void writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
 			// TODO Auto-generated method stub
-
+			return null;
 		}
 
 	}
 
 	public static class TextImpl extends ShapeImpl<Text.TextBuilder> implements Text.TextBuilder {
+		protected String text = "";
+		protected String align = "center";
+		protected Double size = null;
+		protected Attributes attrs = new AttributesImpl<TextBuilder>(a -> {
+			this.attrs = a;
+			return this;
+		});
+		private Double angle = null;
+		private String font = null;
 
 		public TextImpl(Canvas canvas, Matrix3x2dc matrix, PathWriter pw, Point pos, Pen pen) {
 			super(canvas, matrix, pw, pos, pen);
@@ -169,44 +188,78 @@ public abstract class ShapeImpl<T> implements Shape {
 
 		@Override
 		public TextBuilder text(String text) {
-			// TODO Auto-generated method stub
-			return null;
+			this.text = text;
+			return this;
 		}
 
 		@Override
 		public TextBuilder along(Path path) {
 			// TODO Auto-generated method stub
-			return null;
+			return this;
 		}
 
 		@Override
 		public TextBuilder size(double pointSize) {
-			// TODO Auto-generated method stub
-			return null;
+			size = pointSize;
+			return this;
 		}
 
 		@Override
-		public TextBuilder font(Font font) {
-			// TODO Auto-generated method stub
-			return null;
+		public TextBuilder font(String font) {
+			this.font = font;
+			return this;
+		}
+
+		public TextBuilder rotate(double angle) {
+			this.angle = angle;
+			return this;
 		}
 
 		@Override
 		public TextBuilder style(Attributes attrs) {
-			// TODO Auto-generated method stub
-			return null;
+			this.attrs = attrs;
+			return this;
 		}
 
 		@Override
 		public AttributeBuilder<TextBuilder> style() {
-			// TODO Auto-generated method stub
-			return null;
+			return new AttributesImpl<TextBuilder>(a -> {
+				this.attrs = a;
+				return this;
+			});
 		}
 
 		@Override
-		protected void writePath(PathWriter writer, boolean stroke, boolean fill) {
-			// TODO Auto-generated method stub
+		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
+			PathStroke ps = writer.addStroke();
+			System.out.println("write: " + text);
+			System.out.println("orig pen: " + pen);
+			if (fill) {
+				if (pen.fillPaint() == Colors.TRANSPARENT)
+					pen = pen.change().fillPaint(pen.strokePaint()).done();
+				System.out.println("fill pen: " + pen);
+		} else {
+				pen = pen.change().fillPaint(Colors.TRANSPARENT).done();
+			}
+			if (!stroke)
+				pen = pen.change().strokePaint(Colors.TRANSPARENT).done();
+			System.out.println("final pen: " + pen);
+			PathPointImpl start = new PathPointImpl(position, pen);
+			start.annotation(Text.TEXT_ALIGN, align);
+			start.annotation(Text.TEXT_FONT_SIZE, size);
+			start.annotation(Text.TEXT_ROTATION, angle);
+			start.annotation(Text.TEXT_FONT_FAMILY, font);
+			ps.addText(start, text);
+			String id = String.format("text@%x", System.identityHashCode(this));
+			ps.group(id);
+			ps.endPath();
+			return id;
+		}
 
+		@Override
+		public TextBuilder align(String alignment) {
+			this.align = alignment;
+			return this;
 		}
 
 	}
@@ -243,10 +296,13 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected void writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
 			if (closed)
 				this.stroke.addPoint(position);
+			String id = String.format("poly@%x", System.identityHashCode(this));
+			this.stroke.group(id);
 			this.stroke.endPath();
+			return id;
 		}
 
 	}
@@ -255,10 +311,12 @@ public abstract class ShapeImpl<T> implements Shape {
 		protected boolean closed;
 		protected PathStroke stroke;
 		protected Point current;
+		private String id;
 
 		public PathImpl(Canvas canvas, Matrix3x2dc matrix, PathWriter pw, Point pos, Pen pen) {
 			super(canvas, matrix, pw, pos, pen);
 			this.closed = false;
+			this.id = String.format("path@%x", System.identityHashCode(this));
 		}
 
 		@Override
@@ -293,6 +351,7 @@ public abstract class ShapeImpl<T> implements Shape {
 			if (stroke == null) {
 				PathPointImpl pp = new PathPointImpl(current, pen);
 				stroke = pathWriter.addStroke();
+				stroke.group(id);
 				stroke.addPoint(pp);
 			}
 			stroke.addPoint(next);
@@ -311,8 +370,9 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected void writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
 			finishStroke();
+			return id;
 		}
 
 	}

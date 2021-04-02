@@ -138,7 +138,7 @@ public class OrientImpl implements Orientation {
 			OrientImpl o = ((OrientImpl) other);
 			return new OrientImpl(q.mul(o.q, new Quaterniond()), absolute || other.isAbsolute());
 		} else {
-			return new OrientImpl(new Quaterniond(q).rotateLocalY(other.radians()), absolute || other.isAbsolute());
+			return new OrientImpl(new Quaterniond(q).rotateLocalZ(other.radians()), absolute || other.isAbsolute());
 		}
 	}
 
@@ -152,7 +152,7 @@ public class OrientImpl implements Orientation {
 			return new OrientImpl(new Quaterniond(q).conjugate().mul(new Quaterniond(o.q)).conjugate(),
 					absolute && !other.isAbsolute());
 		} else {
-			return new OrientImpl(new Quaterniond(q).rotateLocalY(-other.radians()), absolute && !other.isAbsolute());
+			return new OrientImpl(new Quaterniond(q).rotateLocalZ(-other.radians()), absolute && !other.isAbsolute());
 		}
 	}
 

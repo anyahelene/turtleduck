@@ -64,12 +64,24 @@ public interface Key<T> {
 	String toJava();
 
 	static class KeyImpl<T> implements Key<T> {
+		private final String keyCode;
 		private final String key;
+		private final String code;
 		private final Class<T> type;
 		private final Supplier<T> defaultValue;
 
 		protected KeyImpl(String key, Class<T> type, Supplier<T> defaultValue) {
-			this.key = key;
+			keyCode = key;
+			int indexOf = key.indexOf(':');
+			if (indexOf >= 0) {
+				this.key = key.substring(0, indexOf);
+				this.code = String.format("%-4s", key.substring(indexOf + 1));
+				if (code.length() > 4)
+					throw new IllegalArgumentException("Code must be <= 4 chars: " + key);
+			} else {
+				this.key = key;
+				this.code = null;
+			}
 			this.type = type;
 			this.defaultValue = defaultValue;
 		}
@@ -114,18 +126,19 @@ public interface Key<T> {
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
-			builder.append("KeyImpl [key=").append(key).append(", type=").append(type).append("]");
+			builder.append("Key<").append(type != null ? type.getName() : "Object").append(">(").append(keyCode)
+					.append(")");
 			return builder.toString();
 		}
 
 		@Override
 		public T defaultValue() {
-			return defaultValue.get();
+			return defaultValue != null ? defaultValue.get() : null;
 		}
 
 		@Override
 		public String toJava() {
-			return String.format("Key.key(\"%s\", %s.class)", key, type != null ? type.getName() : "Object");
+			return String.format("Key.key(\"%s\", %s.class)", keyCode, type != null ? type.getName() : "Object");
 		}
 
 	}

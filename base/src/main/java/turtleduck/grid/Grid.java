@@ -3,7 +3,13 @@ package turtleduck.grid;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import turtleduck.annotations.Icon;
+
+@Icon("🗺️")
 public interface Grid<T> extends Iterable<T> {
+	public static <T> Grid<T> create(int width, int height, T initElement) {
+		return new MyGrid<>(width, height, initElement);
+	}
 
 	/**
 	 * Make a copy
@@ -38,8 +44,7 @@ public interface Grid<T> extends Iterable<T> {
 	 * grid.setAll((x, y) -> String.format("(%d,%d)", x, y));
 	 * </pre>
 	 * 
-	 * @param initialiser
-	 *            The initialiser function
+	 * @param initialiser The initialiser function
 	 */
 	void fill(Function<Location, T> initialiser);
 
@@ -63,10 +68,8 @@ public interface Grid<T> extends Iterable<T> {
 	 * y must be greater than or equal to 0 and less than getHeight(). x must be
 	 * greater than or equal to 0 and less than getWidth().
 	 *
-	 * @param pos
-	 *            The (x,y) position of the grid cell to get the contents of.
-	 * @throws IndexOutOfBoundsException
-	 *             if !isValid(pos)
+	 * @param pos The (x,y) position of the grid cell to get the contents of.
+	 * @throws IndexOutOfBoundsException if !isValid(pos)
 	 */
 	T get(Location pos);
 
@@ -76,12 +79,9 @@ public interface Grid<T> extends Iterable<T> {
 	 * y must be greater than or equal to 0 and less than getHeight(). x must be
 	 * greater than or equal to 0 and less than getWidth().
 	 *
-	 * @param x
-	 *            The column of the cell to get the contents of.
-	 * @param y
-	 *            The row of the cell to get contents of.
-	 * @throws IndexOutOfBoundsException
-	 *             if !isValid(x,y)
+	 * @param x The column of the cell to get the contents of.
+	 * @param y The row of the cell to get contents of.
+	 * @throws IndexOutOfBoundsException if !isValid(x,y)
 	 */
 	T get(int x, int y);
 
@@ -96,11 +96,10 @@ public interface Grid<T> extends Iterable<T> {
 	 * y must be greater than or equal to 0 and less than getHeight(). x must be
 	 * greater than or equal to 0 and less than getWidth().
 	 *
-	 * @param pos
-	 *            The (x,y) position of the grid cell to get the contents of.
-	 * @param defaultResult
-	 *            A default value to be substituted if the (x,y) is out of bounds or
-	 *            contents == null.
+	 * @param pos           The (x,y) position of the grid cell to get the contents
+	 *                      of.
+	 * @param defaultResult A default value to be substituted if the (x,y) is out of
+	 *                      bounds or contents == null.
 	 */
 	T getOrDefault(Location pos, T defaultResult);
 
@@ -110,13 +109,10 @@ public interface Grid<T> extends Iterable<T> {
 	 * y must be greater than or equal to 0 and less than getHeight(). x must be
 	 * greater than or equal to 0 and less than getWidth().
 	 *
-	 * @param x
-	 *            The column of the cell to get the contents of.
-	 * @param y
-	 *            The row of the cell to get contents of.
-	 * @param defaultResult
-	 *            A default value to be substituted if the (x,y) is out of bounds or
-	 *            contents == null.
+	 * @param x             The column of the cell to get the contents of.
+	 * @param y             The row of the cell to get contents of.
+	 * @param defaultResult A default value to be substituted if the (x,y) is out of
+	 *                      bounds or contents == null.
 	 */
 	T getOrDefault(int x, int y, T defaultResult);
 
@@ -129,8 +125,7 @@ public interface Grid<T> extends Iterable<T> {
 	 * Valid coordinates are 0 <= pos.getX() < getWidth(), 0 <= pos.getY() <
 	 * getHeight().
 	 * 
-	 * @param pos
-	 *            A position
+	 * @param pos A position
 	 * @return true if the position is within the grid
 	 */
 	boolean isValid(Location pos);
@@ -140,10 +135,8 @@ public interface Grid<T> extends Iterable<T> {
 	 * 
 	 * Valid coordinates are 0 <= x < getWidth(), 0 <= y < getHeight().
 	 * 
-	 * @param x
-	 *            an x coordinate
-	 * @param y
-	 *            an y coordinate
+	 * @param x an x coordinate
+	 * @param y an y coordinate
 	 * @return true if the (x,y) position is within the grid
 	 */
 	boolean isValid(int x, int y);
@@ -188,12 +181,9 @@ public interface Grid<T> extends Iterable<T> {
 	 * y must be greater than or equal to 0 and less than getHeight(). x must be
 	 * greater than or equal to 0 and less than getWidth().
 	 *
-	 * @param pos
-	 *            The (x,y) position of the grid cell to get the contents of.
-	 * @param element
-	 *            The contents the cell is to have.
-	 * @throws IndexOutOfBoundsException
-	 *             if !isValid(pos)
+	 * @param pos     The (x,y) position of the grid cell to get the contents of.
+	 * @param element The contents the cell is to have.
+	 * @throws IndexOutOfBoundsException if !isValid(pos)
 	 */
 	void set(Location pos, T element);
 
@@ -203,14 +193,10 @@ public interface Grid<T> extends Iterable<T> {
 	 * y must be greater than or equal to 0 and less than getHeight(). x must be
 	 * greater than or equal to 0 and less than getWidth().
 	 *
-	 * @param pos
-	 *            The (x,y) position of the grid cell to get the contents of.
-	 * @param element
-	 *            The contents the cell is to have.
-	 * @throws IndexOutOfBoundsException
-	 *             if !isValid(x,y)
+	 * @param pos     The (x,y) position of the grid cell to get the contents of.
+	 * @param element The contents the cell is to have.
+	 * @throws IndexOutOfBoundsException if !isValid(x,y)
 	 */
 	void set(int x, int y, T element);
-
 
 }

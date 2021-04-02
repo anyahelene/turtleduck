@@ -4,15 +4,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import org.teavm.jso.dom.events.KeyboardEvent;
-import org.teavm.jso.json.JSON;
 
-import turtleduck.comms.Message;
-import turtleduck.comms.Message.*;
 import turtleduck.events.JSKeyCodes;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.tea.Browser;
-import turtleduck.tea.NativeTScreen;
+
 import turtleduck.terminal.PtyHostSide;
 import xtermjs.IDisposable;
 import xtermjs.Terminal;
@@ -110,6 +107,7 @@ public class HostSide implements PtyHostSide {
 
 	@Override
 	public void writeToTerminal(String s) {
+		s = s.replace("\n", "\r\n");
 		terminal.write(s);
 	}
 
@@ -131,5 +129,10 @@ public class HostSide implements PtyHostSide {
 	@Override
 	public void reconnectListener(Runnable listener) {
 		reconnectListener = listener;
+	}
+
+	@Override
+	public void flushToTerminal() {
+		// not using buffering, so do nothing
 	}
 }

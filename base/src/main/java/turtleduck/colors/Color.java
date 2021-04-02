@@ -1,5 +1,8 @@
 package turtleduck.colors;
 
+import turtleduck.annotations.Icon;
+
+@Icon("🎨")
 public interface Color {
 	enum ColorModel {
 		GREY, RGB, CMYK, HSL, HSV, XYZ, PALETTE
@@ -46,7 +49,7 @@ public interface Color {
 	static Color fromRGBA(int r, int g, int b, int a) {
 		if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || a < 0 || a > 255)
 			throw new IllegalArgumentException("Must be from 0 to 255: (" + r + ", " + g + ", " + b + ", " + a + ")");
-		return new ColorRGB(r, g, b, a, false);
+		return new ColorRGB(r/255f, g/255f, b/255f, a/255f, false);
 	}
 
 	static Color fromBytes(byte[] bytes, int offset, PixelFormat format) {
@@ -59,6 +62,14 @@ public interface Color {
 
 	static Color grey(double g) {
 		return color(g, g, g, 1);
+	}
+
+	static Color hsv(double h, double s, double v) {
+		return ColorRGB.hsv((float) h, (float) s, (float) v, 1);
+	}
+
+	static Color hsva(double h, double s, double v, double a) {
+		return ColorRGB.hsv((float) h, (float) s, (float) v, (float) a);
 	}
 
 	static Color color(double r, double g, double b, double a) {
@@ -94,6 +105,10 @@ public interface Color {
 	Color asRGBA();
 
 	Color asCMYK();
+	
+	Color perturb();
+	
+	Color perturb(double factor);
 
 	boolean isAdditive();
 
@@ -104,4 +119,22 @@ public interface Color {
 	String toCss();
 
 	String toSGRParam(int i);
+
+	/**
+	 * Apply this colour to a string as text foreground, using Select Graphic
+	 * Rendition control sequences
+	 * 
+	 * @param s A string
+	 * @return The string, with control sequences applied
+	 */
+	String applyFg(String s);
+
+	/**
+	 * Apply this colour to a string as text background, using Select Graphic
+	 * Rendition control sequences
+	 * 
+	 * @param s A string
+	 * @return The string, with control sequences applied
+	 */
+	String applyBg(String s);
 }

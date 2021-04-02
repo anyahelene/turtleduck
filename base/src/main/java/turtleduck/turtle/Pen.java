@@ -1,5 +1,8 @@
 package turtleduck.turtle;
 
+import turtleduck.annotations.Icon;
+
+@Icon("🖋️")
 public interface Pen extends Stroke, Fill {
 	/**
 	 * Describes the smoothness of a path as it passes through a point. When

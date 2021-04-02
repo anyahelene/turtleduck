@@ -4,12 +4,14 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import turtleduck.colors.Color;
+import turtleduck.annotations.Icon;
 import turtleduck.canvas.Canvas;
 import turtleduck.drawing.Functional;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.objects.IdentifiedObject;
 
+@Icon("🐢")
 public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, Navigator<T>, IdentifiedObject {
 
 	/**
@@ -211,5 +213,7 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, 
 	<U> T annotate(Annotation<U> anno, U value);
 
 	<U> U annotation(Annotation<U> anno);
+
+	T fillColor(Color color);
 
 }

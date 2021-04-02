@@ -3,9 +3,10 @@ package turtleduck.events;
 import java.util.regex.Matcher;
 
 import turtleduck.events.impl.KeyEventImpl;
+import turtleduck.messaging.Encodable;
 import turtleduck.text.ControlSequences;
 
-public interface KeyEvent {
+public interface KeyEvent extends Encodable<KeyEvent> {
 	int MODIFIER_SHIFT = 0x01;
 	int MODIFIER_ALT = 0x02;
 	int MODIFIER_CONTROL = 0x04;
