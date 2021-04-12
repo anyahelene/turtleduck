@@ -14,6 +14,7 @@ import org.teavm.jso.dom.events.KeyboardEvent;
 import org.teavm.jso.dom.events.WheelEvent;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
+import org.teavm.jso.dom.html.TextRectangle;
 import org.teavm.jso.dom.xml.Element;
 import org.teavm.jso.dom.xml.Node;
 import org.teavm.jso.dom.xml.NodeList;
@@ -66,6 +67,12 @@ public class CanvasServer implements CanvasService {
 		return null;
 	}
 
+	/**
+	 * @param e
+	 * 
+	 *          Calculation inspired by
+	 *          https://gamedev.stackexchange.com/questions/9330/zoom-to-cursor-calculation
+	 */
 	protected void zoom(WheelEvent e) {
 		double deltaY = e.getDeltaY();
 		if (e.getDeltaMode() == WheelEvent.DOM_DELTA_LINE)
@@ -74,10 +81,26 @@ public class CanvasServer implements CanvasService {
 			deltaY *= 100;
 		if (deltaY != 0) {
 			DOMRect rect = svg.getViewBox().getBaseVal();
-			deltaY = Math.max(deltaY, 5 - rect.getWidth());
-			deltaY = Math.max(deltaY, 5 - rect.getHeight());
-			rect.setWidth(rect.getWidth() + deltaY);
-			rect.setHeight(rect.getHeight() + deltaY);
+			TextRectangle clientRect = svg.getBoundingClientRect();
+			double figW = Math.max(1, rect.getWidth()), figH = Math.max(1, rect.getHeight());
+			deltaY = Math.max(deltaY, 5 - figW);
+			deltaY = Math.max(deltaY, 5 - figH);
+			double newW = figW + deltaY, newH = figH + deltaY;
+			double posX = e.getClientX() - clientRect.getLeft(), posY = e.getClientY() - clientRect.getTop();
+			double ratioX = posX / svg.getClientWidth(), ratioY = posY / svg.getClientHeight();
+			double diffW = figW - newW, diffH = figH - newH;
+//			Browser.consoleLog("Event:");
+//			Browser.consoleLog(e);
+//			Browser.consoleLog("Zoom: deltaY=" + deltaY + ", posX=" + posX + ", posY=" + posY + ", diffW=" + diffW
+//					+ ", diffH=" + diffH + ", ratioX=" + ratioX + ", ratioY=" + ratioY);
+//			Browser.consoleLog("Before: ");
+//			Browser.consoleLog(rect);
+			rect.setWidth(newW);
+			rect.setHeight(newH);
+			rect.setX(rect.getX() + diffW * ratioX);
+			rect.setY(rect.getY() + diffH * ratioY);
+//			Browser.consoleLog("After: ");
+//			Browser.consoleLog(rect);
 		}
 
 	}
