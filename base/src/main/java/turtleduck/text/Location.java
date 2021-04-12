@@ -1,13 +1,16 @@
-package turtleduck.shell;
+package turtleduck.text;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author anya
  *
  */
 public class Location {
+	protected static final Pattern FRAGMENT_PATTERN = Pattern.compile("(\\d+)(?:\\+(\\d+))?(?:@(\\d+))?");
 	final String protocol;
 	final String host;
 	final String path;
@@ -15,6 +18,36 @@ public class Location {
 	final int length;
 	final int pos;
 	final URI uri;
+
+	public Location(URI uri) {
+		this.uri = uri;
+		this.protocol = uri.getScheme();
+		String host = uri.getHost();
+		String path = uri.getPath();
+		String ssp = uri.getSchemeSpecificPart();
+		if(path == null) {
+			this.path = ssp;
+			this.host = null;
+		} else {
+			this.host = host;
+			this.path = path;
+		}
+		String fragment = uri.getFragment();
+		int s = -1, l = -1, p = -1;
+		if (fragment != null) {
+			Matcher matcher = FRAGMENT_PATTERN.matcher(fragment);
+			if (matcher.matches()) {
+				s = Integer.valueOf(matcher.group(1));
+				if (matcher.group(2) != null)
+					l = Integer.valueOf(matcher.group(2));
+				if (matcher.group(3) != null)
+					p = Integer.valueOf(matcher.group(3));
+			}
+		}
+		this.start = s;
+		this.length = l;
+		this.pos = p;
+	}
 
 	public Location(String protocol, String host, String path, String input) {
 		this(protocol, host, path, 0, input.length());
@@ -118,6 +151,14 @@ public class Location {
 		} else {
 			return (s + "_").substring(start, start + length);
 		}
+	}
+
+	public String scheme() {
+		return protocol;
+	}
+
+	public String path() {
+		return path;
 	}
 
 	public int start() {

@@ -74,14 +74,14 @@ public interface Region extends Position {
 	 * Check if this region is rectangular or flowed.
 	 * 
 	 * A <em>rectangular</em> region includes all positions <code>(c, l)</code> with
-	 * line <code>line() <= l <= endLine()</code> and column
-	 * <code>column() <= c <= endColumn()</code>, and a <em>flowed</em> region
+	 * line <code>line() &leq; l &leq; endLine()</code> and column
+	 * <code>column() &leq; c &leq; endColumn()</code>, and a <em>flowed</em> region
 	 * includes all positions <code>(c, l)</code> with
 	 *
 	 * <ul>
-	 * <li><code>line() < l < endLine()</code>, and
-	 * <li><code>(line() == l) == (c >= column())</code>, and
-	 * <li><code>(endLine() == l) == (c <= endColumn())</code>
+	 * <li><code>line() &lt; l &lt; endLine()</code>, and
+	 * <li><code>(line() == l) == (c &geq; column())</code>, and
+	 * <li><code>(endLine() == l) == (c &leq; endColumn())</code>
 	 * </ul>
 	 * 
 	 * @return True if the region is rectangular

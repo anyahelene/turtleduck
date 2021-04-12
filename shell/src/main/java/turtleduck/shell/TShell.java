@@ -1,6 +1,7 @@
 package turtleduck.shell;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,6 +67,7 @@ import turtleduck.shell.generated.TShellDispatch;
 import turtleduck.terminal.TerminalPrintStream;
 import turtleduck.text.Attribute;
 import turtleduck.text.FontStyle;
+import turtleduck.text.Location;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
 import turtleduck.turtle.Turtle;
@@ -449,7 +451,22 @@ public class TShell implements ShellService {
 
 		if (!code.isBlank()) {
 			result = (Async<Dict>) enqueuer.apply(() -> {
-				List<SourceCode> codes = split(code, new Location("input", "terminal", "/" + ref, code), opts);
+				String locstr = opts.get(LOC);
+				boolean consideredComplete = opts.get(COMPLETE, false);
+				Location loc = null;
+				if(locstr != null) {
+					try {
+						URI uri = new URI(locstr);
+						loc = new Location(uri);
+					} catch(URISyntaxException e) {
+						logger.error("invalid URI: " + locstr, e);
+						loc = new Location("INVALID", "LOCATION", "/" + ref, code);
+				}	
+				}
+				if(loc == null) {
+					loc = new Location("input", "terminal", "/" + ref, code);
+				}
+				List<SourceCode> codes = split(code, loc, opts);
 				System.out.println(code);
 				if (!codes.isEmpty()) {
 					Dict evalResult;
@@ -462,7 +479,7 @@ public class TShell implements ShellService {
 					Array multiResult = Array.of(Dict.class);
 					for (SourceCode c : codes) {
 						Dict dict;
-						if (complete)
+						if (complete || consideredComplete)
 							dict = eval(c.code, c.location);
 						else
 							dict = Dict.create();

@@ -1,6 +1,7 @@
 package turtleduck.shell;
 
 import jdk.jshell.SourceCodeAnalysis.Completeness;
+import turtleduck.text.Location;
 
 public class SourceCode {
 	Location location;

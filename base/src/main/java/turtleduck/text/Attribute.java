@@ -56,7 +56,7 @@ public interface Attribute<T> {
 	 */
 	Attribute<Boolean> ATTR_BLINK = new AttributeImpl<>("blink", false, AttributeImpl.MASK_BLINK, (b) -> "");
 	/**
-	 * Darker (<1) or brighter (>1) colour.
+	 * Darker (&lt;1) or brighter (&gt;1) colour.
 	 */
 	Attribute<Float> ATTR_BRIGHTNESS = new AttributeImpl<>("brightness", 1f, 0x00,
 			(b) -> m(b < .8f ? 3 : (b > 1.2f ? 1 : 22)));
@@ -67,7 +67,8 @@ public interface Attribute<T> {
 	/**
 	 * Foreground colour
 	 */
-	Attribute<Color> ATTR_FOREGROUND = new AttributeImpl<>("foreground", Colors.BLUE, 0x00, (c) -> m(c != null ? c.toSGRParam(30) : "30"));
+	Attribute<Color> ATTR_FOREGROUND = new AttributeImpl<>("foreground", Colors.BLUE, 0x00,
+			(c) -> m(c != null ? c.toSGRParam(30) : "30"));
 	/**
 	 * Background colour
 	 */

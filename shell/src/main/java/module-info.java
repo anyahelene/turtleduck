@@ -9,4 +9,6 @@ module turtleduck.shell {
 	requires org.apache.commons.text;
 	requires org.slf4j;
 	requires turtleduck.anno;
+	requires jdk.javadoc;
+	requires java.compiler;
 }
