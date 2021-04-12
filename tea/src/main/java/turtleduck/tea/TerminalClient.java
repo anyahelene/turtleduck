@@ -391,4 +391,8 @@ public class TerminalClient implements TerminalService, ExplorerService {
 		}
 		return null;
 	}
+	
+	public TextCursor cursor() {
+		return cursor;
+	}
 }

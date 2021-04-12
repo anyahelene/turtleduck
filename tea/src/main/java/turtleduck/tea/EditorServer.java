@@ -1,21 +1,32 @@
 package turtleduck.tea;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.teavm.jso.JSBody;
+import org.teavm.jso.JSObject;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.dom.events.Event;
+import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
 
-import ace.Ace;
-import ace.AceSession;
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
+import turtleduck.colors.Colors;
 import turtleduck.messaging.EditorService;
+import turtleduck.messaging.Reply;
 import turtleduck.messaging.ShellService;
+import turtleduck.tea.TDEditor.State;
+import turtleduck.text.Location;
+import turtleduck.util.Array;
 import turtleduck.util.Dict;
+import static turtleduck.tea.Browser.trying;
 
 @MessageDispatch("turtleduck.tea.generated.EditorDispatch")
 public class EditorServer implements EditorService {
@@ -23,8 +34,8 @@ public class EditorServer implements EditorService {
 	public static final String TABCLASS_INACTIVE = "title saveable";
 	public static final String TABCLASS_ACTIVE = "title saveable active";
 	private Map<String, EditSession> sessionsByName = new LinkedHashMap<>();
-	private Map<String, EditSession> sessionsById = new HashMap<>();
-	private HTMLElement element;
+	private Map<Integer, EditSession> sessionsById = new HashMap<>();
+//	private HTMLElement element;
 	private Client client;
 	private EditSession currentSession;
 	private HTMLElement saveButton;
@@ -35,6 +46,43 @@ public class EditorServer implements EditorService {
 	private String service;
 	private ShellService shell;
 	private int nextSessionId = 0;
+	private EventListener<?> saveListener;
+	private EventListener<?> closeListener;
+
+	@JSBody(params = { "state" }, script = "return state.doc.toString()")
+	native static String getDoc(State state);
+
+	@JSBody(params = { "state",
+			"text" }, script = "return state.update({changes: [{from: 0, to: state.doc.length, insert: text}]}).state;")
+	native static State setDoc(State state, String text);
+
+	@JSBody(params = { "state" }, script = "return state.doc.length == 0")
+	native static boolean isEmpty(State state);
+	
+	
+	@JSBody(params = { "elt", "text" }, script = "return turtleduck.createEditor(elt, text)")
+	native static TDEditor createEditor(HTMLElement elt, String text);
+
+	@JSBody(params = { "sess", "start", "len", "type",
+			"message" }, script = "{const anno = sess.doc.indexToPosition(start);\n"
+					+ "const rowColEnd = sess.doc.indexToPosition(start+len);\n" + "anno.type = type;\n"
+					+ "const annos = sess.getAnnotations();" + "anno.text = message;\n" + "annos.push(anno);"
+					+ "sess.setAnnotations(annos); console.log(annos);\n" + "}")
+	native static void addAnno(State sess, int start, int len, String type, String message);
+
+	@JSBody(params = { "sess", "start", "len",
+			"className" }, script = "{const startRow = sess.doc.indexToPosition(start).row;\n"
+					+ "const endRow = sess.doc.indexToPosition(start+len).row;\n"
+					+ "for(var i = startRow; i <= endRow; i++) sess.addGutterDecoration(i, className);\n"
+					+ "return {startRow: startRow, endRow: endRow, className: className};}")
+	native static JSObject addGutterDecoration(State sess, int start, int len, String className);
+
+	@JSBody(params = { "sess",
+			"ref" }, script = "for(var i = ref.startRow; i <= ref.endRow; i++) sess.removeGutterDecoration(i, ref.className);")
+	native static void removeGutterDecoration(State sess, JSObject ref);
+
+	@JSBody(params = { "sess" }, script = "sess.setAnnotations([])")
+	native static void clearAnnos(State sess);
 
 	public EditorServer(HTMLElement element, HTMLElement wrapper, HTMLElement tabs, String service, Client client,
 			ShellService shell) {
@@ -52,21 +100,16 @@ public class EditorServer implements EditorService {
 		saveButton = document.getElementById("tb-save");
 		closeButton = document.getElementById("tb-close");
 
-		element = document.getElementById(service + "-embed");
 		Browser.consoleLog(saveButton);
 		if (saveButton != null)
-			saveButton.addEventListener("click", this::save);
+			saveButton.addEventListener("click", saveListener = trying(this::save));
 		if (closeButton != null)
-			closeButton.addEventListener("click", this::close);
+			closeButton.addEventListener("click", closeListener = trying(this::close));
 		Browser.consoleLog("editor save button: ");
 		Browser.consoleLog(saveButton);
 
 		if (client.editor == null) {
-			client.editor = Ace.edit(element);
-			client.editor.setTheme("ace/theme/terminal");
-			client.editor.setOption("enableBasicAutocompletion", true);
-			client.editor.setOption("enableLiveAutocompletion", true);
-			client.editor.setOption("enableSnippets", true);
+			client.editor = createEditor(wrapper, "");
 			open("*scratch*", "", "Java");
 			client.map.set("editor", client.editor);
 		} else {
@@ -76,20 +119,88 @@ public class EditorServer implements EditorService {
 
 	public void dispose() {
 		if (saveButton != null)
-			saveButton.removeEventListener("click", this::save);
+			saveButton.removeEventListener("click", saveListener);
 		if (closeButton != null)
-			closeButton.removeEventListener("click", this::close);
+			closeButton.removeEventListener("click", closeListener);
 	}
 
 	protected void save(Event e) {
 		Browser.consoleLog("save: ");
 		Browser.consoleLog(e);
 		if (currentSession != null) {
-			String contents = currentSession.session.getValue();
-			if (!currentSession.filename.startsWith("*")) {
-				client.storage().setItem("file://" + currentSession.filename, contents);
+			EditSession current = currentSession;
+			String contents = content();
+			if (!current.filename.startsWith("*")) {
+				client.storage().setItem("file://" + current.filename, contents);
 			}
-			shell.eval(contents, 0, Dict.create()).onSuccess(d -> { client.terminalClient.prompt();});
+			Dict opts = Dict.create();
+			Location loc = new Location("file", "editor", current.filename, 0, contents.length(), -1);
+			opts.put(ShellService.LOC, loc.toString());
+			opts.put(ShellService.COMPLETE, true);
+			client.cursor.println();
+			State state = current.state;
+			shell.eval(contents, current.id, opts).onSuccess(msg -> {
+//				clearAnnos(state);
+//				while (!current.decorations.isEmpty()) {
+//					removeGutterDecoration(state, current.decorations.remove(0));
+//				}
+				for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
+					Array diags = result.get(ShellService.DIAG);
+					for (Dict diag : diags.toListOf(Dict.class)) {
+						client.cursor.println(diag.get(Reply.ENAME) + " at " + diag.get(ShellService.LOC),
+								Colors.MAROON);
+						client.cursor.println(diag.get(Reply.EVALUE), Colors.MAROON);
+						try {
+							URI uri = new URI(diag.get(ShellService.LOC));
+							Location l = new Location(uri);
+//							addAnno(state, l.start(), l.length(), "error",
+//									diag.get(Reply.ENAME) + ": " + diag.get(Reply.EVALUE));
+						} catch (URISyntaxException ex) {
+							Browser.addError(ex);
+						}
+					}
+					if (msg.get(ShellService.COMPLETE)) {
+						String value = result.get(ShellService.VALUE);
+						String name = result.get(ShellService.NAME);
+						String type = result.get(ShellService.TYPE);
+						if (value != null) {
+							String v = TerminalClient.TEXTCOLOR.applyFg(value) + "\n";
+							if (name != null && !name.isEmpty()) {
+								v = TerminalClient.VARCOLOR.applyFg(name) + " = " + v;
+							}
+							if (type != null && !type.isEmpty()) {
+								v = TerminalClient.TYPECOLOR.applyFg(type) + " " + v;
+							}
+							client.cursor.print(v);
+						}
+						if (diags.isEmpty()) {
+							try {
+								URI uri = new URI(result.get(ShellService.LOC));
+								Location l = new Location(uri);
+//								current.decorations.add(addGutterDecoration(state, l.start(), l.length(), "ok"));
+							} catch (URISyntaxException ex) {
+								Browser.addError(ex);
+							}
+						}
+					}
+				}
+				client.terminalClient.prompt();
+			}).onFailure(msg -> {
+//				clearAnnos(state);
+				while (!current.decorations.isEmpty()) {
+//					removeGutterDecoration(state, current.decorations.remove(0));
+				}
+				Browser.consoleLog("exec error: " + msg);
+				String ename = msg.get(Reply.ENAME);
+				String evalue = msg.get(Reply.EVALUE, null);
+				Array trace = msg.get(Reply.TRACEBACK);
+				client.cursor.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""),
+						Colors.RED);
+				for (String frame : trace.toListOf(String.class)) {
+					client.cursor.println(frame, Colors.MAROON);
+				}
+				client.terminalClient.prompt();
+			});
 		}
 	}
 
@@ -98,8 +209,7 @@ public class EditorServer implements EditorService {
 		Browser.consoleLog(e);
 		if (currentSession != null) {
 			if (!currentSession.filename.startsWith("*")) {
-				String contents = currentSession.session.getValue();
-				client.storage().setItem("autosave://" + currentSession.filename, contents);
+				client.storage().setItem("autosave://" + currentSession.filename, content());
 			}
 			sessionsByName.remove(currentSession.filename);
 			sessionsById.remove(currentSession.id);
@@ -107,7 +217,7 @@ public class EditorServer implements EditorService {
 				open("*scratch*", "", "Java");
 			} else {
 				currentSession = sessionsByName.entrySet().iterator().next().getValue();
-				client.editor.setSession(currentSession.session);
+				client.editor.switchState(currentSession.state);
 			}
 		}
 	}
@@ -115,12 +225,13 @@ public class EditorServer implements EditorService {
 	@Override
 	public Async<Dict> content(String content, String language) {
 		Browser.consoleLog("Contents: " + content);
-		currentSession.session.setValue(content);
+		State newState = setDoc(client.editor.state(), content);
+		client.editor.switchState(newState);
 		return null;
 	}
 
 	public String content() {
-		return client.editor.getValue();
+		return getDoc(client.editor.state());
 	}
 
 	@Override
@@ -140,15 +251,17 @@ public class EditorServer implements EditorService {
 
 	@Override
 	public Async<Dict> read() {
-		return Async.succeeded(Dict.create().put(EditorService.TEXT, client.editor.getValue()));
+		return Async.succeeded(Dict.create().put(EditorService.TEXT, getDoc(client.editor.state())));
 	}
 
 	private void switchTo(EditSession sess) {
-		if (currentSession != null)
+		if (currentSession != null) {
 			currentSession.tab.setClassName(TABCLASS_INACTIVE);
+			currentSession.state = client.editor.state();
+		}
 		sess.tab.setClassName(TABCLASS_ACTIVE);
 		currentSession = sess;
-		client.editor.setSession(currentSession.session);
+		client.editor.switchState(currentSession.state);
 	}
 
 	@Override
@@ -157,29 +270,32 @@ public class EditorServer implements EditorService {
 
 		if (currentSession != null) {
 			if (currentSession.filename.equals(filename)) {
-				currentSession.session.setValue(text);
+				client.editor.switchState(setDoc(client.editor.state(), text));
 				return null;
-			} else if(currentSession.filename.equals("*scratch*") && currentSession.session.getValue().equals("")) {
+			} else if (currentSession.filename.equals("*scratch*") && isEmpty(client.editor.state())) {
 				Browser.consoleLog("replacing *scratch*");
-				if(text == null)
+				if (text == null)
 					text = client.storage().getItem("file://" + filename);
-				if(text == null)
+				if (text == null)
 					text = "";
 				Browser.consoleLog("text: " + text);
-				currentSession.session.setValue(text);
+				client.editor.switchState(setDoc(client.editor.state(), text));
 				currentSession.filename = filename;
 				currentSession.tabLink.withText(filename);
 				return null;
 			}
 		}
+		if (text == null)
+			text = client.storage().getItem("file://" + filename);
+		
 		EditSession sess = sessionsByName.get(filename);
 		if (sess == null) {
-			String id = "" + nextSessionId++;
+			int id = nextSessionId++;
 			sess = new EditSession();
 			sess.tab = Browser.document.createElement("span");
 			sess.tabLink = Browser.document.createElement("a") //
 					.withAttr("href", "#") //
-					.withAttr("data-session", id)//
+					.withAttr("data-session", String.valueOf(id))//
 					.withAttr("data-filename", filename) //
 					.withText(filename);
 //					.withAttr("class", "nav-link") //
@@ -187,7 +303,7 @@ public class EditorServer implements EditorService {
 			sess.closeLink = Browser.document.createElement("a") //
 //					.withAttr("class", "ui-icon ui-icon-close") //
 					.withAttr("href", "#") //
-					.withAttr("data-session", id)//
+					.withAttr("data-session", String.valueOf(id))//
 					.withAttr("data-filename", filename) //
 					.withAttr("role", "presentation")//
 					.withText("×");
@@ -196,7 +312,7 @@ public class EditorServer implements EditorService {
 			tabs.appendChild(sess.tab);
 			Browser.consoleLog("editor tabs: ");
 			Browser.consoleLog(tabs);
-			sess.session = Ace.createEditSession(id, "ace/mode/java");
+			sess.state = client.editor.createState(text);
 			sess.id = id;
 			sess.filename = filename;
 
@@ -208,20 +324,21 @@ public class EditorServer implements EditorService {
 			sess.closeLink.addEventListener("click", (e) -> {
 				Browser.consoleLog("Close tab: " + filename);
 			});
+		} else {
+			sess.state = setDoc(sess.state, text);
+
 		}
-		if(text == null)
-			text = client.storage().getItem("file://" + currentSession.filename);
-		sess.session.setValue(text);
 		switchTo(sess);
 		return null;
 	}
 
 	public class EditSession {
-		String id;
+		int id;
 		String filename;
-		AceSession session;
+		TDEditor.State state;
 		HTMLElement tab;
 		HTMLElement tabLink;
 		HTMLElement closeLink;
-		}
+		List<JSObject> decorations = new ArrayList<>();
+	}
 }

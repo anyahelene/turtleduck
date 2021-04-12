@@ -9,6 +9,7 @@
 	type="image/png" />
 
 <script type="text/javascript" charset="utf-8" src="static/js/bundle.js"></script>
+<script type="text/javascript" charset="utf-8" src="static/js/editor.js"></script>
 <script type="text/javascript" charset="utf-8"
 	src="static/js/classes.js"></script>
 <!-- 
@@ -110,22 +111,26 @@
 					<a id="explorer-head-var" href="#explorer-var" class="open empty"
 						data-toggle="collapse">Variables</a>
 				</h2>
-				<ul id="explorer-var" class="collapse open empty" data-role="listview"></ul>
+				<ul id="explorer-var" class="collapse open empty"
+					data-role="listview"></ul>
 				<h2>
-					<a id="explorer-head-method" href="#explorer-method" class="open empty"
-						data-toggle="collapse">Methods</a>
+					<a id="explorer-head-method" href="#explorer-method"
+						class="open empty" data-toggle="collapse">Methods</a>
 				</h2>
-				<ul id="explorer-method" class="collapse open empty" data-role="listview"></ul>
+				<ul id="explorer-method" class="collapse open empty"
+					data-role="listview"></ul>
 				<h2>
 					<a id="explorer-head-type" href="#explorer-type" class="open empty"
 						data-toggle="collapse">Types</a>
 				</h2>
-				<ul id="explorer-type" class="collapse open empty" data-role="listview"></ul>
+				<ul id="explorer-type" class="collapse open empty"
+					data-role="listview"></ul>
 				<h2>
-					<a id="explorer-head-import" href="#explorer-import" class="open empty"
-						data-toggle="collapse">Imports</a>
+					<a id="explorer-head-import" href="#explorer-import"
+						class="open empty" data-toggle="collapse">Imports</a>
 				</h2>
-				<ul id="explorer-import" class="collapse open empty" data-role="listview"></ul>
+				<ul id="explorer-import" class="collapse open empty"
+					data-role="listview"></ul>
 			</div>
 		</fieldset>
 
@@ -133,7 +138,6 @@
 			data-provides="editor">
 			<legend id="editor-tabs" class="">Code</legend>
 			<div id="editor-wrap">
-				<div id="editor-embed"></div>
 			</div>
 			<section data-reset-onclick="show-splash-help" class="splashhelp">
 				<h2>Code Editor</h2>
@@ -159,8 +163,8 @@
 			</nav>
 			<div>
 				<!-- svg id="svg0" viewBox="0 0 1280 720" preserveAspectRatio="xMinYMin slice"></svg-->
-			<div id="excavator"></div>
-					<svg id="svg0" tabindex="0" viewBox="-640 -360 1280 720"
+				<div id="excavator"></div>
+				<svg id="svg0" tabindex="0" viewBox="-640 -360 1280 720"
 					preserveAspectRatio="xMidYMid slice"></svg>
 			</div>
 			<div class="footnote" id="coordinates-svg0">(0,0)</div>
@@ -182,9 +186,12 @@
 			data-widget="instructions" data-provides="instructions"
 			style="display: none">
 			<legend>Method Bytecode</legend>
-			<div id="bytecode-display"></div>
+			<div id="bytecode-display" class="text"></div>
 		</fieldset>
-
+		<fieldset id="docs" class="box widget figure" style="display: none">
+			<legend>Docs</legend>
+			<div id="doc-display" class="text"></div>
+		</fieldset>
 		<!-- div style="width: 100%; height: 10px; background: #f00"
 			draggable="true"></div-->
 		<fieldset id="console" class="box console">
@@ -224,7 +231,8 @@
 			</div>
 		</footer>
 	</div>
-	<audio id="music" src="static/images/desert-of-lost-souls-by-kevin-macleod-from-filmmusic-io.mp3"></audio>
+	<audio id="music"
+		src="static/images/desert-of-lost-souls-by-kevin-macleod-from-filmmusic-io.mp3"></audio>
 	<script>
 		function resizable(element, handle, direction, callback) {
 			var start, size = 0;

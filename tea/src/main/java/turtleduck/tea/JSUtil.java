@@ -9,6 +9,7 @@ import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.core.JSNumber;
 import org.teavm.jso.core.JSObjects;
 import org.teavm.jso.core.JSString;
+import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.json.JSON;
 import org.teavm.jso.typedarrays.ArrayBuffer;
 
@@ -43,6 +44,18 @@ class JSUtil {
 	@JSBody(params = { "name", "fun" }, script = "turtleduck[name] = fun")
 	native static <T extends JSObject> void export(String name, JSConsumer<T> fun);
 	
+	@JSBody(params = { "elt", "code" }, script = "elt.innerHTML = turtleduck.md.render(code)")
+	native static void renderSafeMarkdown(HTMLElement elt, String code);
+
+	/**
+	 * TODO: make sure html code is sane
+	 * 
+	 * @param elt
+	 * @param code
+	 */
+	@JSBody(params = { "elt", "code" }, script = "elt.innerHTML = turtleduck.md.render(code)")
+	native static void renderUnsafeMarkdown(HTMLElement elt, String code);
+
 	public static Dict decodeDict(JSMapLike<?> jsobj) {
 		if (jsobj == null)
 			return null;

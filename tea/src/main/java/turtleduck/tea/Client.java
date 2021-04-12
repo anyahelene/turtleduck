@@ -5,6 +5,7 @@ import static turtleduck.tea.Browser.trying;
 import java.util.function.Consumer;
 
 import org.teavm.jso.JSObject;
+import org.teavm.jso.ajax.XMLHttpRequest;
 import org.teavm.jso.browser.Navigator;
 import org.teavm.jso.browser.Storage;
 import org.teavm.jso.browser.Window;
@@ -29,6 +30,7 @@ import turtleduck.tea.generated.EditorDispatch;
 import turtleduck.tea.generated.ExplorerDispatch;
 import turtleduck.tea.generated.TerminalDispatch;
 import turtleduck.tea.net.SockJS;
+import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
 import turtleduck.util.Dict;
 import xtermjs.Terminal;
@@ -47,7 +49,7 @@ protected static Client client;
 	public InputService inputService;
 	public CodeService codeService;
 
-	protected AceEditor editor;
+	protected TDEditor editor;
 	private int nextChannelId = 2;
 	private String sessionName;
 	protected TerminalClient terminalClient;
@@ -56,6 +58,8 @@ protected static Client client;
 	private EditorServer editorImpl;
 	private int reconnectIntervalId;
 	private int reconnectInterval = 2000;
+
+	public TextCursor cursor;
 
 	public void initialize() {
 		try {
@@ -84,6 +88,7 @@ protected static Client client;
 			HTMLElement xtermjsWrap = Browser.document.getElementById("xtermjs-wrap");
 			terminalClient = new TerminalClient(xtermjsWrap, "jshell", this);
 			terminalClient.initialize();
+			cursor = terminalClient.cursor();
 
 			sessionName = ((JSString) map.get("sessionName")).stringValue();
 			router = new TeaRouter(sessionName, "", this);
@@ -117,6 +122,20 @@ protected static Client client;
 //		terminal.onData((d) -> {sockJS.send(d);});
 			WINDOW_MAP.set("turtleduck", map);
 			JSUtil.export("eval", this::eval);
+			
+			XMLHttpRequest req = XMLHttpRequest.create();
+			req.onComplete(() -> {
+				if(req.getReadyState() == 4 && req.getStatus() == 200) {
+					HTMLElement elt = Browser.document.getElementById("doc-display");
+					JSUtil.renderSafeMarkdown(elt, req.getResponseText());
+				} else {
+					Browser.consoleLog(req);
+				}
+			});
+			req.open("GET", "doc/TODO-PROJECTS.md", true);
+			req.setRequestHeader("Accept", "text/markdown, text/plain, text/*;q=0.9");
+			req.send();
+			
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
 		} catch (Throwable ex) {

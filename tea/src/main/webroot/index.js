@@ -5,15 +5,21 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import jquery from 'jquery';
 import animals from './animals.txt';
-import ace from "ace-builds";
-import "ace-builds/webpack-resolver";
+import { Remarkable } from 'remarkable';
+import hljs from 'highlight.js'
+
+
+//import ace from "ace-builds";
+//import "ace-builds/webpack-resolver";
 //var ace = require('ace-builds/src-noconflict/ace')
 
-var turtleduck = window['turtleduck'] || {};
-window['turtleduck'] = turtleduck;
 
-ace.config.loadModule("ace/ext/language_tools", function(m) { turtleduck.editor_language_tools = m; });
-ace.config.loadModule('ace/ext/options', function(m) { turtleduck.editor_options = m; });
+var turtleduck = window['turtleduck'] || {};
+window.turtleduck = turtleduck;
+
+
+//ace.config.loadModule("ace/ext/language_tools", function(m) { turtleduck.editor_language_tools = m; });
+//ace.config.loadModule('ace/ext/options', function(m) { turtleduck.editor_options = m; });
 
 const animalList = animals.split(/\s+/).filter(function(a) { return a.length > 0; })
 turtleduck.animals = {
@@ -80,43 +86,11 @@ turtleduck.generateSessionName = function(regen = false) {
 }
 
 turtleduck.generateSessionName();
-/*
-class MessageRepr {
-	constructor(json) {
-		this.data = json === undefined ? {} : JSON.parse(json);
-	}
+
+turtleduck.md = new Remarkable();
 
 
-	put(key, val) {
-		this.data[key] = val;
-	}
 
-
-	toJson() {
-		return JSON.stringify(this.data);
-	}
-
-	getArray(key) {
-		console.log(this.data[key]);
-		if (this.data[key] === undefined)
-			return [];
-		else
-			return this.data[key];
-	}
-	//
-	// @Override
-	// public <U extends Message> List<U> getList(String key) {
-	// return null;
-	// }
-
-	get(key, defaultValue) {
-		if (this.data[key] === undefined)
-			return defaultValue;
-		else
-			return this.data[key];
-	}
-}
-*/
 function ctrl(key) {
 	return ['ctrl+' + key, 'command+' + key];
 }
@@ -251,8 +225,8 @@ jquery(function() {
 window.SockJS = SockJS;
 window.Terminal = Terminal;
 window.FitAddon = FitAddon;
-//window.MessageRepr = MessageRepr;
 window.Mousetrap = Mousetrap;
+window.Remarkable = Remarkable;
+window.hljs = hljs;
 window.$ = jquery;
-window.ace = ace;
-
+//window.ace = ace;

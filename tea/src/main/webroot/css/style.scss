@@ -113,6 +113,9 @@ button {
 	height: 100%;
 	overflow: hidden;
 }
+.box > div.text {
+	overflow: auto;
+}
 .explorer {
 	grid-column: 1/2; 
 	grid-row: 2/-2;
@@ -128,6 +131,19 @@ h1, h2, h3, h4, h5, h6 {
 	margin: 0;
 	font-weight: normal;
 	padding:0;
+}
+
+.text h1, .text h2, .text h3, .text h4, .text h5, .text h6 {
+	font-size: medium;
+	margin: 0.2rem 0;
+	color: $pen-sharp;
+}
+.text h1 {
+	font-size: x-large;
+    text-align: center;
+}
+.text h2, .text h3 {
+	font-size: large;
 }
 .box legend {
 	@include hires-font;
@@ -283,7 +299,7 @@ h1, h2, h3, h4, h5, h6 {
 	grid-row: 3/-2;
 	padding: 1rem;
 }
-.main-alone #figure0.box {
+.main-alone #figure0.box, .main-alone #docs.box {
 	grid-column: -1/-1;
 	grid-row: 2/-3;
 	display:none;
@@ -292,7 +308,7 @@ h1, h2, h3, h4, h5, h6 {
 	grid-column: 2/9;
 	grid-row: 2/-3;	
 }
-.mainly-coding #figure0.box {
+.mainly-coding #figure0.box, .mainly-coding  #docs.box {
 	grid-column: 9/-1;
 	grid-row: 2/-3;
 }
@@ -300,7 +316,7 @@ h1, h2, h3, h4, h5, h6 {
 	grid-column: 2/5;
 	grid-row: 2/-3;	
 }
-.mainly-figure #figure0.box {
+.mainly-figure #figure0.box, .mainly-figure #docs.box{
 	grid-column: 5/-1;
 	grid-row: 2/-3;
 }
@@ -309,7 +325,7 @@ h1, h2, h3, h4, h5, h6 {
 	grid-row: 2/-3;
 }
 
-.main-and-figure #figure0.box {
+.main-and-figure #figure0.box, .main-and-figure #docs.box {
 	grid-column: 7/-1;
 	grid-row: 2/-3;
 }
@@ -582,6 +598,11 @@ nav li {
 	position: relative;
 	flex-shrink: 0;
 	flex-grow: 2;
+}
+
+#editor-wrap .cm-editor {
+	width: 100%;
+	height: 100%;
 }
 #editor-embed {
 	margin: 0 -2px -2px -2px;
@@ -868,4 +889,9 @@ div#excavator.working {
 div#excavator.digging {
 	background-image: url(../images/excavator.gif);
 }
+
+.ace_gutter .ok {
+	color: green !important;
+}
+
 @import '~xterm/css/xterm.css';
