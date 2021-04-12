@@ -28,10 +28,10 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-shell</artifactId>
 		</dependency>
-		<dependency>
+		<!-- dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-tea</artifactId>
-		</dependency>
+		</dependency-->
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-core</artifactId>

@@ -39,7 +39,7 @@ public class Readline implements LineInput {
 			inputHandler(str);
 //			if (pos >= 0)
 //				line.pos = pos;
-			System.out.println("added: " + line.toString());
+//			System.out.println("added: " + line.toString());
 			keyHandler(KeyEvent.create(KeyCodes.Whitespace.ENTER, "\r", 0, 0));
 		}
 		Dict dict = history.get(CURRENT);
@@ -49,7 +49,7 @@ public class Readline implements LineInput {
 			inputHandler(str);
 //			if (pos >= 0 && pos <= line.cells.size())
 //				line.pos = pos;
-			System.out.println("current: " + line.toString());
+//			System.out.println("current: " + line.toString());
 		}
 	}
 
@@ -168,9 +168,9 @@ public class Readline implements LineInput {
 				lastLine.line = s;
 				lastLine.id = histPos;
 				if (histPos > 0 && history.get(histPos - 1).line.equals(lastLine.line)) {
-					System.out.println("ignored: " + lastLine.toString());
+//					System.out.println("ignored: " + lastLine.toString());
 				} else {
-					System.out.println("added: " + lastLine.toString());
+//					System.out.println("added: " + lastLine.toString());
 					history.add(lastLine);
 					histPos++;
 				}

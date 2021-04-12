@@ -161,18 +161,18 @@ public class Users extends AbstractVerticle {
 			return;
 		}
 		String username = extUsername.replaceAll("#.*$", "");
-		if (!username.matches("^\\w(?:\\w*(?:[.'`-]\\w+)?)*$")) {
+		if (!username.matches("(?U)^\\w(?:\\w*(?:[.'`-]\\w+)?)*$")) {
 			msg.fail(100, "Illegal character in username");
 			return;
 		}
 		String nickname = body.getString("nickname", username);
 
-		if (!nickname.matches("^\\w(?:\\w*(?:[ .'`-]\\w+)?)*$")) {
+		if (!nickname.matches("(?U)^\\w(?:\\w*(?:[ .'`-]\\w+)?)*$")) {
 			msg.fail(100, "Illegal character in nickname");
 			return;
 		}
 		String name = body.getString("name");
-		if (!name.matches("^\\w(?:\\w*(?:[ .'`-]\\w+)?)*$")) {
+		if (!name.matches("(?U)^\\w(?:\\w*(?:[ .'`-]\\w+)?)*$")) {
 			msg.fail(100, "Illegal character in name");
 			return;
 		}

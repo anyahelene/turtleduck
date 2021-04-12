@@ -65,7 +65,7 @@ public class DemoScene implements TurtleDuckApp {
 		}
 
 		@Override
-		public Sprite update(CanvasService service) {
+		public Sprite update() {
 			// TODO Auto-generated method stub
 			return null;
 		}

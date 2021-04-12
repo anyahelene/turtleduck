@@ -28,6 +28,11 @@
 		<dependencies>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
+				<artifactId>turtleduck</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>turtleduck-anno</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -91,6 +96,7 @@
 
 	<build>
 		<plugins>
+			<!-- COMPILING -->
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
@@ -103,12 +109,27 @@
 					</compilerArgs>
 				</configuration>
 			</plugin>
+			<!-- TESTING -->
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.0.0-M4</version>
 				<configuration>
 					<argLine></argLine>
 				</configuration>
+			</plugin>
+			<!-- PACKAGE SOURCE JARS -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 		<pluginManagement>
@@ -166,7 +187,38 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<doclet>turtleduck.shell.TurtleDoclet</doclet>
+					<docletArtifact>
+						<groupId>${project.groupId}</groupId>
+						<artifactId>turtleduck-shell</artifactId>
+						<version>${project.version}</version>
+					</docletArtifact>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>aggregate</report>
+						</reports>
+					</reportSet>
+					<reportSet>
+						<id>default</id>
+						<reports>
+							<report>javadoc</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+		</plugins>
+	</reporting>
 	<modules>
 		<module>anno</module>
 		<module>auth</module>
