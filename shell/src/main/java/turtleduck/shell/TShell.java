@@ -62,6 +62,7 @@ import turtleduck.messaging.Router;
 import turtleduck.messaging.ShellService;
 import turtleduck.messaging.generated.EditorServiceProxy;
 import turtleduck.messaging.generated.ExplorerServiceProxy;
+import turtleduck.shell.TShell.SnippetData;
 import turtleduck.shell.control.TShellLocalExecutionControl;
 import turtleduck.shell.generated.TShellDispatch;
 import turtleduck.terminal.TerminalPrintStream;
@@ -94,17 +95,13 @@ public class TShell implements ShellService {
 	private List<CodeSuggestion> completions = null;
 	private TextWindow window;
 	private Map<String, SnippetData> snippets = new LinkedHashMap<>();
-	private int inputX;
-	private int inputY;
-	private final ExecutorService executor;
 	private final EditorService editorService;
 	protected final Map<String, String> icons = new HashMap<>();
 	private final TShellLocalExecutionControl control;
 	private LocalLoaderDelegate delegate;
 	private String startupCode;
-	private final Router router;
+//	private final Router router;
 	private ExplorerService explorerService;
-	private ThreadGroup execThreadGroup;
 	private Function<Supplier<Dict>, Async<Dict>> enqueuer;
 
 	public TShell(Screen screen, TextWindow window, TextCursor printer2, Router router) {
@@ -112,8 +109,7 @@ public class TShell implements ShellService {
 		this.window = window;
 		this.screen = screen;
 		this.printer = printer2;
-		this.router = router;
-		executor = Executors.newSingleThreadExecutor();
+//		this.router = router;
 
 		printer2.autoScroll(true);
 		delegate = new LocalLoaderDelegate(TShell.class.getClassLoader());
@@ -164,14 +160,7 @@ public class TShell implements ShellService {
 		meta("String $SCREEN_ID = \"" + screen.id() + "\";");
 		startup("/prelude/TurtlePrelude.jsh");
 		currentNS = mainNS;
-		if (screen != null)
-			screen.setPasteHandler(this::paste);
-		System.out.println(System.getProperties());
-		;
-		System.out.println(System.getProperty("java.class.path"));
-		;
-		System.out.println(System.getProperty("jdk.module.path"));
-		;
+
 		if (enqueuer == null)
 			enqueuer = (code) -> Async.succeeded(code.get());
 //		prompt();
@@ -242,7 +231,7 @@ public class TShell implements ShellService {
 		if (cmd.equals("/list")) {
 			logger.info("/list");
 			List<Snippet> collect = shell.snippets().collect(Collectors.toList());
-			for(Snippet snip : collect) {
+			for (Snippet snip : collect) {
 				System.out.println(snip.id());
 				System.out.println("--------------");
 				System.out.println(snip.source());
@@ -257,6 +246,7 @@ public class TShell implements ShellService {
 					String s = e.getValue().toColorString();
 					list.add(s);
 					txt.append(s);
+					txt.append(" ").append(e.getValue().active);
 					txt.append("\n");
 				}
 			});
@@ -264,7 +254,7 @@ public class TShell implements ShellService {
 			dict.put(VALUE, txt.toString());
 		} else if (cmd.equals("/edit")) {
 			edit(args);
-		} else if(cmd.equals("/open")) {
+		} else if (cmd.equals("/open")) {
 			editorService.open(args, null, "Java");
 		} else if (cmd.equals("/restart")) {
 			startup("/prelude/TurtlePrelude.jsh");
@@ -307,9 +297,9 @@ public class TShell implements ShellService {
 				}
 			}
 		}
-		//logger.info("Number of events: " + events.size());
-		if(dict != null)
-		logger.info("Eval end: " + dict.toJson());
+		// logger.info("Number of events: " + events.size());
+		if (dict != null)
+			logger.info("Eval end: " + dict.toJson());
 		else
 			logger.info("Eval end.");
 		// logger.info("EVAL END: {}", code);
@@ -356,8 +346,7 @@ public class TShell implements ShellService {
 			if (info.completeness() != Completeness.CONSIDERED_INCOMPLETE //
 					&& info.completeness() != Completeness.DEFINITELY_INCOMPLETE) {
 				System.out.println("" + info.completeness() + info.source());
-				 System.out.println("Evaluating: " + info.source().replaceAll("(?s)\n.+$",
-				 "…"));
+				System.out.println("Evaluating: " + info.source().replaceAll("(?s)\n.+$", "…"));
 				eval(info.source(), new Location("unknown", "", "", script));
 			} else {
 //				System.out.println(info.completeness() + "… " + info.remaining());
@@ -399,6 +388,7 @@ public class TShell implements ShellService {
 	}
 
 	public List<SourceCode> split(String origSource, Location loc, Dict opts) {
+		// TODO: comments are considered "complete", and skip the next statement
 		String source = origSource;
 		List<SourceCode> list = new ArrayList<>();
 //		String remaining = "";
@@ -409,9 +399,9 @@ public class TShell implements ShellService {
 				code.code = info.source();
 				code.location = loc.length(code.code.length());
 				code.completeness = info.completeness();
+				code.strip();
 				if (code.code.startsWith("/"))
 					code.completeness = Completeness.COMPLETE;
-				code.strip();
 //				logger.info("Analyzed @{} '{}':", loc, Strings.termEscape(source.strip()));
 //				logger.info("Source:    @{} '{}'  ({}) {}", code.location, Strings.termEscape(code.code),
 //						Strings.termEscape(code.location.substring(origSource)), code.completeness);
@@ -446,6 +436,24 @@ public class TShell implements ShellService {
 	}
 
 	@Override
+	public Async<Dict> refresh() {
+		for (var entry : snippets.entrySet()) {
+			SnippetData data = entry.getValue();
+			if (data.isActive()) {
+				Dict msg = data.lastMsg;
+				if (msg != null) {
+					String sig = msg.get("signature", String.class);
+					if (!sig.isEmpty() && !sig.contains("$")) {
+						if (/* sideEffect && */explorerService != null)
+							explorerService.update(msg);
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	@Override
 	public Async<Dict> eval(String code, int ref, Dict opts) {
 		Async<Dict> result = null;
 
@@ -454,16 +462,16 @@ public class TShell implements ShellService {
 				String locstr = opts.get(LOC);
 				boolean consideredComplete = opts.get(COMPLETE, false);
 				Location loc = null;
-				if(locstr != null) {
+				if (locstr != null) {
 					try {
 						URI uri = new URI(locstr);
 						loc = new Location(uri);
-					} catch(URISyntaxException e) {
+					} catch (URISyntaxException e) {
 						logger.error("invalid URI: " + locstr, e);
 						loc = new Location("INVALID", "LOCATION", "/" + ref, code);
-				}	
+					}
 				}
-				if(loc == null) {
+				if (loc == null) {
 					loc = new Location("input", "terminal", "/" + ref, code);
 				}
 				List<SourceCode> codes = split(code, loc, opts);
@@ -478,6 +486,7 @@ public class TShell implements ShellService {
 
 					Array multiResult = Array.of(Dict.class);
 					for (SourceCode c : codes) {
+						logger.info("EVAL: complete={}: «{}»", c.isComplete(), c.code);
 						Dict dict;
 						if (complete || consideredComplete)
 							dict = eval(c.code, c.location);
@@ -656,148 +665,11 @@ public class TShell implements ShellService {
 		for (String s : cs.signatures())
 			printer.print(s + "\n", Colors.GREEN.darker());
 		input = cs.expansion();
-		prompt();
+//		prompt();
 		if (!hasMore) {
 			completionAnchor = -1;
 			completions = null;
 		}
-	}
-
-	public void charKey(String character) {
-		executor.execute(() -> {
-			keypress(character);
-		});
-	}
-
-	public void keypress(String character) {
-		if (character.equals("\t")) {
-			doCompletion();
-			return;
-		}
-		completions = null;
-		if (character.equals("\r") || character.equals("\n")) {
-			enterKey();
-			completions = null;
-		} else if (character.equals("\b")) {
-			if (input.length() > 0) {
-				input = input.substring(0, input.length() - 1);
-				printer.print(" \b");
-				printer.print("\b \b", Colors.WHITE, Colors.BLACK);
-			}
-		} else {
-			completions = null;
-			input += character;
-			printer.print(character);
-			CompletionInfo info = sca.analyzeCompletion(input);
-			System.out.println("" + info.completeness() + ": " + info.source() + "…" + info.remaining());
-			System.out.println("   " + sca.analyzeType(input, input.length()));
-			List<Documentation> documentation = sca.documentation(input, input.length(), false);
-			for (Documentation doc : documentation) {
-				System.out.println("   " + doc.signature() + " " + doc);
-			}
-			String status = ":)";
-			switch (info.completeness()) {
-			case COMPLETE:
-				status = ":D";
-				break;
-			case COMPLETE_WITH_SEMI:
-				status = ";D";
-				break;
-			case CONSIDERED_INCOMPLETE:
-				status = ":?";
-				break;
-			case DEFINITELY_INCOMPLETE:
-				status = ":P";
-				break;
-			case EMPTY:
-				status = ":)";
-				break;
-			case UNKNOWN:
-				status = ":(";
-				break;
-			default:
-				break;
-			}
-//			printer.begin().beginningOfLine().print(status).end();
-//			printer.print(" \b", Colors.WHITE, Colors.BLACK);
-			System.out.println(info.completeness());
-		}
-	}
-
-	public void enterKey() {
-		completions = null;
-		if (input != "") {
-			CompletionInfo info = sca.analyzeCompletion(input);
-			System.out.println("Completeness: " + info.completeness() + " – " + input);
-//		printer.println();
-			try {
-				eval(input, new Location("input", "", "", input));
-			} catch (Throwable t) {
-				logger.error("eval error", t);
-			}
-			screen.flush();
-			input = "";
-		} else {
-			printer.println();
-		}
-		prompt();
-	}
-
-	public void prompt() {
-		printer.print("java> ", Colors.YELLOW);
-		inputX = printer.x();
-		inputY = printer.y();
-		printer.foreground(Colors.GREEN);
-		printer.print(input);
-//		printer.print(" ", Colors.WHITE, Colors.BLACK);
-		printer.clearToEndOfLine();
-//		printer.print("\b");
-		printer.flush();
-	}
-
-	public boolean paste(String pasted) {
-		input += pasted;
-		printer.print(pasted);
-		return true;
-	}
-
-	public static void colorWheel(Turtle turtle, double radius) {
-		Color red = Color.color(1, 0, 0);
-		Color green = Color.color(0, 1, 0);
-		Color blue = Color.color(0, 0, 1);
-		Color ink = red;
-		double step = (2 * Math.PI * radius) / 360.0;
-		turtle.jump(radius);
-
-//		for (int k = 0; k < 360; k++)
-		for (int i = 0; i < 360; i++) {
-			if (i < 120)
-				ink = red.mix(green, i / 119.0);
-			else if (i < 240)
-				ink = green.mix(blue, (i - 120) / 119.0);
-			else
-				ink = blue.mix(red, (i - 240) / 119.0);
-			turtle.penChange().strokePaint(ink).done();
-			turtle.draw(step);
-			Turtle sub = turtle.spawn().turn(90);
-			for (int j = 20; j > 0; j--) {
-				sub.penChange().strokeWidth(j / 3.5).strokePaint(ink).done();
-				sub.draw(radius / 20.0);
-				ink = ink.brighter();
-			}
-			sub.done();
-			if (radius < 0) {
-				turtle.turn(10);
-				if (i % 2 == 0) {
-					double a = turtle.bearing().degrees();
-					turtle.turnTo(i).jump(10).turnTo(a);
-				}
-				turtle.draw(-step / 2);
-
-			}
-			turtle.turn(1);
-		}
-		turtle.done();
 	}
 
 	boolean isStartupSnippet(Snippet s) {
@@ -806,11 +678,6 @@ public class TShell implements ShellService {
 
 	boolean isBadSnippet(Snippet s) {
 		return s.id().startsWith(errorNS.prefix);
-	}
-
-	public void close() {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -932,9 +799,14 @@ public class TShell implements ShellService {
 		protected List<String> history = new ArrayList<>();
 		protected Dict lastMsg;
 		protected Location loc;
-
+		protected boolean active;
 		public void location(Location loc) {
 			this.loc = loc;
+		}
+
+		public boolean isActive() {
+			// TODO Auto-generated method stub
+			return active;
 		}
 
 		public Dict update(SnippetEvent ev) {
@@ -975,6 +847,7 @@ public class TShell implements ShellService {
 				data.put(NAME, name);
 				data.put("signature", signature);
 				data.put("category", title);
+				active = false;
 				return data;
 			case NONEXISTENT:
 			case OVERWRITTEN:
@@ -1004,7 +877,7 @@ public class TShell implements ShellService {
 			}
 			snippet = ev.snippet();
 			id = snippet.id();
-			
+
 			boolean isDef = ev.status().isDefined(), wasDef = ev.previousStatus().isDefined();
 			String verb;
 			if (isDef && wasDef)
@@ -1030,7 +903,7 @@ public class TShell implements ShellService {
 			data.put(DEF, ev.status().isDefined());
 			data.put(PERSISTENT, snippet.kind().isPersistent());
 			data.put(EXEC, snippet.subKind().isExecutable());
-
+			active = ev.status().isActive();
 			kind(snippet.kind(), snippet.subKind());
 
 			name = "";

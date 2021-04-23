@@ -164,15 +164,29 @@
 								<goals>
 									<goal>exec</goal>
 								</goals>
+								<configuration>
+									<executable>webpack</executable>
+									<arguments>
+									</arguments>
+									<systemProperties></systemProperties>
+									<skip>false</skip>
+								</configuration>
+							</execution>
+							<execution>
+								<id>rollup</id>
+								<phase>generate-resources</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>rollup</executable>
+									<arguments>-c
+									</arguments>
+									<systemProperties></systemProperties>
+									<skip>false</skip>
+								</configuration>
 							</execution>
 						</executions>
-						<configuration>
-							<executable>webpack</executable>
-							<arguments>
-							</arguments>
-							<systemProperties></systemProperties>
-							<skip>false</skip>
-						</configuration>
 					</plugin>
 				</plugins>
 			</build>

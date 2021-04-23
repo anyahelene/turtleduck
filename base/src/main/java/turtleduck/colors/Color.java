@@ -26,6 +26,27 @@ public interface Color {
 	}
 
 	/**
+	 * @param argb 0xRRGGBBAA
+	 * @return
+	 */
+	static Color fromRGBA(int argb) {
+		return new ColorRGB(((argb >> 24) & 0xff) / 255f, ((argb >> 16) & 0xff) / 255f, ((argb >> 8) & 0xff) / 255f,
+				((argb >> 0) & 0xff) / 255f, false);
+	}
+
+	static Color fromString(String s) {
+		if (s.startsWith("#")) {
+			if (s.length() == 7)
+				return Color.fromRGB(Integer.valueOf(s.substring(1), 16));
+			else if (s.length() == 9)
+				return Color.fromRGBA(Integer.valueOf(s.substring(1), 16));
+
+		}
+
+		throw new IllegalArgumentException("not a color: " + s);
+	}
+
+	/**
 	 * @param bgr 0xBBGGRR
 	 * @return
 	 */
@@ -49,7 +70,7 @@ public interface Color {
 	static Color fromRGBA(int r, int g, int b, int a) {
 		if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || a < 0 || a > 255)
 			throw new IllegalArgumentException("Must be from 0 to 255: (" + r + ", " + g + ", " + b + ", " + a + ")");
-		return new ColorRGB(r/255f, g/255f, b/255f, a/255f, false);
+		return new ColorRGB(r / 255f, g / 255f, b / 255f, a / 255f, false);
 	}
 
 	static Color fromBytes(byte[] bytes, int offset, PixelFormat format) {
@@ -105,9 +126,9 @@ public interface Color {
 	Color asRGBA();
 
 	Color asCMYK();
-	
+
 	Color perturb();
-	
+
 	Color perturb(double factor);
 
 	boolean isAdditive();
@@ -137,4 +158,7 @@ public interface Color {
 	 * @return The string, with control sequences applied
 	 */
 	String applyBg(String s);
+
+	int toARGB();
+
 }

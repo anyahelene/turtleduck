@@ -1,5 +1,6 @@
 package turtleduck.tea.terminal;
 
+import org.slf4j.Logger;
 import org.teavm.jso.dom.events.KeyboardEvent;
 
 import turtleduck.events.JSKeyCodes;
@@ -7,11 +8,12 @@ import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.messaging.InputService;
 import turtleduck.tea.Browser;
-
+import turtleduck.util.Logging;
 import xtermjs.IDisposable;
 import xtermjs.Terminal;
 
 public class KeyHandler {
+	public static final Logger logger = Logging.getLogger(KeyHandler.class);
 	protected String data = null;
 	private IDisposable onKey;
 	private IDisposable onData;
@@ -62,7 +64,7 @@ public class KeyHandler {
 				flags |= KeyEvent.KEY_TYPE_REPEAT;
 
 			if (data != null) {
-				Browser.consoleLog("KeyHandler.onKey: leftover data: '" + data + "'");
+				logger.warn("KeyHandler.onKey: leftover data: '{}'", data);
 			}
 			data = ke.getKey();
 			String jsKey = ev.getKey();
@@ -83,7 +85,7 @@ public class KeyHandler {
 		onData = terminal.onData((String s) -> {
 			if (data != null) {
 				if (!data.equals(s))
-					Browser.consoleLog("KeyHandler.onData: mismatch with onKey: '" + data + "' != '" + s + "'");
+					logger.info("KeyHandler.onData: mismatch with onKey: '{}' != '{}'", data, s);
 				data = null;
 			} else {
 				remote.dataEvent(s);

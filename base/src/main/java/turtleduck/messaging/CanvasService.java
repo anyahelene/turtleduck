@@ -4,6 +4,7 @@ import turtleduck.annotations.MessageField;
 import turtleduck.annotations.MessageProtocol;
 import turtleduck.annotations.Request;
 import turtleduck.async.Async;
+import turtleduck.colors.Color;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Key;
@@ -20,13 +21,17 @@ public interface CanvasService {
 	Key<Double> X = Key.key("x", Double.class);
 	Key<Double> Y = Key.key("y", Double.class);
 	Key<Double> FONT_SIZE = Key.key("fontSize", Double.class);
-
+	Key<String> COLOR = Key.key("color", String.class);
+	
 	@Request(type = "drawPath", replyType = "none", //
 			replyFields = {})
 	Async<Dict> drawPath(@MessageField("PATHS") Array paths);
 
 	@Request(type = "clearCanvas", replyType = "none")
 	Async<Dict> clear();
+	
+	@Request(type = "background", replyType = "none")
+	Async<Dict> background(@MessageField("COLOR") String color);
 
 	@Request(type = "styleObject", replyType = "none", //
 			replyFields = {})

@@ -1,5 +1,6 @@
 $water: #66e;
 $page: #ccd;
+$page-light: #eeeaea;
 $pen: #222;
 $pen-sharp: #000;
 $prompt: #880;
@@ -11,3 +12,5 @@ $button-bg-hover: color.scale($sun, $lightness: +10%);
 $button-bg-active:  color.scale($sun, $lightness: -40%);
 $border-active: $pen-sharp;
 $border: $pen;
+$bgdark: #111;
+$bglight: #eee;

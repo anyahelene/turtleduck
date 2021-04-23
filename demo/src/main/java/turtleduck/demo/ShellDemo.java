@@ -75,7 +75,7 @@ public class ShellDemo implements TurtleDuckApp {
 				return handleCommandKeypress(event);
 			}
 			if (event.hasCharacter()) {
-				tshell.charKey(event.character());
+//				tshell.charKey(event.character());
 //				window.flush();
 				return true;
 			}
@@ -118,7 +118,7 @@ public class ShellDemo implements TurtleDuckApp {
 				screen.cycleAspect();
 				return true;
 			} else if (code == 'D' || ch.equals("d")) {
-				tshell.charKey("D");
+//				tshell.charKey("D");
 //				window.flush();
 				return true;
 			} else if (code == 'H' || ch.equals("h")) {

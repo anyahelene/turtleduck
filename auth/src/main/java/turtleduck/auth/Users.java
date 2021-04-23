@@ -160,22 +160,32 @@ public class Users extends AbstractVerticle {
 			msg.fail(100, "Username too short or too long");
 			return;
 		}
-		String username = extUsername.replaceAll("#.*$", "");
-		if (!username.matches("(?U)^\\w(?:\\w*(?:[.'`-]\\w+)?)*$")) {
+		String s = extUsername.replaceAll("#.*$", "");
+		if (!s.matches("(?U)^[^\\p{Cc}\\p{Cn}\\p{Cs}]+$")) { // "(?U)^\\w(?:\\w*(?:[ .'`-]\\w+)?)*$"
 			msg.fail(100, "Illegal character in username");
 			return;
 		}
-		String nickname = body.getString("nickname", username);
-
-		if (!nickname.matches("(?U)^\\w(?:\\w*(?:[ .'`-]\\w+)?)*$")) {
+		String username = s;
+		
+		s = body.getString("nickname", username);
+		if(s == null)
+			s = username;
+		
+		if (!s.matches("(?U)^[^\\p{Cc}\\p{Cn}\\p{Cs}]+$")) {
 			msg.fail(100, "Illegal character in nickname");
 			return;
 		}
-		String name = body.getString("name");
-		if (!name.matches("(?U)^\\w(?:\\w*(?:[ .'`-]\\w+)?)*$")) {
+		String nickname = s;
+		
+		s = body.getString("name");
+		if(s == null)
+			s = username;
+		if (!s.matches("(?U)^[^\\p{Cc}\\p{Cn}\\p{Cs}]+$")) {
 			msg.fail(100, "Illegal character in name");
 			return;
 		}
+		String name = s;
+		
 		String email = body.getString("email");
 		if (!EmailValidator.getInstance().isValid(email)) {
 			msg.fail(100, "Invalid email address");

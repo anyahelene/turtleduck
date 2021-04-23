@@ -5,4 +5,6 @@ module turtleduck.tea {
 	requires teavm.jso;
 	requires teavm.jso.apis;
 	requires turtleduck.anno;
+	requires org.slf4j;
+	requires teavm.platform;
 }

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
@@ -112,6 +113,15 @@ public class Manager {
 					});
 		}
 
+	}
+
+	public Future<JsonObject> workersAvailable() {
+		return connect(0).compose(redis -> redis.llen("available").compose(avail -> redis.llen("busy").compose(busy -> {
+			JsonObject obj = new JsonObject();
+			obj.put("available", avail.toInteger());
+			obj.put("busy", busy.toInteger());
+			return Future.succeededFuture(obj);
+		})));
 	}
 
 	protected Future<List<String>> getWorkerIp(String workerId, String userId) {

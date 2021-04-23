@@ -118,4 +118,7 @@ public interface ShellService extends ExecuteService, CodeService {
 			"MULTI", "DIAG", "EXCEPTION" })
 	Async<Dict> eval(@MessageField("CODE") String code, @MessageField("REF") int ref,
 			@MessageField("OPTIONS") Dict opts);
+
+	@Request(type = "refresh", noReply = true)
+	Async<Dict> refresh();
 }

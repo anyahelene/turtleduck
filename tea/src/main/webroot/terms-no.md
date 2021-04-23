@@ -1,4 +1,4 @@
-# Kort oppsummering
+## Kort oppsummering
 
 * Vi bruker Cookies (informasjonskapsler) og Web Storage i nettleseren din.
 * TurtleDuck er en *veldig eksperimentell* tjeneste:
@@ -7,7 +7,7 @@
    * Vær grei – ikke misbruk tjenesten til skade eller sjenanse, eller for profitt eller
      ulovligheter.
   
-# Bruk av Informasjonskapsler
+## Bruk av Informasjonskapsler
 
 Vi bruker informasjonskapsler for å ordne innloggingen. I
 informasjonskapselen ligger en [sesjons-id](https://en.wikipedia.org/wiki/Session_ID) for innloggingen din
@@ -23,7 +23,7 @@ For generell om informasjonskapsler se en av disse nettsidene:
 
 * [*https://www.datatilsynet.no/personvern-pa-ulike-omrader/internett-og-apper/cookies/*](https://www.datatilsynet.no/personvern-pa-ulike-omrader/internett-og-apper/cookies/)
 
-# Datainnsamling
+## Datainnsamling
 
 TurtleDuck er en eksperimentell tjeneste, og du får tilgang utelukkende for å
 kunne hjelpe med testing, tilbakemeldinger og videreutvikling. Vi logger
@@ -35,7 +35,7 @@ det være aktuelt med datainnsamling for pedagogikk-/forskningsformål, som i
 såfall vi skje kun etter informert samtykke fra brukerne, ved et egen
 samtykkeskjema.
 
-# Sikkerhet og bruk av virtuell datamaskin
+## Sikkerhet og bruk av virtuell datamaskin
 
 Mens du er logget inn og aktiv i TurtleDuck har du tilgang til en egen liten
 virtuell datamaskin ([«container»](https://en.wikipedia.org/wiki/OS-level_virtualization)
@@ -60,7 +60,7 @@ Containeren stoppes / restartes automatisk hvis den bruker for mye ressurser
 (f.eks. om du lager en uendelig løkke) eller hvis den ikke er i bruk på en
 stund. Dette kan føre til korte avbrudd i tjenesten.
 
-# Lagring av innhold
+## Lagring av innhold
 
 Vi bruker [Web Storage](https://en.wikipedia.org/wiki/Web_storage) i din egen
 nettleser for å lagre sesjonen din og ting du programmerer / lager («innhold»).

@@ -26,9 +26,9 @@ String help = "Type /help for help :)";
 /namespace startup
 
 Screen screen = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, $SCREEN_ID)
-Canvas canvas = screen.createCanvas().strokePaint(Colors.BLACK);
+Canvas canvas = screen.createCanvas().strokePaint(Colors.WHITE).strokeWidth(1).fillPaint(Colors.TRANSPARENT).background(Colors.BLACK);
 
-Turtle turtle = canvas.turtle().penColor(Colors.BLACK).jumpTo(0, 0);
+Turtle turtle = canvas.turtle().penColor(Colors.WHITE).jumpTo(0, 0);
 turtleduck.shell.TShell.testValue = 5;
 
 double sin(double deg) {
@@ -43,7 +43,8 @@ void clear() {
 }
 
 void reset() {
-	turtle.penColor(Colors.BLACK).penWidth(1).fillColor(Colors.TRANSPARENT).jumpTo(0, 0).turnTo(0);
+	canvas.strokePaint(Colors.WHITE).strokeWidth(1).fillPaint(Colors.TRANSPARENT).background(Colors.BLACK);
+	turtle.penColor(Colors.WHITE).penWidth(1).fillColor(Colors.TRANSPARENT).jumpTo(0, 0).turnTo(0);
 	screen.clear();
 }
 

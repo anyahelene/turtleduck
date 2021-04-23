@@ -105,19 +105,20 @@ function handleKey(key, button, event) {
 				jquery("#page").toggleClass('figure-alone', false);
 				jquery("#page").toggleClass('main-and-figure', true);
 			}
-			jquery('#editor textarea').focus();
+			turtleduck.editor.view.focus();
 			break;
 		case "f7":
 			turtleduck.jshell.focus();
 			break;
-		case "f8":
+		case "~f8":
 			if (jquery("#page").hasClass('main-alone')) {
 				jquery("#page").toggleClass('main-alone', false);
 				jquery("#page").toggleClass('figure-alone', false);
 				jquery("#page").toggleClass('main-and-figure', true);
 			}
+			jquery('#screen').focus();
 			break;
-		case "f9":
+		case "f8":
 			//var alone = jquery("#page").hasClass('main-alone');
 			//jquery("#page").toggleClass('main-alone', !alone);
 			//jquery("#page").toggleClass('main-and-figure', alone);
@@ -126,7 +127,6 @@ function handleKey(key, button, event) {
 			jquery("#page").toggleClass('mainly-figure', coding);
 			jquery("#page").toggleClass('main-alone', false);
 			jquery("#page").toggleClass('main-and-figure', false);
-			turtleduck.editor.resize();
 			turtleduck.jshell_fitAddon.fit();
 			break;
 		case "help":
@@ -165,7 +165,12 @@ jquery(function() {
 
 		};
 		const shortcut = jquery(this).attr('data-shortcut');
-		jquery(this).attr('data-shortcut-text', shortcut.replace('ctrl+', '⌘').replace('shift+', '↑'));
+		const shortcutText = shortcut.replace('ctrl+', '⌘').replace('shift+', '↑');
+		jquery(this).prepend(jquery('<span class="icon"><span>'+jquery(this).attr('data-icon')+'</span></span>'))
+		jquery(this).prepend(jquery('<span></span>').addClass('bg'));
+		jquery(this).attr('data-shortcut-text', shortcutText);
+		jquery(this).append(jquery('<span class="shortcut"><span>'+shortcut+'</span></span>'))
+		//jquery(this).find(".icon").prepend(jquery('<span>'+shortcutText+'</span>'));//.attr('data-shortcut-text', shortcutText)
 		Mousetrap.bindGlobal(shortcut, keyHandler);
 		jquery(this).click(handler);
 	});
@@ -221,6 +226,31 @@ jquery(function() {
 
 });
 
+jquery(document).ready(() => {
+	const mqlDark = window.matchMedia('(prefers-color-scheme: dark)')
+	const mqlLight = window.matchMedia('(prefers-color-scheme: light)')
+	function handleColorPreference(mql) {
+		if(mql.matches) {
+			const dark = mql.media.endsWith('dark)');
+			jquery('#page').toggleClass('light', !dark);
+			jquery('#page').toggleClass('dark', dark);
+			console.log(mql);
+			console.log(document.getElementById('page').classList);
+		}	
+	}
+
+	handleColorPreference(mqlDark);
+	//handleColorPreference(mqlLight);
+	mqlDark.onchange = handleColorPreference;
+	mqlLight.onchange = handleColorPreference;
+	
+	// focus
+	['editor', 'screen', 'console', 'explorer'].forEach(id => {
+		const elt = jquery('#'+id);
+		elt.focusin(() => elt.toggleClass('focused', true));
+		elt.focusout(() => elt.toggleClass('focused', false));
+	});
+})
 
 window.SockJS = SockJS;
 window.Terminal = Terminal;

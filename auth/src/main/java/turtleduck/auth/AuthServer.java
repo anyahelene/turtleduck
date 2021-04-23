@@ -280,8 +280,7 @@ public class AuthServer extends AbstractVerticle {
 				String workerDb = redisOpts.getString("workerDb", "0");
 				if (!redisUrl.endsWith("/"))
 					redisUrl += "/";
-				manager = new Manager(vertx, redisUrl + workerDb,
-						"http://" + bindAddress + ":" + bindPort);
+				manager = new Manager(vertx, redisUrl + workerDb, "http://" + bindAddress + ":" + bindPort);
 				sessionRedis = Redis.createClient(vertx, redisUrl + sessionDb);
 
 				sessionRedis.connect().onSuccess(r -> {
@@ -370,8 +369,20 @@ public class AuthServer extends AbstractVerticle {
 								links += "</ul>\n";
 								HttpServerResponse response = ctx.response();
 								response.putHeader("Content-Type", "text/html; charset=UTF-8");
-								ctx.end(loginHtml.toString().replace("<!-- LOGIN -->", links).replace("<!-- TERMS -->",
-										res2.result().toString()));
+								String text = loginHtml.toString().replace("<!-- LOGIN -->", links).replace("<!-- TERMS -->",
+										res2.result().toString());
+								if(manager != null) {
+									manager.workersAvailable().onComplete(res3 -> {
+										if(res3.succeeded()) {
+											JsonObject obj = res3.result();
+											ctx.end(text.replace("<!-- STATUS -->", String.format("%d/%d workers available", obj.getInteger("available"),obj.getInteger("available")+obj.getInteger("busy"))));
+										} else {
+											ctx.end(text.replace("<!-- STATUS -->",""));
+										}
+									});
+								} else {
+									ctx.end(text.replace("<!-- STATUS -->",""));
+								}
 							} else {
 								logger.error("can't load login.html", res.cause());
 								ctx.fail(res.cause());
@@ -385,6 +396,16 @@ public class AuthServer extends AbstractVerticle {
 			}
 		});
 
+		router.get(pathPrefix + "/login/status").handler(loggerHandler).handler(sessionHandler).handler(ctx -> {
+			manager.workersAvailable().onSuccess(result -> {
+				HttpServerResponse response = ctx.response();
+				response.putHeader("Content-Type", "application/json; charset=UTF-8");
+				ctx.end(result.toBuffer());
+			}).onFailure(ex -> {
+				logger.error("get worker info failed: ", ex);
+				ctx.fail(500);
+			});
+		});
 		router.get(pathPrefix + "/logout").handler(loggerHandler).handler(sessionHandler).handler(ctx -> {
 			User user = ctx.user();
 			Session session = ctx.session();

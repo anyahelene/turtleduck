@@ -1,6 +1,7 @@
 package turtleduck.canvas;
 
 import turtleduck.annotations.Icon;
+import turtleduck.colors.Color;
 import turtleduck.display.Layer;
 import turtleduck.geometry.Point;
 import turtleduck.messaging.CanvasService;
@@ -122,4 +123,6 @@ public interface Canvas extends PenContext<Canvas>, TransformContext2<Canvas> {
 	void setText(String id, String newText);
 
 	void evalScript(String javaScript);
+
+	Canvas background(Color color);
 }

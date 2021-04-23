@@ -273,17 +273,20 @@ public class AuthProvider {
 			api.fetch(HttpMethod.GET, path, headers, null, r -> {
 				try {
 					OAuth2Response result = r.result();
-					System.out.println(result.body().toString());
-					Object obj = null;
-					if (result.is("application/json")) {
-						obj = Json.decodeValue(result.body());
-					} else if (result.is("application/x-www-form-urlencoded") || result.is("text/plain")) {
-						obj = SimpleHttpClient.queryToJson(result.body());
-					}
-					if (expected.isInstance(obj))
-						promise.complete((T) obj);
-					else
-						promise.fail("wrong result type");
+					if (result != null && result.body() != null) {
+						System.out.println(result.body());
+						Object obj = null;
+						if (result.is("application/json")) {
+							obj = Json.decodeValue(result.body());
+						} else if (result.is("application/x-www-form-urlencoded") || result.is("text/plain")) {
+							obj = SimpleHttpClient.queryToJson(result.body());
+						}
+						if (expected.isInstance(obj))
+							promise.complete((T) obj);
+						else
+							promise.fail("wrong result type");
+					} else
+						promise.fail("got no response");
 				} catch (DecodeException | UnsupportedEncodingException e) {
 					promise.fail(e);
 				}

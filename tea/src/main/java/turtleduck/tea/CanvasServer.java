@@ -3,6 +3,7 @@ package turtleduck.tea;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
 import org.teavm.jso.JSBody;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.core.JSFunction;
@@ -27,15 +28,22 @@ import svg.TSpanElement;
 import svg.SVGTransform;
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
+import turtleduck.colors.Color;
 import turtleduck.messaging.CanvasService;
+import turtleduck.tea.terminal.KeyHandler;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
+import turtleduck.util.JsonUtil;
+import turtleduck.util.Logging;
 
 @MessageDispatch("turtleduck.tea.generated.CanvasDispatch")
 public class CanvasServer implements CanvasService {
+	public static final Logger logger = Logging.getLogger(CanvasServer.class);
+	private static final String SVG_ELT_ID = "svg";
+
 	@JSBody(params = { "elt" }, script = "if(elt.transform.baseVal.numberOfItems == 0)\n"
-			+ "  elt.transform.baseVal.appendItem(document.getElementById('svg0').createSVGTransform());\n"
-			+ " return elt.transform.baseVal.getItem(0);\n")
+			+ "  elt.transform.baseVal.appendItem(document.getElementById('" + SVG_ELT_ID
+			+ "').createSVGTransform());\n" + " return elt.transform.baseVal.getItem(0);\n")
 	native static SVGTransform svgTransform(Element elt);
 
 	private EventListener<KeyboardEvent> keyListener;
@@ -46,8 +54,8 @@ public class CanvasServer implements CanvasService {
 
 	public CanvasServer() {
 		document = Window.current().getDocument();
-		svg = (SVGSVGElement) document.getElementById("svg0");
-		figure = document.getElementById("figure0");
+		svg = (SVGSVGElement) document.getElementById(SVG_ELT_ID);
+		figure = document.getElementById("screen");
 		if (svg != null) {
 			svg.listenWheel(this::zoom);
 		}
@@ -89,18 +97,18 @@ public class CanvasServer implements CanvasService {
 			double posX = e.getClientX() - clientRect.getLeft(), posY = e.getClientY() - clientRect.getTop();
 			double ratioX = posX / svg.getClientWidth(), ratioY = posY / svg.getClientHeight();
 			double diffW = figW - newW, diffH = figH - newH;
-//			Browser.consoleLog("Event:");
-//			Browser.consoleLog(e);
-//			Browser.consoleLog("Zoom: deltaY=" + deltaY + ", posX=" + posX + ", posY=" + posY + ", diffW=" + diffW
+//			logger.info("Event:");
+//			logger.info(e);
+//			logger.info("Zoom: deltaY=" + deltaY + ", posX=" + posX + ", posY=" + posY + ", diffW=" + diffW
 //					+ ", diffH=" + diffH + ", ratioX=" + ratioX + ", ratioY=" + ratioY);
-//			Browser.consoleLog("Before: ");
-//			Browser.consoleLog(rect);
+//			logger.info("Before: ");
+//			logger.info(rect);
 			rect.setWidth(newW);
 			rect.setHeight(newH);
 			rect.setX(rect.getX() + diffW * ratioX);
 			rect.setY(rect.getY() + diffH * ratioY);
-//			Browser.consoleLog("After: ");
-//			Browser.consoleLog(rect);
+//			logger.info("After: ");
+//			logger.info(rect);
 		}
 
 	}
@@ -117,7 +125,7 @@ public class CanvasServer implements CanvasService {
 		txt += "</svg>";
 		elt.setAttribute("href", "data:image/svg+xml;charset=utf-8," + JSUtil.encodeURIComponent(txt));
 		elt.setAttribute("download", "canvas.svg");
-		Browser.consoleLog(elt);
+		logger.info("save({})", elt);
 		elt.click();
 
 	}
@@ -136,7 +144,7 @@ public class CanvasServer implements CanvasService {
 			} else if (path.has("TEXT")) {
 				elt = text(path.getString("TEXT"), path);
 			} else {
-				Browser.consoleLog("Unknown operation: " + path.toJson());
+				logger.info("Unknown operation: " + path.toJson());
 			}
 
 			if (elt != null) {
@@ -154,7 +162,7 @@ public class CanvasServer implements CanvasService {
 
 				String group = path.getString("GROUP");
 				if (group != null) {
-					String id = "svg0." + group;
+					String id = SVG_ELT_ID + "." + group;
 					Element g = groups.get(group);
 					if (g == null) {
 						g = document.getElementById(id);
@@ -233,11 +241,11 @@ public class CanvasServer implements CanvasService {
 		CSSStyleDeclaration css = ((ElementCSSInlineStyle) elt).getStyle();
 		style.forEach(k -> {
 			String key = k.key();
-//			Browser.consoleLog(key + " → " + style.get(key, Object.class));
+//			logger.info(key + " → " + style.get(key, Object.class));
 
 			if (key.equals("_transform")) {
 				SVGTransform svgTransform = svgTransform(elt);
-				// Browser.consoleLog(svgTransform);
+				// logger.info(svgTransform);
 				Array arr = style.getArray(key);
 				svgTransform.getMatrix().setA(arr.get(0, Number.class).doubleValue());
 				svgTransform.getMatrix().setB(arr.get(1, Number.class).doubleValue());
@@ -245,7 +253,7 @@ public class CanvasServer implements CanvasService {
 				svgTransform.getMatrix().setD(arr.get(3, Number.class).doubleValue());
 				svgTransform.getMatrix().setE(arr.get(4, Number.class).doubleValue());
 				svgTransform.getMatrix().setF(arr.get(5, Number.class).doubleValue());
-				// Browser.consoleLog(svgTransform);
+				// logger.info(svgTransform);
 			} else {
 				css.setProperty(k.key(), style.getString(k.key()));
 			}
@@ -254,9 +262,9 @@ public class CanvasServer implements CanvasService {
 
 	@Override
 	public Async<Dict> styleObject(String id, Dict style) {
-		Browser.consoleLog("Styling svg0." + id + " → " + style.toJson());
-		Element obj = document.getElementById("svg0." + id);
-		Browser.consoleLog(obj);
+		logger.info("Styling " + SVG_ELT_ID + "." + id + " → " + style.toJson());
+		Element obj = document.getElementById(SVG_ELT_ID + "." + id);
+		logger.info("styleObject({})", obj);
 		if (obj != null) {
 			styleObject(obj, style);
 		} else {
@@ -273,12 +281,12 @@ public class CanvasServer implements CanvasService {
 		keyListener = null;
 		if (javaScript != null) {
 			JSFunction function = JSUtil.function("kev", javaScript);
-			// Browser.consoleLog(function);
+			// logger.info(function);
 			keyListener = kev -> {
 				// System.out.println("key event!");
 				function.call(null, kev);
 			};
-			// Browser.consoleLog(keyListener);
+			// logger.info(keyListener);
 
 			svg.listenKeyDown(keyListener);
 		}
@@ -291,6 +299,22 @@ public class CanvasServer implements CanvasService {
 			JSFunction function = JSUtil.function("foo", javaScript);
 			function.call(null, null);
 		}
+		return null;
+	}
+
+	@Override
+	public Async<Dict> background(String color) {
+		logger.info("background: {}", color);
+		Color col = JsonUtil.decodeJson(color, Color.class);
+		double brightness = col.properties().lightness();
+		String className = figure.getClassName();
+		if(brightness >= 0.5) {
+			figure.setClassName(className.replaceAll("\\s*dark\\b", "") + " light");
+		} else {
+			figure.setClassName(className.replaceAll("\\s*light\\b", "") + " dark");
+		}
+		logger.info("background: {}, brightness {}", col, brightness); 
+		figure.getStyle().setProperty("background-color", color);
 		return null;
 	}
 

@@ -8,9 +8,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
 import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.browser.Window;
+import org.teavm.jso.core.JSArray;
+import org.teavm.jso.core.JSMapLike;
+import org.teavm.jso.core.JSObjects;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.HTMLDocument;
@@ -23,16 +27,20 @@ import turtleduck.messaging.EditorService;
 import turtleduck.messaging.Reply;
 import turtleduck.messaging.ShellService;
 import turtleduck.tea.TDEditor.State;
+import turtleduck.tea.terminal.KeyHandler;
 import turtleduck.text.Location;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
+import turtleduck.util.Logging;
+
 import static turtleduck.tea.Browser.trying;
 
 @MessageDispatch("turtleduck.tea.generated.EditorDispatch")
 public class EditorServer implements EditorService {
+	public static final Logger logger = Logging.getLogger(EditorServer.class);
 	public static final String ENDPOINT_ID = "turtleduck.editor";
-	public static final String TABCLASS_INACTIVE = "title saveable";
-	public static final String TABCLASS_ACTIVE = "title saveable active";
+	public static final String TABCLASS_INACTIVE = "tab saveable";
+	public static final String TABCLASS_ACTIVE = "tab saveable selected";
 	private Map<String, EditSession> sessionsByName = new LinkedHashMap<>();
 	private Map<Integer, EditSession> sessionsById = new HashMap<>();
 //	private HTMLElement element;
@@ -43,7 +51,7 @@ public class EditorServer implements EditorService {
 	private HTMLElement tabs;
 	private HTMLElement wrapper;
 //	private HTMLElement tabItem;
-	private String service;
+//	private String service;
 	private ShellService shell;
 	private int nextSessionId = 0;
 	private EventListener<?> saveListener;
@@ -58,10 +66,11 @@ public class EditorServer implements EditorService {
 
 	@JSBody(params = { "state" }, script = "return state.doc.length == 0")
 	native static boolean isEmpty(State state);
-	
-	
+
 	@JSBody(params = { "elt", "text" }, script = "return turtleduck.createEditor(elt, text)")
 	native static TDEditor createEditor(HTMLElement elt, String text);
+	@JSBody(params = { "elt", "text" }, script = "return turtleduck.createLineEditor(elt, text)")
+	native static TDEditor createLineEditor(HTMLElement elt, String text);
 
 	@JSBody(params = { "sess", "start", "len", "type",
 			"message" }, script = "{const anno = sess.doc.indexToPosition(start);\n"
@@ -84,29 +93,31 @@ public class EditorServer implements EditorService {
 	@JSBody(params = { "sess" }, script = "sess.setAnnotations([])")
 	native static void clearAnnos(State sess);
 
-	public EditorServer(HTMLElement element, HTMLElement wrapper, HTMLElement tabs, String service, Client client,
-			ShellService shell) {
+	@JSBody(params = { "state", "diags" }, script = "return state.update(turtleduck.editor.setDiagnostics(state, diags)).state")
+	native static State setDiagnostics(State sess, JSArray<JSObject> diags);
+
+	@JSBody(params = { "from", "to", "severity", "message" }, script = "return turtleduck.editor.diagnostic(from, to, severity, message, [])")
+	native static JSObject diagnostic(int from, int to, String severity, String message);
+
+	public EditorServer(HTMLElement wrapper, HTMLElement tabs, Client client, ShellService shell) {
 		this.client = client;
 		this.tabs = tabs;
 		this.wrapper = wrapper;
-		this.service = service;
 		this.shell = shell;
 	}
 
 	public void initialize() {
 		String name = "*scratch*";
 		HTMLDocument document = Window.current().getDocument();
-		wrapper.getStyle().setProperty("display", "flex");
+//		wrapper.getStyle().setProperty("display", "flex");
 		saveButton = document.getElementById("tb-save");
 		closeButton = document.getElementById("tb-close");
 
-		Browser.consoleLog(saveButton);
 		if (saveButton != null)
 			saveButton.addEventListener("click", saveListener = trying(this::save));
 		if (closeButton != null)
 			closeButton.addEventListener("click", closeListener = trying(this::close));
-		Browser.consoleLog("editor save button: ");
-		Browser.consoleLog(saveButton);
+		logger.info("editor save button: {}", saveButton);
 
 		if (client.editor == null) {
 			client.editor = createEditor(wrapper, "");
@@ -125,8 +136,7 @@ public class EditorServer implements EditorService {
 	}
 
 	protected void save(Event e) {
-		Browser.consoleLog("save: ");
-		Browser.consoleLog(e);
+		logger.info("save: {}", e);
 		if (currentSession != null) {
 			EditSession current = currentSession;
 			String contents = content();
@@ -138,12 +148,12 @@ public class EditorServer implements EditorService {
 			opts.put(ShellService.LOC, loc.toString());
 			opts.put(ShellService.COMPLETE, true);
 			client.cursor.println();
-			State state = current.state;
 			shell.eval(contents, current.id, opts).onSuccess(msg -> {
 //				clearAnnos(state);
 //				while (!current.decorations.isEmpty()) {
 //					removeGutterDecoration(state, current.decorations.remove(0));
 //				}
+				JSArray<JSObject> cmDiags = JSArray.create();
 				for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
 					Array diags = result.get(ShellService.DIAG);
 					for (Dict diag : diags.toListOf(Dict.class)) {
@@ -153,6 +163,7 @@ public class EditorServer implements EditorService {
 						try {
 							URI uri = new URI(diag.get(ShellService.LOC));
 							Location l = new Location(uri);
+							cmDiags.push(diagnostic(l.start(), l.end(), "error", diag.get(Reply.ENAME) + ": " + diag.get(Reply.EVALUE)));
 //							addAnno(state, l.start(), l.length(), "error",
 //									diag.get(Reply.ENAME) + ": " + diag.get(Reply.EVALUE));
 						} catch (URISyntaxException ex) {
@@ -184,13 +195,15 @@ public class EditorServer implements EditorService {
 						}
 					}
 				}
+				current.state = setDiagnostics(client.editor.state(), cmDiags);
+				client.editor.switchState(current.state);
 				client.terminalClient.prompt();
 			}).onFailure(msg -> {
 //				clearAnnos(state);
 				while (!current.decorations.isEmpty()) {
 //					removeGutterDecoration(state, current.decorations.remove(0));
 				}
-				Browser.consoleLog("exec error: " + msg);
+				logger.info("exec error: " + msg);
 				String ename = msg.get(Reply.ENAME);
 				String evalue = msg.get(Reply.EVALUE, null);
 				Array trace = msg.get(Reply.TRACEBACK);
@@ -205,8 +218,7 @@ public class EditorServer implements EditorService {
 	}
 
 	protected void close(Event e) {
-		Browser.consoleLog("close: ");
-		Browser.consoleLog(e);
+		logger.info("close: {}", e);
 		if (currentSession != null) {
 			if (!currentSession.filename.startsWith("*")) {
 				client.storage().setItem("autosave://" + currentSession.filename, content());
@@ -224,7 +236,7 @@ public class EditorServer implements EditorService {
 
 	@Override
 	public Async<Dict> content(String content, String language) {
-		Browser.consoleLog("Contents: " + content);
+		logger.info("Contents: " + content);
 		State newState = setDoc(client.editor.state(), content);
 		client.editor.switchState(newState);
 		return null;
@@ -236,7 +248,7 @@ public class EditorServer implements EditorService {
 
 	@Override
 	public Async<Dict> mark(String message, int cursorPos, int start, int end) {
-		Browser.consoleLog("Contents2: " + message + ", " + cursorPos + ", " + start + ", " + end);
+		logger.info("Contents2: " + message + ", " + cursorPos + ", " + start + ", " + end);
 		return null;
 	}
 
@@ -266,19 +278,19 @@ public class EditorServer implements EditorService {
 
 	@Override
 	public Async<Dict> open(String filename, String text, String language) {
-		Browser.consoleLog("Open: " + filename + " " + language + ":\n" + (text != null ? text : "null"));
+		logger.info("Open: " + filename + " " + language + ":\n" + (text != null ? text : "null"));
 
 		if (currentSession != null) {
 			if (currentSession.filename.equals(filename)) {
 				client.editor.switchState(setDoc(client.editor.state(), text));
 				return null;
 			} else if (currentSession.filename.equals("*scratch*") && isEmpty(client.editor.state())) {
-				Browser.consoleLog("replacing *scratch*");
+				logger.info("replacing *scratch*");
 				if (text == null)
 					text = client.storage().getItem("file://" + filename);
 				if (text == null)
 					text = "";
-				Browser.consoleLog("text: " + text);
+				logger.info("text: " + text);
 				client.editor.switchState(setDoc(client.editor.state(), text));
 				currentSession.filename = filename;
 				currentSession.tabLink.withText(filename);
@@ -287,7 +299,7 @@ public class EditorServer implements EditorService {
 		}
 		if (text == null)
 			text = client.storage().getItem("file://" + filename);
-		
+
 		EditSession sess = sessionsByName.get(filename);
 		if (sess == null) {
 			int id = nextSessionId++;
@@ -297,7 +309,7 @@ public class EditorServer implements EditorService {
 					.withAttr("href", "#") //
 					.withAttr("data-session", String.valueOf(id))//
 					.withAttr("data-filename", filename) //
-					.withText(filename);
+					.withAttr("class", "tab-name").withText(filename);
 //					.withAttr("class", "nav-link") //
 			sess.tab.appendChild(sess.tabLink);
 			sess.closeLink = Browser.document.createElement("a") //
@@ -305,24 +317,23 @@ public class EditorServer implements EditorService {
 					.withAttr("href", "#") //
 					.withAttr("data-session", String.valueOf(id))//
 					.withAttr("data-filename", filename) //
-					.withAttr("role", "presentation")//
+					.withAttr("class", "tab-close").withAttr("role", "presentation")//
 					.withText("×");
 			sess.tab.appendChild(sess.closeLink);
 
 			tabs.appendChild(sess.tab);
-			Browser.consoleLog("editor tabs: ");
-			Browser.consoleLog(tabs);
+			logger.info("editor tabs: {}", tabs);
 			sess.state = client.editor.createState(text);
 			sess.id = id;
 			sess.filename = filename;
 
 			EditSession theSession = sess;
 			sess.tabLink.addEventListener("click", (e) -> {
-				Browser.consoleLog("Switch to tab: " + filename);
+				logger.info("Switch to tab: " + filename);
 				switchTo(theSession);
 			});
 			sess.closeLink.addEventListener("click", (e) -> {
-				Browser.consoleLog("Close tab: " + filename);
+				logger.info("Close tab: " + filename);
 			});
 		} else {
 			sess.state = setDoc(sess.state, text);

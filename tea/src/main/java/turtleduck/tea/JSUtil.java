@@ -1,5 +1,7 @@
 package turtleduck.tea;
 
+import java.util.List;
+
 import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.core.JSArray;
@@ -9,14 +11,20 @@ import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.core.JSNumber;
 import org.teavm.jso.core.JSObjects;
 import org.teavm.jso.core.JSString;
+import org.teavm.jso.dom.css.CSSStyleDeclaration;
 import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.json.JSON;
 import org.teavm.jso.typedarrays.ArrayBuffer;
+import org.teavm.platform.Platform;
 
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
+import turtleduck.util.Logging;
 
 class JSUtil {
+	@JSBody(params = { "elt" }, script = "return window.getComputedStyle(elt)")
+	static native CSSStyleDeclaration getStyle(HTMLElement elt);
+
 	@JSBody(params = { "obj" }, script = "return Array.isArray(obj)")
 	native static boolean isArray(JSObject obj);
 
@@ -40,10 +48,10 @@ class JSUtil {
 
 	@JSBody(params = { "arg", "code" }, script = "return new Function(arg, code)")
 	native static JSFunction function(String arg, String code);
-	
+
 	@JSBody(params = { "name", "fun" }, script = "turtleduck[name] = fun")
 	native static <T extends JSObject> void export(String name, JSConsumer<T> fun);
-	
+
 	@JSBody(params = { "elt", "code" }, script = "elt.innerHTML = turtleduck.md.render(code)")
 	native static void renderSafeMarkdown(HTMLElement elt, String code);
 
@@ -55,6 +63,32 @@ class JSUtil {
 	 */
 	@JSBody(params = { "elt", "code" }, script = "elt.innerHTML = turtleduck.md.render(code)")
 	native static void renderUnsafeMarkdown(HTMLElement elt, String code);
+
+	public static void logger(Integer lvl, List<Object> args) {
+		try {
+			JSArray<JSObject> objs = JSArray.create();
+			for (Object obj : args) {
+				if (obj == null)
+					objs.push(JSString.valueOf("(null)"));
+				else if (obj instanceof Object)
+					objs.push(JSString.valueOf(obj.toString()));
+				else
+					objs.push((JSObject) obj);
+			}
+			if (lvl >= Logging.LOG_LEVEL_ERROR)
+				Browser.consoleErrorArray(objs);
+			else if (lvl >= Logging.LOG_LEVEL_WARN)
+				Browser.consoleWarnArray(objs);
+			else if (lvl >= Logging.LOG_LEVEL_INFO)
+				Browser.consoleInfoArray(objs);
+			else if (lvl >= Logging.LOG_LEVEL_DEBUG)
+				Browser.consoleDebugArray(objs);
+			else
+				Browser.consoleTraceArray(objs);
+		} catch (Throwable ex) {
+			Browser.consoleLog("Logger failed: ", JSString.valueOf(ex.toString()));
+		}
+	}
 
 	public static Dict decodeDict(JSMapLike<?> jsobj) {
 		if (jsobj == null)

@@ -2,6 +2,8 @@ package turtleduck.util;
 
 import java.util.stream.Collectors;
 
+import turtleduck.colors.Color;
+
 public class JsonUtil {
 
 	public static Object decodeJson(String s) {
@@ -28,6 +30,8 @@ public class JsonUtil {
 			return (T) Short.valueOf(s);
 		} else if (type == Byte.class) {
 			return (T) Byte.valueOf(s);
+		} else if (type == Color.class && s.startsWith("#")) {
+			return (T) Color.fromString(s);
 		} else {
 			throw new IllegalArgumentException("Can't decode " + type.getName());
 		}
@@ -51,6 +55,8 @@ public class JsonUtil {
 			return (T) Short.valueOf(s);
 		} else if (type == Byte.class) {
 			return (T) Byte.valueOf(s);
+		} else if (type == Color.class && s.startsWith("#")) {
+			return (T) Color.fromString(s);
 		} else {
 			throw new IllegalArgumentException("Can't decode " + type.getName());
 		}
@@ -83,6 +89,8 @@ public class JsonUtil {
 				sb.append(encodeValue(d.get(k)));
 			});
 			return sb.toString();
+		} else if (o instanceof Color) {
+			return String.format("#%08x", ((Color) o).toARGB());
 		} else {
 			throw new IllegalArgumentException("Can't encode " + o);
 		}

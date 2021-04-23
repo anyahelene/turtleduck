@@ -5,6 +5,7 @@ import java.util.function.Function;
 import org.joml.Matrix3x2d;
 
 import turtleduck.colors.Color;
+import turtleduck.colors.Colors;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseLayer;
@@ -68,8 +69,9 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 
 	public Canvas strokePaint(Color ink) {
 		if (ink == null)
-			throw new NullPointerException();
-		return pen(pen.change().strokePaint(ink).done());
+			return pen(pen.change().strokePaint(Colors.TRANSPARENT).done());
+		else
+			return pen(pen.change().strokePaint(ink).done());
 	}
 
 	public Canvas strokeOpacity(double opacity) {
@@ -78,8 +80,9 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 
 	public Canvas fillPaint(Color ink) {
 		if (ink == null)
-			throw new NullPointerException();
-		return pen(pen.change().fillPaint(ink).done());
+			return pen(pen.change().fillPaint(Colors.TRANSPARENT).done());
+		else
+			return pen(pen.change().fillPaint(ink).done());
 	}
 
 	public Canvas fillOpacity(double opacity) {
@@ -380,23 +383,31 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	public CanvasService service() {
 		return canvasService;
 	}
-	
+
 	@Override
 	public void onKeyPress(String javaScript) {
-		if(canvasService != null) {
+		if (canvasService != null) {
 			canvasService.onKeyPress(javaScript);
 		}
 	}
+
 	@Override
 	public void evalScript(String javaScript) {
-		if(canvasService != null) {
+		if (canvasService != null) {
 			canvasService.evalScript(javaScript);
 		}
 	}
-	
+
 	@Override
 	public void setText(String id, String newText) {
-		if(canvasService != null)
+		if (canvasService != null)
 			canvasService.setText(id, newText);
+	}
+
+	@Override
+	public Canvas background(Color color) {
+		if (canvasService != null)
+			canvasService.background(color.toString());
+		return this;
 	}
 }

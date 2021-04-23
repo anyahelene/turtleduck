@@ -21,7 +21,7 @@ public interface ITheme extends JSObject {
 		protected static native ITheme createVGA();
 
 		@JSBody(params = {}, script = "return {" + //
-				"'black':'#000', 'red':'#E00', 'green':'#0E0', 'yellow':'#EA0'," + //
+				"'black':'#222', 'red':'#E00', 'green':'#0E0', 'yellow':'#EA0'," + //
 				"blue:'#00E', magenta:'#E0E', cyan:'#0EE', white:'#EEE', " + //
 				"brightBlack:'#AAA', brightRed:'#FAA', brightGreen:'#AFA', brightYellow:'#FFA', " + //
 				"brightBlue:'#AAF', brightMagenta:'#FAF', brightCyan:'#AFF', brightWhite:'#FFF'" + //

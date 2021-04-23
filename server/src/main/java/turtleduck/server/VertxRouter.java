@@ -34,9 +34,9 @@ public class VertxRouter extends Router {
 	protected void socketSend(Buffer data) {
 		if (socket != null) {
 			while (!queue.isEmpty()) {
-				socket.write(queue.remove(0));
+				socket.write(queue.remove(0)).onFailure(ex -> logger.error("Send error", ex)).onSuccess(v -> logger.info("Send ok"));
 			}
-			socket.write(data);
+			socket.write(data).onFailure(ex -> logger.error("Send error", ex)).onSuccess(v -> logger.info("Send ok"));
 		} else {
 			queue.add(data);
 		}
@@ -45,7 +45,7 @@ public class VertxRouter extends Router {
 	public void connect(SockJSSocket socket) {
 		this.socket = socket;
 		while (!queue.isEmpty()) {
-			socket.write(queue.remove(0));
+			socket.write(queue.remove(0)).onFailure(ex -> logger.error("Send error", ex)).onSuccess(v -> logger.info("Send ok"));
 		}
 	}
 

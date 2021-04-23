@@ -3,6 +3,7 @@ package turtleduck.tea.terminal;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
+import org.slf4j.Logger;
 import org.teavm.jso.dom.events.KeyboardEvent;
 
 import turtleduck.events.JSKeyCodes;
@@ -11,10 +12,12 @@ import turtleduck.events.KeyEvent;
 import turtleduck.tea.Browser;
 
 import turtleduck.terminal.PtyHostSide;
+import turtleduck.util.Logging;
 import xtermjs.IDisposable;
 import xtermjs.Terminal;
 
 public class HostSide implements PtyHostSide {
+	public static final Logger logger = Logging.getLogger(HostSide.class);
 	protected String data = null;
 	private IDisposable onKey;
 	private IDisposable onData;
@@ -63,7 +66,7 @@ public class HostSide implements PtyHostSide {
 				flags |= KeyEvent.KEY_TYPE_REPEAT;
 
 			if (data != null) {
-				Browser.consoleLog("KeyHandler.onKey: leftover data: '" + data + "'");
+				logger.warn("KeyHandler.onKey: leftover data: '{}'", data);
 			}
 			data = ke.getKey();
 			String jsKey = ev.getKey();
@@ -84,7 +87,7 @@ public class HostSide implements PtyHostSide {
 		onData = terminal.onData((String s) -> {
 			if (data != null) {
 				if (!data.equals(s))
-					Browser.consoleLog("KeyHandler.onData: mismatch with onKey: '" + data + "' != '" + s + "'");
+					logger.info("KeyHandler.onData: mismatch with onKey: '{}' != '{}'", data, s);
 				data = null;
 			} else if (inputListener != null) {
 				inputListener.test(s);

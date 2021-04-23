@@ -90,12 +90,17 @@ module.exports = {
           test: /\.s[ac]ss$/i,
 	exclude: /node_modules/,
           use: [
-              { loader: 'file-loader', options: { name: '[name].css' } },
+              { loader: 
+              'file-loader', options: { name: 'css/[name].css', publicPath: 'css' } },
               "extract-loader",
               // Translates CSS into CommonJS
-              { loader: "css-loader", options: { url: true } },
+              { loader: "css-loader", options: { url: false } },
               // Compiles Sass to CSS
-              "sass-loader", // { loader: "sass-loader", options: { webpackImporter: true} }
+              //"sass-loader",
+               { loader: "sass-loader", options: {
+                   webpackImporter: true,
+               //    sassOptions: {includePaths: [path.resolve(__dirname, 'node_modules'),]}
+               } }
           ]
       },
       {
@@ -104,7 +109,7 @@ module.exports = {
         //exclude: /fonts/,
         loader: 'url-loader',
         options: {
-            limit: 200000, outputPath: '',
+            limit: 200000, outputPath: 'static',
         }
       }
     ]

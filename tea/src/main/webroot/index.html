@@ -17,11 +17,11 @@
 	src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
 <script type="text/javascript" charset="utf-8"
 	src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-java.min.js"></script> -->
-<link rel="stylesheet" href="static/style.css" />
+<link rel="stylesheet" href="static/css/style.css" />
 </head>
 <body onload="main()">
 
-	<div id="page" class="main-and-figure">
+	<div id="page" class="dark main-and-figure">
 		<header id="top">
 			<nav id="top-left">
 				<img id="logoimg" src="static/images/turtleduck.svg" /> <a
@@ -31,82 +31,94 @@
 
 			</nav>
 			<nav id="top-menu">
-				<button id="f1" data-shortcut="ctrl+s" class="row2" type=button>
-					<span class="">Save</span><span class="icon">💾</span>
+				<button id="f1" data-shortcut="ctrl+s" data-icon="💾" class="row2"
+					type=button>
+					<span class="the-text">Save&Run</span>
 				</button>
-				<button id="f2" data-shortcut="ctrl+2" class="row2" type=button>
-					<span class="">Run</span><span class="icon">🏃</span>
+				<button id="f2" data-shortcut="ctrl+2" data-icon="🏃" class="row2"
+					type=button>
+					<span class="the-text">Run</span>
 				</button>
-				<button id="f3" data-shortcut="ctrl+3" class="row2" type=button>
-					<span class="">Test</span><span class="icon">🎈</span>
+				<button id="f3" data-shortcut="ctrl+3" data-icon="🧪" class="row2"
+					type=button>
+					<span class="the-text">Test</span>
 				</button>
-				<button id="f4" data-shortcut="ctrl+4" class="row2" type=button>
-					<span class=""></span>
+				<button id="f4" data-shortcut="ctrl+4" data-icon="🦜"
+					data-alt-icon="💬" class="row2" type=button>
+					<span class="the-text">Chat</span><span class="notification">2</span>
 				</button>
-				<button id="f5" data-shortcut="ctrl+5" class="row2" type=button>
-					<span class="">Explorer</span><span class="icon">🗺️</span>
+				<button id="f5" data-shortcut="ctrl+5" data-icon="🗺️" class="row2"
+					type=button>
+					<span class="the-text">Explorer</span>
 				</button>
-				<button id="f6" data-shortcut="ctrl+6" class="row2" type=button>
-					<span class="">Code</span><span class="icon">📖</span>
+				<button id="f6" data-shortcut="ctrl+6" data-icon="⌨️" class="row2"
+					type=button>
+					<span class="the-text">Code</span>
 				</button>
-				<button id="f7" data-shortcut="ctrl+7" class="row2" type=button>
-					<span class="">Command</span><span class="icon">⌨️</span>
+				<button id="f7" data-shortcut="ctrl+7" data-icon="📖" class="row2"
+					type=button>
+					<span class="the-text">Docs</span>
 				</button>
-				<button id="f8" data-shortcut="ctrl+8" class="row2" type=button>
-					<span class="">Graphics</span><span class="icon">🎨</span>
-				</button>
-				<button id="f9" data-shortcut="ctrl+9" class="row2" type=button>
-					<span class="">Code/Gfx</span><span class="icon">🖥️</span>
+				<button id="f8" data-shortcut="ctrl+8" data-icon="🖥️" class="row2"
+					type=button>
+					<span class="the-text">Code/Gfx</span>
 					<!-- 🖼️ -->
 				</button>
-				<button id="f11" data-shortcut="shift+ctrl+1" class="row1"
+				<button id="f9" data-shortcut="ctrl+9" data-icon="☕" class="row2"
 					type=button>
-					<span class="long">Exercises</span><span class="icon">👩‍🏫</span>
+					<span class="the-text">Java ↓</span>
 				</button>
-				<button id="f12" data-shortcut="shift+ctrl+2" class="row1"
-					type=button>
-					<span class="">Debug</span><span class="icon">🐛</span>
+				<button id="f11" data-shortcut="shift+ctrl+1" data-icon="📂"
+					class="row1" type=button>
+					<span class="the-text">Open</span>
 				</button>
-				<button id="f13" data-shortcut="shift+ctrl+3" class="row1"
-					type=button>
-					<span class=""></span>
+				<button id="f12" data-shortcut="shift+ctrl+2" data-icon="🐛"
+					class="row1" type=button>
+					<span class="the-text">Debug</span>
 				</button>
-				<button id="f14" data-shortcut="shift+ctrl+4" class="row1"
-					type=button>
-					<span class=""></span>
+				<button id="f13" data-shortcut="shift+ctrl+3" data-icon="🌐"
+					class="row1" type=button>
+					<span class="the-text">Publish</span>
 				</button>
-				<button id="f15" data-shortcut="shift+ctrl+5" class="row1"
-					type=button>
-					<span class=""></span>
+				<button id="f14" data-shortcut="shift+ctrl+4" data-icon="🙃"
+					class="row1" type=button>
+					<span class="the-text">Profile</span>
 				</button>
-				<button id="f16" data-shortcut="shift+ctrl+6" class="row1"
-					type=button>
-					<span class=""></span>
+				<button id="f15" data-shortcut="shift+ctrl+5" data-icon="🚧"
+					class="row1" type=button>
+					<span class="the-text">Projects</span>
 				</button>
-				<button id="f17" data-shortcut="shift+ctrl+7" class="row1"
-					type=button>
-					<span class=""></span>
+				<button id="f16" data-shortcut="shift+ctrl+6" data-icon="🧐"
+					class="row1" type=button>
+					<span class="the-text">Quality</span>
 				</button>
-				<button id="f18" data-shortcut="shift+ctrl+8" class="row1"
-					type=button>
-					<span class=""></span>
+				<button id="f17" data-shortcut="shift+ctrl+7" data-icon="✨"
+					class="row1" type=button>
+					<span class="the-text">Hints</span>
 				</button>
-				<button id="f19" data-shortcut="shift+ctrl+9" class="row1"
-					type=button>
-					<span class="">Java ↓</span><span class="icon">☕</span>
+				<button id="f18" data-shortcut="shift+ctrl+8" data-icon="👩‍🏫"
+					class="row1" type=button>
+					<span class="the-text">Demos</span>
 				</button>
-				<button id="help" data-shortcut="ctrl+?" class="rows" type=button>
-					<span class="" style="font-size: x-large">?</span>
+				<button id="f19" data-shortcut="shift+ctrl+9" data-icon="💅"
+					data-alt-icon="⚙️" class="row1" type=button>
+					<span class="the-text">Settings</span>
+				</button>
+				<button id="help" data-shortcut="ctrl+?" data-icon="" class="rows" type=button>
+					<span class="the-text" style="font-size: x-large">?</span>
 				</button>
 			</nav>
 			<nav id="top-right"></nav>
 		</header>
 
-		<fieldset id="explorer" class="box explorer widget">
-			<legend>
-				<span class="title">Explorer</span>
-			</legend>
-			<div class="body">
+		<section id="explorer" class="box explorer widget"
+			style="background: none">
+			<header>
+				<nav id="explorer-tabs" class="tabs">
+					<span class="tab selected">Explorer</span>
+				</nav>
+			</header>
+			<section class="body">
 				<h2>
 					<a id="explorer-head-var" href="#explorer-var" class="open empty"
 						data-toggle="collapse">Variables</a>
@@ -131,15 +143,15 @@
 				</h2>
 				<ul id="explorer-import" class="collapse open empty"
 					data-role="listview"></ul>
-			</div>
-		</fieldset>
+			</section>
+		</section>
 
-		<fieldset id="editor" class="box widget" data-widget="editor"
-			data-provides="editor">
-			<legend id="editor-tabs" class="">Code</legend>
-			<div id="editor-wrap">
-			</div>
-			<section data-reset-onclick="show-splash-help" class="splashhelp">
+		<section id="editor" class="box widget">
+			<header id="editor-head">
+				<nav id="editor-tabs" class="tabs"></nav>
+			</header>
+			<main id="editor-wrap"></main>
+			<aside data-reset-onclick="show-splash-help" class="splashhelp">
 				<h2>Code Editor</h2>
 				<p>Try..
 				<ul class="shell-sample">
@@ -149,27 +161,45 @@
 							twice</a>
 				</ul>
 				<p>to open shell snippets in editor.
-			</section>
-		</fieldset>
+			</aside>
+		</section>
 
 		<!--div id="right-size" style="position:absolute;left:0px;margin-left:-5px;height:100%;width:5px;background:#ccc;z-index:100" ></div-->
-		<fieldset id="figure0" class="box figure">
-			<legend>
-				<span class="title">Graphics</span>
-			</legend>
-			<nav class="toolbar">
-				<button id="gfx-clear" type="button">Clear</button>
-				<button id="gfx-save" type="button">Save</button>
-			</nav>
-			<div>
-				<!-- svg id="svg0" viewBox="0 0 1280 720" preserveAspectRatio="xMinYMin slice"></svg-->
-				<div id="excavator"></div>
-				<svg id="svg0" tabindex="0" viewBox="-640 -360 1280 720"
+		<section id="screen" class="box screen">
+			<header id="screen-head">
+				<nav id="screen-tabs" class="tabs">
+					<span class="tab selected">GFX</span> <span class="tab">DOC</span>
+					<span class="tab">JVM</span>
+				</nav>
+				<nav id="screen-tools" class="toolbar" data-enable-if="svg">
+					<a id="gfx-clear" class="button">Clear</a> <a id="gfx-save"
+						class="button">Save</a>
+				</nav>
+			</header>
+			<main data-enable-if="svg">
+				<div data-enable-if="svg" id="excavator" style="display: none"></div>
+				<svg id="svg" tabindex="0" viewBox="-640 -360 1280 720"
 					preserveAspectRatio="xMidYMid slice"></svg>
-			</div>
-			<div class="footnote" id="coordinates-svg0">(0,0)</div>
-			<div class="box-foot">SVG</div>
-			<section data-reset-onclick="show-splash-help" class="splashhelp">
+			</main>
+			<main data-enable-if="docs" style="display: none">
+				<section id="docs" class="box widget figure">
+					<legend>Docs</legend>
+					<div id="doc-display" class="text"></div>
+				</section>
+			</main>
+			<main data-enable-if="jvm" style="display: none">
+				<section id="instructions" class="box widget figure"
+					data-widget="instructions" data-provides="instructions"
+					style="display: none">
+					<header>Method Bytecode</header>
+					<div id="bytecode-display" class="text"></div>
+				</section>
+			</main>
+			<footer id="screen-foot">
+				<div class="footnote" id="coordinates-svg" data-enable-if="svg">(0,0)</div>
+				<div class="box-foot" data-enable-if="svg">SVG</div>
+			</footer>
+			<aside data-reset-onclick="show-splash-help" class="splashhelp">
 				<h2>Graphics</h2>
 				<p>For example, try...
 				<ul class="shell-sample">
@@ -180,28 +210,25 @@
 							turtle.draw(2).turn(1);
 					</a>
 				</ul>
-			</section>
-		</fieldset>
-		<fieldset id="instructions" class="box widget figure"
-			data-widget="instructions" data-provides="instructions"
-			style="display: none">
-			<legend>Method Bytecode</legend>
-			<div id="bytecode-display" class="text"></div>
-		</fieldset>
-		<fieldset id="docs" class="box widget figure" style="display: none">
-			<legend>Docs</legend>
-			<div id="doc-display" class="text"></div>
-		</fieldset>
+			</aside>
+		</section>
+
+
 		<!-- div style="width: 100%; height: 10px; background: #f00"
 			draggable="true"></div-->
-		<fieldset id="console" class="box console">
-			<legend>
-				<span class="title">Shell</span>
-			</legend>
+		<section id="console" class="box console">
+			<div class="slack"></div>
+			<header>
+				<nav id="console-tabs" class="tabs">
+					<span class="tab selected">Shell</span> <span class="tab">CmShell</span>
+				</nav>
+			</header>
 			<!--div id="code-size" style="position:relative;top:0px;margin-top:-5px;width:100%;height:5px;background:#ccc;z-index:100"></div-->
-			<div id="xtermjs-wrap" class="widget" data-widget="xtermjs"
-				data-requires="jshell"></div>
-			<section data-reset-onclick="show-splash-help" class="splashhelp">
+			<main id="xtermjs-wrap" data-enable-if="xterm"></main>
+			<main id="cmshell-wrap" data-enable-if="cmterm"
+				style="display: none"></main>
+
+			<aside data-reset-onclick="show-splash-help" class="splashhelp">
 				<h2>Shell</h2>
 				<p>Evaluate expressions and declare variables, methods and
 					classes
@@ -213,8 +240,8 @@
 						data-paste="int twice(int a) { return a + a; }">int twice(int
 							a) { return a + a; }</a>
 				</ul>
-			</section>
-		</fieldset>
+			</aside>
+		</section>
 		<footer id="bottom">
 			<div id="foot-left"></div>
 			<div id="foot-mid"></div>
@@ -301,7 +328,7 @@
 						+ Math.round(p.y) + ")";
 			}
 		}
-		trackMouse(document.getElementById("svg0"));
+		trackMouse(document.getElementById("svg"));
 	</script>
 </body>
 </html>

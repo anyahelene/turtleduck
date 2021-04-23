@@ -221,13 +221,13 @@
 	</reporting>
 	<modules>
 		<module>anno</module>
-		<module>auth</module>
 		<module>base</module>
 		<module>jfx</module>
 		<module>demo</module>
 		<module>shell</module>
 		<module>gl</module>
 		<module>tea</module>
+		<module>auth</module>
 		<module>server</module>
 	</modules>
 </project>

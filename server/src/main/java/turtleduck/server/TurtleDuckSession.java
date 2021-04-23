@@ -28,6 +28,7 @@ import turtleduck.terminal.PseudoTerminal;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 
 @MessageDispatch("turtleduck.server.generated.TDSDispatch")
 public class TurtleDuckSession extends AbstractVerticle implements HelloService, ShellService, Shareable {
@@ -139,10 +140,7 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 //			return true;
 //		});
 		pty.useHistory(0, false);
-		pty.reconnectListener(() -> {
-			shell.reconnect();
-			shell.prompt();
-		});
+
 //		shell.editorFactory((n, callback) -> {
 //			EditorChannel ch = new EditorChannel(n, "editor", callback);
 ////			open(ch);
@@ -158,8 +156,26 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 		sessionId = sessionName;
 		sessions.put(sessionId, this);
 		router.init(sessionName, user);
-		if(shell == null)
-			createShell();
+		if(shell == null) {
+			Sink<Dict> sink = Async.create();
+			context.executeBlocking((Promise<Dict> promise) -> {
+				createShell();
+				promise.complete(finishHello());
+			}, res -> {
+				if(res.succeeded()) {
+					sink.success(res.result());
+				} else {
+					sink.fail(res.cause());
+				}
+			});
+			return sink.async();
+		} else {
+			return Async.succeeded(finishHello());
+		}
+
+	}
+
+	private Dict finishHello() {
 		Dict myEndPoints = Dict.create();
 		myEndPoints.put("turtleduck.server", Array.of("hello"));
 		myEndPoints.put("turtleduck.shell.server", Array.of("inspect_request"));
@@ -169,9 +185,8 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 		reply.put(HelloService.USER, userInfo);
 		reply.put(HelloService.EXISTING, used);
 		used = true;
-		return Async.succeeded(reply);
+		return reply;
 	}
-
 	@Override
 	public Async<Dict> executeRequest(String code, boolean silent, boolean store_history, Dict user_expressions,
 			boolean allow_stdin, boolean stop_on_error) {
@@ -192,6 +207,11 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 	@Override
 	public Async<Dict> complete(String code, int cursorPos, int detailLevel) {
 		return shell.complete(code, cursorPos, detailLevel);
+	}
+
+	@Override
+	public Async<Dict> refresh() {
+		return shell.refresh();
 	}
 
 }

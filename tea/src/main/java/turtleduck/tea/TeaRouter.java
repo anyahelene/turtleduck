@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+import org.slf4j.Logger;
 import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.dom.events.MessageEvent;
 import org.teavm.jso.json.JSON;
@@ -18,9 +19,12 @@ import org.teavm.jso.typedarrays.Int8Array;
 import turtleduck.messaging.Message;
 import turtleduck.messaging.Router;
 import turtleduck.tea.net.SockJS;
+import turtleduck.tea.terminal.KeyHandler;
 import turtleduck.util.Dict;
+import turtleduck.util.Logging;
 
 class TeaRouter extends Router {
+	public static final Logger logger = Logging.getLogger(TeaRouter.class);
 
 	private SockJS socket;
 	private List<String> queue = new ArrayList<>();
@@ -39,7 +43,7 @@ class TeaRouter extends Router {
 
 	public void debug() {
 		for (String s : messageLog) {
-			Browser.consoleLog(s);
+			logger.info("{}", s);
 		}
 	}
 
@@ -82,18 +86,21 @@ class TeaRouter extends Router {
 
 	protected void receive(MessageEvent ev) {
 		String str = ev.getDataAsString();
+		logger.info("RECV: {}", ev.getDataAsString());
 		if (str.startsWith("{")) {
+
 			JSMapLike<?> data = (JSMapLike<?>) JSON.parse(ev.getDataAsString());
 			log("RECV: " + ev.getDataAsString());
 			Dict d = JSUtil.decodeDict(data);
 			turtleduck.messaging.Message msg = turtleduck.messaging.Message.fromDict(d);
 			receive(msg);
+			logger.info("DONE: {}", ev.getDataAsString());
 		} else {
 			ArrayBuffer buf = ev.getDataAsArray();
 			if (!(buf instanceof ArrayBuffer)) {
 				buf = JSUtil.encodeUtf8(str);
 			}
-			Browser.consoleLog(buf);
+			logger.info("Buffer: {}", buf);
 			int bufSize = buf.getByteLength();
 			DataView view = DataView.create(buf);
 			boolean le = true;
@@ -101,30 +108,30 @@ class TeaRouter extends Router {
 			int int32 = view.getUint32(offset, !le);
 			offset += 4;
 			if (int32 != Message.BINARY_HEAD) {
-				Browser.consoleError("Bad message: " + str);
+				logger.error("Bad message: " + str);
 				return;
 			}
 			int len = view.getUint32(offset, le);
 			offset += 4;
 			if (len > bufSize - offset) {
-				Browser.consoleError("Bad message length: " + str);
+				logger.error("Bad message length: " + str);
 				return;
 			}
 			String msg = JSUtil.decodeUtf8(buf.slice(offset, offset + len));
-			Browser.consoleLog("Decoded: '" + msg + "'");
+			logger.info("Decoded: '" + msg + "'");
 			offset += len;
 			List<ByteBuffer> buffers = new ArrayList<>();
 			while (offset < bufSize) {
 				int32 = view.getUint32(offset, !le);
 				offset += 4;
 				if (int32 != Message.BINARY_DATA) {
-					Browser.consoleError("Bad message chunk: " + buf.slice(offset, bufSize));
+					logger.error("Bad message chunk: " + buf.slice(offset, bufSize));
 					return;
 				}
 				len = view.getUint32(offset, le);
 				offset += 4;
 				if (len > bufSize - offset) {
-					Browser.consoleError("Bad message chunk length: " + buf.slice(offset - 4, bufSize));
+					logger.error("Bad message chunk length: " + buf.slice(offset - 4, bufSize));
 					return;
 				}
 				Int8Array slice = Int8Array.create(buf.slice(offset, offset + len));
@@ -138,13 +145,14 @@ class TeaRouter extends Router {
 				offset += len;
 			}
 			for (ByteBuffer b : buffers) {
-				Browser.consoleLog(b.toString());
+				logger.info("buffer: {}", b.toString());
 			}
 		}
 	}
 
 	@Override
 	protected void socketSend(String json, ByteBuffer[] buffers) {
+		logger.error("socketSend not implemented");
 		throw new UnsupportedOperationException();
 	}
 }

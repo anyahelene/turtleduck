@@ -1,5 +1,7 @@
 package turtleduck.colors;
 
+import turtleduck.colors.Colors.Gamma;
+
 public class ColorRGB implements Color {
 //	private final short r, g, b, a;
 	private final float red;
@@ -53,7 +55,7 @@ public class ColorRGB implements Color {
 			g1 = c;
 			b1 = x;
 		} else if (h2 <= 4) {
-			r1 =0;
+			r1 = 0;
 			g1 = x;
 			b1 = c;
 		} else if (h2 <= 5) {
@@ -68,7 +70,7 @@ public class ColorRGB implements Color {
 			throw new IllegalStateException("this shouldn't happen, h=" + h + ", h2=" + h2);
 		}
 		float m = v - c;
-		return new ColorRGB(r1+m, g1+m, b1+m, a, true);
+		return new ColorRGB(r1 + m, g1 + m, b1 + m, a, true);
 
 	}
 
@@ -372,5 +374,15 @@ public class ColorRGB implements Color {
 				green + (r - green) * f, //
 				blue + (r - blue) * f, //
 				alpha, true);
+	}
+
+	@Override
+	public int toARGB() {
+		int r = (int) (Gamma.gammaCompress(red) * 255);
+		int g = (int) (Gamma.gammaCompress(green) * 255);
+		int b = (int) (Gamma.gammaCompress(blue) * 255);
+		int a = (int) (alpha * 255);
+
+		return ((r & 0xff) << 16) | ((g & 0xff) << 8) | ((b & 0xff) << 0) | ((a & 0xff) << 24);
 	}
 }

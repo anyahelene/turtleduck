@@ -4,6 +4,7 @@ import static turtleduck.tea.Browser.trying;
 
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.ajax.XMLHttpRequest;
 import org.teavm.jso.browser.Navigator;
@@ -33,10 +34,12 @@ import turtleduck.tea.net.SockJS;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextWindow;
 import turtleduck.util.Dict;
+import turtleduck.util.Logging;
 import xtermjs.Terminal;
 
 public class Client implements JSObject {
-protected static Client client;
+	public static final Logger logger = Logging.getLogger(Client.class);
+	protected static Client client;
 
 	public static JSMapLike<JSObject> WINDOW_MAP;
 	protected JSMapLike<JSObject> map;
@@ -60,18 +63,17 @@ protected static Client client;
 	private int reconnectInterval = 2000;
 
 	public TextCursor cursor;
+	private CMTerminalServer cmTerminalServer;
 
 	public void initialize() {
 		try {
 			JSObject jsobj = WINDOW_MAP.get("turtleduck");
 			if (jsobj != null) {
-				Browser.consoleLog("Found turtleduck map:");
-				Browser.consoleLog(jsobj);
+				logger.info("Found turtleduck map: {}", jsobj);
 				map = jsobj.cast();
 			} else {
 				map = JSObjects.create().cast();
-				Browser.consoleLog("Created turtleduck map:");
-				Browser.consoleLog(map);
+				logger.info("Created turtleduck map:", map);
 			}
 			map.set("actions", (KeyCallback) this::action);
 			Storage localStorage = Storage.getLocalStorage();
@@ -79,14 +81,14 @@ protected static Client client;
 			TextWindow window = new NativeTTextWindow(terminal);
 
 			Browser.document.addEventListener("visibilitychange", e -> {
-				Browser.consoleLog("Document visibility: " + Browser.visibilityState());
+				logger.info("Document visibility: " + Browser.visibilityState());
 			}, false);
 
 			Browser.window.addEventListener("pagehide", e -> {
-				Browser.consoleLog("Window hidden: ", e);
+				logger.info("Window hidden: ", e);
 			}, false);
 			HTMLElement xtermjsWrap = Browser.document.getElementById("xtermjs-wrap");
-			terminalClient = new TerminalClient(xtermjsWrap, "jshell", this);
+			terminalClient = new TerminalClient(xtermjsWrap, this);
 			terminalClient.initialize();
 			cursor = terminalClient.cursor();
 
@@ -111,35 +113,38 @@ protected static Client client;
 			socket.onClose(trying(this::disconnect));
 			socket.onOpen(trying(this::connect));
 
-			HTMLElement editor = Browser.document.getElementById("editor");
 			HTMLElement tabs = Browser.document.getElementById("editor-tabs");
 			HTMLElement wrapper = Browser.document.getElementById("editor-wrap");
-			editorImpl = new EditorServer(editor, wrapper, tabs, "editor", this, shellService);
+			editorImpl = new EditorServer(wrapper, tabs, this, shellService);
 			editorImpl.initialize();
 			router.route(new EditorDispatch(editorImpl));
+
+			cmTerminalServer = new CMTerminalServer(Browser.document.getElementById("cmshell-wrap"), this);
+			cmTerminalServer.initialize();
+
 			// Route route = router.route();
 //			route.registerHandler("welcome", (msg,r) -> Welcome.accept(msg, this));
 //		terminal.onData((d) -> {sockJS.send(d);});
 			WINDOW_MAP.set("turtleduck", map);
 			JSUtil.export("eval", this::eval);
-			
+
 			XMLHttpRequest req = XMLHttpRequest.create();
 			req.onComplete(() -> {
-				if(req.getReadyState() == 4 && req.getStatus() == 200) {
+				if (req.getReadyState() == 4 && req.getStatus() == 200) {
 					HTMLElement elt = Browser.document.getElementById("doc-display");
 					JSUtil.renderSafeMarkdown(elt, req.getResponseText());
 				} else {
-					Browser.consoleLog(req);
+					logger.warn("Unexpected request result: {}", req);
 				}
 			});
 			req.open("GET", "doc/TODO-PROJECTS.md", true);
 			req.setRequestHeader("Accept", "text/markdown, text/plain, text/*;q=0.9");
 			req.send();
-			
+
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
 		} catch (Throwable ex) {
-			Browser.addError(ex);
+			logger.error("Client failed: ", ex);
 			throw ex;
 		}
 	}
@@ -147,14 +152,17 @@ protected static Client client;
 	public void eval(JSString code) {
 		shellService.eval(code.stringValue(), terminalClient.lineNum++, Dict.create());
 	}
+
 	public static void main(String[] args) {
+		Logging.setLogDest(JSUtil::logger);
+		Logging.useCustomLoggerFactory();
 		WINDOW_MAP = Window.current().cast();
 		client = new Client();
 		client.initialize();
 	}
 
 	protected void connect(Event ev) {
-		Browser.consoleLog("Connect: " + ev.getType() + ", " + router);
+		logger.info("Connect: " + ev.getType() + ", " + router);
 		socketConnected = true;
 		router.connect(socket);
 		reconnectInterval = 2000;
@@ -167,25 +175,26 @@ protected static Client client;
 			status.withText("ONLINE");
 		}
 		welcomeService.hello(sessionName, Dict.create()).onSuccess(msg -> {
-			Browser.consoleLog("Received welcome: " + msg);
+			logger.info("Received welcome: {}", msg);
 			String username = msg.get(HelloService.USERNAME);
 			username(username);
 			String ex = msg.get(HelloService.EXISTING) ? "existing" : "new";
 			if (terminalClient != null)
 				terminalClient.connected(username, ex, sessionName);
-
+			if(msg.get(HelloService.EXISTING))
+				client.shellService.refresh();
 		});
 
 	}
 
 	protected void disconnect(CloseEvent ev) {
 		if (socketConnected) {
-			Browser.consoleLog("Disconnect: " + router + ", retry " + reconnectInterval);
+			logger.info("Disconnect: " + router + ", retry " + reconnectInterval);
 			if (terminalClient != null)
 				terminalClient.disconnected("");
 			socketConnected = false;
 		} else
-			Browser.consoleLog("Connection failed: " + router + ", retry " + reconnectInterval);
+			logger.error("Connection failed: " + router + ", retry " + reconnectInterval);
 		router.disconnect();
 		socket = null;
 		map.set("socket", null);
@@ -199,7 +208,7 @@ protected static Client client;
 		}
 
 		reconnectIntervalId = Window.setInterval(() -> {
-			Browser.consoleLog("Retrying SockJS connection...");
+			logger.info("Retrying SockJS connection...");
 			if (statusBtn != null) {
 				statusBtn.withText("Connecting...");
 			}
@@ -237,7 +246,7 @@ protected static Client client;
 	}
 
 	void action(String key, Event ev) {
-		Browser.consoleLog("action: " + key);
+		logger.info("action: {}, {}", key, ev);
 		if (key.equals("f1")) {
 			editorImpl.save(ev);
 		} else if (key.equals("f2")) {
