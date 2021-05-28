@@ -404,8 +404,10 @@ public class ControlSequences {
 				i = it.next();
 				if (i < 16)
 					return PALETTE_VGA[i];
-				else if (i < 232)
-					return Color.color(i / 36, (i / 6) % 6, i % 6);
+				else if (i < 232) {
+					int j = i - 16;
+					return Color.color((j / 36)/5.0, ((j / 6) % 6)/5.0, (j % 6)/5.0);
+				}
 				else
 					return Color.grey((i - 232) / 23.0);
 			} else if (i == 2) {

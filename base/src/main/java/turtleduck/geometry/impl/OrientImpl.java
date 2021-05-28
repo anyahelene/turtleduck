@@ -236,7 +236,6 @@ public class OrientImpl implements Orientation {
 
 	@Override
 	public String toString() {
-		double degs = degrees();
 		Vector3d euler = q.getEulerAnglesXYZ(new Vector3d());
 		Vector3d xyz = new Vector3d();
 		double x = q.x(), y = q.y(), z = q.z(), w = q.w();
@@ -245,18 +244,14 @@ public class OrientImpl implements Orientation {
 		xyz.x = Math.safeAsin(-2.0 * (x * z - w * y));
 		xyz.z = Math.atan2(2.0 * (z * w + x * y), w * w + x * x - y * y - z * z); // 1.0 - 2.0 * (y * y + z * z));
 
-//		double x = q.x(), y = q.y(), z = q.z(), w = q.w();
-//        euler.x = Math.atan2(2.0 * (x*w - y*z), 1.0 - 2.0 * (x*x + y*y));
-//        euler.y = Math.safeAsin(2.0 * (x*z + y*w));
-//        euler.y = Math.atan2(2.0 * (y*w - x*x), 1.0 - 2.0 * (z*z + x*x));
-//        euler.z = Math.atan2(2.0 * (z*w - x*y), 1.0 - 2.0 * (y*y + z*z));
-	// format = absolute ? "%s%.2f°,%.2f°,%.2f° %s" : "%s%+.2f°,%+.2f°,%+.2f° %s";
-		if (absolute && degs < 0) {
-			degs += 360;
-		}
-		return String.format("%.2f°,%.2f°,%.2f° / %.2f°,%.2f°,%.2f° %s %s", Math.toDegrees(euler.x),
-				Math.toDegrees(euler.y), Math.toDegrees(euler.z), Math.toDegrees(xyz.x), Math.toDegrees(xyz.y),
-				Math.toDegrees(xyz.z), vec, q);
+		if (euler.x == 0 && euler.y == 1)
+			return AngleImpl.toString(absolute, Math.toDegrees(euler.z));
+		else
+			return String.format("(%.1f°,%.1f°,%.1f°)", Math.toDegrees(euler.x),
+					Math.toDegrees(euler.y), Math.toDegrees(euler.z));
+//		return String.format("%.2f°,%.2f°,%.2f° / %.2f°,%.2f°,%.2f° %s %s", Math.toDegrees(euler.x),
+//				Math.toDegrees(euler.y), Math.toDegrees(euler.z), Math.toDegrees(xyz.x), Math.toDegrees(xyz.y),
+//				Math.toDegrees(xyz.z), vec, q);
 //		return String.format(format, toArrow(), Math.toDegrees(euler.x), Math.toDegrees(euler.y),
 //				Math.toDegrees(euler.z), euler.toString() + "/" + xyz.toString() + " vec " + vec.toString());
 	}

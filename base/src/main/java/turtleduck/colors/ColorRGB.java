@@ -317,22 +317,27 @@ public class ColorRGB implements Color {
 
 	@Override
 	public String toString() {
-		if (alpha == 1.0)
-			return String.format("#%02X%02X%02X", Math.round(red * 255), Math.round(green * 255),
-					Math.round(blue * 255));
+		int r = (int) Math.round(Gamma.gammaCompress(red) * 255);
+		int g = (int) Math.round(Gamma.gammaCompress(green) * 255);
+		int b = (int) Math.round(Gamma.gammaCompress(blue) * 255);
+//		 r = (int) (red * 255);
+//		 g = (int) (green * 255);
+//		 b = (int) (blue * 255);
+		 if (alpha == 1.0)
+			return String.format("#%02X%02X%02X", r, g, b);
 		else
-			return String.format("#%02X%02X%02X%02X", Math.round(red * 255), Math.round(green * 255),
-					Math.round(blue * 255), Math.round(alpha * 255));
+			return String.format("#%02X%02X%02X%02X", r, g, b, Math.round(alpha * 255));
 	}
 
 	@Override
 	public String toCss() {
+		int r = (int) Math.round(Gamma.gammaCompress(red) * 255);
+		int g = (int) Math.round(Gamma.gammaCompress(green) * 255);
+		int b = (int) Math.round(Gamma.gammaCompress(blue) * 255);
 		if (alpha == 1.0)
-			return String.format("rgb(%d,%d,%d)", Math.round(red * 255), Math.round(green * 255),
-					Math.round(blue * 255));
+			return String.format("rgb(%d,%d,%d)", r, g, b);
 		else
-			return String.format("rgba(%d,%d,%d,%d)", Math.round(red * 255), Math.round(green * 255),
-					Math.round(blue * 255), Math.round(blue * 255));
+			return String.format("rgba(%d,%d,%d,%d)", r, g, b, Math.round(alpha * 255));
 	}
 
 	@Override
@@ -341,8 +346,10 @@ public class ColorRGB implements Color {
 			if (this == Colors.TRANSPARENT) {
 				return String.format("%d;2;", i + 8);
 			} else {
-				return String.format("%d;2;%d;%d;%d", i + 8, Math.round(red * 255), Math.round(green * 255),
-						Math.round(blue * 255));
+				int r = (int) Math.round(Gamma.gammaCompress(red) * 255);
+				int g = (int) Math.round(Gamma.gammaCompress(green) * 255);
+				int b = (int) Math.round(Gamma.gammaCompress(blue) * 255);
+				return String.format("%d;2;%d;%d;%d", i + 8, r, g, b);
 			}
 		} else if (sgr < 8) {
 			return String.valueOf(i + sgr);
@@ -382,7 +389,9 @@ public class ColorRGB implements Color {
 		int g = (int) (Gamma.gammaCompress(green) * 255);
 		int b = (int) (Gamma.gammaCompress(blue) * 255);
 		int a = (int) (alpha * 255);
-
+		 r = (int) (red * 255);
+		 g = (int) (green * 255);
+		 b = (int) (blue * 255);
 		return ((r & 0xff) << 16) | ((g & 0xff) << 8) | ((b & 0xff) << 0) | ((a & 0xff) << 24);
 	}
 }

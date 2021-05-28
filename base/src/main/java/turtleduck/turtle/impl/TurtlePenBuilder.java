@@ -1,5 +1,7 @@
 package turtleduck.turtle.impl;
 
+import java.util.function.Function;
+
 import turtleduck.colors.Color;
 import turtleduck.geometry.Projection;
 import turtleduck.turtle.Pen;
@@ -7,10 +9,10 @@ import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.Pen.SmoothType;
 import turtleduck.turtle.Chelonian;
 
-public class TurtlePenBuilder<T extends Chelonian<T,C>, C> implements PenBuilder<T> {
+public class TurtlePenBuilder<T extends Chelonian<T, C>, C> implements PenBuilder<T> {
 	protected PenBuilder<Pen> pen;
 	protected T obj;
-	
+
 	public TurtlePenBuilder(PenBuilder<Pen> pen, T obj) {
 		this.pen = pen;
 		this.obj = obj;
@@ -25,12 +27,12 @@ public class TurtlePenBuilder<T extends Chelonian<T,C>, C> implements PenBuilder
 		return this;
 	}
 
-	public Color strokePaint() {
-		return pen.strokePaint();
+	public Color strokeColor() {
+		return pen.strokeColor();
 	}
 
-	public Color fillPaint() {
-		return pen.fillPaint();
+	public Color fillColor() {
+		return pen.fillColor();
 	}
 
 	public PenBuilder<T> strokePaint(Color ink) {
@@ -62,7 +64,7 @@ public class TurtlePenBuilder<T extends Chelonian<T,C>, C> implements PenBuilder
 		obj.pen();
 		return obj;
 	}
-	
+
 	public PenBuilder<T> smooth(SmoothType smooth) {
 		pen.smooth(smooth);
 		return this;
@@ -81,5 +83,41 @@ public class TurtlePenBuilder<T extends Chelonian<T,C>, C> implements PenBuilder
 	@Override
 	public double smoothAmount() {
 		return pen.smoothAmount();
+	}
+
+	@Override
+	public PenBuilder<T> color(Color ink) {
+		pen.color(ink);
+		return this;
+	}
+
+	@Override
+	public PenBuilder<T> color(Function<Color, Color> colorOp) {
+		pen.color(colorOp);
+		return this;
+	}
+
+	@Override
+	public PenBuilder<T> stroke(Function<Color, Color> colorOp) {
+		pen.stroke(colorOp);
+		return this;
+	}
+
+	@Override
+	public PenBuilder<T> fill(Function<Color, Color> colorOp) {
+		pen.fill(colorOp);
+		return this;
+	}
+
+	@Override
+	public PenBuilder<T> stroke(boolean enable) {
+		pen.stroke(enable);
+		return this;
+	}
+
+	@Override
+	public PenBuilder<T> fill(boolean enable) {
+		pen.fill(enable);
+		return this;
 	}
 }

@@ -78,6 +78,54 @@
 					</annotationProcessors>
 				</configuration>
 			</plugin>
+			<!-- Configure TeaVM -->
+			<plugin>
+				<groupId>org.teavm</groupId>
+				<artifactId>teavm-maven-plugin</artifactId>
+				<version>${teavm.version}</version>
+				<executions>
+					<execution>
+						<id>web-client</id>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<phase>process-classes</phase>
+						<configuration>
+							<!-- Directory where TeaVM should put generated files. This configuration 
+								conforms to the settings of the WAR plugin -->
+							<targetDirectory>${project.build.directory}/classes/webroot/js</targetDirectory>
+
+							<!-- Main class, containing static void main(String[]) -->
+							<mainClass>turtleduck.tea.Client</mainClass>
+
+							<!-- Whether TeaVM should produce minified JavaScript. Can reduce 
+								JavaScript file size more than two times. TODO: set to true -->
+							<minifying>false</minifying>
+
+							<!-- Whether TeaVM should produce a debug information file for its 
+								Eclipse plugin -->
+							<debugInformationGenerated>true</debugInformationGenerated>
+
+							<!-- whether TeaVM should build JavaScript incrementally -->
+							<incremental>true</incremental>
+
+							<!-- Whether TeaVM should produce source maps file -->
+							<sourceMapsGenerated>true</sourceMapsGenerated>
+
+							<!-- Whether TeaVM should also put source files into output directory, 
+								for compatibility with source maps -->
+							<sourceFilesCopied>true</sourceFilesCopied>
+
+							<!-- how the runtime.js file should be copied: SEPARATE, MERGED, NONE -->
+							<runtime>SEPARATE</runtime>
+
+							<!-- Optimization level. Valid values are: SIMPLE, ADVANCED, FULL -->
+							<optimizationLevel>ADVANCED</optimizationLevel>
+							<stopOnErrors>false</stopOnErrors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>3.2.0</version>
@@ -139,10 +187,6 @@
 							</resource -->
 					</webResources>
 				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.teavm</groupId>
-				<artifactId>teavm-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>

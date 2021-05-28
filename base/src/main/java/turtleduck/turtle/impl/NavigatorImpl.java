@@ -26,12 +26,12 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 	protected abstract void addPoint(PathPointImpl point); 
 
 	@Override
-	public Direction bearing() {
+	public Direction direction() {
 		return current.bearing;
 	}
 
 	@Override
-	public Point at() {
+	public Point point() {
 		return current.point;
 	}
 
@@ -59,13 +59,13 @@ public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator
 
 	@SuppressWarnings("unchecked")
 	public T turnTo(PositionVector dest) {
-		bearing(Direction.absolute(dest.x() - current.point.x(), dest.y() - current.point.y()).sub(current.bearing));
+		direction(Direction.absolute(dest.x() - current.point.x(), dest.y() - current.point.y()).sub(current.bearing));
 		return (T) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public T bearing(Direction dest) {
+	public T direction(Direction dest) {
 		if (dest.isAbsolute())
 			current.bearing = dest;
 		else

@@ -85,11 +85,11 @@ public class JfxLayer extends BaseLayer<JfxScreen> implements Layer {
 
 
 	protected void changeFill(Fill fill) {
-		context.setFill(JfxColor.toJfxPaint(fill.fillPaint()));
+		context.setFill(JfxColor.toJfxPaint(fill.fillColor()));
 	}
 
 	protected void changeStroke(Stroke stroke) {
-		context.setStroke(JfxColor.toJfxPaint(stroke.strokePaint()));
+		context.setStroke(JfxColor.toJfxPaint(stroke.strokeColor()));
 		context.setLineWidth(stroke.strokeWidth());
 	}
 

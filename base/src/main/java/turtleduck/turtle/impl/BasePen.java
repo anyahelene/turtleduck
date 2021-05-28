@@ -1,34 +1,41 @@
 package turtleduck.turtle.impl;
 
 import turtleduck.colors.Colors;
+
+import java.util.function.Function;
+
 import turtleduck.colors.Color;
 import turtleduck.geometry.Projection;
 import turtleduck.geometry.impl.OrthographicProjection;
-import turtleduck.turtle.Fill;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
-import turtleduck.turtle.Stroke;
 
 public class BasePen implements Pen, PenBuilder<Pen> {
+	protected static final Function<Color, Color> IDENTITY = c -> c;
+	protected static final Function<Color, Color> NONE = c -> Colors.TRANSPARENT;
 	protected double strokeWidth;
 	protected Projection projection;
-	protected Color stroke, fill;
+	protected Color pen;
+	protected Function<Color, Color> strokeFun, fillFun;
 	protected boolean frozen = false;
+	protected boolean stroke = true, fill = false;
 	protected SmoothType smoothType;
 	protected double smoothAmount;
 
 	public BasePen() {
 		strokeWidth = 1;
 		projection = new OrthographicProjection(100, 100);
-		stroke = Color.color(1, 1, 1);
-		fill = Colors.TRANSPARENT;
+		pen = Color.color(1, 1, 1);
 	}
 
 	public BasePen(BasePen original) {
 		strokeWidth = original.strokeWidth;
 		projection = original.projection;
+		pen = original.pen;
 		stroke = original.stroke;
 		fill = original.fill;
+		strokeFun = original.strokeFun;
+		fillFun = original.fillFun;
 	}
 
 	@Override
@@ -37,13 +44,27 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public Color strokePaint() {
-		return stroke;
+	public Color strokeColor() {
+		if (stroke) {
+			if (strokeFun != null)
+				return strokeFun.apply(pen);
+			else
+				return pen;
+		} else {
+			return Colors.TRANSPARENT;
+		}
 	}
 
 	@Override
-	public Color fillPaint() {
-		return fill;
+	public Color fillColor() {
+		if (fill) {
+			if (fillFun != null)
+				return fillFun.apply(pen);
+			else
+				return pen;
+		} else {
+			return Colors.TRANSPARENT;
+		}
 	}
 
 	@Override
@@ -65,10 +86,13 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	public PenBuilder<Pen> strokePaint(Color ink) {
 		if (frozen)
 			throw new IllegalStateException("Changing pen properties after done()");
-		if (ink == null)
-			stroke = Colors.TRANSPARENT;
-		else
-			stroke = ink;
+		if (ink == null) {
+			strokeFun = NONE;
+			stroke = false;
+		} else {
+			strokeFun = c -> ink; 
+			stroke = true;
+		}
 		return this;
 	}
 
@@ -76,16 +100,21 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	public PenBuilder<Pen> strokeOpacity(double opacity) {
 		if (frozen)
 			throw new IllegalStateException("Changing pen properties after done()");
-		stroke = stroke.opacity(opacity);
+//		stroke = stroke.opacity(opacity);
 		return this;
 	}
 
 	@Override
 	public PenBuilder<Pen> fillPaint(Color ink) {
-		if (ink == null)
-			fill = Colors.TRANSPARENT;
-		else
-			fill = ink;
+		if (frozen)
+			throw new IllegalStateException("Changing pen properties after done()");
+		if (ink == null) {
+			fillFun = NONE;
+			fill = false;
+		} else {
+			fillFun = c -> ink;
+			fill = true;
+		}
 		return this;
 	}
 
@@ -93,7 +122,7 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	public PenBuilder<Pen> fillOpacity(double opacity) {
 		if (frozen)
 			throw new IllegalStateException("Changing pen properties after done()");
-		fill = fill.opacity(opacity);
+//		fill = fill.opacity(opacity);
 		return this;
 	}
 
@@ -136,23 +165,49 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 		return smoothAmount;
 	}
 
-	@Override
-	public Pen stroke(Stroke newStroke) {
-		return change() //
-				.strokeWidth(newStroke.strokeWidth()) //
-				.strokePaint(newStroke.strokePaint()) //
-				.smooth(newStroke.smoothType(), newStroke.smoothAmount()) //
-				.done();
+	public String toString() {
+		return String.format("Pen(color=%s, stroke=%s, fill=%s)", pen, stroke, fill);
 	}
 
 	@Override
-	public Pen fill(Fill newFill) {
-		return change() //
-				.fillPaint(newFill.fillPaint()) //
-				.done();
+	public PenBuilder<Pen> color(Color ink) {
+		if (ink == null)
+			pen = Colors.TRANSPARENT;
+		else
+			pen = ink;
+		strokeFun = IDENTITY;
+		fillFun = IDENTITY;
+		return this;
 	}
-	public String toString() {
-		return String.format("Pen(stroke=%s, fill=%s)", stroke, fill);
+
+	@Override
+	public PenBuilder<Pen> color(Function<Color, Color> colorOp) {
+		pen = colorOp.apply(pen);
+		return this;
+	}
+
+	@Override
+	public PenBuilder<Pen> stroke(Function<Color, Color> colorOp) {
+		strokeFun = colorOp;
+		return this;
+	}
+
+	@Override
+	public PenBuilder<Pen> fill(Function<Color, Color> colorOp) {
+		fillFun = colorOp;
+		return this;
+	}
+
+	@Override
+	public PenBuilder<Pen> stroke(boolean enable) {
+		stroke = enable;
+		return this;
+	}
+
+	@Override
+	public PenBuilder<Pen> fill(boolean enable) {
+		fill = enable;
+		return this;
 	}
 
 }

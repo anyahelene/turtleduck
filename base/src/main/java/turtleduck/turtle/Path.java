@@ -120,7 +120,7 @@ public interface Path {
 
 		@Override
 		public Color pointColor(int i) {
-			return points.get(i).pen().strokePaint();
+			return points.get(i).pen().strokeColor();
 		}
 
 		@Override

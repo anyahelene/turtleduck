@@ -22,6 +22,7 @@ import org.teavm.jso.dom.html.HTMLElement;
 
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
+import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
 import turtleduck.messaging.EditorService;
 import turtleduck.messaging.Reply;
@@ -157,13 +158,16 @@ public class EditorServer implements EditorService {
 				for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
 					Array diags = result.get(ShellService.DIAG);
 					for (Dict diag : diags.toListOf(Dict.class)) {
+						String name = diag.get(Reply.ENAME);
+						String level = Diagnostics.levelOf(name);
+						Color color = Diagnostics.colorOf(level);
 						client.cursor.println(diag.get(Reply.ENAME) + " at " + diag.get(ShellService.LOC),
-								Colors.MAROON);
-						client.cursor.println(diag.get(Reply.EVALUE), Colors.MAROON);
+								color);
+						client.cursor.println(diag.get(Reply.EVALUE), color);
 						try {
 							URI uri = new URI(diag.get(ShellService.LOC));
 							Location l = new Location(uri);
-							cmDiags.push(diagnostic(l.start(), l.end(), "error", diag.get(Reply.ENAME) + ": " + diag.get(Reply.EVALUE)));
+							cmDiags.push(diagnostic(l.start(), l.end(), Diagnostics.levelOf(name),  name + ": " + diag.get(Reply.EVALUE)));
 //							addAnno(state, l.start(), l.length(), "error",
 //									diag.get(Reply.ENAME) + ": " + diag.get(Reply.EVALUE));
 						} catch (URISyntaxException ex) {
@@ -287,7 +291,7 @@ public class EditorServer implements EditorService {
 			} else if (currentSession.filename.equals("*scratch*") && isEmpty(client.editor.state())) {
 				logger.info("replacing *scratch*");
 				if (text == null)
-					text = client.storage().getItem("file://" + filename);
+					text = client.fileSystem.read(filename);
 				if (text == null)
 					text = "";
 				logger.info("text: " + text);
@@ -298,7 +302,7 @@ public class EditorServer implements EditorService {
 			}
 		}
 		if (text == null)
-			text = client.storage().getItem("file://" + filename);
+			text = client.fileSystem.read(filename);
 
 		EditSession sess = sessionsByName.get(filename);
 		if (sess == null) {

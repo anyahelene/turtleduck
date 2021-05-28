@@ -46,14 +46,14 @@ public class Demo implements TurtleDuckApp {
 		}
 
 		public void draw(Canvas canvas) {
-			((GLLayer) canvas).drawImage(offset, img, (float) bearing().radians());
+			((GLLayer) canvas).drawImage(offset, img, (float) direction().radians());
 		}
 
 		public void step() {
 			if (x() < -1280 || x() > 1280 * 2 || y() < -720 || y() > 720 * 2)
-				bearing(Direction.relative(90));
+				direction(Direction.relative(90));
 
-			bearing(rotation);
+			direction(rotation);
 			if (this == sprites.get(0)) {
 //				System.out.println("bearing: " + bearing() + ", rotation: " + rotation + ", azimuth: " + bearing().azimuth());
 			}
@@ -105,10 +105,10 @@ public class Demo implements TurtleDuckApp {
 //		if(true)
 //			return;
 
-		fern(turtle.spawn().penColor(Colors.GREEN).at(200, 200).turnTo(135), 10, 5);
-		fern2(turtle.spawn().at(900, 200).turnTo(90), 5, 10);
-		tree(turtle.spawn().at(850, 200).penColor(Color.color(.5, .3, .0)).penWidth(2).turnTo(90), 10, 10);
-		wheel1(turtle.spawn().at(500, 200).turnTo(-2 * rotation).penColor(Color.color(0.5, 0, 0, 0.5)));
+		fern(turtle.spawn().penColor(Colors.GREEN).goTo(200, 200).turnTo(135), 10, 5);
+		fern2(turtle.spawn().goTo(900, 200).turnTo(90), 5, 10);
+		tree(turtle.spawn().goTo(850, 200).penColor(Color.color(.5, .3, .0)).penWidth(2).turnTo(90), 10, 10);
+		wheel1(turtle.spawn().goTo(500, 200).turnTo(-2 * rotation).penColor(Color.color(0.5, 0, 0, 0.5)));
 		rotation += 8 * deltaTime;
 //		canvas.drawImage(Point.point(100, 0), image2);
 //		canvas.drawImage(Point.point(200, 0), image2);
@@ -142,7 +142,7 @@ public class Demo implements TurtleDuckApp {
 
 			for (int y = 0; y < image2.height(); y++) {
 				turtle.jumpTo(300, 0 + y);
-				turtle.bearing(Direction.DUE_EAST);
+				turtle.direction(Direction.DUE_EAST);
 				for (int x = 0; x < image2.width(); x++) {
 					Color p = image2.readPixel(x, y);
 					turtle.penColor(p);
@@ -286,7 +286,7 @@ public class Demo implements TurtleDuckApp {
 				turtle.turn(10);
 //				System.out.println("1:" + turtle.bearing());
 				if (i % 2 == 0) {
-					double a = turtle.bearing().degrees();
+					double a = turtle.direction().degrees();
 //					System.out.println(a);
 					turtle.turnTo(i).jump(10);
 //					System.out.println(turtle.bearing().degrees());

@@ -55,7 +55,7 @@ public class Point3 extends Point2 implements IPoint3 {
 
 	@Override
 	public String toString() {
-		return String.format("(%.2f,%.2f,%.2f)", x, y, z);
+		return String.format("(%.1f,%.1f,%.1f)", x, y, z);
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class Point3 extends Point2 implements IPoint3 {
 		return Orientation.absoluteVec(x(), y(), z());
 	}
 	@Override
-	public Direction bearingTo(PositionVector otherPoint) {
+	public Direction directionTo(PositionVector otherPoint) {
 		return Orientation.absoluteVec(otherPoint.x() - x(), otherPoint.y() - y(), otherPoint.z() -z());
 	}
 	@Override

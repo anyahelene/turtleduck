@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html style="height: 100vh">
+<head>
+<title>TurtleDuck</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="icon" href="images/turtleduck-icon.png"
+	type="image/png" />
+
+<script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+<link rel="stylesheet" href="/td/css/style.css" />
+</head>
+<body onload="main()">
+	<div id="page" class="mainly-figure">
+		<section id="screen" class="box screen" style="grid-column: 1/-1;grid-row: 1/-1;">
+			<header id="screen-head">
+				<nav id="screen-tabs" class="tabs">
+					<span class="tab selected" data-tab="screen-tabs"
+						data-tab-define="true" data-tab-key="app">App</span>
+				</nav>
+				<nav id="screen-tools" class="toolbar" data-enable-if="svg">
+					<a id="gfx-clear" class="button">Clear</a> <a id="gfx-save"
+						class="button">Save</a>
+				</nav>
+			</header>
+			<main data-tab="screen-tabs" data-tab-key="app">
+				<svg id="svg" tabindex="0" viewBox="-640 -360 1280 720"
+					preserveAspectRatio="xMidYMid slice"></svg>
+				<aside id="gfx-hud">
+					<section id="gfx-hud-top"></section>
+					<section id="gfx-hud-bottom"></section>
+				</aside>
+			</main>
+
+		</section>
+	</div>
+</body>
+</html>

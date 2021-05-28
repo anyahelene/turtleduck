@@ -85,7 +85,7 @@ public class SvgDrawing implements Drawing {
 		if (stroke == null)
 			return "stroke:none;";
 		else
-			return "stroke:" + toSvg(stroke.strokePaint()) + ";stroke-width:" + stroke.strokeWidth() + ";";
+			return "stroke:" + toSvg(stroke.strokeColor()) + ";stroke-width:" + stroke.strokeWidth() + ";";
 	}
 
 	public String toSvg(Color paint) {
@@ -97,7 +97,7 @@ public class SvgDrawing implements Drawing {
 		if (fill == null)
 			return "fill:none;";
 		else
-			return "fill:" + toSvg(fill.fillPaint()) + ";";
+			return "fill:" + toSvg(fill.fillColor()) + ";";
 	}
 
 	public void element(String name, String... attrPairs) {

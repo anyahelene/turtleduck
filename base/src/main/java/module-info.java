@@ -40,7 +40,7 @@ module turtleduck.base {
 	requires java.desktop;
 	requires java.base;
 	requires transitive org.slf4j;
-	requires transitive com.github.spotbugs.annotations;
+	//requires transitive com.github.spotbugs.annotations;
 	requires java.compiler;
 	
 }

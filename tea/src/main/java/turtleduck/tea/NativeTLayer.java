@@ -84,11 +84,11 @@ public class NativeTLayer extends BaseLayer<NativeTScreen> {
 	}
 
 	protected void changeFill(Fill fill) {
-		context.setFillStyle(fill.fillPaint().toString());
+		context.setFillStyle(fill.fillColor().toString());
 	}
 
 	protected void changeStroke(Stroke stroke) {
-		context.setStrokeStyle(stroke.strokePaint().toString());
+		context.setStrokeStyle(stroke.strokeColor().toString());
 		context.setLineWidth(stroke.strokeWidth());
 	}
 

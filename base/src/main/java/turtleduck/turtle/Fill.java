@@ -5,5 +5,5 @@ import turtleduck.colors.Color;
 
 @Icon("🖌️")
 public interface Fill {
-	Color fillPaint();
+	Color fillColor();
 }

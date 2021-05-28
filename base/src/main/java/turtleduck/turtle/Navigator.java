@@ -15,7 +15,7 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * @param y the new Y position
 	 * @return {@code this}, for sending more draw commands
 	 */
-	default T at(double x, double y) {
+	default T goTo(double x, double y) {
 		return goTo(Point.point(x, y));
 	}
 
@@ -41,8 +41,8 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 */
 	default T turnTo(PositionVector to, RelativeTo rel) {
 		Point p = findPoint(to, rel);
-		at().bearingTo(p);
-		return bearing(at().bearingTo(p));
+		point().directionTo(p);
+		return direction(point().directionTo(p));
 	}
 
 	/**
@@ -61,7 +61,7 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * @return {@code this}, for sending more commands
 	 */
 	default T left(double degrees) {
-		return bearing(Direction.relative(-degrees));
+		return direction(Direction.relative(-degrees));
 	}
 
 	/**
@@ -80,7 +80,7 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * @return {@code this}, for sending more commands
 	 */
 	default T right(double degrees) {
-		return bearing(Direction.relative(degrees));
+		return direction(Direction.relative(degrees));
 	}
 
 	/**
@@ -102,11 +102,11 @@ public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
 	 * <p>
 	 * Negative distances will move backwards.
 	 * 
-	 * @param bearing A direction
+	 * @param dir A direction
 	 * @param dist    Distance to move
 	 * @return {@code this}, for sending more draw commands
 	 */
-	default T go(Direction bearing, double dist) {
-		return go(Point.ZERO.add(bearing, dist), RelativeTo.POSITION);
+	default T go(Direction dir, double dist) {
+		return go(Point.ZERO.add(dir, dist), RelativeTo.POSITION);
 	}
 }

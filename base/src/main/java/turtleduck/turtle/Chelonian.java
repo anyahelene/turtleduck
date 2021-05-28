@@ -2,6 +2,7 @@ package turtleduck.turtle;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import turtleduck.colors.Color;
 import turtleduck.annotations.Icon;
@@ -139,7 +140,7 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, 
 	 * @see #useDegrees(), {@link #useRadians()}
 	 */
 	default T turnTo(double angle) {
-		return bearing(Direction.absolute(angle));
+		return direction(Direction.absolute(angle));
 	}
 
 	PenBuilder<? extends T> penChange();
@@ -148,11 +149,32 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, 
 
 	T pen(Pen newPen);
 
-	T pen(Stroke newPen);
-
-	T pen(Fill newPen);
-
+	@Deprecated
 	T penColor(Color color);
+
+	T pen(Color color);
+
+	T pen(Function<Color, Color> penColorMapping);
+
+	T stroke(boolean enable);
+
+	T fill(boolean enable);
+
+	default T strokeOnly() {
+		return stroke(true).fill(false);
+	}
+
+	default T fillOnly() {
+		return stroke(false).fill(true);
+	}
+
+	default T strokeAndFill() {
+		return stroke(true).fill(true);
+	}
+
+	T stroke(Function<Color, Color> penColorMapping);
+
+	T fill(Function<Color, Color> penColorMapping);
 
 	T penWidth(double width);
 
@@ -208,12 +230,14 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, 
 	Path endPath();
 
 	T turn(Direction dir);
+
 	T turnTo(Direction dir);
 
 	<U> T annotate(Annotation<U> anno, U value);
 
 	<U> U annotation(Annotation<U> anno);
 
+	@Deprecated
 	T fillColor(Color color);
 
 }

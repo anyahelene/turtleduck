@@ -60,11 +60,8 @@ public interface Pen extends Stroke, Fill {
 
 	@Override
 	int hashCode();
-	
+
 	@Override
 	boolean equals(Object other);
 
-	Pen stroke(Stroke newStroke);
-	Pen fill(Fill newFill);
-
-	}
+}

@@ -8,7 +8,7 @@ import turtleduck.turtle.Pen.SmoothType;
 public interface Stroke {
 	double strokeWidth();
 
-	Color strokePaint();
+	Color strokeColor();
 	
 	SmoothType smoothType();
 

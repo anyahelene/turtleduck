@@ -17,7 +17,7 @@ public class Point2 implements Point {
 	}
 
 	@Override
-	public Direction bearingTo(PositionVector otherPoint) {
+	public Direction directionTo(PositionVector otherPoint) {
 		return Direction.absolute(otherPoint.x() - x(), otherPoint.y() - y());
 	}
 
@@ -104,7 +104,7 @@ public class Point2 implements Point {
 
 	@Override
 	public String toString() {
-		return String.format("(%.2f,%.2f)", x, y);
+		return String.format("(%.1f,%.1f)", x, y);
 	}
 
 	@Override

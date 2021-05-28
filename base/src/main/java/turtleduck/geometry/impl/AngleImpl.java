@@ -40,8 +40,12 @@ public class AngleImpl implements DirectionVector, Direction {
 	 * 2π in milliarcsecs
 	 */
 	public static final int TWO_MI = 360 * MARCSEC;
-	static final int ARCSEC_NORTH = 0 * MARCSEC, ARCSEC_EAST = 90 * MARCSEC, //
-			ARCSEC_SOUTH = 180 * MARCSEC, ARCSEC_WEST = -90 * MARCSEC;
+	static final int ARCSEC_NORTH = Direction.DEGREES_NORTH * ARCSEC, //
+			ARCSEC_EAST = Direction.DEGREES_EAST * ARCSEC, //
+			ARCSEC_SOUTH = Direction.DEGREES_SOUTH * ARCSEC, //
+			ARCSEC_WEST = Direction.DEGREES_WEST * ARCSEC;
+	static final int MARCSEC_NORTH = 1000 * ARCSEC_NORTH, MARCSEC_EAST = 1000 * ARCSEC_EAST, //
+			MARCSEC_SOUTH = 1000 * ARCSEC_SOUTH, MARCSEC_WEST = 1000 * ARCSEC_WEST;
 	public static final double HALF_SQRT_2 = Math.sqrt(2) / 2, HALF_SQRT_3 = Math.sqrt(3) / 2;
 	private final int angle;
 	private final boolean absolute;
@@ -175,22 +179,22 @@ public class AngleImpl implements DirectionVector, Direction {
 		if (absolute) {
 			if (d < 0)
 				d += MI;
-			assert angle >= 0 && angle < ARCSEC_NORTH : String.format("0 <= %d < %d", angle, ARCSEC_NORTH);
+			assert angle >= 0 && angle < MARCSEC_NORTH : String.format("0 <= %d < %d", angle, MARCSEC_NORTH);
 			if (angle == 0) {
 				return "N";
-			} else if (angle == ARCSEC_EAST) {
+			} else if (angle == MARCSEC_EAST) {
 				return "E";
-			} else if (angle == ARCSEC_SOUTH) {
+			} else if (angle == MARCSEC_SOUTH) {
 				return "S";
-			} else if (angle == ARCSEC_WEST) {
+			} else if (angle == MARCSEC_WEST) {
 				return "W";
-			} else if (angle < ARCSEC_EAST) {
+			} else if (angle < MARCSEC_EAST) {
 				return "N" + (d) + "°E";
-			} else if (angle < ARCSEC_SOUTH) {
+			} else if (angle < MARCSEC_SOUTH) {
 				return "S" + (180 - d) + "°E";
-			} else if (angle < ARCSEC_WEST) {
+			} else if (angle < MARCSEC_WEST) {
 				return "S" + (d - 180) + "°W";
-			} else if (angle < ARCSEC_NORTH) {
+			} else if (angle < MARCSEC_NORTH) {
 				return "N" + (360 - d) + "°W";
 			}
 			return String.format("%06.2f°", d);
@@ -210,34 +214,34 @@ public class AngleImpl implements DirectionVector, Direction {
 
 	@Override
 	public String toArrow() {
-		if (angle == 0)
-			return "↑";
-		else if (angle < ARCSEC_WEST)
-			return "↙";
-		else if (angle == ARCSEC_WEST)
-			return "←";
-		else if (angle < 0)
-			return "↖";
-		else if (angle < ARCSEC_EAST)
-			return "↗";
-		else if (angle == ARCSEC_EAST)
-			return "→";
-		else if (angle < ARCSEC_SOUTH)
-			return "↘";
-		else if (angle == ARCSEC_SOUTH)
-			return "↓";
-		else
-			return ""; // throw new IllegalStateException();
+		return toArrow(angle);
+	}
+
+	public static String toArrow(int angle) {
+		String arrow = "→↘↘↘↓↙↙↙←↖↖↖↑↗↗↗→";
+		if (angle < 0)
+			angle += TWO_MI;
+		angle = (int) Math.round((16.0 * angle) / TWO_MI);
+		return arrow.substring(angle, angle + 1);
 	}
 
 	@Override
 	public String toString() {
 		double degs = milliArcSecToDegrees(angle);
-		String format = absolute ? "%s%.6f°" : "%s%+.6f°";
+		String format = absolute ? "%s%.1f°" : "%s%+.1f°";
 		if (absolute && degs < 0) {
 			degs += 360;
 		}
 		return String.format(format, toArrow(), degs);
+	}
+
+	public static String toString(boolean absolute, double degrees) {
+		String format = absolute ? "%s%.1f°" : "%s%+.1f°";
+
+//		if (degrees > 180) { //(absolute && degrees < 0) {
+//			degrees -= 360;
+//		}
+		return String.format(format, toArrow(degreesToMilliArcSec(degrees)), degrees);
 	}
 
 	public static double cos(int a) {
@@ -305,7 +309,7 @@ public class AngleImpl implements DirectionVector, Direction {
 			if (absY < 1e-10)
 				throw new ArithmeticException(String.format("atan2(%g,%g", x, y));
 			else
-				return y > 0 ? MI/2 : -MI/2;
+				return y > 0 ? MI / 2 : -MI / 2;
 		} else if (absY < 1e-10) {
 			return x > 0 ? 0 : -MI;
 		} else {

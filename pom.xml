@@ -86,11 +86,11 @@
 			<artifactId>slf4j-simple</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>com.github.spotbugs</groupId>
 			<artifactId>spotbugs-annotations</artifactId>
 			<version>4.2.1</version>
-		</dependency>
+		</dependency-->
 	</dependencies>
 
 
@@ -133,48 +133,8 @@
 			</plugin>
 		</plugins>
 		<pluginManagement>
-			<!-- Configure TeaVM -->
 			<plugins>
-				<plugin>
-					<groupId>org.teavm</groupId>
-					<artifactId>teavm-maven-plugin</artifactId>
-					<version>${teavm.version}</version>
-					<executions>
-						<execution>
-							<id>web-client</id>
-							<goals>
-								<goal>compile</goal>
-							</goals>
-							<!-- phase>process-classes</phase -->
-							<configuration>
-								<!-- Directory where TeaVM should put generated files. This configuration 
-									conforms to the settings of the WAR plugin -->
-								<targetDirectory>${project.build.directory}/classes/webroot/js</targetDirectory>
 
-								<!-- Main class, containing static void main(String[]) -->
-								<mainClass>turtleduck.tea.Client</mainClass>
-
-								<!-- Whether TeaVM should produce minified JavaScript. Can reduce 
-									JavaScript file size more than two times. TODO: set to true -->
-								<minifying>false</minifying>
-								<!-- Whether TeaVM should produce debug information for its built-in 
-									debugger -->
-								<debugInformationGenerated>true</debugInformationGenerated>
-
-								<!-- Whether TeaVM should produce source maps file -->
-								<sourceMapsGenerated>true</sourceMapsGenerated>
-
-								<!-- Whether TeaVM should also put source files into output directory, 
-									for compatibility with source maps -->
-								<sourceFilesCopied>true</sourceFilesCopied>
-
-								<!-- Optimization level. Valid values are: SIMPLE, ADVANCED, FULL -->
-								<optimizationLevel>ADVANCED</optimizationLevel>
-								<stopOnErrors>false</stopOnErrors>
-							</configuration>
-						</execution>
-					</executions>
-				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>exec-maven-plugin</artifactId>

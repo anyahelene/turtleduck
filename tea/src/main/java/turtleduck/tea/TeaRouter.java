@@ -9,6 +9,7 @@ import java.util.Deque;
 import java.util.List;
 
 import org.slf4j.Logger;
+import org.teavm.jso.core.JSBoolean;
 import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.dom.events.MessageEvent;
 import org.teavm.jso.json.JSON;
@@ -25,7 +26,7 @@ import turtleduck.util.Logging;
 
 class TeaRouter extends Router {
 	public static final Logger logger = Logging.getLogger(TeaRouter.class);
-
+	private boolean trace;
 	private SockJS socket;
 	private List<String> queue = new ArrayList<>();
 	private Deque<String> messageLog = new ArrayDeque<>(100);
@@ -33,6 +34,7 @@ class TeaRouter extends Router {
 	public TeaRouter(String session, String username, Client client) {
 		super(session, username);
 		client.map.set("routerDebug", (JSRunnable) this::debug);
+		client.map.set("routerTrace", (JSConsumer<JSBoolean>) this::tracing);
 	}
 
 	private void log(String info) {
@@ -45,6 +47,10 @@ class TeaRouter extends Router {
 		for (String s : messageLog) {
 			logger.info("{}", s);
 		}
+	}
+
+	public void tracing(JSBoolean enable) {
+		trace = enable.booleanValue();
 	}
 
 	@Override
@@ -86,7 +92,8 @@ class TeaRouter extends Router {
 
 	protected void receive(MessageEvent ev) {
 		String str = ev.getDataAsString();
-		logger.info("RECV: {}", ev.getDataAsString());
+		if (trace)
+			logger.info("RECV: {}", ev.getDataAsString());
 		if (str.startsWith("{")) {
 
 			JSMapLike<?> data = (JSMapLike<?>) JSON.parse(ev.getDataAsString());
@@ -94,13 +101,15 @@ class TeaRouter extends Router {
 			Dict d = JSUtil.decodeDict(data);
 			turtleduck.messaging.Message msg = turtleduck.messaging.Message.fromDict(d);
 			receive(msg);
-			logger.info("DONE: {}", ev.getDataAsString());
+			if (trace)
+				logger.info("DONE: {}", ev.getDataAsString());
 		} else {
 			ArrayBuffer buf = ev.getDataAsArray();
 			if (!(buf instanceof ArrayBuffer)) {
 				buf = JSUtil.encodeUtf8(str);
 			}
-			logger.info("Buffer: {}", buf);
+			if (trace)
+				logger.info("Buffer: {}", buf);
 			int bufSize = buf.getByteLength();
 			DataView view = DataView.create(buf);
 			boolean le = true;
@@ -118,7 +127,8 @@ class TeaRouter extends Router {
 				return;
 			}
 			String msg = JSUtil.decodeUtf8(buf.slice(offset, offset + len));
-			logger.info("Decoded: '" + msg + "'");
+			if (trace)
+				logger.info("Decoded: '" + msg + "'");
 			offset += len;
 			List<ByteBuffer> buffers = new ArrayList<>();
 			while (offset < bufSize) {

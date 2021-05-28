@@ -26,7 +26,7 @@ public interface Point extends PositionVector {
 	 * @param otherPoint
 	 * @return
 	 */
-	Direction bearingTo(PositionVector otherPoint);
+	Direction directionTo(PositionVector otherPoint);
 
 	/**
 	 * Calculate direction towards other point

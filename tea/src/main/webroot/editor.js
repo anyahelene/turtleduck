@@ -39,7 +39,7 @@ function config(elt, lang) {
 		var langext = undefined;
 		const myFontTheme = EditorView.theme({
 		  '.cm-scroller':{
-		  //  fontSize: "18px",
+		  //  fontSize: "18px"
 			fontFamily: window.getComputedStyle(elt).fontFamily,
 			textShadow: "0 0 .2rem currentColor"
 		  }
@@ -52,8 +52,8 @@ function config(elt, lang) {
 		} else if(lang == "css") {
 			langext = css();
 		}
-		return [basicSetup, langext, EditorView.lineWrapping, markKeymap,
-					keymap.of(defaultTabBinding), oneDark, myFontTheme, wordHover];
+		return [basicSetup, langext, /*EditorView.lineWrapping,*/ markKeymap,
+					keymap.of(defaultTabBinding), darkDuck, myFontTheme/*, wordHover*/];
 	}
 	
 	return configs[lang];

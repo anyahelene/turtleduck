@@ -136,11 +136,11 @@ public class TShell implements ShellService {
 		}, null);
 //		builder.fileManager(fm -> new FileManager(fm));
 		if (getClass().getModule().isNamed()) {
-			builder.compilerOptions("-g", "--module-path", System.getProperty("jdk.module.path", ""), "--add-modules",
+			builder.compilerOptions("-g", "-Xlint:all", "--module-path", System.getProperty("jdk.module.path", ""), "--add-modules",
 					getClass().getModule().getName());
 			System.out.println("module: " + getClass().getModule().getName());
 		} else {
-			builder.compilerOptions("-g", "--module-path", System.getProperty("jdk.module.path", ""));
+			builder.compilerOptions("-g", "-Xlint:all", "--module-path", System.getProperty("jdk.module.path", ""));
 			System.out.println("no module");
 		}
 		System.out.println("builder: " + builder);

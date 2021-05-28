@@ -552,7 +552,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 					PathPoint from = points.get(0);
 					PathPoint to = points.get(1);
 					Pen pen = from.pen();
-					Color color = pen.strokePaint();
+					Color color = pen.strokeColor();
 					float w = (float) pen.strokeWidth() / 2;
 //				Direction fromDir = from.bearing(); // = tangents.get(line.get(0));
 					from.point().toVector(fromVec);
@@ -637,7 +637,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 //						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, offset)).put(aColorVec4, color).end();
 
 						pen = to.pen();
-						color = pen.strokePaint();
+						color = pen.strokeColor();
 						w = (float) pen.strokeWidth() / 2;
 //					fromVec.set(toVec);
 //					fromDir.set(toDir);

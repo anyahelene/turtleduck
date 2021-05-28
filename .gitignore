@@ -10,3 +10,4 @@ authsecrets.json
 *.mp3
 users.db
 pics
+*.iml

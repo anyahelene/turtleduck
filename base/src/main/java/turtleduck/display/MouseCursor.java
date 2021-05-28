@@ -3,7 +3,7 @@ package turtleduck.display;
 import java.util.ServiceLoader;
 
 public interface MouseCursor {
-	MouseCursor DEFAULT = ServiceLoader.load(MouseCursor.class).findFirst().orElseThrow();
+	MouseCursor DEFAULT = ServiceLoader.load(MouseCursor.class).iterator().next();
 	MouseCursor CROSSHAIR = DEFAULT.fromName("CROSSHAIR");
 	MouseCursor TEXT = DEFAULT.fromName("TEXT");
 	MouseCursor WAIT = DEFAULT.fromName("WAIT");
@@ -27,4 +27,5 @@ public interface MouseCursor {
 	<T> T as(Class<T> type);
 	
 	MouseCursor fromName(String cursorName);
+
 }

@@ -58,12 +58,13 @@ public class Client implements JSObject {
 	protected TerminalClient terminalClient;
 	private Explorer explorer;
 	protected CanvasServer canvas;
-	private EditorServer editorImpl;
+	protected EditorServer editorImpl;
 	private int reconnectIntervalId;
 	private int reconnectInterval = 2000;
 
 	public TextCursor cursor;
 	private CMTerminalServer cmTerminalServer;
+	protected FileSystem fileSystem;
 
 	public void initialize() {
 		try {
@@ -73,19 +74,20 @@ public class Client implements JSObject {
 				map = jsobj.cast();
 			} else {
 				map = JSObjects.create().cast();
-				logger.info("Created turtleduck map:", map);
+				logger.info("Created turtleduck map: {}", map);
 			}
 			map.set("actions", (KeyCallback) this::action);
 			Storage localStorage = Storage.getLocalStorage();
 
 			TextWindow window = new NativeTTextWindow(terminal);
 
+			fileSystem = new FileSystem(localStorage);
 			Browser.document.addEventListener("visibilitychange", e -> {
 				logger.info("Document visibility: " + Browser.visibilityState());
 			}, false);
 
 			Browser.window.addEventListener("pagehide", e -> {
-				logger.info("Window hidden: ", e);
+				logger.info("Window hidden: {}", e);
 			}, false);
 			HTMLElement xtermjsWrap = Browser.document.getElementById("xtermjs-wrap");
 			terminalClient = new TerminalClient(xtermjsWrap, this);
@@ -177,11 +179,17 @@ public class Client implements JSObject {
 		welcomeService.hello(sessionName, Dict.create()).onSuccess(msg -> {
 			logger.info("Received welcome: {}", msg);
 			String username = msg.get(HelloService.USERNAME);
-			username(username);
+			Dict userInfo = null;
+			try {
+				userInfo = msg.get(HelloService.USER);
+			} catch (Throwable ex) {
+				logger.error("failed to get userInfo:", ex);
+			}
+			username(username, userInfo);
 			String ex = msg.get(HelloService.EXISTING) ? "existing" : "new";
 			if (terminalClient != null)
 				terminalClient.connected(username, ex, sessionName);
-			if(msg.get(HelloService.EXISTING))
+			if (msg.get(HelloService.EXISTING))
 				client.shellService.refresh();
 		});
 
@@ -222,9 +230,9 @@ public class Client implements JSObject {
 
 	}
 
-	public void username(String name) {
+	public void username(String name, Dict userInfo) {
 		map.set("username", JSString.valueOf(name));
-		router.init(sessionName, name);
+		router.init(sessionName, name); // TODO: escapes
 		Storage sess = map.get("sessionStorage").cast();
 		if (sess != null) {
 			sess.setItem("turtleduck.username", name);
@@ -232,6 +240,18 @@ public class Client implements JSObject {
 		HTMLElement status = Browser.document.getElementById("status-button");
 		if (status != null) {
 			status.setAttribute("title", name + "@" + socket.url());
+		}
+		HTMLElement imgBox = Browser.document.getElementById("user-picture");
+		if (imgBox != null && userInfo != null) {
+			String imgUrl = userInfo.getString("picture");
+			if (imgUrl != null) {
+				imgBox.setAttribute("src", imgUrl);
+				imgBox.getStyle().setProperty("visibility", "visible");
+			}
+		}
+		HTMLElement nameBox = Browser.document.getElementById("user-name");
+		if (nameBox != null) {
+			nameBox.withText(name); // TODO: escapes
 		}
 	}
 

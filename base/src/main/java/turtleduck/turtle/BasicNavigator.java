@@ -31,14 +31,14 @@ public interface BasicNavigator<T extends BasicNavigator<T>> extends PositionVec
 	/**
 	 * @return The current position.
 	 */
-	Point at();
+	Point point();
 
 
 	/**
 	 * @return The current bearing of the turtle (the direction in which it is
 	 *         facing)
 	 */
-	Direction bearing();
+	Direction direction();
 
 	/**
 	 * Turn to face the given direction.
@@ -48,7 +48,7 @@ public interface BasicNavigator<T extends BasicNavigator<T>> extends PositionVec
 	 * @param bearing the bearing to turn to
 	 * @return {@code this}, for sending more draw commands
 	 */
-	T bearing(Direction bearing);
+	T direction(Direction bearing);
 
 
 	/**

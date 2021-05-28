@@ -4,7 +4,6 @@ import java.util.IdentityHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import turtleduck.colors.Color;
@@ -17,7 +16,6 @@ import turtleduck.sprites.SpriteImpl;
 import turtleduck.turtle.Annotation;
 import turtleduck.turtle.Chelonian;
 import turtleduck.turtle.DrawingBuilder;
-import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
 import turtleduck.turtle.PathStroke;
@@ -25,7 +23,6 @@ import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.SpriteBuilder;
-import turtleduck.turtle.Stroke;
 import turtleduck.turtle.Turtle;
 
 public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends NavigatorImpl<THIS>
@@ -246,8 +243,10 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS turn(double angle) {
+//		System.out.printf("%s + %g = ", current.bearing, angle);
 		current.bearing = current.bearing.yaw(angle);
-		current.rotation += String.format("[yaw%+.1f°]", angle);
+//		System.out.println(current.bearing);
+//		current.rotation += String.format("[yaw%+.1f°]", angle);
 		return (THIS) this;
 	}
 
@@ -255,7 +254,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@Override
 	public THIS turn(Direction dir) {
 		current.bearing = current.bearing.add(dir);
-		current.rotation += String.format("[+%s]", dir);
+//		current.rotation += String.format("[+%s]", dir);
 		return (THIS) this;
 	}
 
@@ -263,15 +262,19 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@Override
 	public THIS turnTo(Direction dir) {
 		current.bearing = dir;
-		current.rotation += String.format("[=%s]", dir);
+//		current.rotation += String.format("[=%s]", dir);
 		return (THIS) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS turnTo(double angle) {
-		current.bearing = Orientation.absoluteAz(angle);
-		current.rotation += String.format("[yaw=%+.1f°]", angle);
+		if (this instanceof TurtleImpl3)
+			current.bearing = Orientation.absoluteAz(angle);
+		else
+			current.bearing = Direction.absolute(angle);
+
+		//current.rotation += String.format("[yaw=%+.1f°]", angle);
 		return (THIS) this;
 	}
 
@@ -284,15 +287,15 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public THIS pen(Stroke newPen) {
-		pen = pen.stroke(newPen);
+	public THIS pen(Color color) {
+		pen = pen.change().color(color).done();
 		return (THIS) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public THIS pen(Fill newPen) {
-		pen = pen.fill(newPen);
+	public THIS pen(Function<Color, Color> penColorMapping) {
+		pen = pen.change().color(penColorMapping).done();
 		return (THIS) this;
 	}
 
@@ -300,6 +303,34 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@Override
 	public THIS penColor(Color color) {
 		pen = pen.change().strokePaint(color).done();
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS fill(boolean enable) {
+		pen = pen.change().fill(enable).done();
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS stroke(boolean enable) {
+		pen = pen.change().stroke(enable).done();
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS fill(Function<Color, Color> penColorMapping) {
+		pen = pen.change().fill(penColorMapping).done();
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS stroke(Function<Color, Color> penColorMapping) {
+		pen = pen.change().stroke(penColorMapping).done();
 		return (THIS) this;
 	}
 
@@ -321,6 +352,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@Override
 	public THIS stroke() { // TODO?
 		beginPath();
+		pen = pen.change().stroke(true).fill(false).done();
 		return (THIS) this;
 	}
 
@@ -393,7 +425,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 		Direction b = current.bearing;
 		SpriteBuilder spawn = new SpriteTurtle(this, t -> {
 			return new SpriteImpl(here, b, t.objId, canvas);
-		}).at(0, 0).turnTo(0);
+		}).goTo(0, 0).turnTo(0);
 		return spawn;
 	}
 
@@ -442,7 +474,12 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@Override
 	public THIS jump(Direction bearing, double dist) {
 		drawing = false;
-		return super.go(bearing, dist);
+		boolean penStatus = penDown;
+		penDown = false;
+		super.go(bearing, dist);
+		penDown = penStatus;
+		triggerActions();
+		return (THIS) this;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -473,7 +510,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	}
 
 	public String toString() {
-		return "turtle(at=" + at() + ", bearing=" + bearing() + ")";
+		return "turtle(at=" + point() + ", bearing=" + direction() + ")";
 	}
 
 	@SuppressWarnings("unchecked")

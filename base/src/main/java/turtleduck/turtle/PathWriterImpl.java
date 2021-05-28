@@ -68,7 +68,7 @@ public class PathWriterImpl implements PathWriter {
 				PathPointImpl from = (PathPointImpl) current;
 				PathPointImpl to = from.copy();
 				if (!from.point.equals(point))
-					from.bearing = from.point.bearingTo(point);
+					from.bearing = from.point.directionTo(point);
 				else if (from.bearing == null)
 					from.bearing = Direction.DUE_NORTH;
 				if (from.incoming == null)

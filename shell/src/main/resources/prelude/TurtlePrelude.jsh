@@ -1,5 +1,5 @@
 /namespace meta
-
+import java.util.Random;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Point
 import turtleduck.geometry.Direction;
@@ -20,6 +20,7 @@ import turtleduck.sprites.Sprite;
 
 Class<?>[] $CLASSES = {Screen.class, Canvas.class, Turtle.class, Color.class, Colors.class};
 Meta $META = Meta.create();
+Random $RANDOM = new Random();
 
 String help = "Type /help for help :)";
 
@@ -31,12 +32,65 @@ Canvas canvas = screen.createCanvas().strokePaint(Colors.WHITE).strokeWidth(1).f
 Turtle turtle = canvas.turtle().penColor(Colors.WHITE).jumpTo(0, 0);
 turtleduck.shell.TShell.testValue = 5;
 
+
 double sin(double deg) {
     return Math.sin(Math.toRadians(deg));
 }
 double cos(double deg) {
     return Math.cos(Math.toRadians(deg));
 }
+
+double sqrt(double n) {
+	return Math.sqrt(n);
+}
+
+double perturb(double n) {
+	return perturb(n, 0.1);
+}
+
+double rand() {
+	return $RANDOM.nextDouble();
+}
+/** Return a random integer, with (approximately) uniform probability 
+    @return A pseudorandom integer, in the range -2<sup>31</sup> – +2<sup>31</sup>-1 (inclusive)
+    @see java.util.random#nextInt()
+*/
+int randInt() {
+	return $RANDOM.nextInt();
+}
+
+/namespace meta
+
+double perturb(double n, double factor) {
+	return n + n * (2 * $RANDOM.nextDouble() - 0.5) * factor;
+}
+
+
+double rand(double to) {
+	return to * $RANDOM.nextDouble();
+}
+double rand(double from, double to) {
+	return from + (to - from) * $RANDOM.nextDouble();
+}
+
+
+/** Return a random integer
+    @return A pseudorandom integer, in the range 0 (inclusive) to <code>to</code> (exclusive)
+    @see java.util.random#nextInt(int)
+*/
+int randInt(int to) {
+	return $RANDOM.nextInt(to);
+}
+
+/** Return a random integer
+    @return A pseudorandom integer, in the range <code>from</code> (inclusive) to <code>to</code> (exclusive)
+    @see java.util.random#nextInt(int)
+*/
+int randInt(int from, int to) {
+	return from + $RANDOM.nextInt(to-from);
+}
+
+/namespace startup
 
 void clear() {
 	screen.clear();

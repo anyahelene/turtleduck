@@ -66,7 +66,7 @@ public class PathRenderer3 {
 					to = points.get(i);
 
 					drawLine(from, to, pen, i == 1, i == points.size() - 1);
-					obj.blend |= pen.strokePaint().opacity() < 1;
+					obj.blend |= pen.strokeColor().opacity() < 1;
 
 					pen = to.pen();
 
@@ -82,7 +82,7 @@ public class PathRenderer3 {
 		to.point().toVector(toVec);
 		from.bearing().directionVector(fromDir).normalize();
 		float w = (float) (pen.strokeWidth() / 2);
-		Color color = pen.strokePaint();
+		Color color = pen.strokeColor();
 //		fromDir.add(toDir).mul(.5f);
 		from.bearing().normalVector(normal).normalize();
 

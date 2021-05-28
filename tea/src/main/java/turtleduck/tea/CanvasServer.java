@@ -132,6 +132,7 @@ public class CanvasServer implements CanvasService {
 
 	@Override
 	public Async<Dict> drawPath(Array paths) {
+//		logger.info("drawPath({})", paths);
 		HTMLDocument document = Window.current().getDocument();
 		svg.getStyle().setProperty("display", "block");
 		Map<String, Element> groups = new HashMap<>();

@@ -32,7 +32,7 @@ public class Demos {
 			if (radius < 0) {
 				turtle.turn(10);
 				if (i % 2 == 0) {
-					double a = turtle.bearing().degrees();
+					double a = turtle.direction().degrees();
 					turtle.turnTo(i).jump(10).turnTo(a);
 				}
 				turtle.draw(-step / 2);

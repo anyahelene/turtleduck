@@ -221,6 +221,7 @@ public abstract class BaseScreen implements Screen {
 			assert d == Math.floor(d) : "Expected whole integer " + d;
 		}
 
+		/*
 		if (debug) {
 			Debug.printf("Screen setup:%n");
 			Debug.printf("  Display: %.0fx%.0f (raw %.0fx%.0f)%n", dim.dispWidth, dim.dispHeight, dim.rawDispWidth,
@@ -230,6 +231,7 @@ public abstract class BaseScreen implements Screen {
 					dim.canvasWidth, dim.canvasHeight);
 			Debug.printf("  Aspect:  %.5f   Scale: %.5f%n", dim.canvasAspect, dim.scale);
 		}
+		*/
 		return dim;
 	}
 

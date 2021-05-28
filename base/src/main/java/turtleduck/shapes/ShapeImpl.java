@@ -235,8 +235,8 @@ public abstract class ShapeImpl<T> implements Shape {
 			System.out.println("write: " + text);
 			System.out.println("orig pen: " + pen);
 			if (fill) {
-				if (pen.fillPaint() == Colors.TRANSPARENT)
-					pen = pen.change().fillPaint(pen.strokePaint()).done();
+				if (pen.fillColor() == Colors.TRANSPARENT)
+					pen = pen.change().fillPaint(pen.strokeColor()).done();
 				System.out.println("fill pen: " + pen);
 		} else {
 				pen = pen.change().fillPaint(Colors.TRANSPARENT).done();

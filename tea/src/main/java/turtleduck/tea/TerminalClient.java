@@ -1,6 +1,7 @@
 package turtleduck.tea;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -90,6 +91,41 @@ public class TerminalClient implements TerminalService, ExplorerService {
 			readline.prompt();
 			return;
 		}
+		if (s.startsWith("/")) {
+			String[] split = s.split("\\s+", 2);
+			String cmd = split[0];
+			String args = split.length == 2 ? split[1].trim() : "";
+			if (cmd.equals("/ls")) {
+				List<String> files = client.fileSystem.list();
+				int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
+				int width = terminal.getCols();
+				int cols = 1;
+				logger.info("0: max={}, width={}, cols={}", max, width, cols);
+				if (max > 0 && max < width) {
+					cols = Math.min(files.size(), width / (max + 1));
+					max = width / cols;
+				}
+				logger.info("1: max={}, width={}, cols={}", max, width, cols);
+				int c = 0;
+				for (String str : files) {
+					cursor.print(String.format("%-" + max + "s", str));
+					if (++c >= cols) {
+						cursor.println();
+						c = 0;
+					}
+				}
+				if(c != 0)
+					cursor.println();
+				prompt1();
+				readline.prompt();
+				return;
+			} else if(cmd.equals("/open")) {
+				client.editorImpl.open(args, null, "Java");
+				prompt1();
+				readline.prompt();
+				return;
+			}
+		}
 		client.shellService.eval(s, lineNum++, Dict.create())//
 				.onSuccess(msg -> {
 					logger.info("exec result: " + msg);
@@ -97,9 +133,10 @@ public class TerminalClient implements TerminalService, ExplorerService {
 						for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
 							Array diags = result.get(ShellService.DIAG);
 							for (Dict diag : diags.toListOf(Dict.class)) {
-								cursor.println(diag.get(Reply.ENAME) + " at " + diag.get(ShellService.LOC),
-										Colors.MAROON);
-								cursor.println(diag.get(Reply.EVALUE), Colors.MAROON);
+								String name = diag.get(Reply.ENAME);
+								cursor.println(name + " at " + diag.get(ShellService.LOC),
+										Diagnostics.colorOf(Diagnostics.levelOf(name)));
+								cursor.println(diag.get(Reply.EVALUE), Diagnostics.colorOf(Diagnostics.levelOf(name)));
 							}
 							String value = result.get(ShellService.VALUE);
 							String name = result.get(ShellService.NAME);

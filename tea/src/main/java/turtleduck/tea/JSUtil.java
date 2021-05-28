@@ -21,7 +21,7 @@ import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Logging;
 
-class JSUtil {
+public class JSUtil {
 	@JSBody(params = { "elt" }, script = "return window.getComputedStyle(elt)")
 	static native CSSStyleDeclaration getStyle(HTMLElement elt);
 
