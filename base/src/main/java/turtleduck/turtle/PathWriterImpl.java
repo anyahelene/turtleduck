@@ -157,7 +157,7 @@ public class PathWriterImpl implements PathWriter {
 		@Override
 		public List<PathPoint> points() {
 			List<PathPoint> list = new ArrayList<>(points.subList(read, points.size()));
-			read += list.size();
+			read += list.size()-1;
 			return list;
 		}
 
