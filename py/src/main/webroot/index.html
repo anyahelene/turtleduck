@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html style="height: 100vh">
+<head>
+<title>TurtleDuck</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="icon" href="static/images/turtleduck-icon.png" type="image/png" />
+
+<script type="text/javascript" charset="utf-8" src="static/js/bundle.js"></script>
+<script type="text/javascript" charset="utf-8" src="static/js/editor.js"></script>
+<script type="text/javascript" charset="utf-8" src="static/js/classes.js"></script>
+
+<link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body onload="main()">
+
+	<div id="page" class="dark main-and-figure" data-layouts="main-and-figure mainly-coding mainly-figure main-alone figure-alone">
+		<header id="top">
+			<nav id="top-left">
+				<img id="logoimg" src="static/images/turtleduck.svg" /> <a id="logotext" href="#"> TurtleDuck <span class="version">v${project.version}</span>
+					<!-- span id="pond">&nbsp;</span-->
+				</a>
+
+			</nav>
+			<nav id="top-menu">
+				<button id="f1" data-shortcut="ctrl+s" data-icon="💾" class="row2" type=button>
+					<span class="the-text">Save&Run</span>
+				</button>
+				<button id="f2" data-shortcut="ctrl+2" data-icon="🏃" class="row2" type=button>
+					<span class="the-text">Run</span>
+				</button>
+				<button id="f3" data-shortcut="ctrl+3" data-icon="🧪" class="row2" type=button>
+					<span class="the-text">Test</span>
+				</button>
+				<button id="f4" data-shortcut="ctrl+4" data-icon="🦜" data-alt-icon="💬" class="row2" type=button>
+					<span class="the-text">Chat</span><span class="notification">2</span>
+				</button>
+				<button id="f5" data-shortcut="ctrl+5" data-icon="🗺️" class="row2" type=button>
+					<span class="the-text">Explorer</span>
+				</button>
+				<button id="f6" data-shortcut="ctrl+6" data-icon="⌨️" class="row2" type=button>
+					<span class="the-text">Code</span>
+				</button>
+				<button id="f7" data-shortcut="ctrl+7" data-icon="📖" class="row2" type=button>
+					<span class="the-text">Docs</span>
+				</button>
+				<button id="f8" data-shortcut="ctrl+8" data-icon="🖥️" class="row2" type=button>
+					<span class="the-text">Code/Gfx</span>
+					<!-- 🖼️ -->
+				</button>
+				<button id="f9" data-shortcut="ctrl+9" data-icon="☕" class="row2" type=button>
+					<span class="the-text">Java ↓</span>
+				</button>
+				<button id="f11" data-shortcut="shift+ctrl+1" data-icon="📂" class="row1" type=button>
+					<span class="the-text">Open</span>
+				</button>
+				<button id="f12" data-shortcut="shift+ctrl+2" data-icon="🐛" class="row1" type=button>
+					<span class="the-text">Debug</span>
+				</button>
+				<button id="f13" data-shortcut="shift+ctrl+3" data-icon="🌐" class="row1" type=button>
+					<span class="the-text">Publish</span>
+				</button>
+				<button id="f14" data-shortcut="shift+ctrl+4" data-icon="🙃" class="row1" type=button>
+					<span class="the-text">Profile</span>
+				</button>
+				<button id="f15" data-shortcut="shift+ctrl+5" data-icon="🚧" class="row1" type=button>
+					<span class="the-text">Projects</span>
+				</button>
+				<button id="f16" data-shortcut="shift+ctrl+6" data-icon="🧐" class="row1" type=button>
+					<span class="the-text">Quality</span>
+				</button>
+				<button id="f17" data-shortcut="shift+ctrl+7" data-icon="✨" class="row1" type=button>
+					<span class="the-text">Hints</span>
+				</button>
+				<button id="f18" data-shortcut="shift+ctrl+8" data-icon="👩‍🏫" class="row1" type=button>
+					<span class="the-text">Demos</span>
+				</button>
+				<button id="f19" data-shortcut="shift+ctrl+9" data-icon="💅" data-alt-icon="⚙️" class="row1" type=button>
+					<span class="the-text">Settings</span>
+				</button>
+				<button id="help" data-shortcut="ctrl+?" data-icon="" class="rows" type=button>
+					<span class="the-text" style="font-size: x-large">?</span>
+				</button>
+			</nav>
+			<nav id="top-right">
+				<div id="user">
+					<img id="user-picture" style="height: 2.5rem; visibility: hidden" />
+				</div>
+			</nav>
+		</header>
+
+		<section id="explorer" class="box explorer widget" style="background: none">
+			<header>
+				<nav id="explorer-tabs" class="tabs">
+					<span class="tab selected">Explorer</span>
+				</nav>
+			</header>
+			<section class="body">
+				<div id="explorer-var-section" class="open">
+					<h2>
+						<a id="explorer-head-var" href="#explorer-var-section"
+							class="empty" data-toggle="open">Variables</a>
+					</h2>
+					<ul id="explorer-var" class="collapse empty" data-role="listview"></ul>
+				</div>
+				<div id="explorer-method-section" class="open">
+					<h2>
+						<a id="explorer-head-method" href="#explorer-method-section" class="empty" data-toggle="open">Methods</a>
+					</h2>
+					<ul id="explorer-method" class="collapse empty" data-role="listview"></ul>
+				</div>
+				<div id="explorer-type-section" class="open">
+					<h2>
+						<a id="explorer-head-type" href="#explorer-type-section" class="empty" data-toggle="open">Types</a>
+					</h2>
+					<ul id="explorer-type" class="collapse empty" data-role="listview"></ul>
+				</div>
+				<div id="explorer-import-section" class="open">
+					<h2>
+						<a id="explorer-head-import" href="#explorer-import-section" class="empty" data-toggle="open">Imports</a>
+					</h2>
+					<ul id="explorer-import" class="collapse empty" data-role="listview"></ul>
+				</div>
+			</section>
+		</section>
+
+		<section id="editor" class="box widget">
+			<header id="editor-head">
+				<nav id="editor-tabs" class="tabs"></nav>
+			</header>
+			<main id="editor-wrap"></main>
+			<aside data-reset-onclick="show-splash-help" class="splashhelp">
+				<h2>Code Editor</h2>
+				<p>Try..
+				<ul class="shell-sample">
+					<li><a href="#shellEditor" data-paste="/edit">/edit</a>
+					<li><a href="#shellEditor" data-paste="/edit 2">/edit 2</a>
+					<li><a href="#shellEditor" data-paste="/edit twice">/edit twice</a>
+				</ul>
+				<p>to open shell snippets in editor.
+			</aside>
+		</section>
+
+		<!--div id="right-size" style="position:absolute;left:0px;margin-left:-5px;height:100%;width:5px;background:#ccc;z-index:100" ></div-->
+		<section id="screen" class="box screen">
+			<header id="screen-head">
+				<nav id="screen-tabs" class="tabs">
+					<span class="tab selected" data-tab="screen-tabs" data-tab-define="true" data-tab-key="gfx">GFX</span> <span class="tab"
+						data-tab="screen-tabs" data-tab-define="true" data-tab-key="doc">DOC</span> <span class="tab" data-tab="screen-tabs"
+						data-tab-define="true" data-tab-key="jvm">JVM</span>
+				</nav>
+				<nav id="screen-tools" class="toolbar" data-enable-if="svg">
+					<a id="gfx-clear" class="button">Clear</a> <a id="gfx-save" class="button">Save</a>
+				</nav>
+			</header>
+			<main data-tab="screen-tabs" data-tab-key="gfx">
+				<div data-enable-if="svg" id="excavator" style="display: none"></div>
+				<svg id="svg" tabindex="0" viewBox="-640 -360 1280 720" preserveAspectRatio="xMidYMid slice"></svg>
+				<aside id="gfx-hud">
+					<section id="gfx-hud-top"></section>
+					<section id="gfx-hud-bottom"></section>
+				</aside>
+			</main>
+			<main id="docs" data-tab="screen-tabs" data-tab-key="doc" style="display: none">
+				<div id="doc-display" class="text"></div>
+			</main>
+			<main id="instructions" data-tab="screen-tabs" data-tab-key="jvm" style="display: none">
+				<div id="bytecode-display" class="text"></div>
+			</main>
+			<footer id="screen-foot">
+				<div class="footnote" id="coordinates-svg" data-tab="screen-tabs" data-tab-key="gfx">(0,0)</div>
+				<div class="box-foot" data-tab="screen-tabs" data-tab-key="gfx">SVG</div>
+			</footer>
+			<aside data-reset-onclick="show-splash-help" class="splashhelp">
+				<h2>Graphics</h2>
+				<p>For example, try...
+				<ul class="shell-sample">
+					<li><a href="#shellEditor" data-paste="turtle.draw(50);">turtle.draw(50);</a>
+					<li><a href="#shellEditor" data-paste="for(int i = 0; i &lt; 360; i++) turtle.draw(2).turn(1);">for(int i = 0; i
+							&lt; 360; i++) <br>&#x2000;&#x2000; turtle.draw(2).turn(1);
+					</a>
+				</ul>
+			</aside>
+		</section>
+
+
+		<!-- div style="width: 100%; height: 10px; background: #f00"
+			draggable="true"></div-->
+		<section id="shell" class="box console">
+			<div class="slack"></div>
+			<header>
+				<nav id="console-tabs" class="tabs">
+					<span class="tab selected" data-tab="console-tabs" data-tab-define="true" data-tab-key="cm">Shell</span> <span class="tab"
+						data-tab="console-tabs" data-tab-define="true" data-tab-key="xterm">XTerm</span>
+				</nav>
+			</header>
+			<!--div id="code-size" style="position:relative;top:0px;margin-top:-5px;width:100%;height:5px;background:#ccc;z-index:100"></div-->
+			<main id="xtermjs-wrap" data-tab="console-tabs" data-tab-key="xterm"></main>
+			<main id="cmshell-wrap" data-tab="console-tabs" data-tab-key="cm" tabindex="-1"></main>
+
+			<aside data-reset-onclick="show-splash-help" class="splashhelp">
+				<h2>Shell</h2>
+				<p>Evaluate expressions and declare variables, methods and classes
+				<ul class="shell-sample">
+					<li><a href="#shellEditor" data-paste="var x = 1 + 2">var x = 1 + 2</a>
+					<li><a href="#shellEditor" data-paste="x * 2">x * 2</a>
+					<li><a href="#shellEditor" data-paste="int twice(int a) { return a + a; }">int twice(int a) { return a + a; }</a>
+				</ul>
+			</aside>
+		</section>
+		<footer id="bottom">
+			<div id="foot-left"></div>
+			<div id="foot-mid">
+				<span id="heapStatus" data-from="runtime.heapUse"></span>
+			</div>
+			<div id="foot-right">
+				<div>
+					<span id="sessionName" data-from="turtleduck.sessionName"></span>
+				</div>
+				<div id="status" class="active">
+					<span>@<span id="user-name"></span></span>
+					<ul id="status-pop" class="popup"></ul>
+					<span id="status-button" type="button">OFFLINE</span>
+				</div>
+				<div id="error">
+					<ul id="error-pop" class="popup"></ul>
+					<button id="error-button" type="button">ERR!</button>
+				</div>
+			</div>
+		</footer>
+	</div>
+	<audio id="music" src="static/images/desert-of-lost-souls-by-kevin-macleod-from-filmmusic-io.mp3"></audio>
+	<script>
+		function resizable(element, handle, direction, callback) {
+			var start, size = 0;
+			handle.onmousedown = mouseDown;
+			function mouseDown(e) {
+				e = e || window.event;
+				console.log("resize start: ")
+				console.log(e);
+				e.preventDefault();
+				if (direction == 'h') {
+					start = e.clientX;
+					size = element.clientWidth;
+				} else {
+					start = e.clientY;
+					size = element.clientHeight;
+				}
+				document.onmouseup = mouseUp;
+				document.onmousemove = mouseMove;
+			}
+
+			function mouseMove(e) {
+				e = e || window.event;
+				console.log("resize move: ");
+				console.log(e);
+				e.preventDefault();
+				if (e.buttons != 1) {
+					mouseUp(e);
+				}
+				if (direction == 'h') {
+					size = size + (start - e.clientX);
+					start = e.clientX;
+					element.style.width = size + "px";
+				} else {
+					size = size + (start - e.clientY);
+					start = e.clientY;
+					element.style.height = size + "px";
+				}
+				console.log("resize to: " + size);
+			}
+
+			function mouseUp(e) {
+				console.log("resize done: ")
+				console.log(e);
+				e.preventDefault();
+				document.onmouseup = null;
+				document.onmousemove = null;
+				console.log(callback);
+				if (callback) {
+					callback();
+				}
+			}
+		}
+		//resizable(document.getElementById("code-box"), document.getElementById("code-size"), "v", () => window.fitAddon.fit());
+		//resizable(document.getElementById("right"), document.getElementById("right-size"), "h");
+		function trackMouse(element) {
+			footnote = document.getElementById("coordinates-" + element.id)
+			element.onmousemove = mouseMove;
+
+			function mouseMove(e) {
+				e = e || window.event;
+				e.preventDefault();
+				var p = new DOMPoint(e.clientX, e.clientY);
+				var m = element.getScreenCTM().inverse();
+				p = p.matrixTransform(m);
+				footnote.textContent = "(" + Math.round(p.x) + ","
+						+ Math.round(p.y) + ")";
+			}
+		}
+		trackMouse(document.getElementById("svg"));
+	</script>
+</body>
+</html>
