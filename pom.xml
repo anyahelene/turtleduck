@@ -22,6 +22,7 @@
 		<slf4j.version>1.7.30</slf4j.version>
 		<vertx.version>4.0.0.CR1</vertx.version>
 		<joml.version>1.9.25</joml.version>
+		<jackson.version>2.12.3</jackson.version>
 	</properties>
 
 	<dependencyManagement>

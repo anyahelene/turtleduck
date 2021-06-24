@@ -114,7 +114,7 @@ public class Readline implements LineInput {
 			if (histPos > 0) {
 				line = history.get(--histPos);
 				redraw();
-				System.out.println("UP: " + debugHist());
+//				System.out.println("UP: " + debugHist());
 			} else {
 				bell();
 			}
@@ -127,7 +127,7 @@ public class Readline implements LineInput {
 					line = history.get(histPos);
 				}
 				redraw();
-				System.out.println("DOWN: " + debugHist());
+//				System.out.println("DOWN: " + debugHist());
 			} else {
 				bell();
 			}

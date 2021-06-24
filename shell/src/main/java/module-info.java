@@ -11,4 +11,7 @@ module turtleduck.shell {
 	requires turtleduck.anno;
 	requires jdk.javadoc;
 	requires java.compiler;
+	requires com.fasterxml.jackson.databind;
+	requires com.fasterxml.jackson.dataformat.cbor;
+
 }

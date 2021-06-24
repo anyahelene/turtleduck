@@ -17,7 +17,7 @@ import org.teavm.jso.browser.Window;
  * hopefully this wrapper code will not be compiled into the client. TeaVM
  * should optimize it away as dead code. It is here for convenience
  */
-public interface WebSocket extends JSObject {
+interface WebSocket extends JSObject {
 
 	/**
 	 * creates a socket back to the server that provided the location of the current
@@ -41,7 +41,7 @@ public interface WebSocket extends JSObject {
 	void send(String text);
 
 	/** overwrites any previously attached onData handler */
-	default void setOnData(JSConsumer each) {
+	default void setOnData(JSConsumer<?> each) {
 		WebSocketUtil.setMessageConsumer(this, each);
 	}
 
@@ -60,7 +60,7 @@ public interface WebSocket extends JSObject {
 		native static WebSocket newSocket(String url);
 
 		@JSBody(params = { "socket", "each" }, script = "socket.onmessage = function(m) {  each(m.data); };")
-		native static void setMessageConsumer(WebSocket socket, JSConsumer each);
+		native static void setMessageConsumer(WebSocket socket, JSConsumer<?> each);
 
 	}
 

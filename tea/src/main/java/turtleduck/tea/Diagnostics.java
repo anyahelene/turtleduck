@@ -16,6 +16,18 @@ public class Diagnostics {
 			return "error";
 	}
 
+	public static String worstOf(String level1, String level2) {
+		int l1 = levels.indexOf(level1);
+		int l2 = levels.indexOf(level2);
+		if(l2 == -1)
+			return level1;
+		else if(l1 == -1)
+			return level2;
+		else if(l1 <= l2)
+			return level1;
+		else
+			return level2;
+	}
 	public static Color colorOf(String level) {
 		switch (level) {
 		case "debug":
@@ -29,5 +41,6 @@ public class Diagnostics {
 			return Colors.MAROON;
 		}
 	}
+	
 
 }

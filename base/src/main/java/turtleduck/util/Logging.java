@@ -465,7 +465,7 @@ public class Logging {
 
 		@Override
 		public void error(String msg, Throwable t) {
-			log(LOG_LEVEL_ERROR, msg, t);
+			log(LOG_LEVEL_ERROR, msg + ": {}", t);
 
 		}
 

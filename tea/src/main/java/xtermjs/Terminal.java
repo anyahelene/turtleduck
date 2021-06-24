@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.JSProperty;
 import org.teavm.jso.dom.events.KeyboardEvent;
@@ -11,6 +12,15 @@ import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.dom.html.HTMLTextAreaElement;
 
 public interface Terminal extends JSObject, IDisposable {
+	public abstract class Util {
+		@JSBody(params = {  }, script = "return !!XTermJS;")
+		public static native boolean hasTerminal();
+
+		@JSBody(params = { "opts" }, script = "return new XTermJS.Terminal(opts);")
+		public static native Terminal createTerminal(ITerminalOptions opts);
+	}
+
+	
 	public static Terminal create(ITerminalOptions options) {
 		return Util.createTerminal(options);
 	}

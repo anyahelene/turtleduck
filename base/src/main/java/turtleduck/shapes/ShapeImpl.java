@@ -1,7 +1,5 @@
 package turtleduck.shapes;
 
-import java.awt.Font;
-
 import org.joml.Matrix3x2dc;
 
 import turtleduck.canvas.Canvas;

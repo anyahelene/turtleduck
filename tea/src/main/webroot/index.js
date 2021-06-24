@@ -1,16 +1,14 @@
 import SockJS from 'sockjs-client';
 import Mousetrap from 'mousetrap';
 import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
-import { Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
 import jquery from 'jquery';
 import animals from './animals.txt';
 import { Remarkable } from 'remarkable';
 import hljs from 'highlight.js'
-import Dexie from 'dexie';
-var async = Dexie.async,
-    spawn = Dexie.spawn;
-
+import { fileSystem, FileSystem } from './FileSystem';
+import { History } from './History';
+import { Component } from './Component';
+//import { XTermJS } from './XTermJS';
 //import ace from "ace-builds";
 //import "ace-builds/webpack-resolver";
 //var ace = require('ace-builds/src-noconflict/ace')
@@ -18,6 +16,9 @@ var async = Dexie.async,
 
 var turtleduck = window['turtleduck'] || {};
 window.turtleduck = turtleduck;
+
+turtleduck.fileSystem = fileSystem;
+turtleduck.history = new History(fileSystem);
 
 
 //ace.config.loadModule("ace/ext/language_tools", function(m) { turtleduck.editor_language_tools = m; });
@@ -123,125 +124,6 @@ turtleduck.tabSelect = function(tabsId, key) {
 	return previous;
 }
 
-turtleduck.db = new Dexie('tddb');
-turtleduck.db.version(1).stores({
-	paths: 'path,modtime,kind,inode',
-	files: '++inode,next' 
-});
-
-turtleduck.Path = turtleduck.db.paths.defineClass({
-		path: String,
-		kind: String,
-		inode: Number
-});
-turtleduck.Path.prototype.log = function() {
-		console.log("log path:", JSON.stringify(this));	
-}
-turtleduck.Path.prototype.save = function() {
-		console.log("save path:", JSON.stringify(this));
-		return turtleduck.db.paths.put(this);
-}
-turtleduck.Path.prototype.read = function() {
-		console.log("read path:", JSON.stringify(this));
-		return turtleduck.db.files.get(this.inode).then(inode => {
-			if(inode)
-				return inode.read();
-			else
-				return '';
-		});
-}
-turtleduck.Path.prototype.write = function(newData) {
-		console.log("write path:", JSON.stringify(this));
-		const path = this;
-		return turtleduck.db.transaction('rw', [turtleduck.db.paths, turtleduck.db.files],
-			async () => {
-				const inode = await turtleduck.db.files.get(path.inode || -1);
-				if(inode) {
-					path.inode = await inode.write(newData);
-				}
-				else {
-					path.inode = await turtleduck.db.files.add({data: newData});
-				}
-				path.save();
-				console.log("path written:", JSON.stringify(path));					
-			});
-}
-turtleduck.File = turtleduck.db.files.defineClass({
-		data: String,
-		next: Number,
-		modtime: Date,
-});
-turtleduck.File.prototype.save = function() {
-		console.log("save file:", JSON.stringify(this));
-		return turtleduck.db.files.put(this);
-}
-turtleduck.File.prototype.log = function() {
-		console.log(JSON.stringify(this));	
-}
-
-function patch(data, diff) {
-	return "patch(" + data + ", "+ diff + ")";
-}
-
-function diff(from, to) {
-	return "diff("+ from + ", " + to + ")";
-}
-turtleduck.File.prototype.read = function() {
-		if(this.next > 0) {
-			return turtleduck.db.files.get(this.next)
-				.then(nextFile => patch(nextFile.read(), this.data));
-		} else {
-			return Promise.resolve(this.data);
-		}
-}
-
-turtleduck.File.prototype.write = function(newData) {
-		if(this.next > 0) {
-			return turtleduck.db.files.get(this.next)
-				.then(nextFile => nextFile.write(newData));
-		} else if(this.data) {
-			let last = this;
-			return turtleduck.db.files.add({data: newData, next: 0, date: new Date()}).then(function(id) {
-				console.log("overwrite: ", id);
-				last.data = diff(newData, last.data);
-				last.next = id;
-				return turtleduck.db.files.put(last).then(() => Promise.resolve(id));
-				
-			})
-		} else {
-			this.data = newData;
-			return turtleduck.db.files.put(this);
-		}
-}
-
-turtleduck.fileSystem = {
-	
-	list: function() {
-		let result = [];
-		for(let i = 0; i < turtleduck.localStorage.length; i++) {
-			let key = turtleduck.localStorage.key(i);
-			if(key.startsWith("file://")) {
-				result.push(key.substring(7));
-			}
-		}
-		return result;
-	},
-	
-	read: function(filename) {
-		if(!filename.startsWith("file://")) {
-			filename = "file://" + filename;
-		}
-		return turtleduck.localStorage.getItem(filename);
-	},
-	
-	write: function(filename, data) {
-		if(!filename.startsWith("file://")) {
-			filename = "file://" + filename;
-		}
-		return turtleduck.localStorage.setItem(filename, data);
-	}
-	
-}
 
 
 function ctrl(key) {
@@ -267,10 +149,12 @@ function handleKey(key, button, event) {
 		case "f6":
 			unsetLayout();
 			page.toggleClass('main-and-figure', true);
-			turtleduck.editor.view.focus();
+			if(turtleduck.editor)
+				turtleduck.editor.focus();
 			break;
 		case "f7":
-			turtleduck.xtermjs.focus();
+			if(turtleduck.shell)
+				turtleduck.shell.focus();
 			break;
 		case "~f8":
 			if (jquery("#page").hasClass('main-alone')) {
@@ -278,13 +162,13 @@ function handleKey(key, button, event) {
 				jquery("#page").toggleClass('figure-alone', false);
 				jquery("#page").toggleClass('main-and-figure', true);
 			}
-			jquery('#screen').focus();
+			turtleduck.screen.focus();
 			break;
 		case "f8":
 			const nextLayout = jquery(this).attr('data-target');
 			if(nextLayout)
 				page.toggleClass(nextLayout, true);
-			turtleduck.xtermjs_fitAddon.fit();
+			turtleduck.terminal.fit();
 			break;
 		case "help":
 			jquery("#page").toggleClass('show-splash-help');
@@ -301,6 +185,60 @@ function handleKey(key, button, event) {
 }
 
 turtleduck.handleKey = handleKey;
+
+turtleduck.activateToggle = function(element, toggleClass, target, ...targets) {
+	const jqtgt = jquery(target);
+	jquery(element).click(function(e) {
+		var active = jqtgt.hasClass(toggleClass);
+		console.log(jqtgt, active);
+		jqtgt.toggleClass(toggleClass, !active);
+		targets.forEach(elt => jquery(elt).toggleClass(toggleClass, !active));
+		console.log("done");
+		return false;
+	});
+}
+
+turtleduck.activateDrag = function(element, type, value) {
+	element.addEventListener("dragstart", e => {
+		e.dataTransfer.setData(type, value);
+		e.preventDefault();
+		return false;
+	});
+}
+
+turtleduck.createComponent = (name, element) => new Component(name, element, turtleduck);
+
+turtleduck.activatePaste = function(element, target, text, cursorAdj = 0, then = null) {
+	element.addEventListener("click", e => {
+		try {
+			console.log("clicked");
+			var comp = null;
+			if(target === "currentTarget") {
+				if(turtleduck.lastFocus)
+					comp = turtleduck.lastFocus;
+				else
+					comp = turtleduck.shell;
+			} else if(turtleduck[target]) {
+				comp = turtleduck[target];
+			} else
+				console.error("paste: ", target, "does not exist");
+			console.log("comp:", comp, comp.paste);
+			if(comp !== null && comp.paste)
+				comp.paste(text, cursorAdj);
+			e.preventDefault();
+			if(then !== null) {
+				then(element);
+			}
+		} catch(e) {
+			console.error(e);
+			throw e;
+		}
+		return false;
+	}, false);
+}
+turtleduck.currentFocus = null;
+turtleduck.lastFocus = null;
+
 
 jquery(function() {
 	jquery('[data-shortcut]').each(function(index) {
@@ -353,7 +291,8 @@ jquery(function() {
 		const toggleType = jquery(this).attr('data-toggle');
 		const ref = jquery(this).attr('href') || jquery(this).attr('data-target');
 		const target = jquery(ref);
-		if (toggleType == 'collapse') {
+		turtleduck.activateToggle(this, toggleType, ref);
+	/*	if (toggleType == 'collapse') {
 			jquery(button).click(function(e) {
 				var active = jquery(button).hasClass('open');
 				jquery(button).toggleClass('open', !active);
@@ -367,7 +306,7 @@ jquery(function() {
 				target.toggleClass('active', !active);
 				return false;
 			});
-		}
+		}*/
 	});
 
 	jquery('[data-reset-onclick]').each(function() {
@@ -422,22 +361,13 @@ jquery(document).ready(() => {
 		turtleduck.localStorage.setItem('hasSeenSplashHelp', true);
 	}
 	
-	// focus
-	['editor', 'screen', 'console', 'explorer'].forEach(id => {
-		const elt = jquery('#'+id);
-		elt.focusin(() => elt.toggleClass('focused', true));
-		elt.focusout(() => elt.toggleClass('focused', false));
-	});
-	
 	const resizeObserver = new ResizeObserver(entries => {
 		console.log('Console size changed');
 	})
-	resizeObserver.observe(document.getElementById('console'));
+	resizeObserver.observe(document.getElementById('shell'));
 })
 
 window.SockJS = SockJS;
-window.Terminal = Terminal;
-window.FitAddon = FitAddon;
 window.Mousetrap = Mousetrap;
 window.Remarkable = Remarkable;
 window.hljs = hljs;

@@ -1,16 +1,11 @@
 package turtleduck.tea;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.teavm.jso.browser.Storage;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.dom.css.CSSStyleDeclaration;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
-import org.teavm.jso.dom.events.KeyboardEvent;
 import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.dom.html.HTMLInputElement;
 import org.teavm.jso.dom.html.HTMLOptionElement;
@@ -19,13 +14,11 @@ import org.teavm.jso.dom.html.TextRectangle;
 
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
-import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.messaging.CodeService;
 import turtleduck.messaging.ExplorerService;
-import turtleduck.messaging.Reply;
 import turtleduck.messaging.ShellService;
 import turtleduck.messaging.TerminalService;
 import turtleduck.tea.terminal.HostSide;
@@ -48,23 +41,21 @@ import xtermjs.Terminal;
 @MessageDispatch("turtleduck.tea.generated.TerminalDispatch")
 public class TerminalClient implements TerminalService, ExplorerService {
 	public static final Logger logger = Logging.getLogger(TerminalClient.class);
-	public static final Color VARCOLOR = Colors.OLIVE;
-	public static final Color TYPECOLOR = Colors.LIGHT_BLUE;
-	public static final Color TEXTCOLOR = Colors.LIME;
 	public static final String ENDPOINT_ID = "turtleduck.terminal";
 	private Client client;
 	private Terminal terminal;
 	private ITheme theme;
 	private final HTMLElement element;
-	private KeyHandler keyHandler;
 	private final Readline readline;
 	private HostSide hostSide;
 	private EventListener<Event> onresize;
 	protected int lineNum = 0;
 	private TextCursor cursor;
 	private Async<Dict> completionPending;
+	private Shell shell;
+	private KeyHandler keyHandler;
 
-	public TerminalClient(HTMLElement element, Client client) {
+	TerminalClient(HTMLElement element, Client client) {
 		Storage storage = client.storage();
 		Readline rl;
 		if (storage != null && storage.getItem("terminal.history") != null) {
@@ -80,102 +71,76 @@ public class TerminalClient implements TerminalService, ExplorerService {
 		readline.customKeyHandler(this::keyHandler);
 	}
 
+	public void initialize() {
+		theme = ITheme.createBrightVGA();
+		theme.setCursor("#f00");
+		theme.setBackground("#111");
+		CSSStyleDeclaration style = element.getStyle();
+		style.setProperty("position", "relative");
+
+		HTMLElement embedNode = element.getOwnerDocument().createElement("div").withAttr("class", "xtermjs-embed");
+		style = embedNode.getStyle();
+		style.setProperty("height", "100%");
+		style.setProperty("width", "100%");
+		style.setProperty("overflow", "hidden");
+		element.appendChild(embedNode);
+//			theme.setForeground("#0a0");
+
+		ITerminalOptions opts = ITerminalOptions.create();
+		opts.setTheme(theme);
+		try {
+			String font = JSUtil.getStyle(embedNode).getPropertyValue("font-family");
+			if (font != null)
+				opts.setFontFamily(font);
+		} catch (Throwable t) {
+			logger.error("Failed to get style", t);
+		}
+		opts.setCursorBlink(true);
+		opts.setFontSize(16);
+		logger.info(opts.getFontFamily());
+
+		terminal = Terminal.create(opts);
+		terminal.open(embedNode);
+
+		hostSide = new HostSide(terminal);
+		cursor = new TermCursorImpl(hostSide, terminal::paste);
+		shell = new Shell(cursor, null, this::prompt, null);
+		readline.attach(hostSide);
+		readline.handler(this::lineHandler);
+		prompt(1);
+		if (readline.hasHistory())
+			readline.redraw();
+		FitAddon fitAddon = FitAddon.create();
+		terminal.loadAddon(fitAddon);
+		fitAddon.fit();
+		onresize = (e) -> {
+			fitAddon.fit();
+		};
+		Window.current().addEventListener("resize", onresize);
+		client.map.set("xtermjs", terminal);
+		client.map.set("xtermjs_fitAddon", fitAddon);
+		client.map.set("xtermjs_onresize", onresize);
+	}
+
 	public void lineHandler(String s) {
 //		if (id > 0) { // we're open for business!
 		Dict dict = readline.toDict();
-		logger.info("saving history: " + dict);
+//		logger.info("saving history: " + dict);
 		client.withStorage(storage -> storage.setItem("terminal.history", dict.toJson()));
 		if (s.startsWith("!refresh")) {
 			client.shellService.refresh();
-			prompt1();
-			readline.prompt();
+			prompt(1);
 			return;
 		}
-		if (s.startsWith("/")) {
-			String[] split = s.split("\\s+", 2);
-			String cmd = split[0];
-			String args = split.length == 2 ? split[1].trim() : "";
-			if (cmd.equals("/ls")) {
-				List<String> files = client.fileSystem.list();
-				int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
-				int width = terminal.getCols();
-				int cols = 1;
-				logger.info("0: max={}, width={}, cols={}", max, width, cols);
-				if (max > 0 && max < width) {
-					cols = Math.min(files.size(), width / (max + 1));
-					max = width / cols;
-				}
-				logger.info("1: max={}, width={}, cols={}", max, width, cols);
-				int c = 0;
-				for (String str : files) {
-					cursor.print(String.format("%-" + max + "s", str));
-					if (++c >= cols) {
-						cursor.println();
-						c = 0;
-					}
-				}
-				if(c != 0)
-					cursor.println();
-				prompt1();
-				readline.prompt();
-				return;
-			} else if(cmd.equals("/open")) {
-				client.editorImpl.open(args, null, "Java");
-				prompt1();
-				readline.prompt();
-				return;
-			}
+		if (s.startsWith("!refresh")) {
+			client.shellService.refresh();
+			prompt(1);
+			return;
+		} else if (s.startsWith("/") && shell.specialCommand(s)) {
+			return;
+		} else {
+			shell.evalLine(s);
 		}
-		client.shellService.eval(s, lineNum++, Dict.create())//
-				.onSuccess(msg -> {
-					logger.info("exec result: " + msg);
-					if (msg.get(ShellService.COMPLETE)) {
-						for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
-							Array diags = result.get(ShellService.DIAG);
-							for (Dict diag : diags.toListOf(Dict.class)) {
-								String name = diag.get(Reply.ENAME);
-								cursor.println(name + " at " + diag.get(ShellService.LOC),
-										Diagnostics.colorOf(Diagnostics.levelOf(name)));
-								cursor.println(diag.get(Reply.EVALUE), Diagnostics.colorOf(Diagnostics.levelOf(name)));
-							}
-							String value = result.get(ShellService.VALUE);
-							String name = result.get(ShellService.NAME);
-							String type = result.get(ShellService.TYPE);
-							if (value != null) {
-								String v = TEXTCOLOR.applyFg(value) + "\n";
-								if (name != null) {
-									v = VARCOLOR.applyFg(name) + " = " + v;
-								}
-								if (type != null) {
-									v = TYPECOLOR.applyFg(type) + " " + v;
-								}
-								cursor.print(v);
-							}
-						}
-						prompt1();
-						readline.prompt();
-					} else {
-//				String code = msg.get(ShellService.CODE);
-						prompt2();
-						readline.prompt();
-//				terminal.paste(code);
-//				if (code.endsWith(";"))
-//					readline.keyHandler(KeyEvent.create(KeyCodes.Navigation.ARROW_LEFT, "", 0, 0));
-					}
-				})//
-				.onFailure(msg -> {
-					logger.info("exec error: " + msg);
-					String ename = msg.get(Reply.ENAME);
-					String evalue = msg.get(Reply.EVALUE, null);
-					Array trace = msg.get(Reply.TRACEBACK);
-					cursor.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""), Colors.RED);
-					for (String frame : trace.toListOf(String.class)) {
-						cursor.println(frame, Colors.MAROON);
-					}
-					prompt1();
-					readline.prompt();
-				});
-//		}
 	}
 
 	public boolean keyHandler(KeyEvent ev, LineInput li) {
@@ -333,58 +298,8 @@ public class TerminalClient implements TerminalService, ExplorerService {
 	public void connected(String user, String newOrExisting, String session) {
 		cursor.println("Welcome " + Colors.LIME.applyFg(user) + "! Using " + newOrExisting + " session "
 				+ Colors.LIME.applyFg(session), Colors.GREEN);
-		prompt1();
+		prompt(1);
 		readline.redraw();
-	}
-
-	public void initialize() {
-		theme = ITheme.createBrightVGA();
-		theme.setCursor("#f00");
-		theme.setBackground("#111");
-		CSSStyleDeclaration style = element.getStyle();
-		style.setProperty("position", "relative");
-
-		HTMLElement embedNode = element.getOwnerDocument().createElement("div").withAttr("class", "xtermjs-embed");
-		style = embedNode.getStyle();
-		style.setProperty("height", "100%");
-		style.setProperty("width", "100%");
-		style.setProperty("overflow", "hidden");
-		element.appendChild(embedNode);
-//			theme.setForeground("#0a0");
-
-		ITerminalOptions opts = ITerminalOptions.create();
-		opts.setTheme(theme);
-		try {
-			String font = JSUtil.getStyle(embedNode).getPropertyValue("font-family");
-			if (font != null)
-				opts.setFontFamily(font);
-		} catch (Throwable t) {
-			logger.error("Failed to get style", t);
-		}
-		opts.setCursorBlink(true);
-		opts.setFontSize(16);
-		logger.info(opts.getFontFamily());
-
-		terminal = Terminal.create(opts);
-		terminal.open(embedNode);
-
-		hostSide = new HostSide(terminal);
-		cursor = new TermCursorImpl(hostSide, terminal::paste);
-		readline.attach(hostSide);
-		readline.handler(this::lineHandler);
-		prompt1();
-		if (readline.hasHistory())
-			readline.redraw();
-		FitAddon fitAddon = FitAddon.create();
-		terminal.loadAddon(fitAddon);
-		fitAddon.fit();
-		onresize = (e) -> {
-			fitAddon.fit();
-		};
-		Window.current().addEventListener("resize", onresize);
-		client.map.set("xtermjs", terminal);
-		client.map.set("xtermjs_fitAddon", fitAddon);
-		client.map.set("xtermjs_onresize", onresize);
 	}
 
 	public void opened(int id) {
@@ -393,19 +308,14 @@ public class TerminalClient implements TerminalService, ExplorerService {
 			keyHandler = new KeyHandler(terminal, client.inputService);
 	}
 
-//	public void write(String s) {
-//		terminal.write(s);
-//	}
-	public void prompt() {
+	private void prompt(int variant) {
+		if (variant == 1)
+			readline.prompt("\u001b[33m  --> \u001b[38;5;82m");
+		else if (variant == 2)
+			readline.prompt("\u001b[33mjava> \u001b[38;5;82m");
+		else
+			readline.prompt("\u001b[33m> \u001b[38;5;82m");
 		readline.prompt();
-	}
-
-	private void prompt1() {
-		readline.prompt("\u001b[33mjava> \u001b[38;5;82m");
-	}
-
-	private void prompt2() {
-		readline.prompt("\u001b[33m  --> \u001b[38;5;82m");
 	}
 
 	@Override

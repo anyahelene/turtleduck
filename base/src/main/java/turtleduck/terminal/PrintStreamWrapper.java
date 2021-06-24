@@ -14,7 +14,7 @@ public abstract class PrintStreamWrapper extends PrintStream {
 			public void write(int b) throws IOException {
 				throw new IOException("This method should never be called! Missing override in TerminalPrintStream?");
 			}
-		}, true, Charset.forName("UTF-8"));
+		}, true); // TODO: add UTF-8 argument and make it work with TeaVM
 	}
 
 	public void write(byte[] b) {

@@ -1,7 +1,7 @@
 package turtleduck.tea;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import static turtleduck.tea.Browser.tryListener;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -13,8 +13,6 @@ import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.core.JSArray;
-import org.teavm.jso.core.JSMapLike;
-import org.teavm.jso.core.JSObjects;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.HTMLDocument;
@@ -22,19 +20,16 @@ import org.teavm.jso.dom.html.HTMLElement;
 
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
-import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
 import turtleduck.messaging.EditorService;
 import turtleduck.messaging.Reply;
 import turtleduck.messaging.ShellService;
+import turtleduck.tea.TDEditor.Callback;
 import turtleduck.tea.TDEditor.State;
-import turtleduck.tea.terminal.KeyHandler;
 import turtleduck.text.Location;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Logging;
-
-import static turtleduck.tea.Browser.trying;
 
 @MessageDispatch("turtleduck.tea.generated.EditorDispatch")
 public class EditorServer implements EditorService {
@@ -53,10 +48,13 @@ public class EditorServer implements EditorService {
 	private HTMLElement wrapper;
 //	private HTMLElement tabItem;
 //	private String service;
-	private ShellService shell;
+	private ShellService shellService;
 	private int nextSessionId = 0;
 	private EventListener<?> saveListener;
 	private EventListener<?> closeListener;
+	private Shell shell;
+	private JSArray<JSObject> cmDiags;
+	private TDEditor editor;
 
 	@JSBody(params = { "state" }, script = "return state.doc.toString()")
 	native static String getDoc(State state);
@@ -68,10 +66,11 @@ public class EditorServer implements EditorService {
 	@JSBody(params = { "state" }, script = "return state.doc.length == 0")
 	native static boolean isEmpty(State state);
 
-	@JSBody(params = { "elt", "text" }, script = "return turtleduck.createEditor(elt, text)")
-	native static TDEditor createEditor(HTMLElement elt, String text);
-	@JSBody(params = { "elt", "text" }, script = "return turtleduck.createLineEditor(elt, text)")
-	native static TDEditor createLineEditor(HTMLElement elt, String text);
+	@JSBody(params = { "elt", "wrap", "text" }, script = "return turtleduck.createEditor(elt, wrap, text)")
+	native static TDEditor createEditor(HTMLElement elt, HTMLElement wrap, String text);
+
+	@JSBody(params = { "elt", "wrap", "text", "handler" }, script = "return turtleduck.createLineEditor(elt, wrap, text, handler)")
+	native static TDEditor createLineEditor(HTMLElement elt, HTMLElement wrap, String text, Callback handler);
 
 	@JSBody(params = { "sess", "start", "len", "type",
 			"message" }, script = "{const anno = sess.doc.indexToPosition(start);\n"
@@ -94,17 +93,25 @@ public class EditorServer implements EditorService {
 	@JSBody(params = { "sess" }, script = "sess.setAnnotations([])")
 	native static void clearAnnos(State sess);
 
-	@JSBody(params = { "state", "diags" }, script = "return state.update(turtleduck.editor.setDiagnostics(state, diags)).state")
+	@JSBody(params = { "state",
+			"diags" }, script = "return state.update(turtleduck.editor.setDiagnostics(state, diags)).state")
 	native static State setDiagnostics(State sess, JSArray<JSObject> diags);
 
-	@JSBody(params = { "from", "to", "severity", "message" }, script = "return turtleduck.editor.diagnostic(from, to, severity, message, [])")
+	@JSBody(params = { "from", "to", "severity",
+			"message" }, script = "return turtleduck.editor.diagnostic(from, to, severity, message, [])")
 	native static JSObject diagnostic(int from, int to, String severity, String message);
 
-	public EditorServer(HTMLElement wrapper, HTMLElement tabs, Client client, ShellService shell) {
+	EditorServer(HTMLElement element, HTMLElement wrapper, HTMLElement tabs, Client client, ShellService shell) {
 		this.client = client;
 		this.tabs = tabs;
 		this.wrapper = wrapper;
-		this.shell = shell;
+		this.shellService = shell;
+		this.editor = createEditor(element, wrapper, "");
+
+		this.shell = new Shell(client.cursor, (d, l) //
+		-> cmDiags.push(
+				diagnostic(l.start(), l.end(), d.getString("level"), d.get(Reply.ENAME) + ": " + d.get(Reply.EVALUE))),
+				null, null);
 	}
 
 	public void initialize() {
@@ -115,18 +122,12 @@ public class EditorServer implements EditorService {
 		closeButton = document.getElementById("tb-close");
 
 		if (saveButton != null)
-			saveButton.addEventListener("click", saveListener = trying(this::save));
+			saveButton.addEventListener("click", saveListener = tryListener(this::save));
 		if (closeButton != null)
-			closeButton.addEventListener("click", closeListener = trying(this::close));
+			closeButton.addEventListener("click", closeListener = tryListener(this::close));
 		logger.info("editor save button: {}", saveButton);
 
-		if (client.editor == null) {
-			client.editor = createEditor(wrapper, "");
-			open("*scratch*", "", "Java");
-			client.map.set("editor", client.editor);
-		} else {
-			throw new IllegalStateException("EditorServer initialized again?!");
-		}
+		open(name, "", "Java");
 	}
 
 	public void dispose() {
@@ -149,64 +150,13 @@ public class EditorServer implements EditorService {
 			opts.put(ShellService.LOC, loc.toString());
 			opts.put(ShellService.COMPLETE, true);
 			client.cursor.println();
-			shell.eval(contents, current.id, opts).onSuccess(msg -> {
-//				clearAnnos(state);
-//				while (!current.decorations.isEmpty()) {
-//					removeGutterDecoration(state, current.decorations.remove(0));
-//				}
-				JSArray<JSObject> cmDiags = JSArray.create();
-				for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
-					Array diags = result.get(ShellService.DIAG);
-					for (Dict diag : diags.toListOf(Dict.class)) {
-						String name = diag.get(Reply.ENAME);
-						String level = Diagnostics.levelOf(name);
-						Color color = Diagnostics.colorOf(level);
-						client.cursor.println(diag.get(Reply.ENAME) + " at " + diag.get(ShellService.LOC),
-								color);
-						client.cursor.println(diag.get(Reply.EVALUE), color);
-						try {
-							URI uri = new URI(diag.get(ShellService.LOC));
-							Location l = new Location(uri);
-							cmDiags.push(diagnostic(l.start(), l.end(), Diagnostics.levelOf(name),  name + ": " + diag.get(Reply.EVALUE)));
-//							addAnno(state, l.start(), l.length(), "error",
-//									diag.get(Reply.ENAME) + ": " + diag.get(Reply.EVALUE));
-						} catch (URISyntaxException ex) {
-							Browser.addError(ex);
-						}
-					}
-					if (msg.get(ShellService.COMPLETE)) {
-						String value = result.get(ShellService.VALUE);
-						String name = result.get(ShellService.NAME);
-						String type = result.get(ShellService.TYPE);
-						if (value != null) {
-							String v = TerminalClient.TEXTCOLOR.applyFg(value) + "\n";
-							if (name != null && !name.isEmpty()) {
-								v = TerminalClient.VARCOLOR.applyFg(name) + " = " + v;
-							}
-							if (type != null && !type.isEmpty()) {
-								v = TerminalClient.TYPECOLOR.applyFg(type) + " " + v;
-							}
-							client.cursor.print(v);
-						}
-						if (diags.isEmpty()) {
-							try {
-								URI uri = new URI(result.get(ShellService.LOC));
-								Location l = new Location(uri);
-//								current.decorations.add(addGutterDecoration(state, l.start(), l.length(), "ok"));
-							} catch (URISyntaxException ex) {
-								Browser.addError(ex);
-							}
-						}
-					}
-				}
-				current.state = setDiagnostics(client.editor.state(), cmDiags);
-				client.editor.switchState(current.state);
-				client.terminalClient.prompt();
+			shellService.eval(contents, current.id, opts).onSuccess(msg -> {
+				cmDiags = JSArray.create();
+				shell.processResult(msg, true, null);
+				current.state = setDiagnostics(editor.state(), cmDiags);
+				editor.switchState(current.state);
 			}).onFailure(msg -> {
-//				clearAnnos(state);
-				while (!current.decorations.isEmpty()) {
-//					removeGutterDecoration(state, current.decorations.remove(0));
-				}
+
 				logger.info("exec error: " + msg);
 				String ename = msg.get(Reply.ENAME);
 				String evalue = msg.get(Reply.EVALUE, null);
@@ -216,7 +166,6 @@ public class EditorServer implements EditorService {
 				for (String frame : trace.toListOf(String.class)) {
 					client.cursor.println(frame, Colors.MAROON);
 				}
-				client.terminalClient.prompt();
 			});
 		}
 	}
@@ -233,7 +182,7 @@ public class EditorServer implements EditorService {
 				open("*scratch*", "", "Java");
 			} else {
 				currentSession = sessionsByName.entrySet().iterator().next().getValue();
-				client.editor.switchState(currentSession.state);
+				editor.switchState(currentSession.state);
 			}
 		}
 	}
@@ -241,13 +190,13 @@ public class EditorServer implements EditorService {
 	@Override
 	public Async<Dict> content(String content, String language) {
 		logger.info("Contents: " + content);
-		State newState = setDoc(client.editor.state(), content);
-		client.editor.switchState(newState);
+		State newState = setDoc(editor.state(), content);
+		editor.switchState(newState);
 		return null;
 	}
 
 	public String content() {
-		return getDoc(client.editor.state());
+		return getDoc(editor.state());
 	}
 
 	@Override
@@ -267,17 +216,17 @@ public class EditorServer implements EditorService {
 
 	@Override
 	public Async<Dict> read() {
-		return Async.succeeded(Dict.create().put(EditorService.TEXT, getDoc(client.editor.state())));
+		return Async.succeeded(Dict.create().put(EditorService.TEXT, getDoc(editor.state())));
 	}
 
 	private void switchTo(EditSession sess) {
 		if (currentSession != null) {
 			currentSession.tab.setClassName(TABCLASS_INACTIVE);
-			currentSession.state = client.editor.state();
+			currentSession.state = editor.state();
 		}
 		sess.tab.setClassName(TABCLASS_ACTIVE);
 		currentSession = sess;
-		client.editor.switchState(currentSession.state);
+		editor.switchState(currentSession.state);
 	}
 
 	@Override
@@ -286,16 +235,16 @@ public class EditorServer implements EditorService {
 
 		if (currentSession != null) {
 			if (currentSession.filename.equals(filename)) {
-				client.editor.switchState(setDoc(client.editor.state(), text));
+				editor.switchState(setDoc(editor.state(), text));
 				return null;
-			} else if (currentSession.filename.equals("*scratch*") && isEmpty(client.editor.state())) {
+			} else if (currentSession.filename.equals("*scratch*") && isEmpty(editor.state())) {
 				logger.info("replacing *scratch*");
 				if (text == null)
 					text = client.fileSystem.read(filename);
 				if (text == null)
 					text = "";
 				logger.info("text: " + text);
-				client.editor.switchState(setDoc(client.editor.state(), text));
+				editor.switchState(setDoc(editor.state(), text));
 				currentSession.filename = filename;
 				currentSession.tabLink.withText(filename);
 				return null;
@@ -327,7 +276,7 @@ public class EditorServer implements EditorService {
 
 			tabs.appendChild(sess.tab);
 			logger.info("editor tabs: {}", tabs);
-			sess.state = client.editor.createState(text);
+			sess.state = editor.createState(text);
 			sess.id = id;
 			sess.filename = filename;
 

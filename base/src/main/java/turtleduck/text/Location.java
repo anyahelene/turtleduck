@@ -5,11 +5,16 @@ import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+
+import turtleduck.util.Logging;
+
 /**
  * @author anya
  *
  */
 public class Location {
+	protected static final Logger logger = Logging.getLogger(Location.class);
 	protected static final Pattern FRAGMENT_PATTERN = Pattern.compile("(\\d+)(?:\\+(\\d+))?(?:@(\\d+))?");
 	final String protocol;
 	final String host;
@@ -19,13 +24,25 @@ public class Location {
 	final int pos;
 	final URI uri;
 
+	public static final Location fromString(String locstr) {
+		if (locstr != null) {
+			try {
+				URI uri = new URI(locstr);
+				return new Location(uri);
+			} catch (URISyntaxException e) {
+				logger.error("invalid URI: " + locstr, e);
+			}
+		}
+		return null;
+	}
+
 	public Location(URI uri) {
 		this.uri = uri;
 		this.protocol = uri.getScheme();
 		String host = uri.getHost();
 		String path = uri.getPath();
 		String ssp = uri.getSchemeSpecificPart();
-		if(path == null) {
+		if (path == null) {
 			this.path = ssp;
 			this.host = null;
 		} else {
@@ -150,6 +167,22 @@ public class Location {
 			return s.substring(start);
 		} else {
 			return (s + "_").substring(start, start + length);
+		}
+	}
+
+	public String before(String s) {
+		if (start <= 0) {
+			return "";
+		} else {
+			return s.substring(0, start);
+		}
+	}
+
+	public String after(String s) {
+		if (start < 0 || length < 0) {
+			return "";
+		} else {
+			return s.substring(start + length);
 		}
 	}
 

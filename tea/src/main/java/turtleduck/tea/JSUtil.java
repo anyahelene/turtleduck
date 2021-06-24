@@ -15,7 +15,6 @@ import org.teavm.jso.dom.css.CSSStyleDeclaration;
 import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.json.JSON;
 import org.teavm.jso.typedarrays.ArrayBuffer;
-import org.teavm.platform.Platform;
 
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
@@ -42,7 +41,15 @@ public class JSUtil {
 
 	@JSBody(params = { "keyName" }, script = "turtleduck.handleKey(keyName)")
 	native static void handleKey(String keyName);
-
+	
+	@JSBody(params = { "activeElement", "className", "target" }, script = "turtleduck.activateToggle(activeElement, className, target)")
+	native static void activateToggle(HTMLElement activeElement, String className, HTMLElement target);
+	@JSBody(params = { "activeElement", "mimeType", "data" }, script = "turtleduck.activateDrag(activeElement, mimeType, data);activeElement.draggable=true;")
+	native static void activateDrag(HTMLElement activeElement, String mimeType, String data);
+	@JSBody(params = { "activeElement", "target", "text" }, script = "turtleduck.activatePaste(activeElement, target, text);")
+	native static void activatePaste(HTMLElement link, String target, String text);
+	@JSBody(params = { "activeElement", "target", "text", "cursorAdj", "then" }, script = "turtleduck.activatePaste(activeElement, target, text, cursorAdj, then);")
+	native static void activatePaste(HTMLElement link, String target, String text, int cursorAdj, JSConsumer<HTMLElement> then);
 	@JSBody(params = { "code" }, script = "return eval(code)")
 	native static JSObject eval(String code);
 
@@ -54,6 +61,14 @@ public class JSUtil {
 
 	@JSBody(params = { "elt", "code" }, script = "elt.innerHTML = turtleduck.md.render(code)")
 	native static void renderSafeMarkdown(HTMLElement elt, String code);
+	@JSBody(params = { "elt" }, script = "elt.scrollIntoView()")
+	native static void scrollIntoView(HTMLElement elt);
+	@JSBody(params = { }, script = "return turtleduck.lastFocus")
+	native static Component activeComponent();
+	@JSBody(params = { "name", "elt" }, script = "{const comp = turtleduck.createComponent(name, elt); turtleduck[name] = comp; return comp;}")
+	native static JSMapLike<JSObject> createComponent(String name, HTMLElement elt);
+	@JSBody(params = { "elt" }, script = "{if(elt.id) {const comp = turtleduck.createComponent(elt.id, elt); turtleduck[elt.id] = comp; return comp;} else {throw new Error(\"createComponent: element missing id\");}}")
+	native static JSMapLike<JSObject> createComponent(HTMLElement elt);
 
 	/**
 	 * TODO: make sure html code is sane
@@ -87,6 +102,7 @@ public class JSUtil {
 				Browser.consoleTraceArray(objs);
 		} catch (Throwable ex) {
 			Browser.consoleLog("Logger failed: ", JSString.valueOf(ex.toString()));
+			throw ex;
 		}
 	}
 
@@ -146,4 +162,6 @@ public class JSUtil {
 			}
 		}
 	}
+
+
 }

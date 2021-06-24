@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,12 +75,13 @@ import turtleduck.text.TextWindow;
 import turtleduck.turtle.Turtle;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
+import turtleduck.util.Logging;
 import turtleduck.util.Strings;
 
 @MessageDispatch("turtleduck.shell.generated.TShellDispatch")
 public class TShell implements ShellService {
 	private final TShellDispatch dispatch;
-	protected final Logger logger = LoggerFactory.getLogger(TShell.class);
+	protected final Logger logger = Logging.getLogger(TShell.class);
 	private final SnippetNS startupNS = new SnippetNS("Startup", "s");
 	private final SnippetNS errorNS = new SnippetNS("Error", "e");
 	private final SnippetNS mainNS = new SnippetNS("Main", "");
@@ -136,8 +138,8 @@ public class TShell implements ShellService {
 		}, null);
 //		builder.fileManager(fm -> new FileManager(fm));
 		if (getClass().getModule().isNamed()) {
-			builder.compilerOptions("-g", "-Xlint:all", "--module-path", System.getProperty("jdk.module.path", ""), "--add-modules",
-					getClass().getModule().getName());
+			builder.compilerOptions("-g", "-Xlint:all", "--module-path", System.getProperty("jdk.module.path", ""),
+					"--add-modules", getClass().getModule().getName());
 			System.out.println("module: " + getClass().getModule().getName());
 		} else {
 			builder.compilerOptions("-g", "-Xlint:all", "--module-path", System.getProperty("jdk.module.path", ""));
@@ -145,8 +147,8 @@ public class TShell implements ShellService {
 		}
 		System.out.println("builder: " + builder);
 		builder.idGenerator((sn, i) -> currentNS.getId(sn, i));
-		builder.out(new TerminalPrintStream(printer2));
-		builder.err(new TerminalPrintStream(printer2));
+		builder.out(new TerminalPrintStream(printer2, true));
+		builder.err(new TerminalPrintStream(printer2, true));
 		shell = builder.build();
 		shell.onShutdown(this::shutdownListener);
 //		shell.onSnippetEvent(this::snippetEventListener);
@@ -459,18 +461,11 @@ public class TShell implements ShellService {
 
 		if (!code.isBlank()) {
 			result = (Async<Dict>) enqueuer.apply(() -> {
+				long t0 = System.currentTimeMillis();
 				String locstr = opts.get(LOC);
 				boolean consideredComplete = opts.get(COMPLETE, false);
-				Location loc = null;
-				if (locstr != null) {
-					try {
-						URI uri = new URI(locstr);
-						loc = new Location(uri);
-					} catch (URISyntaxException e) {
-						logger.error("invalid URI: " + locstr, e);
-						loc = new Location("INVALID", "LOCATION", "/" + ref, code);
-					}
-				}
+				Location loc = Location.fromString(locstr);
+
 				if (loc == null) {
 					loc = new Location("input", "terminal", "/" + ref, code);
 				}
@@ -488,10 +483,14 @@ public class TShell implements ShellService {
 					for (SourceCode c : codes) {
 						logger.info("EVAL: complete={}: «{}»", c.isComplete(), c.code);
 						Dict dict;
-						if (complete || consideredComplete)
+						if (complete || consideredComplete) {
+							long tk = System.currentTimeMillis();
 							dict = eval(c.code, c.location);
-						else
+							long dt = System.currentTimeMillis() - tk;
+							dict.put(CPU_TIME, dt / 1000.0);
+						} else {
 							dict = Dict.create();
+						}
 						dict.put(CODE, c.code);
 						dict.put(COMPLETE, c.isComplete());
 						dict.put(LOC, c.location.toString());
@@ -504,8 +503,16 @@ public class TShell implements ShellService {
 						multiResult.add(dict);
 					}
 					evalResult.put(MULTI, multiResult);
-
 					screen.flush();
+
+					long dt = System.currentTimeMillis() - t0;
+					evalResult.put(CPU_TIME, dt / 1000.0);
+					Runtime runtime = Runtime.getRuntime();
+					runtime.gc();
+					int total = (int) (runtime.totalMemory() / 1024);
+					int use = (int) (total - runtime.freeMemory() / 1024);
+					evalResult.put(HEAP_TOTAL, total);
+					evalResult.put(HEAP_USE, use);
 
 					return evalResult;
 				} else {
@@ -723,9 +730,31 @@ public class TShell implements ShellService {
 			}
 			dict.put(MATCHES, matching);
 
-			dict.put(COMPLETES, Array.from(
-					suggestions.stream().map(sugg -> sugg.continuation()).collect(Collectors.toList()), String.class));
+			List<String> continuations = new ArrayList<>(
+					suggestions.stream().map(sugg -> sugg.continuation()).collect(Collectors.toSet()));
+			Collections.sort(continuations);
 
+			Array completes = Array.create();
+			for (String sugg : continuations) {
+				String cont = code.substring(0, anchor[0]) + sugg;
+				logger.info("suggestion: {} – {} – {}", code.substring(0, anchor[0]), sugg, code.substring(cursorPos));
+				if (cont.endsWith("()") || cont.endsWith("(")) {
+					int pos = cont.length();
+					if(cont.endsWith(")"))
+						pos--;
+					List<Documentation> documentation = sca.documentation(cont + code.substring(cursorPos),
+							pos, false);
+					if (!documentation.isEmpty()) {
+						documentation.forEach(doc -> {
+							logger.info("* {}", doc.signature());
+							completes.add(sugg + "–" + doc.signature());
+						});
+					} else {
+						completes.add(sugg);
+					}
+				}
+			}
+			dict.put(COMPLETES, completes);
 			return dict;
 		});
 		return result;
@@ -800,6 +829,7 @@ public class TShell implements ShellService {
 		protected Dict lastMsg;
 		protected Location loc;
 		protected boolean active;
+
 		public void location(Location loc) {
 			this.loc = loc;
 		}

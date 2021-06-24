@@ -45,8 +45,8 @@ public class PseudoTerminal implements PtyHostSide {
 			((TermWindowImpl) window).setTerminal(this);
 			stdout = window.cursor();
 			stderr = window.cursor();
-			out = new TerminalPrintStream(stdout);
-			err = new TerminalPrintStream(stderr);
+			out = new TerminalPrintStream(stdout, true);
+			err = new TerminalPrintStream(stderr, true);
 		}
 		graphemizer = new Graphemizer(this::acceptGrapheme);
 		graphemizer.csiEnabled(true);

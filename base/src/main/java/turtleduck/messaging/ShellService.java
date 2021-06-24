@@ -113,6 +113,10 @@ public interface ShellService extends ExecuteService, CodeService {
 	 */
 	Key<Dict> EXCEPTION = Key.dictKey("exception", null);
 	Key<String> TEXT = TerminalService.TEXT;
+	Key<Integer> HEAP_USE = Key.intKey("heapUse");
+	Key<Integer> HEAP_TOTAL = Key.intKey("heapTotal");
+	Key<Integer> HEAP_MAX = Key.intKey("heapMax");
+	Key<Double> CPU_TIME = Key.key("cpuTime", Double.class, 0.0);
 
 	@Request(replyType = "evalReply", replyFields = { "REF", "VALUE", "SNIP_KIND", "SNIP_ID", "CODE", "DEF", "SYMBOL",
 			"MULTI", "DIAG", "EXCEPTION" })

@@ -242,6 +242,7 @@ public class ProcessAnnotations extends AbstractProcessor {
 					handlers.values().stream().map(h -> "\"" + h.replyType + "\"").collect(Collectors.joining(", ")));
 			cls.append(");\n\n");
 			cls.append("\tpublic ").append(className).append("(").append(origClass).append(" handler) {\n");
+			cls.append("\t\tif(handler == null) throw new NullPointerException();\n");
 			cls.append("\t\tthis.handler = handler;\n");
 			cls.append("\t}\n\n");
 			cls.append("\tpublic Async<Message> dispatch(Message msg) {\n");

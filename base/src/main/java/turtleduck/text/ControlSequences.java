@@ -9,15 +9,18 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+
 import turtleduck.colors.Colors;
+import turtleduck.util.Logging;
 import turtleduck.colors.Color;
 
 @SuppressWarnings("unused")
 public class ControlSequences {
+	public static final Logger logger = Logging.getLogger(ControlSequences.class);
 	private static final boolean DEBUG = false;
 	private static int savedX = 1, savedY = 1;
 	public static final Pattern PATTERN_KEY = Pattern.compile("^\u001b\\[([0-9;]*)([A-Z~])$");
@@ -81,12 +84,12 @@ public class ControlSequences {
 				String[] args = argStr.split(";");
 				if (handler0 != null) {
 					if (DEBUG)
-						logger().info(() -> "Handling " + getDescription() + ".");
+						logger.info("Handling " + getDescription() + ".");
 					handler0.accept(printer);
 				} else if (handler1 != null) {
 					int arg = args.length > 0 && !args[0].equals("") ? Integer.valueOf(args[0]) : defaultArg;
 					if (DEBUG)
-						logger().info(() -> "Handling " + getDescription() + ": " + arg);
+						logger.info("Handling " + getDescription() + ": " + arg);
 					handler1.accept(printer, arg);
 				} else if (handlerN != null) {
 					List<Integer> argList = new ArrayList<>();
@@ -100,7 +103,7 @@ public class ControlSequences {
 						argList.add(defaultArg);
 					}
 					if (DEBUG)
-						logger().info(() -> "Handling " + getDescription() + ": " + argList);
+						logger.info("Handling " + getDescription() + ": " + argList);
 					handlerN.accept(printer, argList);
 				}
 				return true;
@@ -151,12 +154,12 @@ public class ControlSequences {
 				else if(i == 3)
 					p.clearPage(); // TODO: and clear scrollback
 				else
-					logger().warning(() -> "Unimplemented: ED");
+					logger.warn("Unimplemented: ED");
 			});
 	private static final CsiPattern EK = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)K", 0, "erase in line",
 			(TextCursor p, Integer i) -> {
 				p.clearLine(i);
-				logger().warning(() -> "Unimplemented: EK");
+				logger.warn("Unimplemented: EK");
 			});
 	private static final CsiPattern SU = CsiPattern.compile1("\u001b\\\u005b([0-9;]*)S", 1, "scroll up",
 			(TextCursor p, Integer i) -> {
@@ -171,10 +174,10 @@ public class ControlSequences {
 				p.at(l.get(1), l.get(0));
 			});
 	private static final CsiPattern AUX_ON = CsiPattern.compile0("\u001b\\\u005b5i", "aux port on", (TextCursor p) -> {
-		logger().warning(() -> "Unimplemented: AUX on");
+		logger.warn("Unimplemented: AUX on");
 	});
 	private static final CsiPattern AUX_OFF = CsiPattern.compile0("\u001b\\\u005b4i", "aux port off", (TextCursor p) -> {
-		logger().warning(() -> "Unimplemented: AUX off");
+		logger.warn("Unimplemented: AUX off");
 	});
 	private static final CsiPattern DSR = CsiPattern.compile0("\u001b\\\u005b6n", "device status report",
 			(TextCursor p) -> {
@@ -388,10 +391,10 @@ public class ControlSequences {
 			if (csiPattern.match(printer, csi))
 				return true;
 			else
-				logger().severe(() -> "Handler failed for escape sequence: " + csi.replaceAll("\u001b", "ESC"));
+				logger.error("Handler failed for escape sequence: " + csi.replaceAll("\u001b", "ESC"));
 
 		} else {
-			logger().severe(() -> "No handler for escape sequence: " + csi.replaceAll("\u001b", "ESC"));
+			logger.error("No handler for escape sequence: " + csi.replaceAll("\u001b", "ESC"));
 		}
 		return false;
 	}
@@ -421,7 +424,4 @@ public class ControlSequences {
 		return null;
 	}
 	
-	protected static Logger logger() {
-		return Logger.getLogger(ControlSequences.class.getPackageName());
-	}
 }

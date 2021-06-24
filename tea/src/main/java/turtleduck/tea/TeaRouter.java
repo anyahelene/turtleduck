@@ -1,6 +1,6 @@
 package turtleduck.tea;
 
-import static turtleduck.tea.Browser.trying;
+import static turtleduck.tea.Browser.tryListener;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -20,7 +20,6 @@ import org.teavm.jso.typedarrays.Int8Array;
 import turtleduck.messaging.Message;
 import turtleduck.messaging.Router;
 import turtleduck.tea.net.SockJS;
-import turtleduck.tea.terminal.KeyHandler;
 import turtleduck.util.Dict;
 import turtleduck.util.Logging;
 
@@ -71,7 +70,7 @@ class TeaRouter extends Router {
 	public void connect(SockJS socket) {
 		this.socket = socket;
 		if (socket != null) {
-			socket.onMessage(trying(this::receive));
+			socket.onMessage(tryListener(this::receive));
 			while (!queue.isEmpty()) {
 				socket.send(queue.remove(0));
 			}

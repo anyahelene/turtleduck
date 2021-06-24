@@ -1,5 +1,6 @@
 @use "sass:color";
-@import "~xterm";
+//@import "~xterm";
+@import '~normalize.css';
 @import 'colors.scss';
 @import 'normal.scss';
 @import 'fonts.scss';
@@ -222,13 +223,10 @@ figcaption {
 	@include hires-font;
 }
 
-.explorer > div {
-	overflow: scroll;
-	width: 9rem;
-}
+
 
 h1, h2, h3, h4, h5, h6 {
-	font-size: 1rem;
+	font-size: inherit;
 	margin: 0;
 	font-weight: normal;
 	padding:0;
@@ -245,20 +243,20 @@ h1, h2, h3, h4, h5, h6 {
 	padding: .2rem;
 }
 
-.dark .text {
+.dark .text, .dark .terminal-out {
 	color: $terminal;
 	background: #010;
 }
 
-.light .text {
+.light .text, .light .terminal-out  {
 	color: $pen-sharp;
 	background: $page-light;
 }
 .text h1, .text h2, .text h3, .text h4, .text h5, .text h6 {
-	font-size: 1rem;
+	font-size: inherit;
 	margin: .2rem 0;
 		//color: $pen-sharp;
-	text-shadow: 0 0 .5rem #0f0;
+	text-shadow: 0 0 .5rem;
 	//background: #001800;
 	//padding: .5rem;
 }
@@ -367,6 +365,10 @@ header .tabs {
 	pointer-events: none;
 }
 
+.explorer > .body {
+	overflow: auto;
+	height:100%;
+}
 .explorer ul {
 	margin: 0.25rem 0.125rem;
 	padding-left: 1rem;
@@ -403,30 +405,33 @@ header .tabs {
 	margin: 0 -2px;
 }
 
-.explorer a, .explorer a:visited, .explorer a:link {
+.explorer h2 a, .explorer h2 a:visited, .explorer h2 a:link {
 	color: #eeeaea;
 	text-decoration: none;
 }
 
-.collapse {
-	display: none;
-	transition: all 2s;
+:not(.open) > .collapse, .open > .collapse:empty {
+	display: none
 }
 
-.collapse.open {
-	display: block;
-}
-.collapse.open.empty {
-	display: none;
+.explorer h2 a {
+	margin-left: 1rem;
+	position: relative;
 }
 .explorer h2 a::before {
-	content: "▸ ";
+//	content: "▸";
+	content: "⯈";
+	margin-left: -1rem;
+	position: absolute;
+	left: 0;
+	transition: transform ease .5s;
 }
-.explorer h2 a.empty::before {
-	content: "▿ ";
+.explorer .open > h2 a::before {
+	//content: "▾ ";
+	transform: rotate(90deg);
 }
-.explorer h2 a.open::before {
-	content: "▾ ";
+.explorer .open > h2 a.empty::before {
+//	content: "▿ ";
 }
 
 #login ul {
@@ -490,7 +495,7 @@ text-shadow: 0 0 .5rem #333a;
 	cursor: crosshair;
 	background:inherit;
 }
-#console {
+#shell {
 	grid-column: 2/-1;
 	grid-row: -3/-2;
 }
@@ -820,11 +825,151 @@ nav li {
 	//display:flex;
 	//flex-direction: column;
 }
-#editor-wrap, .cm-editor {
+#editor-wrap, .cm-editor, .terminal {
 	width:100%;
-	height:100%;
 	font-size: 1.4rem;
 }
+#editor-wrap .cm-editor {
+	height: 100%;
+}
+#cmshell-wrap {
+}
+.terminal .cm-editor {
+	height: auto;
+}
+.terminal .cm-editor {
+	border-top: 0.1rem solid #ccd;
+}
+.terminal .cm-editor.cm-focused {
+	border-top: 0.1rem solid #ff8;
+}
+.terminal-out-container {
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column-reverse;
+}
+.terminal-out {
+	white-space: pre-wrap;
+	padding: .2rem .5rem;
+}
+
+.terminal-out .cm-content {
+//	border-top: .1rem solid;
+//	border-bottom: .1rem solid;
+//	padding-left: .5rem;
+}
+.terminal {
+	display: flex;
+	flex-direction: column;
+	overflow-anchor: none;
+	max-height: 100%;
+	max-width: 100%;
+}
+//.terminal .cm-editor .cm-line:first-child::before {
+//	content: "java> "
+//}
+
+.terminal-anchor {
+	overflow-anchor: auto;
+	height: 1px;
+}
+.terminal-out .prompt {
+	margin-left: -.2rem;
+	color: $prompt-half;
+	margin-right: .2rem;
+}
+.terminal-out .diag {
+	border-left: .2rem solid currentcolor;
+	padding-left: .3rem;
+	margin-left: -.5rem;
+}
+
+.diag p, .diag ul {
+	margin: .5rem 0;
+}
+.with-diag-none {
+	background: linear-gradient(45deg,#0201 0%, #020 100%)
+	//border-color: $debug !important
+}
+.with-diag-none .cm-line {
+	background: #0f01;
+}
+.with-diag-debug {
+	background: linear-gradient(45deg,#1121 0%, #112 100%)
+	//border-color: $debug !important
+}
+
+.with-diag-info {
+	background: linear-gradient(45deg,#0021 0%, #002 100%)
+//	border-color: $info !important
+}
+.with-diag-warning {
+	background: linear-gradient(45deg,#2201 0%, #220 100%)
+//	border-color: $warning !important
+}
+.with-diag-error {
+	background: linear-gradient(45deg,#2001 0%, #200 100%)
+//	border-color: $error !important
+}
+.with-diag-error .cm-line {
+	background: #f001;
+}
+.diag-debug {
+	color: $debug
+}
+.diag-info, .diag-code {
+	color: $terminal
+}
+.diag-warning {
+	color: $warning
+}
+.diag-error {
+	color: $error
+}
+.diag-code {
+	padding-left: 2rem;
+}
+.diag-between {
+	border-width: .2rem .1rem .2rem 0;
+	border-style: solid;
+}
+.diag-message {
+//	padding-left: 1rem;
+}
+
+ul.traceback {
+	padding: 0;
+	list-style:none;
+}
+
+ul.fold > li:first-child::before {
+	content: "⯈";
+	left: 0;
+	margin-left: 1rem;
+	position: absolute;
+	transition: transform ease-in-out .5s;
+}
+
+ul.fold.open > li:first-child::before {
+	transform: rotate(90deg);
+}
+ul.fold.open > li:first-child:hover::before {
+	transform: rotate(90deg) scale(1.2)
+}
+
+ul.fold > li:first-child:hover::before {
+	transform: scale(1.2)
+}
+
+ul.fold > li {
+	display:none;
+	position: relative;
+}
+
+ul.fold > li:first-child, ul.fold.open > li {
+	display: block;
+}
+
 #jvm {
 	flex-direction: row;
 	display: flex;
@@ -889,7 +1034,19 @@ nav li {
 	position:absolute;
 	bottom: .2rem;
 	z-index:2000;
-	overflow:hidden;
+	overflow: hidden;
+	max-height: 75vh;
+	max-width:50vw;
+	width:max-content;
+	background: $page-light;
+	flex-direction:column;
+}
+.completion h3 {
+	font-weight: bold;
+}
+.completion ul {
+	overflow-y: scroll;
+	overflow-x: auto;
 }
 .completion datalist {
 	display:block;
@@ -1109,4 +1266,33 @@ div#excavator.digging {
 article, aside, footer, header, nav, section {
   display: block;
 }
+
+.cmt-comment {color: #880;}
+.cmt-typeName {color: #cc0;}
+.cmt-literal {}
+.cmt-string {color: #98c379;}
+.cmt-number {color: #3f3;}
+.cmt-heading {font-weight: bold; color: #3f3;}
+.cmt-keyword {color: #f6f;}
+.cmt-operator {color: #56b6c2;}
+.cmt-punctuation {}
+.cmt-meta {color: #880;}
+.cmt-variableName {color: #3f3;}
+.cmt-propertyName {color: #3f3;}
+.cmt-labelName {color: #3f3;}
+.cmt-namespace {color: #cc0;}
+.cmt-macroName {color: #3f3;}
+.cmt-bool {color: #d19a66;}
+.cmt-string2 {color: #56b6c2;}
+.cmt-url {color: #56b6c2;}
+.cmt-atom {color: #d19a66;}
+.cmt-emphasis {font-style: italic;}
+.cmt-strong {font-weight: bold;}
+.cmt-link {color: #880; text-decoration: underline;}
+.cmt-inserted {color: #98c379;}
+.cmt-deleted {color: #3f3;}
+.cmt-invalid {color: #ffffff;}
+.cmt-variableName .cmt-definition {}
+.cmt-variableName .cmt-local {}
+.cmt-variableName2 {color: #d19a66;}
 

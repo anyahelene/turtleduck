@@ -10,7 +10,6 @@
 	<properties>
 		<main.verticle>turtleduck.server.Server</main.verticle>
 		<vertx.version>4.0.0.CR1</vertx.version>
-		<jackson.version>2.11.3</jackson.version>
 	</properties>
 	<artifactId>turtleduck-server</artifactId>
 	<packaging>jar</packaging>

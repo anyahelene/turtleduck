@@ -8,6 +8,7 @@ public interface CodePoint {
 		public static final CodePoint SPACE = codePoint(0x20);
 		public static final CodePoint ESC = codePoint(0x1b);
 		public static final CodePoint REPLACEMENT_CHARACTER = codePoint(0xfffd);
+
 		public static CodePoint combine(CodePoint cp, CodePoint cp2) {
 			// TODO Auto-generated method stub
 			return null;
@@ -143,6 +144,21 @@ public interface CodePoint {
 	 */
 	default boolean isInRange(int low, int high) {
 		return value() >= low && value() <= high;
+	}
+
+	/**
+	 * Check if the code point is in the given range (inclusive)
+	 * 
+	 * @param low  Low end of range (inclusive)
+	 * @param high High end of range (inclusive)
+	 * @return true iff low <= codepoint <= high
+	 */
+	static boolean isInRange(int cp, int low, int high) {
+		return cp >= low && cp <= high;
+	}
+
+	static String stringValue(int cp) {
+		return String.valueOf(Character.toChars(cp));
 	}
 
 	String toHtml();

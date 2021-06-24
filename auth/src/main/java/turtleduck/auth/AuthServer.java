@@ -1,18 +1,14 @@
 package turtleduck.auth;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -30,9 +26,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.eventbus.MessageProducer;
 import io.vertx.core.http.CookieSameSite;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -47,21 +41,13 @@ import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.AuthenticationHandler;
 import io.vertx.ext.web.handler.BasicAuthHandler;
 import io.vertx.ext.web.handler.LoggerHandler;
-import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 import io.vertx.ext.web.handler.SessionHandler;
-import io.vertx.ext.web.handler.StaticHandler;
-import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.ext.web.sstore.redis.RedisSessionStore;
 import io.vertx.redis.client.Redis;
-import io.vertx.redis.client.RedisAPI;
-import io.vertx.redis.client.RedisConnection;
-import io.vertx.redis.client.Response;
-import io.vertx.redis.client.ResponseType;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.impl.http.SimpleHttpClient;
-import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import turtleduck.auth.data.AuthOptions;
 import turtleduck.auth.services.AuthProvider;
 import org.slf4j.Logger;
@@ -369,28 +355,33 @@ public class AuthServer extends AbstractVerticle {
 								links += "</ul>\n";
 								HttpServerResponse response = ctx.response();
 								response.putHeader("Content-Type", "text/html; charset=UTF-8");
-								String text = loginHtml.toString().replace("<!-- LOGIN -->", links).replace("<!-- TERMS -->",
-										res2.result().toString());
-								if(manager != null) {
+								String text = loginHtml.toString().replace("<!-- LOGIN -->", links)
+										.replace("<!-- TERMS -->", res2.result().toString());
+								if (manager != null) {
 									manager.workersAvailable().onComplete(res3 -> {
-										if(res3.succeeded()) {
+										if (res3.succeeded()) {
 											JsonObject obj = res3.result();
-											ctx.end(text.replace("<!-- STATUS -->", String.format("%d/%d workers available", obj.getInteger("available"),obj.getInteger("available")+obj.getInteger("busy"))));
+											ctx.end(text.replace("<!-- STATUS -->",
+													String.format("%d/%d workers available",
+															obj.getInteger("available"),
+															obj.getInteger("available") + obj.getInteger("busy"))));
 										} else {
-											ctx.end(text.replace("<!-- STATUS -->",""));
+											ctx.end(text.replace("<!-- STATUS -->", ""));
 										}
 									});
 								} else {
-									ctx.end(text.replace("<!-- STATUS -->",""));
+									ctx.end(text.replace("<!-- STATUS -->", ""));
 								}
 							} else {
 								logger.error("can't load login.html", res.cause());
-								ctx.fail(res.cause());
+								ctx.response().setStatusCode(500).putHeader("content-type", "text/html; charset=utf-8")
+								.end("<html><body><h1>Internal server error: Resource not found</h1></body></html>");
 							}
 						});
 					} else {
 						logger.error("can't load terms-no.html", res2.cause());
-						ctx.fail(res2.cause());
+						ctx.response().setStatusCode(500).putHeader("content-type", "text/html; charset=utf-8")
+								.end("<html><body><h1>Internal server error: Resource not found</h1></body></html>");
 					}
 				});
 			}

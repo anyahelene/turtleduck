@@ -7,7 +7,6 @@ import turtleduck.text.TextCursor;
 import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
 import turtleduck.text.CodePoint.CodePoints;
-import turtleduck.text.impl.CursorImpl;
 import xtermjs.Terminal;
 
 public class NativeTTextWindow implements TextWindow {

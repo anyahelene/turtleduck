@@ -1,6 +1,6 @@
 package turtleduck.tea;
 
-import static turtleduck.tea.Browser.trying;
+import static turtleduck.tea.Browser.tryListener;
 
 import java.util.function.Consumer;
 
@@ -17,7 +17,6 @@ import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.websocket.CloseEvent;
 
-import ace.AceEditor;
 import turtleduck.messaging.CodeService;
 import turtleduck.messaging.HelloService;
 import turtleduck.messaging.InputService;
@@ -26,6 +25,7 @@ import turtleduck.messaging.generated.CodeServiceProxy;
 import turtleduck.messaging.generated.HelloServiceProxy;
 import turtleduck.messaging.generated.InputServiceProxy;
 import turtleduck.messaging.generated.ShellServiceProxy;
+import turtleduck.tea.generated.CMDispatch;
 import turtleduck.tea.generated.CanvasDispatch;
 import turtleduck.tea.generated.EditorDispatch;
 import turtleduck.tea.generated.ExplorerDispatch;
@@ -52,9 +52,9 @@ public class Client implements JSObject {
 	public InputService inputService;
 	public CodeService codeService;
 
-	protected TDEditor editor;
+	//protected TDEditor editor;
 	private int nextChannelId = 2;
-	private String sessionName;
+	protected String sessionName;
 	protected TerminalClient terminalClient;
 	private Explorer explorer;
 	protected CanvasServer canvas;
@@ -65,6 +65,7 @@ public class Client implements JSObject {
 	public TextCursor cursor;
 	private CMTerminalServer cmTerminalServer;
 	protected FileSystem fileSystem;
+	protected History history;
 
 	public void initialize() {
 		try {
@@ -77,6 +78,7 @@ public class Client implements JSObject {
 				logger.info("Created turtleduck map: {}", map);
 			}
 			map.set("actions", (KeyCallback) this::action);
+			history = new History(map.get("history").cast());
 			Storage localStorage = Storage.getLocalStorage();
 
 			TextWindow window = new NativeTTextWindow(terminal);
@@ -89,18 +91,33 @@ public class Client implements JSObject {
 			Browser.window.addEventListener("pagehide", e -> {
 				logger.info("Window hidden: {}", e);
 			}, false);
-			HTMLElement xtermjsWrap = Browser.document.getElementById("xtermjs-wrap");
-			terminalClient = new TerminalClient(xtermjsWrap, this);
-			terminalClient.initialize();
-			cursor = terminalClient.cursor();
+
+//			HTMLElement xtermjsWrap = Browser.document.getElementById("xtermjs-wrap");
+//			if (xtermjsWrap != null && Terminal.Util.hasTerminal()) {
+//				terminalClient = new TerminalClient(xtermjsWrap, this);
+//				terminalClient.initialize();
+//				cursor = terminalClient.cursor();
+//			}
+
+			HTMLElement cmshellWrap = Browser.document.getElementById("cmshell-wrap");
+			if (cmshellWrap != null) {
+				cmTerminalServer = new CMTerminalServer(Browser.document.getElementById("shell"), cmshellWrap, this);
+				cmTerminalServer.initialize();
+				cursor = cmTerminalServer.cursor();
+			}
 
 			sessionName = ((JSString) map.get("sessionName")).stringValue();
 			router = new TeaRouter(sessionName, "", this);
-			router.route(new TerminalDispatch(terminalClient));
+			if (terminalClient != null)
+				router.route(new TerminalDispatch(terminalClient));
+			router.route(new CMDispatch(cmTerminalServer));
 
-			explorer = new Explorer();
-			router.route(new ExplorerDispatch(explorer));
-
+			HTMLElement exElt = Browser.document.getElementById("explorer");
+			if (exElt != null) {
+				explorer = new Explorer(exElt);
+				router.route(new ExplorerDispatch(explorer));
+			}
+			
 			canvas = new CanvasServer();
 			router.route(new CanvasDispatch(canvas));
 
@@ -112,17 +129,14 @@ public class Client implements JSObject {
 
 			socket = SockJS.create("socket?session=" + JSUtil.encodeURIComponent(sessionName));
 			map.set("socket", socket);
-			socket.onClose(trying(this::disconnect));
-			socket.onOpen(trying(this::connect));
+			socket.onClose(tryListener(this::disconnect));
+			socket.onOpen(tryListener(this::connect));
 
 			HTMLElement tabs = Browser.document.getElementById("editor-tabs");
 			HTMLElement wrapper = Browser.document.getElementById("editor-wrap");
-			editorImpl = new EditorServer(wrapper, tabs, this, shellService);
+			editorImpl = new EditorServer(Browser.document.getElementById("editor"), wrapper, tabs, this, shellService);
 			editorImpl.initialize();
 			router.route(new EditorDispatch(editorImpl));
-
-			cmTerminalServer = new CMTerminalServer(Browser.document.getElementById("cmshell-wrap"), this);
-			cmTerminalServer.initialize();
 
 			// Route route = router.route();
 //			route.registerHandler("welcome", (msg,r) -> Welcome.accept(msg, this));
@@ -152,6 +166,7 @@ public class Client implements JSObject {
 	}
 
 	public void eval(JSString code) {
+		// TODO: don't use terminalClient
 		shellService.eval(code.stringValue(), terminalClient.lineNum++, Dict.create());
 	}
 
@@ -189,6 +204,8 @@ public class Client implements JSObject {
 			String ex = msg.get(HelloService.EXISTING) ? "existing" : "new";
 			if (terminalClient != null)
 				terminalClient.connected(username, ex, sessionName);
+			if (cmTerminalServer != null)
+				cmTerminalServer.connected(username, ex, sessionName);
 			if (msg.get(HelloService.EXISTING))
 				client.shellService.refresh();
 		});
@@ -200,6 +217,8 @@ public class Client implements JSObject {
 			logger.info("Disconnect: " + router + ", retry " + reconnectInterval);
 			if (terminalClient != null)
 				terminalClient.disconnected("");
+			if (cmTerminalServer != null)
+				cmTerminalServer.disconnected("");
 			socketConnected = false;
 		} else
 			logger.error("Connection failed: " + router + ", retry " + reconnectInterval);
@@ -223,8 +242,8 @@ public class Client implements JSObject {
 			Window.clearInterval(reconnectIntervalId);
 			reconnectInterval *= 1.5;
 			socket = SockJS.create("socket?session=" + JSUtil.encodeURIComponent(sessionName));
-			socket.onClose(trying(this::disconnect));
-			socket.onOpen(trying(this::connect));
+			socket.onClose(tryListener(this::disconnect));
+			socket.onOpen(tryListener(this::connect));
 			map.set("socket", socket);
 		}, reconnectInterval);
 
@@ -285,5 +304,21 @@ public class Client implements JSObject {
 		int id = nextChannelId;
 		nextChannelId += 2;
 		return id;
+	}
+
+	void showHeap(Dict msg) {
+		int heapUse = msg.get(ShellService.HEAP_USE, 0);
+		int heapTot = msg.get(ShellService.HEAP_TOTAL, 0);
+		if (heapUse > 0 && heapTot > 0) {
+			String unit = "k";
+			if (heapTot > 9999) {
+				heapUse /= 1024;
+				heapTot /= 1024;
+				unit = "M";
+			}
+			HTMLElement elt = Window.current().getDocument().getElementById("heapStatus");
+			if (elt != null)
+				elt.withText(String.format("%d%s / %d%s", heapUse, unit, heapTot, unit));
+		}
 	}
 }

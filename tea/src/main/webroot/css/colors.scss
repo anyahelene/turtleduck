@@ -16,3 +16,13 @@ $border-active: $pen-sharp;
 $border: $pen;
 $bgdark: #111;
 $bglight: #eee;
+
+$LIGHT_BLUE: rgb(50%, 50%, 100%);
+$BLUE: rgb(0%, 0%, 100%);
+$OLIVE: rgb(50%, 50%, 0%);
+$MAROON: rgb(50%, 0%, 0%);
+
+$debug: $LIGHT_BLUE;
+$info: $BLUE;
+$warning: #ff0;
+$error: #f00;

@@ -1,20 +1,13 @@
 package turtleduck.tea;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
 import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
-import turtleduck.geometry.Point;
 import turtleduck.messaging.CanvasService;
-import turtleduck.messaging.Message;
-import turtleduck.messaging.MessageWriter;
-import turtleduck.messaging.generated.CanvasServiceProxy;
 import turtleduck.shapes.Text;
-import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
 import turtleduck.turtle.PathStroke;
 import turtleduck.turtle.PathWriter;
@@ -22,7 +15,6 @@ import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
-import turtleduck.util.Key;
 
 public class TeaLayer extends BaseLayer<TeaScreen> {
 	private PathWriterImpl pathWriter = new PathWriterImpl();

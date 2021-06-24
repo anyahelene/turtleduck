@@ -19,18 +19,15 @@ import org.teavm.jso.dom.html.TextRectangle;
 import org.teavm.jso.dom.xml.Element;
 import org.teavm.jso.dom.xml.Node;
 import org.teavm.jso.dom.xml.NodeList;
-import org.teavm.jso.dom.xml.Text;
-import org.teavm.jso.typedarrays.ArrayBuffer;
 
 import svg.DOMRect;
 import svg.SVGSVGElement;
-import svg.TSpanElement;
 import svg.SVGTransform;
+import svg.TSpanElement;
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
 import turtleduck.colors.Color;
 import turtleduck.messaging.CanvasService;
-import turtleduck.tea.terminal.KeyHandler;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.JsonUtil;
@@ -67,7 +64,7 @@ public class CanvasServer implements CanvasService {
 		if (gfxSave != null) {
 			gfxSave.listenClick(this::save);
 		}
-
+		JSUtil.createComponent(figure);
 	}
 
 	public Async<Dict> clear() {
@@ -238,7 +235,7 @@ public class CanvasServer implements CanvasService {
 		return elt;
 	}
 
-	public void styleObject(Element elt, Dict style) {
+	 void styleObject(Element elt, Dict style) {
 		CSSStyleDeclaration css = ((ElementCSSInlineStyle) elt).getStyle();
 		style.forEach(k -> {
 			String key = k.key();

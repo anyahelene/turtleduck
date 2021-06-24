@@ -1,10 +1,13 @@
 package turtleduck.tea;
 
-import org.teavm.jso.JSBody;
+import org.teavm.jso.JSFunctor;
 import org.teavm.jso.JSObject;
-import org.teavm.jso.JSProperty;
+import org.teavm.jso.core.JSMapLike;
+import org.teavm.jso.dom.html.HTMLElement;
 
-public interface TDEditor extends JSObject {
+public interface TDEditor extends Component {
+
+	HTMLElement wrapper();
 
 	State state();
 
@@ -12,7 +15,19 @@ public interface TDEditor extends JSObject {
 
 	State createState(String text);
 
+	State createState(String text, int pos);
+
+	HTMLElement highlightTree();
+
+	HTMLElement highlightTree(HTMLElement prompt);
+
 	public interface State extends JSObject {
 
 	}
+
+	@JSFunctor
+	public interface Callback extends JSObject {
+		boolean handle(String eventName, State state);
+	}
+
 }

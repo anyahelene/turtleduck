@@ -14,7 +14,11 @@ const darkDuckTheme = EditorView.theme({
         "& ::selection": { backgroundColor: selection },
         caretColor: cursor
     },
+    ".cm-cursor": { display: "block", borderLeftColor: "#800", borderLeftWidth: ".5em" },
+	".cm-cursorLayer": { mixBlendMode: "exclusion" },
     "&.cm-focused .cm-cursor": { borderLeftColor: cursor },
+    "&.cm-focused .cm-cursor-secondary": { borderLeftColor: "#ff0" },
+    ".cm-cursor-secondary": { borderLeftColor: "#880" },
     "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": { backgroundColor: selection },
     ".cm-panels": { backgroundColor: darkBackground, color: def },
     ".cm-panels.cm-panels-top": { borderBottom: "1px solid #8808" },
@@ -59,7 +63,7 @@ const darkDuckTheme = EditorView.theme({
 const darkDuckHighlightStyle = HighlightStyle.define([
     { tag: tags.keyword,
         color: keyword },
-    { tag: [tags.name, tags.deleted, tags.number, tags.character, tags.propertyName, tags.macroName, tags.separator],
+    { tag: [tags.name, tags.deleted, tags.number, tags.character, tags.propertyName, tags.macroName, tags.variableName, tags.separator],
         color: name },
     { tag: [tags.function(tags.variableName), tags.labelName],
         color: func },

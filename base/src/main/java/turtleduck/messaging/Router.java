@@ -1,7 +1,6 @@
 package turtleduck.messaging;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,15 +12,18 @@ import org.slf4j.Logger;
 
 import turtleduck.async.Async;
 import turtleduck.async.AsyncImpl;
-import turtleduck.util.Array;
 import turtleduck.util.Dict;
+import turtleduck.util.Key;
 import turtleduck.util.Logging;
 
 public abstract class Router {
-	protected final static Logger logger = Logging.getLogger(Router.class);
+	public static final Key<String> COMMAND = Key.strKey("command");
+	public static final Key<String> RESULT = Key.strKey("result");
+	protected final Logger logger = Logging.getLogger(Router.class);
 	protected Map<String, List<Function<Message, Async<Message>>>> routes = new HashMap<>();
 	protected Map<String, Long> cancels = new HashMap<>();
 	protected Map<String, Monitor> outstandingRequests = new HashMap<>();
+	protected int numSent, numReceived, numReplies;
 	protected String session;
 	protected String username;
 	protected boolean useJupyter = false;
@@ -29,6 +31,7 @@ public abstract class Router {
 	public Router(String session, String username) {
 		this.session = session;
 		this.username = username;
+		route("$router", this::commandRequest);
 	}
 
 	public abstract void socketSend(String data);
@@ -36,6 +39,42 @@ public abstract class Router {
 	public void init(String session, String username) {
 		this.session = session;
 		this.username = username;
+	}
+
+	public String command(String cmd) {
+		StringBuilder result = new StringBuilder();
+		long t0 = System.currentTimeMillis();
+		switch (cmd) {
+		case "routes":
+			for (String key : routes.keySet()) {
+				result.append(key).append("\n");
+			}
+			break;
+		case "cancels":
+			for (var entry : cancels.entrySet()) {
+				result.append(String.format("%10d %s\n", t0 - entry.getValue(), entry.getKey()));
+			}
+			break;
+		case "outstanding":
+			for (var entry : outstandingRequests.entrySet()) {
+				Monitor m = entry.getValue();
+				result.append(String.format("%10d %s\n", t0 - m.timeStamp, entry.getKey()));
+			}
+			break;
+		case "summary":
+			result.append(routes.size()).append(" routes\n");
+			result.append(cancels.size()).append(" cancels\n");
+			result.append(outstandingRequests.size()).append(" outstanding requests\n");
+			result.append(numSent).append(" sent, ").append(numReceived).append(" received, (").append(numReplies)
+					.append(" replies)\n");
+			break;
+		}
+		return result.toString();
+	}
+
+	public Async<Message> commandRequest(Message msg) {
+		String result = command(msg.content(COMMAND));
+		return Async.succeeded(msg.reply("$router_reply").content(Dict.create().put(RESULT, result)).done());
 	}
 
 	public void route(String msgType, Function<Message, Async<Message>> handler) {
@@ -65,11 +104,13 @@ public abstract class Router {
 	}
 
 	public void receive(Message msg) {
+		numReceived++;
 		if (useJupyter && session != null && !session.equals(msg.header(Message.SESSION))) {
 			logger.warn("Expected session {}: {}", session, msg);
 			// return;
 		}
 		if (msg.isReply()) {
+			numReplies++;
 			String ref = msg.msgRef();
 			Long cancelTime = cancels.get(ref);
 			if (cancelTime != null) {
@@ -100,22 +141,35 @@ public abstract class Router {
 //			if (route != null) {
 		List<Function<Message, Async<Message>>> handlers = routes.get(msg.msgType());
 		if (handlers != null) {
-			logger.info("found handlers: {}", handlers);
+			logger.info("found handlers for {} {}: {}", msg.msgType(), msg.msgId(), handlers);
 			for (Function<Message, Async<Message>> handler : handlers) {
+				logger.info("TRYING msgid {} handler {}", msg.msgId(), handler);
 				try {
+					logger.info("APPLY msgid {} handler {}", msg.msgId(), handler);
 					Async<Message> async = handler.apply(msg);
+					logger.info("APPLIED msgid {} handler {}", msg.msgId(), handler);
 					if (async != null) {
-						async.onSuccess(this::send);
+						logger.info("ASYNC msgid {} handler {}", msg.msgId(), handler);
+						async.onSuccess(result -> {
+							logger.info("REPLY msgid {} handler {}: {} ", msg.msgId(), handler, result);
+							send(result);
+						});
 						async.onFailure(fail -> {
+							logger.error("FAIL msgid {} handler {}: {}", msg.msgId(), handler, fail);
 							logger.error("Handler failed: {}", fail);
 							send(msg.reply("error_reply").content(fail).done());
 						});
 					}
 				} catch (Throwable t) {
+					logger.error("EXCEPTION msgid {} handler {}", msg.msgId(), handler);
 					logger.error("Message handler threw exception", t);
 					t.printStackTrace();
 					send(msg.errorReply(t).putContent(Reply.ENAME, handler.toString()).done());
+					logger.error("SENT ERROR");
+				} finally {
+					logger.info("FINALLY");
 				}
+				logger.info("DONE msgid {} handler {}", msg.msgId(), handler);
 			}
 //			}
 //		}
@@ -125,6 +179,7 @@ public abstract class Router {
 	}
 
 	public Async<Dict> send(Message msg) {
+		numSent++;
 		Dict header = msg.header();
 		if (useJupyter) {
 			if (session != null && !session.equals("") && !session.equals(header.get(Message.SESSION))) {
@@ -145,6 +200,7 @@ public abstract class Router {
 	}
 
 	public Async<Dict> send(Message msg, ByteBuffer... buffers) {
+		numSent++;
 		Dict header = msg.header();
 		if (useJupyter) {
 			if (session != null && !session.equals("") && !session.equals(header.get(Message.SESSION))) {
@@ -159,7 +215,7 @@ public abstract class Router {
 				header.put(Message.USERNAME, username);
 		}
 		Monitor m = new Monitor(msg.msgId());
-
+		m.register();
 		socketSend(msg.toJson(), buffers);
 		m.sent = true;
 		return m;
