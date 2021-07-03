@@ -336,6 +336,8 @@ public class AuthServer extends AbstractVerticle {
 			if (last != null)
 				ctx.redirect(pathPrefix + "/login/" + last);
 			else {
+				if (ctx.session().isEmpty())
+					ctx.session().destroy();
 				loadFile("terms-no.html", res2 -> {
 					if (res2.succeeded()) {
 						loadFile("login.html", res -> {
@@ -357,6 +359,9 @@ public class AuthServer extends AbstractVerticle {
 								response.putHeader("Content-Type", "text/html; charset=UTF-8");
 								String text = loginHtml.toString().replace("<!-- LOGIN -->", links)
 										.replace("<!-- TERMS -->", res2.result().toString());
+
+								logger.info("session: empty={}, destroyed={}, regenerated={}", ctx.session().isEmpty(),
+										ctx.session().isDestroyed(), ctx.session().isRegenerated());
 								if (manager != null) {
 									manager.workersAvailable().onComplete(res3 -> {
 										if (res3.succeeded()) {
@@ -373,12 +378,16 @@ public class AuthServer extends AbstractVerticle {
 									ctx.end(text.replace("<!-- STATUS -->", ""));
 								}
 							} else {
+								logger.info("session: empty={}, destroyed={}, regenerated={}", ctx.session().isEmpty(),
+										ctx.session().isDestroyed(), ctx.session().isRegenerated());
 								logger.error("can't load login.html", res.cause());
 								ctx.response().setStatusCode(500).putHeader("content-type", "text/html; charset=utf-8")
-								.end("<html><body><h1>Internal server error: Resource not found</h1></body></html>");
+										.end("<html><body><h1>Internal server error: Resource not found</h1></body></html>");
 							}
 						});
 					} else {
+						logger.info("session: empty={}, destroyed={}, regenerated={}", ctx.session().isEmpty(),
+								ctx.session().isDestroyed(), ctx.session().isRegenerated());
 						logger.error("can't load terms-no.html", res2.cause());
 						ctx.response().setStatusCode(500).putHeader("content-type", "text/html; charset=utf-8")
 								.end("<html><body><h1>Internal server error: Resource not found</h1></body></html>");
