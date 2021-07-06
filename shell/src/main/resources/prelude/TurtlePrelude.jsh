@@ -18,7 +18,7 @@ import turtleduck.turtle.SpriteBuilder;
 import turtleduck.sprites.Sprite;
 
 
-Class<?>[] $CLASSES = {Screen.class, Canvas.class, Turtle.class, Color.class, Colors.class};
+Class<?>[] $CLASSES = {Screen.class, Canvas.class, Turtle.class, TextCursor.class, Color.class, Colors.class};
 Meta $META = Meta.create();
 Random $RANDOM = new Random();
 
@@ -28,6 +28,7 @@ String help = "Type /help for help :)";
 
 Screen screen = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, $SCREEN_ID)
 Canvas canvas = screen.createCanvas().strokePaint(Colors.WHITE).strokeWidth(1).fillPaint(Colors.TRANSPARENT).background(Colors.BLACK);
+TextCursor cursor = turtleduck.objects.IdentifiedObject.Registry.findObject(TextCursor.class, $CURSOR_ID);
 
 Turtle turtle = canvas.turtle().penColor(Colors.WHITE).jumpTo(0, 0);
 turtleduck.shell.TShell.testValue = 5;

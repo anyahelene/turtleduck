@@ -157,9 +157,11 @@ public class TShell implements ShellService {
 		System.out.println("" + Screen.class.getClassLoader() + ", " + findObject);
 		System.out.println(getClass().getClassLoader());
 
-		explorerService = new ExplorerServiceProxy("turtleduck.explorer", router::send);
-		editorService = new EditorServiceProxy("turtleduck.editor", router::send);
+		explorerService = new ExplorerServiceProxy("turtleduck.explorer", router);
+		editorService = new EditorServiceProxy("turtleduck.editor", router);
 		meta("String $SCREEN_ID = \"" + screen.id() + "\";");
+		meta("String $CURSOR_ID = \"" + printer2.id() + "\";");
+
 		startup("/prelude/TurtlePrelude.jsh");
 		currentNS = mainNS;
 

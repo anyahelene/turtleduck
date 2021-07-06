@@ -9,6 +9,7 @@ import { highlightTree, classHighlightStyle } from '@codemirror/highlight';
 
 import {basicSetup} from "@codemirror/basic-setup"
 import {java} from "@codemirror/lang-java"
+import {python} from "@codemirror/lang-python"
 import {html} from "@codemirror/lang-html"
 import {markdown} from "@codemirror/lang-markdown"
 import {css} from "@codemirror/lang-css"
@@ -19,8 +20,6 @@ import {showPanel} from "@codemirror/panel"
 import {closeLintPanel, lintKeymap, linter, nextDiagnostic, openLintPanel, setDiagnostics} from "@codemirror/lint"
 import { NodeProp } from 'lezer-tree';
 import { Component } from './Component';
-
-console.log(document.body);
 
 function isBetweenBrackets(state, pos) {
     if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
@@ -53,32 +52,44 @@ class PromptWidget extends WidgetType {
 
 }
 
-
-const configs = {};
-function config(elt, lang) {
-	if(configs[lang] == undefined) {
+function stdConfig() {
+	return [basicSetup, markKeymap, keymap.of(defaultTabBinding), darkDuck];
+}
+const configs = {'' : []};
+function langConfig(lang) {
+	if(configs[lang]) {
+		return configs[lang];
+	} else {
 		var langext = undefined;
-		const myFontTheme = EditorView.theme({
-		  '.cm-scroller':{
-		  //  fontSize: "18px"
-			fontFamily: window.getComputedStyle(elt).fontFamily,
-			textShadow: "0 0 .2rem currentColor"
-		  }
-		});
-		if(lang == "java") {
+
+		if(lang == "java" || lang == "jsh") {
 			langext = java();
+		} else if(lang == "python") {
+			langext = python();
 		} else if(lang == "html") {
 			langext = html();
 		} else if(lang == "markdown") {
 			langext = markdown();
 		} else if(lang == "css") {
 			langext = css();
+		} 
+		if(langext) {
+			configs[lang] = langext;
+			return langext;
+		} else {
+			throw Error("No configuration found for " + lang);
 		}
-		return [basicSetup, langext, /*EditorView.lineWrapping,*/ markKeymap,
-					keymap.of(defaultTabBinding), darkDuck, myFontTheme/*, wordHover*/];
 	}
-	
-	return configs[lang];
+}
+function fontConfig(elt) {
+	const myFontTheme = EditorView.theme({
+		  '.cm-scroller':{
+		  //  fontSize: "18px"
+			fontFamily: window.getComputedStyle(elt).fontFamily,
+			textShadow: "0 0 .2rem currentColor"
+		  }
+	});
+	return myFontTheme;
 }
 const addMark = StateEffect.define();
 
@@ -156,10 +167,11 @@ export const wordHover = hoverTooltip((view, pos, side) => {
 
 
 class TDEditor extends Component {
-	constructor(name, elt, wrap, text,exts,tdstate) {
-		super(name, elt, tdstate);
-		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, wrap, text, exts, tdstate)
-		this.wrap = wrap;
+	constructor(name, outer, elt, text, lang, exts,tdstate) {
+		super(name, outer, tdstate);
+
+		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, text, exts, tdstate)
+		this.elt = elt;
 		this.exts = exts;
 
 		elt.addEventListener("dragenter", e => {
@@ -170,11 +182,12 @@ class TDEditor extends Component {
 			this.paste(e.dataTransfer.getData("text/plain"));
 			e.preventDefault();
 		}, true);
-		const state = this.createState(text);
+		const state = this.createState(lang, text);
 		this.EditorView = EditorView;
-		this.view = new EditorView({state: state, parent: wrap});
+		this.view = new EditorView({state: state, parent: elt});
 		this.$markField = markField;
 		this.$addMark = addMark;
+		this._debugState = false;
 
 	}
 	
@@ -241,7 +254,7 @@ class TDEditor extends Component {
 	}
 	
 	wrapper() {
-		return this.wrap;
+		return this.elt;
 	}
 	
 	syntaxTree() {
@@ -251,6 +264,7 @@ class TDEditor extends Component {
 		return this.view.state;
 	}
 	focus() {
+		this.select();
 		this.view.focus();
 		return "TDEditor";
 	}
@@ -258,7 +272,6 @@ class TDEditor extends Component {
 		const tr = this.view.state.replaceSelection(text);
 		if(cursorAdj != 0) {
 			const move = EditorSelection.create(tr.selection.ranges.map(r => {
-				console.log(r);
 				if(r.empty) {
 					r.from--;
 					r.to--;
@@ -271,19 +284,22 @@ class TDEditor extends Component {
 		this.view.dispatch(tr);
 	}
 	switchState(newState) {
-		console.log("switchState");
+		if(this._debugState)
+			console.log("switchState");
 		const oldState = this.view.state;
 		this.view.setState(newState);
-		console.log(newState);
+		if(this._debugState)
+			console.log(newState);
 		return oldState;
 	}
 	
 	addMark(from, to) {
 		markRange(this.view, from, to);
 	}
-	createState(text, pos) {
+	createState(lang, text, pos) {
 		let selection;
-		console.log("createState: ", text, text.length, pos);
+		if(this._debugState)
+			console.log("createState: ", lang, text, text.length, pos);
 		if(pos) {
 			if(pos < 0) {
 				selection = { anchor: text.length + 1 + pos};
@@ -291,13 +307,15 @@ class TDEditor extends Component {
 				selection = { anchor: pos };
 			}
 		}
-		console.log("createState: ", text, selection);
+		if(this._debugState)
+			console.log("createState: ", text, selection);
 		const state = EditorState.create({
 			doc: text,
-     		extensions: this.exts,
+     		extensions: [langConfig(lang), this.exts],
 			selection: selection
   		});
-		console.log("createState: ", state);
+		if(this._debugState)
+			console.log("createState: ", state);
 		return state;
 	}
 
@@ -328,9 +346,13 @@ class TDEditor extends Component {
 
 window.TDEditor = TDEditor;
 
-window.turtleduck.createEditor = function(elt,wrap,text) {
-	let editor = new TDEditor(elt.id,elt,wrap,text,[config(elt,"java")],window.turtleduck);
-	window.turtleduck[elt.id] = editor;
+window.turtleduck.createEditor = function(elt,text,lang="java") {
+	const outer = elt;
+	const elts = elt.getElementsByClassName('wrapper');
+	if(elts[0])
+		elt = elts[0];
+		
+	let editor = new TDEditor(outer.id,outer,elt,lang,text,[fontConfig(elt), stdConfig()],window.turtleduck);
 
 	return editor;
 }
@@ -351,7 +373,7 @@ darkDuck[1].module.rules[0]
 window.turtleduck.classHighlightStyle = classHighlightStyle;
 window.turtleduck.darkDuck = darkDuck;
 
-window.turtleduck.createLineEditor = function(elt,wrap,text,handler) {
+window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 	function enter({ state, dispatch }) {
 	    let changes = state.changeByRange(({ from, to }) => {
 	        let between =  isBetweenBrackets(state, from);
@@ -370,10 +392,14 @@ window.turtleduck.createLineEditor = function(elt,wrap,text,handler) {
 		return handler("arrowDown", state);
 	}
 
-
-	let editor = new TDEditor(elt.id, elt, wrap, text, [
+	const outer = elt;
+	const elts = elt.getElementsByClassName('wrapper');
+	if(elts[0])
+		elt = elts[0];
+		
+	let editor = new TDEditor(outer.id, outer, elt, text, lang, [
 		keymap.of([{ key: "Enter", run: enter, shift: insertNewlineAndIndent }]),
-		config(elt,"java"),
+		fontConfig(elt), stdConfig(),
 		EditorView.theme({
 		  '.cm-lineNumbers .cm-gutterElement':{
 			display: "none"
@@ -381,7 +407,6 @@ window.turtleduck.createLineEditor = function(elt,wrap,text,handler) {
 		}),
 		keymap.of([{ key: "ArrowUp", run: arrowUp }, { key: "ArrowDown", run: arrowDown }])
 	], window.turtleduck);
-	window.turtleduck[elt.id] = editor;
 
 	return editor;
 }

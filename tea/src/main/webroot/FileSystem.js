@@ -12,7 +12,7 @@ db.version(3).stores({
 	transactions: '++rev,modtime'
 });
 db.on("populate", function() {
-	console.log("populating database");
+	console.log("FileSystem: populating database");
     db.files.add({inode: 0, name: '', data: null, parent: 0, modtime: new Date(), kind: 'd', ver: 0});
 });
 db.open();
@@ -91,6 +91,7 @@ class FileSystem {
 		this._File = File;
 		this._JSZip = JSZip;
 		this._saveAs = saveAs;
+		this._debug = false;
 	}
 	
 	context(project, cwd = 0) {
@@ -172,7 +173,8 @@ class FileSystem {
 		const parent = filename.startsWith('/') ? 0 : this.cwd;
 		const path = this._filenameToPath(filename);
 		function mkParentDirs(name, path, parent, fullpath) {
-			console.log("Creating missing directory", name, "in", fullpath);
+			if(fs._debug)
+				console.log("Creating missing directory", name, "in", fullpath);
 			return this._mkdir(name, parent);
 		}
 		function mkdir(rev) {
@@ -187,7 +189,8 @@ class FileSystem {
 		if(rev < 0) {
 			return db.transaction('rw', [db.files,db.transactions],
 				tx => {
-					console.log("transaction: ", tx);
+					if(fs._debug)
+						console.log("transaction: ", tx);
 					return db.transactions.add({modtime: new Date()}).then(newrev => mkdir(newrev));
 				});
 		} else {
@@ -197,7 +200,8 @@ class FileSystem {
 	
 	_mkdir(name, parent, rev) {
 		const fs = this;
-		console.log("mkdir:", name, parent, rev);
+		if(fs._debug)
+			console.log("mkdir:", name, parent, rev);
 		return this.files.add({name: name, data: null, parent: parent,
 							kind: 'd', next: 0, ver: rev, modtime: new Date()})
 						.then(id => this.files.get(id));
@@ -205,7 +209,8 @@ class FileSystem {
 	
 	_mkfile(name, parent, rev) {
 		const fs = this;
-		console.log("mkfile:", name, parent, rev);
+		if(fs._debug)
+			console.log("mkfile:", name, parent, rev);
 		return this.files.add({name: name, parent: parent, data: null, kind: 'f',
 							next: 0, ver: rev, modtime: new Date()})
 						.then(id => this.files.get(id));
@@ -220,10 +225,12 @@ class FileSystem {
 			return this.files.get(parent);
 		} else {
 			let n = path.shift();
-			console.log("looking for", n, path, parent, "in", fullpath);
+			if(fs._debug)
+				console.log("looking for", n, path, parent, "in", fullpath);
 			return this.files.where(['name','parent', 'next']).equals([n, parent, 0]).first().then(f => {
 				if(!f && handler) {
-					console.log("handling: ", n, path, parent, fullpath);
+					if(fs._debug)
+						console.log("handling: ", n, path, parent, fullpath);
 					return handler(n, path, parent, fullpath, rev).then(f => {
 						if(!f) {
 							return Promise.reject(new Error("file not found: " + fullpath + "/" + n));
@@ -234,7 +241,8 @@ class FileSystem {
 						}});
 				}
 				if(!f) {
-					console.log("not found");
+					if(fs._debug)
+						console.log("not found");
 					return Promise.reject(new Error("file not found: " + fullpath + "/" + n));
 				} else if(path.length == 0) {
 					return Promise.resolve(f);
@@ -248,13 +256,15 @@ class FileSystem {
 	/** */
 	stat(filename = '') {
 		const parent = filename.startsWith('/') ? 0 : this.cwd;
-		console.log('stat', filename, parent);
+		if(this._debug)
+			console.log('stat', filename, parent);
 		return this._stat(this._filenameToPath(filename), parent, "");
 	}
 	/** */
 	chdir(dirname = '') {
 		const parent = dirname.startsWith('/') ? 0 : this.cwd;
-		console.log('chdir', dirname, parent);
+		if(this._debug)
+			console.log('chdir', dirname, parent);
 		return this._stat(this._filenameToPath(dirname), parent, "").then(f => { this.cwd = f.inode; return f; });
 	}
 	
@@ -282,20 +292,23 @@ class FileSystem {
 		const path = this._filenameToPath(filename);
 		function create(name, path, parent, fullpath, rev) {
 			if(path.length == 0) {
-				console.log("Creating missing file", name, "in", fullpath);
+				if(fs._debug)
+					console.log("Creating missing file", name, "in", fullpath);
 				return fs._mkfile(name, parent, rev);
 			} else {
-				console.log("Creating missing directory", name, "in", fullpath);
+				if(fs._debug)
+					console.log("Creating missing directory", name, "in", fullpath);
 				return fs._mkdir(name, parent, rev);
 			}
 		}
 		function write(rev) {
-			return fs._stat(path, parent, '', create, rev).then(f => {console.log(f); return f.write(data);});
+			return fs._stat(path, parent, '', create, rev).then(f => {return f.write(data);});
 		}
 		if(rev < 0) {
 			return db.transaction('rw', [db.files,db.transactions],
 				tx => {
-					console.log("transaction: ", tx);
+					if(fs._debug)
+						console.log("transaction: ", tx);
 					return db.transactions.add({modtime: new Date()}).then(newrev => write(newrev));
 				});
 		} else {

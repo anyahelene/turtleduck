@@ -26,6 +26,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.impl.HttpUtils;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.impl.URIDecoder;
 import io.vertx.core.shareddata.AsyncMap;
@@ -191,7 +192,7 @@ public class Server extends AbstractVerticle {
 					TurtleDuckSession oldTds = sessions.get(sessName);
 					if (oldTds != null) {
 						logger.info("Reconnecting to TurtleDuck session: " + oldTds);
-						oldTds.connect(sockjs);
+						oldTds.connect(info, sockjs);
 						return;
 					}
 				}
@@ -199,7 +200,7 @@ public class Server extends AbstractVerticle {
 				vertx.deployVerticle(tds, new DeploymentOptions())//
 						.onSuccess(s -> {
 							logger.info("Deployed TurtleDuck as " + s);
-							tds.connect(sockjs);
+							tds.connect(info, sockjs);
 						}) //
 						.onFailure(ex -> {
 							logger.error("Connecting to TurtleDuckSession failed", ex);
@@ -227,14 +228,18 @@ public class Server extends AbstractVerticle {
 		router.route(pathPrefix + "/hello").handler(ctx -> {
 			HttpServerRequest req = ctx.request();
 			String h = req.getHeader("X-User-Info");
-			JsonObject info;
+			JsonObject info = new JsonObject();
 			if (h != null) {
-				info = new JsonObject(h);
-			} else {
-				info = new JsonObject();
-			}
+				info.put("user", new JsonObject(h));
+				JsonObject ss = new JsonObject();
+				LocalMap<String,TurtleDuckSession> sessions = vertx.sharedData().getLocalMap("sessions");
+				for(var entry : sessions.entrySet()) {
+					ss.put(entry.getKey(), entry.getValue().info());
+				}
+				info.put("sessions", ss);
+			} 
 			logger.info("User id {}, info {}", req.getHeader("X-User-Id"), info.encode());
-			ctx.response().end("Hello, " + info.getString("name") + "\n" + info.encodePrettily());
+			ctx.response().end(info.encodePrettily());
 		});
 
 		server.requestHandler(router);

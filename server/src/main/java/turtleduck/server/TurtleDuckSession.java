@@ -1,7 +1,9 @@
 package turtleduck.server;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.Shareable;
@@ -34,10 +37,10 @@ import io.vertx.core.Promise;
 public class TurtleDuckSession extends AbstractVerticle implements HelloService, ShellService, Shareable {
 	protected TShell shell;
 	protected TDSDispatch dispatch;
-	protected SockJSSocket socket;
 	protected String user;
 	protected final static Logger logger = LoggerFactory.getLogger(TurtleDuckSession.class);
-	protected VertxRouter router;
+	protected final Set<String> users = new HashSet<>();
+	protected Router router;
 	protected String sessionId;
 	protected ServerScreen screen;
 	protected TerminalService terminalService;
@@ -55,10 +58,10 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 	public void start() {
 		context.put("verticle", "session-" + user);
 		sessionId = "";
-		router = new VertxRouter(sessionId, user);
+		router = new Router();
 //		router.route("hello", msg -> dispatch.dispatch(msg));
 		router.route(dispatch);
-		terminalService = new TerminalServiceProxy("terminal.server", router::send);
+		terminalService = new TerminalServiceProxy("turtleduck.terminal", router);
 		logger.info("Starting TurtleDuck " + context.deploymentID() + " for user " + user);
 //		createShell();
 	}
@@ -67,37 +70,39 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 		return router;
 	}
 
-	public void connect(SockJSSocket sockjs) {
-		logger.info("connect({}), socket={}", sockjs, socket);
-		if (socket == sockjs) {
+	public void connect(JsonObject userInfo, SockJSSocket sockjs) {
+		Dict info = VertxJson.decodeDict(userInfo);
+		logger.info("connect({}),, info={}", sockjs, info);
+		/*
+		 * if (socket == sockjs) { return; } else if (socket != null) {
+		 * logger.warn("Already connected, closing old socket"); socket.close(); socket
+		 * = null; router.disconnect(); }
+		 */
+		if (users.size() >= 9999) {
+			logger.error("Too many users, giving up");
+			sockjs.close();
 			return;
-		} else if (socket != null) {
-			logger.warn("Already connected, closing old socket");
-			socket.close();
-			socket = null;
-			router.disconnect();
 		}
-		router.connect(sockjs);
-		socket = sockjs;
-		socket.exceptionHandler((e) -> {
+		String uname = userInfo.getString("username");
+		String connName = uname;
+		for (int i = 0; users.contains(connName) && i < 9999; i++) {
+			connName = uname + "_" + i;
+		}
+		String connectionName = connName;
+		users.add(connectionName);
+
+		VertxConnection conn = new VertxConnection(connectionName, info);
+		router.connect(conn, "turtleduck.terminal", "turtleduck.explorer", "turtleduck.screen", "turtleduck.editor");
+		sockjs.exceptionHandler((e) -> {
 			logger.error("Socket error", e);
 		});
-		socket.endHandler((x) -> {
+		sockjs.endHandler((x) -> {
 			logger.info("Socket closed");
-			if (socket == sockjs) {
-				socket = null;
-			}
+			users.remove(connectionName);
+			router.disconnect(conn);
+			conn.disconnect();
 		});
-
-		socket.handler(this::receive);
-		socket.resume();
-	}
-
-	public void receive(Buffer buf) {
-		logger.info("recv context: " + vertx.getOrCreateContext().get("verticle"));
-		logger.info("RECV: " + buf);
-		JsonObject obj = buf.toJsonObject();
-		router.receive(Message.fromDict(VertxJson.decodeDict(obj)));
+		conn.connect(sockjs);
 
 	}
 
@@ -121,7 +126,7 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 	private void createShell() {
 		PseudoTerminal pty = new PseudoTerminal();
 		pty.terminalListener(s -> {
-			terminalService.write(s);
+			terminalService.write(s, "out");
 		});
 		pty.buffering(true);
 		screen = (ServerScreen) ServerDisplayInfo.provider().startPaintScene(TurtleDuckSession.this);
@@ -184,9 +189,11 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 		reply.put(HelloService.USERNAME, user);
 		reply.put(HelloService.USER, userInfo);
 		reply.put(HelloService.EXISTING, used);
+		reply.put(HelloService.CONNECTIONS, Array.from(users, String.class));
 		used = true;
 		return reply;
 	}
+
 	@Override
 	public Async<Dict> executeRequest(String code, boolean silent, boolean store_history, Dict user_expressions,
 			boolean allow_stdin, boolean stop_on_error) {
@@ -212,6 +219,15 @@ public class TurtleDuckSession extends AbstractVerticle implements HelloService,
 	@Override
 	public Async<Dict> refresh() {
 		return shell.refresh();
+	}
+	
+	public JsonObject info() {
+		JsonObject info = new JsonObject();
+		info.put("username", user);
+		info.put("users", new JsonArray(new ArrayList<>(users)));
+		info.put("name", sessionId);
+		info.put("used", used);
+		return info;
 	}
 
 }

@@ -11,3 +11,4 @@ authsecrets.json
 users.db
 pics
 *.iml
+py/pyodide

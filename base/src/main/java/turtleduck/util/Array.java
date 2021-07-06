@@ -1,6 +1,7 @@
 package turtleduck.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -212,9 +213,7 @@ public interface Array extends Iterable<Object> {
 
 		@Override
 		public String toString() {
-			StringBuilder builder = new StringBuilder();
-			builder.append("ArrayImpl [list=").append(list).append(", type=").append(type).append("]");
-			return builder.toString();
+			return JsonUtil.encode(this);
 		}
 
 		@Override
@@ -231,5 +230,7 @@ public interface Array extends Iterable<Object> {
 	public static <T> Array from(List<T> list, Class<T> type) {
 		return new ArrayImpl<>(list, type);
 	}
-
+	public static <T> Array from(Collection<T> list, Class<T> type) {
+		return new ArrayImpl<>(new ArrayList<>(list), type);
+	}
 }

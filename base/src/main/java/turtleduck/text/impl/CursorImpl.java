@@ -2,6 +2,8 @@ package turtleduck.text.impl;
 
 import java.util.function.BiFunction;
 
+import turtleduck.display.Screen;
+import turtleduck.objects.IdentifiedObject;
 import turtleduck.text.Attributes;
 import turtleduck.text.AttributesImpl;
 import turtleduck.text.BlocksAndBoxes;
@@ -20,13 +22,16 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	protected final CursorImpl parent;
 	protected boolean isActive = true;
 	private boolean autoScroll;
+	protected final String id;
 
 	public CursorImpl(TextWindow page) {
+		id = IdentifiedObject.Registry.makeId(TextCursor.class, this);
 		this.page = page;
 		this.parent = null;
 	}
 
 	public CursorImpl(CursorImpl parent) {
+		id = IdentifiedObject.Registry.makeId(TextCursor.class, this);
 		this.x = parent.x;
 		this.y = parent.y;
 		this.font = parent.font;
@@ -281,6 +286,11 @@ public class CursorImpl implements TextCursor, SubTextCursor {
 	public SubTextCursor flush() {
 		page.flush();
 		return this;
+	}
+
+	@Override
+	public String id() {
+		return id;
 	}
 
 }

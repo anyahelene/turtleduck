@@ -16,7 +16,7 @@ const darkDuckTheme = EditorView.theme({
     },
     ".cm-cursor": { display: "block", borderLeftColor: "#800", borderLeftWidth: ".5em" },
 	".cm-cursorLayer": { mixBlendMode: "exclusion" },
-    "&.cm-focused .cm-cursor": { borderLeftColor: cursor },
+    "&.cm-focused .cm-cursor, .focused .cm-cursor": { borderLeftColor: cursor },
     "&.cm-focused .cm-cursor-secondary": { borderLeftColor: "#ff0" },
     ".cm-cursor-secondary": { borderLeftColor: "#880" },
     "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": { backgroundColor: selection },
@@ -37,10 +37,11 @@ const darkDuckTheme = EditorView.theme({
         outline: "1px solid #515a6b"
     },
     ".cm-gutters": {
+		background: "linear-gradient(90deg, #220f 0%, #2200 100%)",
         backgroundColor: background,
         color: comment,
-        border: "none",
-		borderRight: "1px solid #8808"
+        border: "none"
+		//borderRight: "1px solid #8808"
     },
     ".cm-lineNumbers .cm-gutterElement": { color: "inherit" },
     ".cm-foldPlaceholder": {

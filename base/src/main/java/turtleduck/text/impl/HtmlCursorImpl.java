@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import turtleduck.objects.IdentifiedObject;
 import turtleduck.terminal.PseudoTerminal;
 import turtleduck.terminal.PtyWriter;
 import turtleduck.text.Attribute;
@@ -30,8 +31,10 @@ public class HtmlCursorImpl implements TextCursor, SubTextCursor {
 			Attribute.ATTR_BRIGHTNESS, Attribute.ATTR_STYLE, Attribute.ATTR_WEIGHT, Attribute.ATTR_UNDERLINE);
 	private int csiMode = 0;
 	private boolean csiEnabled = true;
+	protected final String id;
 
 	public HtmlCursorImpl(HTMLWriter writeToTerminal, Consumer<String> writeToHost) {
+		id = IdentifiedObject.Registry.makeId(TextCursor.class, this);
 		terminal = writeToTerminal;
 		host = writeToHost;
 		currentStyle = currentAttrs.toCss();
@@ -259,7 +262,7 @@ public class HtmlCursorImpl implements TextCursor, SubTextCursor {
 		} else {
 //			System.out.println("" + 0 + ": " + cp);
 		}
-		terminal.write(CodePoint.stringValue(cp), currentStyle);
+		terminal.writeGlyph(CodePoint.stringValue(cp), currentStyle);
 		return this;
 	}
 
@@ -339,7 +342,7 @@ public class HtmlCursorImpl implements TextCursor, SubTextCursor {
 	}
 
 	public interface HTMLWriter {
-		void write(String glyph, String attrs);
+		void writeGlyph(String glyph, String attrs);
 
 		void move(int dx, int dy);
 
@@ -347,4 +350,10 @@ public class HtmlCursorImpl implements TextCursor, SubTextCursor {
 
 		void row(int y);
 	}
+	
+	@Override
+	public String id() {
+		return id;
+	}
+
 }

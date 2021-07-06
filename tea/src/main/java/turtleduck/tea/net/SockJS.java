@@ -157,6 +157,12 @@ public interface SockJS extends JSObject {
 	@JSProperty("url")
 	String url();
 
+	static String toString(SockJS sock) {
+		if(sock == null)
+			return "(null)";
+		else
+			return "SockJS(" + sock.url() + ")";
+	}
 
 	class SockJSUtil {
 		@JSBody(params = {

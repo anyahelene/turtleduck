@@ -2,6 +2,8 @@ package turtleduck.messaging;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,25 +18,24 @@ import turtleduck.util.Dict;
 import turtleduck.util.Key;
 import turtleduck.util.Logging;
 
-public abstract class Router {
+public class Router {
+	protected boolean DEBUG = false;
 	public static final Key<String> COMMAND = Key.strKey("command");
 	public static final Key<String> RESULT = Key.strKey("result");
 	protected final Logger logger = Logging.getLogger(Router.class);
 	protected Map<String, List<Function<Message, Async<Message>>>> routes = new HashMap<>();
 	protected Map<String, Long> cancels = new HashMap<>();
 	protected Map<String, Monitor> outstandingRequests = new HashMap<>();
+	protected Map<String, Connection> connections = new HashMap<>();
+	protected Map<String, List<Connection>> connectionGroups = new HashMap<>();
 	protected int numSent, numReceived, numReplies;
 	protected String session;
 	protected String username;
 	protected boolean useJupyter = false;
 
-	public Router(String session, String username) {
-		this.session = session;
-		this.username = username;
+	public Router() {
 		route("$router", this::commandRequest);
 	}
-
-	public abstract void socketSend(String data);
 
 	public void init(String session, String username) {
 		this.session = session;
@@ -75,6 +76,35 @@ public abstract class Router {
 	public Async<Message> commandRequest(Message msg) {
 		String result = command(msg.content(COMMAND));
 		return Async.succeeded(msg.reply("$router_reply").content(Dict.create().put(RESULT, result)).done());
+	}
+
+	public void connect(Connection conn, String... groups) {
+		String connName = conn.id();
+		if (connections.containsKey(connName)) {
+			throw new IllegalStateException("connection already added: " + connName);
+		} else {
+			conn.receiver(this, msg -> {
+				msg.setEnvelopeFrom(connName);
+				receive(msg);
+			});
+			connections.put(connName, conn);
+			for (String g : groups) {
+				List<Connection> list = connectionGroups.get(g);
+				if (list == null)
+					list = new ArrayList<>();
+				list.add(conn);
+				connectionGroups.put(g, list);
+			}
+		}
+	}
+
+	public void disconnect(Connection conn) {
+		connections.remove(conn.id());
+		if (conn != null) {
+			for (List<Connection> list : connectionGroups.values()) {
+				list.remove(conn);
+			}
+		}
 	}
 
 	public void route(String msgType, Function<Message, Async<Message>> handler) {
@@ -141,18 +171,25 @@ public abstract class Router {
 //			if (route != null) {
 		List<Function<Message, Async<Message>>> handlers = routes.get(msg.msgType());
 		if (handlers != null) {
-			logger.info("found handlers for {} {}: {}", msg.msgType(), msg.msgId(), handlers);
+			String from = msg.from();
+			if (DEBUG)
+				logger.info("found handlers for {} {}: {}", msg.msgType(), msg.msgId(), handlers);
 			for (Function<Message, Async<Message>> handler : handlers) {
-				logger.info("TRYING msgid {} handler {}", msg.msgId(), handler);
+				if (DEBUG)
+					logger.info("TRYING msgid {} handler {}", msg.msgId(), handler);
 				try {
-					logger.info("APPLY msgid {} handler {}", msg.msgId(), handler);
+					if (DEBUG)
+						logger.info("APPLY msgid {} handler {}", msg.msgId(), handler);
 					Async<Message> async = handler.apply(msg);
-					logger.info("APPLIED msgid {} handler {}", msg.msgId(), handler);
+					if (DEBUG)
+						logger.info("APPLIED msgid {} handler {}", msg.msgId(), handler);
 					if (async != null) {
-						logger.info("ASYNC msgid {} handler {}", msg.msgId(), handler);
+						if (DEBUG)
+							logger.info("ASYNC msgid {} handler {}", msg.msgId(), handler);
 						async.onSuccess(result -> {
-							logger.info("REPLY msgid {} handler {}: {} ", msg.msgId(), handler, result);
-							send(result);
+							if (DEBUG)
+								logger.info("REPLY msgid {} handler {}: {} ", msg.msgId(), handler, result);
+							send(result); // TODO: check that to.equals(from)?
 						});
 						async.onFailure(fail -> {
 							logger.error("FAIL msgid {} handler {}: {}", msg.msgId(), handler, fail);
@@ -167,9 +204,11 @@ public abstract class Router {
 					send(msg.errorReply(t).putContent(Reply.ENAME, handler.toString()).done());
 					logger.error("SENT ERROR");
 				} finally {
-					logger.info("FINALLY");
+					if (DEBUG)
+						logger.info("FINALLY");
 				}
-				logger.info("DONE msgid {} handler {}", msg.msgId(), handler);
+				if (DEBUG)
+					logger.info("DONE msgid {} handler {}", msg.msgId(), handler);
 			}
 //			}
 //		}
@@ -193,10 +232,26 @@ public abstract class Router {
 			if (!"".equals(username))
 				header.put(Message.USERNAME, username);
 		}
+		String to = header.get(Message.TO);// TODO: or default
 		Monitor m = new Monitor(msg.msgId());
-		socketSend(msg.toJson());
+		List<Connection> conns = findConnection(to);
+		if (conns.isEmpty()) {
+			logger.warn("No connections for dest {}: {}", to, msg);
+		} else {
+			conns.forEach(conn -> conn.socketSend(msg));
+		}
 		m.sent = true;
 		return m;
+	}
+
+	protected List<Connection> findConnection(String to) {
+		Connection connection = connections.get(to);
+		if (connection != null)
+			return Arrays.asList(connection);
+		List<Connection> conns = connectionGroups.get(to);
+		if (conns != null)
+			return conns;
+		return Collections.emptyList();
 	}
 
 	public Async<Dict> send(Message msg, ByteBuffer... buffers) {
@@ -214,14 +269,19 @@ public abstract class Router {
 			if (!"".equals(username))
 				header.put(Message.USERNAME, username);
 		}
+		String to = header.get(Message.TO); // TODO: or default
+
 		Monitor m = new Monitor(msg.msgId());
-		m.register();
-		socketSend(msg.toJson(), buffers);
+		List<Connection> conns = findConnection(to);
+		if (conns.isEmpty()) {
+			logger.warn("No connections for dest {}: {}", to, msg);
+		} else {
+			conns.forEach(conn -> conn.socketSend(msg, buffers));
+			m.register();
+		}
 		m.sent = true;
 		return m;
 	}
-
-	protected abstract void socketSend(String json, ByteBuffer[] buffers);
 
 	class Monitor implements MessageMonitor {
 		public Message reply;

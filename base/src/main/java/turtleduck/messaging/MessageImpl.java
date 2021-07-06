@@ -26,11 +26,13 @@ public class MessageImpl implements Message, MessageWriter {
 	private Array buffers;
 	private Dict metadata;
 	private Dict content;
-
-	public MessageImpl() {
-	}
+	private String to;
+	
+//	public MessageImpl() {
+//	}
 
 	public MessageImpl(String to) {
+		this.to = to;
 //		address = Array.of(to);
 	}
 
@@ -64,6 +66,7 @@ public class MessageImpl implements Message, MessageWriter {
 			content = msg.get(Message.CONTENT);
 			message = msg;
 			checkHeader(header);
+			to = header.get(Message.TO);
 		}
 		frozen = true;
 	}
@@ -144,6 +147,7 @@ public class MessageImpl implements Message, MessageWriter {
 			header = Dict.create();
 		header.put(Message.MSG_ID, String.valueOf(idCounter++));
 		header.put(Message.MSG_TYPE, msg_type);
+		header.put(Message.TO, to);
 		return this;
 	}
 
@@ -348,6 +352,34 @@ public class MessageImpl implements Message, MessageWriter {
 	public List<String> address() {
 		return null;
 //		return address.toListOf(String.class);
+	}
+
+	@Override
+	public String from() {
+		return header.get(Message.FROM);
+	}
+
+	@Override
+	public String to() {
+		return header.get(Message.TO);
+	}
+
+/*	@Override
+	public Message setEnvelopeTo(String to) {
+		header.put(Message.TO, to);
+		return this;
+	}*/
+
+	@Override
+	public Message setEnvelopeFrom(String from) {
+		header.put(Message.FROM, from);
+		return this;
+	}
+
+	@Override
+	public Dict toDict() {
+		assemble();
+		return message;
 	}
 
 }

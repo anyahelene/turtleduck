@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import turtleduck.objects.IdentifiedObject;
 import turtleduck.terminal.PseudoTerminal;
 import turtleduck.terminal.PtyWriter;
 import turtleduck.text.Attribute;
@@ -22,8 +23,10 @@ public class TermCursorImpl implements TextCursor, SubTextCursor {
 	private PtyWriter terminal;
 	private List<Attributes> stack = new ArrayList<>();
 	private Consumer<String> host;
+	protected final String id;
 
 	public TermCursorImpl(PtyWriter writeToTerminal, Consumer<String> writeToHost) {
+		id = IdentifiedObject.Registry.makeId(TextCursor.class, this);
 		terminal = writeToTerminal;
 		host = writeToHost;
 	}
@@ -245,6 +248,11 @@ public class TermCursorImpl implements TextCursor, SubTextCursor {
 	public SubTextCursor flush() {
 		terminal.flushToTerminal();
 		return this;
+	}
+
+	@Override
+	public String id() {
+		return id;
 	}
 
 }

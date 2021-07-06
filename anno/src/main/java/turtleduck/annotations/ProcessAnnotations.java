@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
 import java.util.ArrayDeque;
@@ -34,7 +35,10 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.FileObject;
+import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,11 +64,16 @@ public class ProcessAnnotations extends AbstractProcessor {
 						pp.process();
 //						System.out.println(pp.generateProxy());
 						Filer filer = processingEnv.getFiler();
-						JavaFileObject fobj;
 						try {
-							fobj = filer.createSourceFile(pp.fullName);
-							try (PrintWriter out = new PrintWriter(fobj.openWriter())) {
+							JavaFileObject jfobj = filer.createSourceFile(pp.fullName);
+							try (PrintWriter out = new PrintWriter(jfobj.openWriter())) {
 								out.println(pp.generateProxy());
+							}
+							FileObject fobj = filer.createResource(StandardLocation.SOURCE_OUTPUT, pp.packageName,
+									pp.className + ".js");
+							try (PrintWriter out = new PrintWriter(fobj.openWriter())) {
+								System.out.println(pp.generateJsPyProxy());
+								out.println(pp.generateJsPyProxy());
 							}
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -186,8 +195,8 @@ public class ProcessAnnotations extends AbstractProcessor {
 		public String generateProxy() {
 			StringBuilder cls = new StringBuilder();
 			cls.append("package ").append(packageName).append(";\n\n");
-			cls.append("import java.util.function.Function;\n"//
-					+ "import turtleduck.messaging.Message;\n"//
+			cls.append("import turtleduck.messaging.Message;\n"//
+					+ "import turtleduck.messaging.Router;\n"//
 					+ "import turtleduck.messaging.MessageWriter;\n"//
 					+ "import turtleduck.util.Dict;\n"//
 					+ "import turtleduck.async.Async;\n"//
@@ -204,16 +213,41 @@ public class ProcessAnnotations extends AbstractProcessor {
 //			}
 			cls.append(" {\n\n");
 			cls.append("\tprotected final String peer;\n");
-			cls.append("\tprotected final Function<Message, Async<Dict>> transport;\n\n");
+			cls.append("\tprotected final Router router;\n");
+//			cls.append("\tprotected final BiFunction<String, Message, Async<Dict>> transport;\n\n");
 			cls.append("\tpublic ").append(className)
-					.append("(String peer, Function<Message, Async<Dict>> transport) {\n");
+					.append("(String peer, Router router) {\n");
 			cls.append("\t\tthis.peer = peer;\n");
-			cls.append("\t\tthis.transport = transport;\n");
+			cls.append("\t\tthis.router = router;\n");
 			cls.append("\t}\n\n");
 			for (HandlerMethod h : handlers.values()) {
 				cls.append(h.encoder());
 			}
 			cls.append("}\n");
+
+			return cls.toString();
+
+		}
+
+		public String generateJsPyProxy() {
+			StringBuilder cls = new StringBuilder();
+			cls.append("import { asyncRun } from './py-worker';\n\n");
+
+			cls.append("class ").append(className).append(" {\n");
+			String prefix = type.getSimpleName().toString();
+			cls.append("\tconstructor(target = '").append(prefix).append("') {\n");
+			cls.append("\t\tthis.target = target;\n");
+			cls.append("\t}\n");
+			List<String> funs = new ArrayList<>();
+			for (HandlerMethod h : handlers.values()) {
+				funs.add(h.method.getSimpleName().toString());
+				cls.append(h.jspycoder(prefix));
+			}
+			cls.append("\t}\n\n");
+
+			String objName = className.substring(0, 1).toLowerCase() + className.substring(1);
+			cls.append("const ").append(objName).append(" = new ").append(className).append("()\n\n");
+			cls.append("export { ").append(objName).append(" };\n");
 
 			return cls.toString();
 
@@ -360,6 +394,20 @@ public class ProcessAnnotations extends AbstractProcessor {
 			}
 		}
 
+		public String jspycoder(String prefix) {
+			String r = method.getReturnType().toString();
+			return String.format("\t%s(%s) {\n"//
+					+ "\t\tconst args = {%s};\n" + "\t\treturn asyncRun(this.target+'.%s(**js.__args.to_py())', {__args: args});\n" //
+					+ "\t}\n\n", //
+					method.getSimpleName(), // .substring(method.getSimpleName().lastIndexOf('.') + 1),
+					params.stream().map(p -> p.javaParam.getSimpleName().toString()).collect(Collectors.joining(", ")), //
+					params.stream()
+							.map(p -> String.format("%s: %s", p.javaParam.getSimpleName().toString(),
+									p.javaParam.getSimpleName().toString()))
+							.collect(Collectors.joining(", ")), //
+					method.getSimpleName());
+		}
+
 		public String decoder() {
 			return String.format(
 					"\t\t\t  case \"%s\":\n\t\t\t\treply = handler.%s(%s);\n\t\t\t\treplyType = \"%s\";\n\t\t\t\tbreak;\n", //
@@ -372,7 +420,8 @@ public class ProcessAnnotations extends AbstractProcessor {
 			return String.format("\tpublic %s %s(%s) {\n"//
 					+ "\t\tMessageWriter mw = Message.writeTo(peer, \"%s\");\n" //
 					+ "%s\n" //
-					+ "\t\treturn transport.apply(mw.done());\n\t}\n", //
+				//	+ "\t\treturn transport.apply(peer, mw.done());\n\t}\n", //
+					+ "\t\treturn router.send(mw.done());\n\t}\n", //
 					r, //
 					method.getSimpleName(), // .substring(method.getSimpleName().lastIndexOf('.') + 1),
 					params.stream().map(p -> p.declaration()).collect(Collectors.joining(", ")), msgType, //

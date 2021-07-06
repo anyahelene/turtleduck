@@ -5,8 +5,10 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.teavm.jso.JSBody;
+import org.teavm.jso.JSObject;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.core.JSFunction;
+import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.dom.css.CSSStyleDeclaration;
 import org.teavm.jso.dom.css.ElementCSSInlineStyle;
 import org.teavm.jso.dom.events.Event;
@@ -32,6 +34,7 @@ import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.JsonUtil;
 import turtleduck.util.Logging;
+import static turtleduck.tea.HTMLUtil.*;
 
 @MessageDispatch("turtleduck.tea.generated.CanvasDispatch")
 public class CanvasServer implements CanvasService {
@@ -45,26 +48,62 @@ public class CanvasServer implements CanvasService {
 
 	private EventListener<KeyboardEvent> keyListener;
 	private SVGSVGElement svg;
-	private HTMLDocument document;
 	private Map<String, Dict> styles = new HashMap<>();
-	private HTMLElement figure;
+	private Component component;
+	private Component parent;
+	private HTMLElement mainElement;
+	private HTMLElement coordsElement;
+	private HTMLElement formatElement;
+	private HTMLElement gfxClear;
+	private HTMLElement gfxSave;
 
-	public CanvasServer() {
-		document = Window.current().getDocument();
-		svg = (SVGSVGElement) document.getElementById(SVG_ELT_ID);
-		figure = document.getElementById("screen");
-		if (svg != null) {
-			svg.listenWheel(this::zoom);
+	public CanvasServer(Component parent) {
+		this.parent = parent;
+		svg = (SVGSVGElement) Browser.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		svg.setAttribute("id", SVG_ELT_ID);
+		svg.setAttribute("viewBox", "-640 -360 1280 720");
+		svg.setAttribute("tabindex", "-1");
+		svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
+		svg.listenWheel(this::zoom);
+
+		/*
+		 * HTMLElement gfxHudTop = element("section", attr("id", "gfx-hud-top"));
+		 * HTMLElement gfxHudBottom = element("section", attr("id", "gfx-hud-bottom"));
+		 * HTMLElement gfxHud = element("aside", attr("id", "gfx-hud"), gfxHudTop,
+		 * gfxHudBottom);
+		 */
+
+		this.mainElement = element("main", svg);
+		this.component = JSUtil.createComponent("svg", mainElement);
+		component.setParent(parent);
+		component.setTitle("GFX");
+		component.register();
+
+		this.coordsElement = element("div", clazz("footnote"), "(0,0)");
+		this.component.addDependent(coordsElement);
+		JSUtil.trackMouse(svg, coordsElement);
+		this.formatElement = element("div", clazz("box-foot"), "SVG");
+		this.component.addDependent(formatElement);
+		HTMLElement footer = parent.element().getElementsByTagName("footer").get(0);
+		if (footer != null) {
+			footer.appendChild(coordsElement);
+			footer.appendChild(formatElement);
 		}
-		HTMLElement gfxClear = document.getElementById("gfx-clear");
-		if (gfxClear != null) {
+
+		HTMLElement tools = Browser.document.getElementById("screen-tools");
+		if (tools != null) {
+			gfxClear = element("button", "Clear");
+			gfxClear.setAttribute("type", "button");
 			gfxClear.listenClick(this::clear);
-		}
-		HTMLElement gfxSave = document.getElementById("gfx-save");
-		if (gfxSave != null) {
+			gfxSave = element("button", "Save");
+			gfxSave.setAttribute("type", "button");
 			gfxSave.listenClick(this::save);
+			this.component.addDependent(gfxClear);
+			this.component.addDependent(gfxSave);
+			tools.appendChild(gfxClear);
+			tools.appendChild(gfxSave);
 		}
-		JSUtil.createComponent(figure);
+
 	}
 
 	public Async<Dict> clear() {
@@ -111,11 +150,19 @@ public class CanvasServer implements CanvasService {
 	}
 
 	protected void clear(Event e) {
+		e.stopPropagation();
+		e.preventDefault();
+		if(JSUtil.hasClass(gfxClear, "disabled"))
+			return;
 		clear();
 	}
 
 	protected void save(Event e) {
-		HTMLElement elt = document.createElement("a");
+		e.stopPropagation();
+		e.preventDefault();
+		if(JSUtil.hasClass(gfxSave, "disabled"))
+			return;
+		HTMLElement elt = element("a");
 		String txt = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
 				+ "<svg width=\"391\" height=\"391\" viewBox=\"-70.5 -70.5 391 391\" xmlns=\"http://www.w3.org/2000/svg\">";
 		txt += svg.getInnerHTML();
@@ -185,7 +232,7 @@ public class CanvasServer implements CanvasService {
 	}
 
 	private Element text(String t, Dict path) {
-		Element elt = document.createElementNS(svg.getNamespaceURI(), "text");
+		Element elt = Browser.document.createElementNS(svg.getNamespaceURI(), "text");
 		Number n = path.get(X);
 		elt.setAttribute("x", n.toString());
 		n = path.get(Y);
@@ -211,7 +258,7 @@ public class CanvasServer implements CanvasService {
 				if (i < childNodes.getLength())
 					tspan = ((TSpanElement) childNodes.item(i));
 				else
-					tspan = (TSpanElement) document.createElementNS(svg.getNamespaceURI(), "tspan");
+					tspan = (TSpanElement) Browser.document.createElementNS(svg.getNamespaceURI(), "tspan");
 				if (i > 0)
 					tspan.withAttr("dy", "1.2em").withAttr("x", "0");
 				tspan.setTextContent(split[i]);
@@ -224,18 +271,18 @@ public class CanvasServer implements CanvasService {
 
 	@Override
 	public Async<Dict> setText(String id, String text) {
-		Element elt = document.getElementById(id);
+		Element elt = Browser.document.getElementById(id);
 		setText(elt, text);
 		return null;
 	}
 
 	private Element path(String d, Dict path) {
-		Element elt = document.createElementNS(svg.getNamespaceURI(), "path");
+		Element elt = Browser.document.createElementNS(svg.getNamespaceURI(), "path");
 		elt.setAttribute("d", d);
 		return elt;
 	}
 
-	 void styleObject(Element elt, Dict style) {
+	void styleObject(Element elt, Dict style) {
 		CSSStyleDeclaration css = ((ElementCSSInlineStyle) elt).getStyle();
 		style.forEach(k -> {
 			String key = k.key();
@@ -261,7 +308,7 @@ public class CanvasServer implements CanvasService {
 	@Override
 	public Async<Dict> styleObject(String id, Dict style) {
 		logger.info("Styling " + SVG_ELT_ID + "." + id + " → " + style.toJson());
-		Element obj = document.getElementById(SVG_ELT_ID + "." + id);
+		Element obj = Browser.document.getElementById(SVG_ELT_ID + "." + id);
 		logger.info("styleObject({})", obj);
 		if (obj != null) {
 			styleObject(obj, style);
@@ -305,14 +352,16 @@ public class CanvasServer implements CanvasService {
 		logger.info("background: {}", color);
 		Color col = JsonUtil.decodeJson(color, Color.class);
 		double brightness = col.properties().lightness();
-		String className = figure.getClassName();
-		if(brightness >= 0.5) {
-			figure.setClassName(className.replaceAll("\\s*dark\\b", "") + " light");
+		String className = mainElement.getClassName();
+		if (brightness >= 0.5) {
+			JSUtil.removeClass(mainElement, "dark");
+			JSUtil.addClass(mainElement, "light");
 		} else {
-			figure.setClassName(className.replaceAll("\\s*light\\b", "") + " dark");
+			JSUtil.removeClass(mainElement, "light");
+			JSUtil.addClass(mainElement, "dark");
 		}
-		logger.info("background: {}, brightness {}", col, brightness); 
-		figure.getStyle().setProperty("background-color", color);
+		logger.info("background: {}, brightness {}", col, brightness);
+		mainElement.getStyle().setProperty("background-color", color);
 		return null;
 	}
 

@@ -3,6 +3,7 @@ package turtleduck.text;
 import java.util.function.BiFunction;
 
 import turtleduck.colors.Color;
+import turtleduck.objects.IdentifiedObject;
 
 /**
  * @author anya
@@ -12,7 +13,7 @@ import turtleduck.colors.Color;
  * @author anya
  *
  */
-public interface TextCursor {
+public interface TextCursor  extends IdentifiedObject {
 
 	/**
 	 * Save the current state, and continue printing with a sub-cursor.

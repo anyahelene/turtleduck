@@ -32,5 +32,11 @@ interface Promise<T extends JSObject> extends JSObject {
 		
 		@JSBody(params = { "p" }, script = "return p.then(r => { return r; });")
 		native static <T extends JSObject> T await(Promise<T> promise);
+		
+		@JSBody(params = { "executor"}, script = "return new Promise(executor)")
+		native static <T extends JSObject> Promise<T> promise(JSBiConsumer<JSConsumer<T>,JSConsumer<JSObject>> executor);
+		@JSBody(params = { "executor"}, script = "return new Promise(executor)")
+		native static <T extends JSObject> Promise<T> promise(JSConsumer<JSConsumer<T>> executor);
+
 	}
 }

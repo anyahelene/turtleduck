@@ -27,10 +27,15 @@ class History {
 		}
 	}
 	
-	put(session, data) {
-		return this.nextId(session)
-			.then(id =>	this.fs.write('/history/' + session + '/' + id, data)
-				.then(() => Promise.resolve(id)));
+	put(session, data, id) {
+		if(id) {
+			return this.fs.write('/history/' + session + '/' + id, data)
+				.then(() => Promise.resolve(id));
+		} else {
+			return this.nextId(session)
+				.then(id =>	this.fs.write('/history/' + session + '/' + id, data)
+					.then(() => Promise.resolve(id)));
+		}
 	}
 		
 	currentId(session) {

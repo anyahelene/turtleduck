@@ -32,7 +32,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 	public ServerLayer(String layerId, ServerScreen screen, double width, double height, TurtleDuckSession session) {
 		super(layerId, screen, width, height);
 		this.session = session;
-		this.canvas = new CanvasServiceProxy("turtleduck.canvas", session.router::send);
+		this.canvas = new CanvasServiceProxy("turtleduck.screen", session.router);
 	}
 
 	@Override

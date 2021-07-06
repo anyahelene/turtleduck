@@ -189,7 +189,9 @@ public class Location {
 	public String scheme() {
 		return protocol;
 	}
-
+	public String host() {
+		return host;
+	}
 	public String path() {
 		return path;
 	}

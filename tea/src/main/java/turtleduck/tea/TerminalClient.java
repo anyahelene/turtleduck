@@ -71,7 +71,7 @@ public class TerminalClient implements TerminalService, ExplorerService {
 		readline.customKeyHandler(this::keyHandler);
 	}
 
-	public void initialize() {
+	public void initialize(String lang, ShellService service) {
 		theme = ITheme.createBrightVGA();
 		theme.setCursor("#f00");
 		theme.setBackground("#111");
@@ -104,7 +104,7 @@ public class TerminalClient implements TerminalService, ExplorerService {
 
 		hostSide = new HostSide(terminal);
 		cursor = new TermCursorImpl(hostSide, terminal::paste);
-		shell = new Shell(cursor, null, this::prompt, null);
+		shell = new Shell(lang, null);	
 		readline.attach(hostSide);
 		readline.handler(this::lineHandler);
 		prompt(1);
@@ -128,18 +128,18 @@ public class TerminalClient implements TerminalService, ExplorerService {
 //		logger.info("saving history: " + dict);
 		client.withStorage(storage -> storage.setItem("terminal.history", dict.toJson()));
 		if (s.startsWith("!refresh")) {
-			client.shellService.refresh();
+			shell.service().refresh();
 			prompt(1);
 			return;
 		}
 		if (s.startsWith("!refresh")) {
-			client.shellService.refresh();
+			shell.service().refresh();
 			prompt(1);
 			return;
-		} else if (s.startsWith("/") && shell.specialCommand(s)) {
+		} else if (s.startsWith("/") && shell.specialCommand(s, null)) {
 			return;
 		} else {
-			shell.evalLine(s);
+			shell.evalLine(s, null);
 		}
 	}
 
@@ -167,12 +167,12 @@ public class TerminalClient implements TerminalService, ExplorerService {
 		int pos = li.pos();
 		logger.info(line + " @ " + pos);
 		logger.info(line.substring(0, pos) + "|" + line.substring(pos));
-		Async<Dict> inspect = client.shellService.inspect(line, pos, 0);
+		Async<Dict> inspect = shell.service().inspect(line, pos, 0);
 		completionPending = inspect;
 		inspect.onSuccess(msg -> {
 			logger.info("Inspect reply: " + msg);
 		});
-		Async<Dict> complete = client.shellService.complete(line, pos, 0);
+		Async<Dict> complete = shell.service().complete(line, pos, 0);
 		complete.onSuccess(msg -> {
 			if (completionPending == inspect && msg.get(CodeService.FOUND)) { // we're still interested
 				Line current = li.current();
@@ -197,12 +197,12 @@ public class TerminalClient implements TerminalService, ExplorerService {
 		int pos = li.pos();
 		logger.info(line + " @ " + pos);
 		logger.info(line.substring(0, pos) + "|" + line.substring(pos));
-		Async<Dict> inspect = client.shellService.inspect(line, pos, 0);
+		Async<Dict> inspect = shell.service().inspect(line, pos, 0);
 		completionPending = inspect;
 		inspect.onSuccess(msg -> {
 			logger.info("Inspect reply: " + msg);
 		});
-		Async<Dict> complete = client.shellService.complete(line, pos, 0);
+		Async<Dict> complete = shell.service().complete(line, pos, 0);
 		complete.onSuccess(msg -> {
 			if (completionPending == inspect && msg.get(CodeService.FOUND)) { // we're still interested
 				completionPending = null;
@@ -307,8 +307,10 @@ public class TerminalClient implements TerminalService, ExplorerService {
 		if (hostSide == null)
 			keyHandler = new KeyHandler(terminal, client.inputService);
 	}
-
 	private void prompt(int variant) {
+		prompt(variant, null);
+	}
+	private void prompt(int variant, String code) {
 		if (variant == 1)
 			readline.prompt("\u001b[33m  --> \u001b[38;5;82m");
 		else if (variant == 2)
@@ -326,7 +328,7 @@ public class TerminalClient implements TerminalService, ExplorerService {
 	}
 
 	@Override
-	public Async<Dict> write(String text) {
+	public Async<Dict> write(String text, String stream) {
 //		logger.info("«" + Strings.termEscape(text) + "»");
 		terminal.write(text);
 		return null;

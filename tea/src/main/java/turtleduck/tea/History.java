@@ -49,6 +49,18 @@ public class History {
 		return sink.async();
 	}
 
+	Async<Integer> put(String session, String data, int id) {
+		Sink<Integer> sink = Async.create();
+		histObj.put(JSString.valueOf(session), JSString.valueOf(data), JSNumber.valueOf(id)) //
+				.onRejected(err -> sink.fail("not found")) //
+				.then(res -> {
+					Client.logger.info("get -> {}", res);
+					sink.success(((JSNumber) res).intValue());
+					return Promise.Util.resolve(res);
+				});
+		return sink.async();
+	}
+
 	Async<Integer> currentId(String session) {
 		Sink<Integer> sink = Async.create();
 		histObj.currentId(JSString.valueOf(session)) //
@@ -78,6 +90,8 @@ public class History {
 		Promise<JSString> get(JSString session);
 
 		Promise<JSNumber> put(JSString session, JSString data);
+
+		Promise<JSNumber> put(JSString session, JSString data, JSNumber id);
 
 		Promise<JSNumber> currentId(JSString session);
 

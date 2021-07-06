@@ -1,0 +1,85 @@
+{
+	"user" : {
+		"id": "__anon__",
+		"name": "Anas Chelonia",
+		"username": "tduck",
+		"nickname": "",
+		"website" : "$ROOT",
+		"picture": "$ROOT/images/turtleduck-icon.png",
+		"profile": "",
+		"email": "tduck@example.com"
+	},
+	"session" : {
+		"name" : "",
+		"private": false,
+		"offline": false
+	},
+	"connections": {
+		"remote-turtleduck": {
+			"kind": "SockJSConnection",
+			"enabled": "optional",
+			"remote": true,
+			"provides": [
+				"jshell",
+				"default"
+			]
+		},
+		"local-pyodide": {
+			"kind": "PyConnection",
+			"enabled": "optional",
+			"provides": [
+				"pyshell"
+			]
+		}
+	},
+	"languages": {
+		"java": {
+			"title": "Java",
+			"enabled": "optional",
+			"shellName": "jshell",
+			"shellTitle": "JShell",
+			"editMode": "java",
+			"icon": "☕",
+			"extensions": [
+				"jsh",
+				"java",
+				"jshell"
+			],
+			"services": {
+				"jshell": "ShellService"
+			}
+		},
+		"python": {
+			"title": "Python",
+			"enabled": "always",
+			"shellName": "PyShell",
+			"shellTitle": "PyShell",
+			"editMode": "python",
+			"icon": "🐍",
+			"extensions": [
+				"py"
+			],
+			"services": {
+				"pyshell": "ShellService"
+			},
+			"install": [
+				"base45",
+				"cbor2",
+				"pyzbar"
+			],
+			"import": []
+		},
+		"plain": {
+			"title": "plain",
+			"enabled": "fallback",
+			"shellName": "shell",
+			"shellTitle": "Shell",
+			"editMode": "",
+			"icon": "",
+			"extensions": [],
+			"services": {
+				
+			}
+		}
+	}
+}

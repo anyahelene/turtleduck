@@ -1,29 +1,38 @@
 package turtleduck.server;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
+import turtleduck.messaging.BaseConnection;
+import turtleduck.messaging.Connection;
 import turtleduck.messaging.Message;
-import turtleduck.messaging.Router;
+import turtleduck.util.Dict;
 import turtleduck.util.Strings;
 
-public class VertxRouter extends Router {
+public class VertxConnection extends BaseConnection {
 	private SockJSSocket socket;
-	private List<Buffer> queue = new ArrayList<>();
+	private Deque<Buffer> queue = new ArrayDeque<>();
+	private Deque<Message> receiveQueue = new ArrayDeque<>();
 	private Logger logger = LoggerFactory.getLogger(getClass());
+	private Dict userInfo;
 
-	public VertxRouter(String session, String username) {
-		super(session, username);
+	public VertxConnection(String id, Dict userInfo) {
+		super(id);
+		this.userInfo = userInfo;
 	}
 
 	@Override
-	public void socketSend(String data) {
+	public void socketSend(Message msg) {
+		String data = msg.toJson();
 		if (data.length() < 1024)
 			logger.info("SEND: " + data);
 		else
@@ -34,7 +43,8 @@ public class VertxRouter extends Router {
 	protected void socketSend(Buffer data) {
 		if (socket != null) {
 			while (!queue.isEmpty()) {
-				socket.write(queue.remove(0)).onFailure(ex -> logger.error("Send error", ex)).onSuccess(v -> logger.info("Send ok"));
+				socket.write(queue.poll()).onFailure(ex -> logger.error("Send error", ex))
+						.onSuccess(v -> logger.info("Send ok"));
 			}
 			socket.write(data).onFailure(ex -> logger.error("Send error", ex)).onSuccess(v -> logger.info("Send ok"));
 		} else {
@@ -44,17 +54,41 @@ public class VertxRouter extends Router {
 
 	public void connect(SockJSSocket socket) {
 		this.socket = socket;
-		while (!queue.isEmpty()) {
-			socket.write(queue.remove(0)).onFailure(ex -> logger.error("Send error", ex)).onSuccess(v -> logger.info("Send ok"));
+		socket.handler(this::receive);
+		socket.resume();
+		for (BiConsumer<Connection, Dict> h : onConnectHandlers.values()) {
+			if (h != null)
+				h.accept(this, null);
+		}
+	}
+
+	public void receive(Buffer buf) {
+		JsonObject obj = buf.toJsonObject();
+		Message msg = Message.fromDict(VertxJson.decodeDict(obj));
+		if (receiver != null) {
+			while (!receiveQueue.isEmpty()) {
+				Message m = receiveQueue.poll();
+				logger.info("RCVQ: " + m);
+				receiver.accept(m);
+			}
+			logger.info("RECV: " + buf);
+			receiver.accept(msg);
+		} else {
+			receiveQueue.add(msg);
 		}
 	}
 
 	public void disconnect() {
 		this.socket = null;
+		for (Consumer<Connection> h : onDisconnectHandlers.values()) {
+			if (h != null)
+				h.accept(this);
+		}
 	}
 
 	@Override
-	protected void socketSend(String jsonMsg, ByteBuffer[] buffers) {
+	public void socketSend(Message msg, ByteBuffer[] buffers) {
+		String jsonMsg = msg.toJson();
 		Buffer byteMsg = Buffer.buffer(jsonMsg);
 		byteMsg.appendString(" ".repeat(byteMsg.length() % 4));
 		int size = byteMsg.length() + 8;
@@ -78,4 +112,5 @@ public class VertxRouter extends Router {
 					+ " bytes]");
 		socketSend(buffer);
 	}
+
 }

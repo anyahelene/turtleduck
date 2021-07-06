@@ -2,10 +2,12 @@ package turtleduck.tea;
 
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
+import turtleduck.messaging.Connection;
 import turtleduck.messaging.Message;
 import turtleduck.messaging.Reply;
 import turtleduck.messaging.Router;
 import turtleduck.messaging.ShellService;
+import turtleduck.messaging.generated.ShellServiceProxy;
 import turtleduck.text.TextCursor;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
@@ -27,25 +29,38 @@ import static turtleduck.tea.HTMLUtil.*;
 
 public class Shell {
 	public static final Logger logger = Logging.getLogger(Shell.class);
-	private TextCursor cursor;
 	private int lineNum = 0;
-	private BiConsumer<Dict, Location> diagHandler;
-	private Consumer<Integer> prompt;
-	private Consumer<HTMLElement> htmlout;
 	public static final Color VARCOLOR = Colors.OLIVE;
 	public static final Color TYPECOLOR = Colors.LIGHT_BLUE;
 	public static final Color TEXTCOLOR = Colors.LIME;
+	private String language;
+	private ShellService service;
+	private Connection conn;
 
-	public Shell(TextCursor cursor, BiConsumer<Dict, Location> handler, Consumer<Integer> prompt,
-			Consumer<HTMLElement> htmlout) {
-		this.cursor = cursor;
-		this.diagHandler = handler;
-		this.prompt = prompt;
-		this.htmlout = htmlout;
+	Shell(String languageName, Connection conn) {
+		this.language = languageName;
+		this.service = new ShellServiceProxy(conn.id(), conn.router());
+		this.conn = conn;
 	}
 
-	public void printExceptions(Dict msg, HTMLElement output) {
+	public Connection connection() {
+		return conn;
+	}
+	public String language() {
+		return language;
+	}
+
+	public String shellName() {
+		return Languages.langToShell(language);
+	}
+
+	public String fileExtension() {
+		return Languages.langToExt(language, true);
+	}
+
+	public void printExceptions(Dict msg, LanguageConsole console) {
 		Dict ex = msg.get(ShellService.EXCEPTION);
+		HTMLElement output = console.outputElement();
 		if (ex != null) {
 			if (output != null) {
 				HTMLElement trace = element("ul", clazz("traceback fold"));
@@ -67,17 +82,18 @@ public class Shell {
 				output.appendChild(elt);
 
 			} else {
-				cursor.println(ex.get(Reply.ENAME) + ": " + ex.get(Reply.EVALUE), colorOf("error"));
+				console.println(ex.get(Reply.ENAME) + ": " + ex.get(Reply.EVALUE), colorOf("error"));
 				for (String trace : ex.get(Reply.TRACEBACK).toListOf(String.class)) {
-					cursor.println(trace, colorOf("error"));
+					console.println(trace, colorOf("error"));
 				}
 			}
 		}
 	}
 
-	public Array printDiags(Dict msg, HTMLElement output) {
+	public Array printDiags(Dict msg, LanguageConsole console) {
 		Array diags = msg.get(ShellService.DIAG);
 		String worstLevel = "none";
+		HTMLElement output = console.outputElement();
 		for (Dict diag : diags.toListOf(Dict.class)) {
 			String name = diag.get(Reply.ENAME);
 			String level = levelOf(name);
@@ -105,15 +121,15 @@ public class Shell {
 
 				output.appendChild(elt);
 			} else {
-				cursor.println(name + " at " + loc, colorOf(levelOf(name)));
-				cursor.println(diag.get(Reply.EVALUE), colorOf(levelOf(name)));
+				console.println(name + " at " + loc, colorOf(levelOf(name)));
+				console.println(diag.get(Reply.EVALUE), colorOf(levelOf(name)));
 			}
-			if (diagHandler != null) {
+			if (console.hasDiagnostics()) {
 				try {
 					URI uri = new URI(diag.get(ShellService.LOC));
 					Location l = new Location(uri);
 					diag.put("level", level);
-					diagHandler.accept(diag, l);
+					console.diagnostic(diag, l);
 
 //					addAnno(state, l.start(), l.length(), "error",
 //							diag.get(Reply.ENAME) + ": " + diag.get(Reply.EVALUE));
@@ -128,7 +144,7 @@ public class Shell {
 		return diags;
 	}
 
-	public boolean specialCommand(String line) {
+	public boolean specialCommand(String line, LanguageConsole console) {
 		String[] split = line.split("\\s+", 2);
 		String cmd = split[0];
 		String args = split.length == 2 ? split[1].trim() : "";
@@ -145,44 +161,62 @@ public class Shell {
 			logger.info("1: max={}, width={}, cols={}", max, width, cols);
 			int c = 0;
 			for (String str : files) {
-				cursor.print(String.format("%-" + max + "s", str));
+				console.print(String.format("%-" + max + "s", str));
 				if (++c >= cols) {
-					cursor.println();
+					console.println();
 					c = 0;
 				}
 			}
 			if (c != 0)
-				cursor.println();
-			prompt1();
+				console.println();
+			console.prompt1();
+			return true;
+		} else if (cmd.equals("/loadpython")) {
+			Client.client.loadPython();
+			console.prompt1();
 			return true;
 		} else if (cmd.equals("/open")) {
-			Client.client.editorImpl.open(args, null, "Java");
-			prompt1();
+			String l = Languages.extToLang(args);
+			if(l.isEmpty())
+				l = language;
+			Client.client.editorImpl.open(args, null, l);
+			Client.client.editorImpl.focus();
+			console.prompt1();
 			return true;
 		} else if (cmd.equals("/router_local")) {
-			cursor.print(Client.client.router.command(args));
-			prompt1();
+			console.print(Client.client.router.command(args));
+			console.prompt1();
 			return true;
-		} else if (cmd.equals("/router_remote")) {
+		} else if (cmd.equals("/echo")) {
+			console.println(args);
+			console.prompt1();
+			return true;
+			} else if (cmd.equals("/router_remote")) {
 			Message msg = Message.writeTo("$remote", "$router").putContent(Router.COMMAND, args).done();
-			Client.client.router.send(msg).onSuccess(result -> {
-				cursor.print(result.get(Router.RESULT));
+			conn.send(msg).onSuccess(result -> {
+				console.print(result.get(Router.RESULT));
 			});
-			prompt1();
+			console.prompt1();
 			return true;
 		}
 		return false;
 	}
 
-	public boolean processResult(Dict msg, boolean processIncomplete, HTMLElement output) {
-		logger.info("exec result: " + msg);
-		if (msg.get(ShellService.COMPLETE) || processIncomplete) {
+	public boolean processResult(Dict msg, boolean processIncomplete, LanguageConsole console) {
+		logger.info("exec result: {}", msg);
+		HTMLElement output = console.outputElement();
+		logger.info("output elt: {}", output);
+		logger.info("complete: {}", msg.get(ShellService.COMPLETE));
+		logger.info("multi: {}", msg.get(ShellService.MULTI));
+		logger.info("multi-s: {}", msg.getArray("multi"));
+	if (msg.get(ShellService.COMPLETE) || processIncomplete) {
 			for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
-				printDiags(result, output);
-				printExceptions(result, output);
+				printDiags(result, console);
+				printExceptions(result, console);
 				String value = result.get(ShellService.VALUE);
 				String name = result.get(ShellService.NAME);
 				String type = result.get(ShellService.TYPE);
+				logger.info("result: {}, {}, {}", value, name, type);
 				if (value != null) {
 					if (output != null) {
 						HTMLElement elt = span(clazz("eval-result"));
@@ -204,13 +238,20 @@ public class Shell {
 						if (type != null) {
 							v = TYPECOLOR.applyFg(type) + " " + v;
 						}
-						cursor.print(v);
+						console.print(v);
 					}
 				}
 			}
 			Client.client.showHeap(msg);
+			Client.client.userlog("Eval: done");
 			return true;
 		} else {
+			Client.client.userlog("Eval: incomplete input");
+			if (output != null) {
+				output.appendChild(span("…", clazz("diag-error")));
+			} else {
+				console.println("…", Colors.MAROON);
+			}
 //	String code = msg.get(ShellService.CODE);
 //	terminal.paste(code);
 //	if (code.endsWith(";"))
@@ -219,43 +260,42 @@ public class Shell {
 		}
 	}
 
-	public void evalLine(String line) {
-		evalLine(line, lineNum++, null, null);
+	public void evalLine(String line, LanguageConsole console) {
+		evalLine(line, lineNum++, null, console);
 	}
 
-	public void evalLine(String line, int id, Dict opts, HTMLElement output) {
+	public void evalLine(String line, int id, Dict opts, LanguageConsole console) {
 		if (opts == null)
 			opts = Dict.create();
-		Client.client.shellService.eval(line, id, opts)//
-				.onSuccess(msg -> {
-					if (processResult(msg, false, output))
-						prompt1();
-					else
-						prompt2();
+		Client.client.userlog("Eval: running...");
 
+		service.eval(line, id, opts)//
+				.onSuccess(msg -> {
+					Client.client.userlog("Eval: finished");
+					if (processResult(msg, false, console)) {
+						console.prompt1();
+					} else {
+						console.prompt2(line);
+					}
 				})//
 				.onFailure(msg -> {
+					Client.client.userlog("Eval: internal error");
 					logger.info("exec error: " + msg);
 					String ename = msg.get(Reply.ENAME);
 					String evalue = msg.get(Reply.EVALUE, null);
 					Array trace = msg.get(Reply.TRACEBACK);
-					cursor.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""), Colors.RED);
+					console.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""), Colors.RED);
 					for (String frame : trace.toListOf(String.class)) {
-						cursor.println(frame, Colors.MAROON);
+						console.println(frame, Colors.MAROON);
 					}
-					prompt1();
+					console.prompt1();
 
 				});
 //}
 	}
 
-	private void prompt2() {
-		if (prompt != null)
-			prompt.accept(2);
+	public ShellService service() {
+		return service;
 	}
 
-	private void prompt1() {
-		if (prompt != null)
-			prompt.accept(1);
-	}
 }

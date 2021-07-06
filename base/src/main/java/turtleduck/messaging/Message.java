@@ -7,7 +7,9 @@ import turtleduck.util.Dict;
 import turtleduck.util.Key;
 
 public interface Message {
-	Key<Array> TO = Key.arrayKey("to", () -> Array.of(String.class));
+	Key<Array> RCPT = Key.arrayKey("rcpt", () -> Array.of(String.class));
+	Key<String> TO = Key.strKey("to:TO", "");
+	Key<String> FROM = Key.strKey("from:FROM", "");
 	Key<String> MSG_ID = Key.strKey("msg_id:MID");
 	Key<String> REF_ID = Key.strKey("ref_id:RID");
 	Key<String> TOPIC_ID = Key.strKey("topic_id:TID");
@@ -43,7 +45,7 @@ public interface Message {
 //	}
 
 	default MessageWriter reply(String reply_msg_type) {
-		MessageImpl impl = new MessageImpl();
+		MessageImpl impl = new MessageImpl(from());
 		impl.header(this, reply_msg_type);
 		return impl;
 	}
@@ -87,6 +89,9 @@ public interface Message {
 	 */
 	String msgType();
 
+	String from();
+	String to();
+
 	Dict header();
 
 	Dict parent_header();
@@ -99,6 +104,8 @@ public interface Message {
 
 	String toJson();
 
+	Dict toDict();
+	
 	<T> T content(Key<T> key);
 
 	<T> T content(Key<T> key, T defaultValue);
@@ -107,6 +114,19 @@ public interface Message {
 
 	<T> T metadata(Key<T> key, T defaultValue);
 
+	/**
+	 * Add a 'to'-header to the message
+	 * @param to
+	 * @return
+	 */
+	//Message setEnvelopeTo(String to);
+	
+	/**
+	 * Add a 'from'-header to the message
+	 * @param from
+	 * @return
+	 */
+	Message setEnvelopeFrom(String from);
 	/**
 	 * @return The parent's unique message ID (for a reply message)
 	 * @throws NullPointerException if {@link #isReply()} is false

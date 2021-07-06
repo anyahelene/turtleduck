@@ -4,6 +4,7 @@ import turtleduck.annotations.MessageField;
 import turtleduck.annotations.MessageProtocol;
 import turtleduck.annotations.Request;
 import turtleduck.async.Async;
+import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Key;
 
@@ -16,6 +17,7 @@ public interface HelloService {
 	Key<String> USERNAME = Key.strKey("username");
 	Key<Dict> USER = Key.dictKey("user");
 	Key<Boolean> EXISTING = Key.boolKey("existing", false);
+	Key<Array> CONNECTIONS = Key.arrayKey("connections", () -> Array.of(String.class));
 
 	@Request(type = "hello", replyType = "welcome", replyFields = { "ENDPOINTS", "USERNAME", "USER", "EXISTING" })
 	Async<Dict> hello(@MessageField("SESSION_NAME") String sessionName,
