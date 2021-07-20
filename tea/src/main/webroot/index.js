@@ -4,14 +4,14 @@ import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 import jquery from 'jquery';
 import animals from './animals.txt';
 import hints from './hints.txt';
-import { Remarkable } from 'remarkable';
-import hljs from 'highlight.js'
 import { fileSystem, FileSystem } from './FileSystem';
 import { History } from './History';
 import { Component } from './Component';
 import { TilingWM, TilingWindow} from './TilingWM';
-import { PyController } from './pycontroller';
+import { PyController } from './js/pycontroller';
 import { ShellServiceProxy } from './ShellServiceProxy';
+import { MDRender } from './js/MDRender';
+
 //import { XTermJS } from './XTermJS';
 //import ace from "ace-builds";
 //import "ace-builds/webpack-resolver";
@@ -20,7 +20,8 @@ import defaultConfig from './config.json';
 
 var turtleduck = window['turtleduck'] || {};
 window.turtleduck = turtleduck;
-
+turtleduck.MDRender = MDRender;
+turtleduck.md = new MDRender({hrefPrefix:'examples/dgc/'});
 turtleduck.fileSystem = fileSystem;
 turtleduck.history = new History(fileSystem);
 turtleduck.defaultConfig = defaultConfig;
@@ -34,6 +35,7 @@ turtleduck.shellServiceProxy = new ShellServiceProxy(turtleduck.pyController);
 //}
 turtleduck.TilingWM = TilingWM;
 turtleduck.TilingWindow = TilingWindow;
+turtleduck.wm = new TilingWM('mid', 32, 16);
 
 turtleduck._getByPath = function(path, obj) {
 	const ps = path.split(".");
@@ -226,7 +228,6 @@ turtleduck.sessionStorage = storageAvailable('sessionStorage') ? window.sessionS
 	removeItem: function(key) { dict[key] = undefined; },
 };
 
-turtleduck.md = new Remarkable();
 
 turtleduck.alwaysShowSplashHelp = function(enable = true) {
 	if(enable)
@@ -559,7 +560,7 @@ jquery(function() {
 		const belowElt = this;
 		var elt = document.createElement("div");
 		elt.className = "ns-resizer";
-		belowElt.insertBefore(elt, this.firstElementChild);
+		//belowElt.insertBefore(elt, this.firstElementChild);
 	});
 	jquery('[data-left-of]').each(function(index) {
 		console.log(index, this);
@@ -641,11 +642,24 @@ jquery(document).ready(() => {
 		console.log('Console size changed');
 	})
 	resizeObserver.observe(document.getElementById('shell'));
+	
+	turtleduck.layoutSpec = {
+		"dir":"H","items": [
+			{"size":3,"dir":"V","items": [
+				//{"size":2,"item":"iconbox"},
+				{"size":16,"item":"explorer"}]},
+			{"size":29,"dir":"V","max_container":true,"items": [
+				{"size":9,"dir":"H","items":[
+					{"size":15,"item":"editor"},
+					{"size":14,"item":"screen"}]},
+	 			{"size":7,"item":"shell"}]}]};
+	turtleduck.wm.initialize();
+	turtleduck.wm.layout(turtleduck.layoutSpec);
+	turtleduck.wm.setupResizing();
+
 })
 
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;
-window.Remarkable = Remarkable;
-window.hljs = hljs;
 window.$ = jquery;
 //window.ace = ace;

@@ -3,7 +3,7 @@
 
 class PyController {
 	constructor() {
-		this.pyodideWorker = new Worker('./static/pywebworker.js');
+		this.pyodideWorker = new Worker('./js/pywebworker.js');
 		this.pong = 0;
 		this.onmessage(e => {});
 	}

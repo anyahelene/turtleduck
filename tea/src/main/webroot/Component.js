@@ -109,16 +109,37 @@ class Component {
 	}
 	
 	addWindowTools() {
-		if(this._toolbar) {
+		if(this._toolbar && !this._winTools) {
+			this._icon = document.createElement("button");
+			this._icon.type = "button";
+			this._icon.textContent = this.title();
+			this._icon.addEventListener('click', e => {
+				this.iconified(false);
+				this._tdstate.wm.recomputeLayout();
+			});
+			document.getElementById('iconbox').appendChild(this._icon);
 			this._winTools = document.createElement("nav");
 			this._winTools.className = "window-tools";
 			const minButton = document.createElement("button");
 			minButton.type = "button";
-			minButton.textContent = "🗕";
+			minButton.textContent = "";
+			minButton.className = "min-button";
+			minButton.addEventListener('click', e => {
+				this.iconified(true);
+				this._tdstate.wm.recomputeLayout();
+			});
 			this._winTools.appendChild(minButton);
 			const maxButton = document.createElement("button");
 			maxButton.type = "button";
-			maxButton.textContent = "🗖";
+			maxButton.textContent = "";
+			maxButton.className = "max-button";
+			maxButton.addEventListener('click', e => {
+				if(this._element.classList.contains("maximized")) {
+					this._tdstate.wm.unmaximize(this);
+				} else {
+					this._tdstate.wm.maximize(this);				
+				}
+			});	
 			this._winTools.appendChild(maxButton);
 			this._toolbar.appendChild(this._winTools);
 		}
@@ -165,6 +186,10 @@ class Component {
 		}
 		this._title = title;
 	}
+	
+	title() {
+		return this._title ? this._title : this.name;
+	}
 	setParent(parent) {
 		if(this._registered) {
 			console.error("setParent() after register():", this.name, this._element);
@@ -173,6 +198,31 @@ class Component {
 		this._focusElement = this._findFocusElement(this._element);
 	}
 	
+	iconified(enable) {
+		if(enable)  {
+			this._icon.classList.add('iconified');
+			this._element.classList.add("iconified");
+			this._icon.classList.remove('maximized');
+			this._element.classList.remove("maximized");
+		}
+		else {
+			this._icon.classList.remove('iconified');
+			this._element.classList.remove("iconified");
+		}
+	}
+	
+	maximized(enable) {
+		if(enable)  {
+			this._icon.classList.add('maximized');
+			this._element.classList.add("maximized");
+			this._icon.classList.remove('iconified');
+			this._element.classList.remove("iconified");
+		}
+		else {
+			this._icon.classList.remove('maximized');
+			this._element.classList.remove("maximized");
+		}
+	}	
 	_findFocusElement(elt) {
 		if(elt.classList.contains('focusable')) {
 			return elt;
@@ -226,7 +276,7 @@ class Component {
 	
 	register() {
 		this._registered = true;
-		if(this._parent === null) {
+		if(!this._parent) {
 			this._tdstate[this.name] = this;
 		} else {
 			this._parent.addChild(this);

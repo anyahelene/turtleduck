@@ -63,9 +63,9 @@
 				"pyshell": "ShellService"
 			},
 			"install": [
-				"base45",
-				"cbor2",
-				"pyzbar"
+				"../py/base45-0.4.0-py3-none-any.whl",
+				"../py/cbor2-5.4.0.post3-py3-none-any.whl",
+				"../py/pyzbar-0.1.8-py2.py3-none-any.whl"
 			],
 			"import": []
 		},

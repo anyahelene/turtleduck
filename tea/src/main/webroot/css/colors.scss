@@ -1,3 +1,6 @@
+$PHOSPHOR_P1: #4aff00;  // ~525nm
+$PHOSPHOR_P19: #ffdf00; // ~590nm
+
 $water: #66e;
 $page: #ccd;
 $page-light: #eeeaea;
@@ -5,8 +8,8 @@ $pen: #222;
 $pen-sharp: #000;
 $prompt: #fa6;
 $prompt-half: #880;
-$terminal: #6f6;
-$terminal-half: #080;
+$terminal: $PHOSPHOR_P1;
+$terminal-half: $PHOSPHOR_P19;
 $sun: color.adjust($page, $hue: 180);
 $button-bg-header: color.scale($page, $lightness: -20%);
 $button-bg-normal: color.scale($sun, $lightness: -20%);
@@ -22,8 +25,6 @@ $BLUE: rgb(0%, 0%, 100%);
 $OLIVE: rgb(50%, 50%, 0%);
 $MAROON: rgb(50%, 0%, 0%);
 
-$PHOSPHOR_P1: #4aff00;  // ~525nm
-$PHOSPHOR_P19: #ffdf00; // ~590nm
 
 $debug: $LIGHT_BLUE;
 $info: $BLUE;

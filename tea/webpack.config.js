@@ -15,7 +15,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'target', 'classes', 'webroot'),
-    publicPath: 'static/',
+//    publicPath: 'static/',
     filename: 'js/[name].[contenthash].js'
   },
   optimization: {

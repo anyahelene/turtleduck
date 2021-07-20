@@ -99,10 +99,13 @@ public class EditorServer implements EditorService {
 			"message" }, script = "return turtleduck.editor.diagnostic(from, to, severity, message, [])")
 	native static JSObject diagnostic(int from, int to, String severity, String message);
 
-	EditorServer(HTMLElement element) {
+	EditorServer(HTMLElement element, Component parent) {
 		this.tabs = JSUtil.getElementsByClassName(element, "tabs").get(0);
 		this.modeFooterElement = element.querySelector(".editor-mode-foot");
 		this.editor = createEditor(element, "", "");
+		if(parent != null)
+			editor.setParent(parent);
+		editor.setTitle("Editor");
 		editor.addWindowTools();
 	}
 

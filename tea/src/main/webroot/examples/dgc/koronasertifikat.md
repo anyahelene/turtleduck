@@ -26,21 +26,21 @@ Selve datastrukturen («payload») ser slik ut (i [JSON-format](https://en.wikip
 
 ```json
 {
-	'iss': 'NO',                 // issuer; landkode for utsteder
-	'exp': 1631311200,           // expiration time; utløpsdato (2021-09-11)
-	'iat': 1623597458,           // issued at; utstedelsesdato (2021-06-13)
-	'hcert': {                   // helsesertifikat
-		'eu_dcc_v1': {           // EU Digital Covid Certificate v1
-			'du': '2021-09-11',  // valid until; utløpsdato
-			'dob': '1977',       // date-of-birth; fødselsdato eller år
-			'nam': {             // name; navn
-				'fn': 'BAG*',    // family name; etternavn i UTF-8-format
-				'gn': 'A.',      // given name; fornavn (given name)  i UTF-8-format
-				'fnt': 'BAG',    // etternavn i pass-format
-				 gnt': None      // fornavn i pass-format
+	"iss": "NO",                 // issuer; landkode for utsteder
+	"exp": 1631311200,           // expiration time; utløpsdato (2021-09-11)
+	"iat": 1623597458,           // issued at; utstedelsesdato (2021-06-13)
+	"hcert": {                   // helsesertifikat
+		"eu_dcc_v1": {           // EU Digital Covid Certificate v1
+			"du": "2021-09-11",  // valid until; utløpsdato
+			"dob": "1977",       // date-of-birth; fødselsdato eller år
+			"nam": {             // name; navn
+				"fn": "BAG*",    // family name; etternavn i UTF-8-format
+				"gn": "A.",      // given name; fornavn (given name)  i UTF-8-format
+				"fnt": "BAG",    // etternavn i pass-format
+				"gnt": null      // fornavn i pass-format
 			},
-			'ver': '1.0.0',      // standard-versjon
-			'reason': 0          // ???
+			"ver": "1.0.0",      // standard-versjon
+			"reason": 0          // ???
 		}
 	}
 }
@@ -49,29 +49,29 @@ Selve datastrukturen («payload») ser slik ut (i [JSON-format](https://en.wikip
 Eksempelet over er fra den norske kontrollsiden for innenlands bruk og inneholder ingen konkrete opplysninger om vaksinering – dette er siden som vil være grønn eller rød avhengig av om du er vaksinert eller ikke (den blir grønn om du er vaksinert med minst én dose for minst tre uker siden). Bevis på vaksinering finner man på den *utvidede kontrollsiden*, med en QR-kode som inneholder et EU-standard sertifikat. Vaksineinformasjonen er lagret som et ekstra felt i sertifikatet (`v` for vaksine; evt. `t` for testresultat eller `r` (recovery) for gjennomgått sykdom): 
 
 ```json
-'v': [{
-		'ci': 'URN:UVCI:01:NO:VAK/KR2XE5DMMVCHKY3LB',  // unik ID fra vaksinasjonsregisteret	                          
-		'co': 'NO',                                    // land/organisasjon som har satt vaksinen
-		'dn': 1,                                       // dosenummer
-		'dt': '2021-04-31',                            // vaksinasjonsdato
-		'is': 'Norwegian Institute of Public Health',  // sertifikat-utsteder => FHI
-		'ma': 'ORG-100030215',                         // markedsfører => Biontech Manufacturing GmbH
-		'mp': 'EU/1/20/1528',                          // medisinsk produkt => Comirnaty (BioNTech/Pfizer)
-		'sd': 2,                                       // antall doser for full vaksinering
-		'tg': '840539006',                             // target => COVID-19
-		'vp': '1119349007'                             // vaksinetype => SARS-CoV-2 mRNA vaccine
+{"v": [{
+		"ci": "URN:UVCI:01:NO:VAK/KR2XE5DMMVCHKY3LB",  // unik ID fra vaksinasjonsregisteret	                          
+		"co": "NO",                                    // land/organisasjon som har satt vaksinen
+		"dn": 1,                                       // dosenummer
+		"dt": "2021-04-31",                            // vaksinasjonsdato
+		"is": "Norwegian Institute of Public Health",  // sertifikat-utsteder => FHI
+		"ma": "ORG-100030215",                         // markedsfører => Biontech Manufacturing GmbH
+		"mp": "EU/1/20/1528",                          // medisinsk produkt => Comirnaty (BioNTech/Pfizer)
+		"sd": 2,                                       // antall doser for full vaksinering
+		"tg": "840539006",                             // target => COVID-19
+		"vp": "1119349007"                             // vaksinetype => SARS-CoV-2 mRNA vaccine
 	}, {
-		'ci': 'URN:UVCI:01:NO:VAK/IR2WG22UOVZHI3DFB',
-		'co': 'NO',
-		'dn': 2,
-		'dt': '2021-06-31',
-		'is': 'Norwegian Institute of Public Health',
-		'ma': 'ORG-100030215',
-		'mp': 'EU/1/20/1528',
-		'sd': 2,
-		'tg': '840539006',                             // http://snomed.info/id/840539006
-		'vp': '1119349007'                             // http://snomed.info/id/1119349007
-	}]
+		"ci": "URN:UVCI:01:NO:VAK/IR2WG22UOVZHI3DFB",
+		"co": "NO",
+		"dn": 2,
+		"dt": "2021-06-31",
+		"is": "Norwegian Institute of Public Health",
+		"ma": "ORG-100030215",
+		"mp": "EU/1/20/1528",
+		"sd": 2,
+		"tg": "840539006",                             // http://snomed.info/id/840539006
+		"vp": "1119349007"                             // http://snomed.info/id/1119349007
+	}]}
 ```
 
 ([Standarden](https://ec.europa.eu/health/sites/default/files/ehealth/docs/covid-certificate_json_specification_en.pdf) spesifiserer at sertifikatet kun skal inneholde informasjon om én vaksinedose (f.eks. dose 2 av 2); den norske kontrollsiden har likevel (juni 2021) info om begge dosene hvis man er fullvaksinert.)

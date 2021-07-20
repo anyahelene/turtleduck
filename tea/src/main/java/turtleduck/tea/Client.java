@@ -102,27 +102,35 @@ public class Client implements JSObject {
 				logger.info("Window hidden: {}", e);
 			}, false);
 
+			Component wm = map.get("wm").cast();
+			
 			HTMLElement shellElt = Browser.document.getElementById("shell");
 			if (shellElt != null) {
 				this.shellComponent = JSUtil.createComponent(shellElt);
+				shellComponent.setTitle("Shell");
 				shellComponent.addWindowTools();
+				shellComponent.setParent(wm);
 				shellComponent.register();
 
 			}
 
 			sessionName = getConfig("session.name", "?");
 
-			editorImpl = new EditorServer(Browser.document.getElementById("editor"));
+			editorImpl = new EditorServer(Browser.document.getElementById("editor"), wm);
 			editorImpl.initialize();
 			router.route(new EditorDispatch(editorImpl));
 
-			map.set("loadJava", (JSRunnable) this::loadJava);
-			map.set("loadPython", (JSRunnable) this::loadPython);
+			JSUtil.declare("loadJava", this::loadJava);
+			JSUtil.declare("loadPython",this::loadPython);
+			JSUtil.declare("goOnline",this::goOnline);
+			JSUtil.declare("userlog", (JSStringConsumer)this::userlog);
 
 			HTMLElement screenElt = Browser.document.getElementById("screen");
 			if (screenElt != null) {
 				this.screenComponent = JSUtil.createComponent(screenElt);
+				screenComponent.setTitle("Display");
 				screenComponent.addWindowTools();
+				screenComponent.setParent(wm);
 				screenComponent.register();
 			}	
 			canvas = new CanvasServer(screenComponent);
@@ -139,10 +147,8 @@ public class Client implements JSObject {
 			}
 
 			WINDOW_MAP.set("turtleduck", map);
-			JSUtil.export("eval", this::eval);
-
-			DocDisplay docDisplay = new DocDisplay(screenComponent);
-			docDisplay.initFromUrl("doc/TODO-PROJETS.md", "TODO", true);
+			//DocDisplay docDisplay = new DocDisplay(screenComponent);
+			//docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
 			DocDisplay docDisplay2 = new DocDisplay(screenComponent);
 			docDisplay2.initFromUrl("examples/dgc/koronasertifikat.md", null, true);
 			
@@ -351,11 +357,6 @@ public class Client implements JSObject {
 		}
 	}
 
-	public void eval(JSString code) {
-		// TODO: don't use terminalClient
-		jshell.evalLine(code.stringValue(), 0, Dict.create(), mainJavaConsole);
-	}
-
 	public static void main(String[] args) {
 		Logging.setLogDest(JSUtil::logger);
 		Logging.useCustomLoggerFactory();
@@ -454,8 +455,11 @@ public class Client implements JSObject {
 	public void userlog(String message) {
 		userlog(message, false);
 	}
+	public void userlogWait(String message) {
+		userlog(message, true);
+	}
 
-	public void userlog(String message, boolean wait) {
+	private void userlog(String message, boolean wait) {
 		HTMLElement log = Browser.document.getElementById("last-message");
 		if (log != null) {
 			if (lastMessageIntervalId != 0)

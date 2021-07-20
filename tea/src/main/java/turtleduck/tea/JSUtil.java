@@ -1,6 +1,7 @@
 package turtleduck.tea;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
@@ -105,10 +106,7 @@ public class JSUtil {
 	native static JSFunction runPython(String code, JSMapLike<JSObject> context,
 			JSConsumer<JSMapLike<JSObject>> onsuccess);
 
-	@JSBody(params = { "name", "fun" }, script = "turtleduck[name] = fun")
-	native static <T extends JSObject> void export(String name, JSConsumer<T> fun);
-
-	@JSBody(params = { "elt", "code" }, script = "elt.innerHTML = turtleduck.md.render(code)")
+	@JSBody(params = { "elt", "code" }, script = "return turtleduck.md.render_unsafe(elt, code)")
 	native static void renderSafeMarkdown(HTMLElement elt, String code);
 
 	@JSBody(params = { "elt" }, script = "elt.scrollIntoView()")
@@ -123,8 +121,7 @@ public class JSUtil {
 	@JSBody(params = {}, script = "return turtleduck.lastFocus")
 	native static Component activeComponent();
 
-	@JSBody(params = { "name",
-			"elt" }, script = "{const comp = turtleduck.createComponent(name, elt);return comp;}")
+	@JSBody(params = { "name", "elt" }, script = "{const comp = turtleduck.createComponent(name, elt);return comp;}")
 	native static Component createComponent(String name, HTMLElement elt);
 
 	@JSBody(params = {
@@ -136,20 +133,38 @@ public class JSUtil {
 
 	@JSBody(params = { "config", "source" }, script = "turtleduck.setConfig(config, source);")
 	native static void setConfig(JSMapLike<JSObject> config, String source);
-	@JSBody(params = { "config"}, script = "turtleduck.mergeConfig(config);")
+
+	@JSBody(params = { "config" }, script = "turtleduck.mergeConfig(config);")
 	native static void mergeConfig(JSMapLike<JSObject> config);
-	@JSBody(params = { "path"}, script = "return turtleduck.getConfig(path);")
+
+	@JSBody(params = { "path" }, script = "return turtleduck.getConfig(path);")
 	native static JSObject getConfig(String path);
 
 	@JSBody(params = {}, script = "turtleduck.saveConfig();")
 	native static void saveConfig();
+
 	@JSBody(params = {}, script = "turtleduck.loadConfig();")
 	native static void loadConfig();
-	
+
 	@JSBody(params = {}, script = "turtleduck.updateInfo();")
 	native static void updateInfo();
-	@JSBody(params = {"track", "display"}, script = "turtleduck.trackMouse(track, display);")
+
+	@JSBody(params = { "track", "display" }, script = "turtleduck.trackMouse(track, display);")
 	native static void trackMouse(HTMLElement trackElement, HTMLElement displayElement);
+
+	@JSBody(params = { "name", "fun" }, script = "turtleduck[name] = function() { fun.run(); };")
+	native static void declare(String name, JSRunnable fun);
+
+	@JSBody(params = { "name", "fun" }, script = "turtleduck[name] = function(arg) { fun.accept(arg); };")
+	native static <T extends JSObject> void declare(String name, JSConsumer<T> fun);
+
+	@JSBody(params = { "name",
+			"fun" }, script = "turtleduck[name] = function(arg1,arg2) { return fun.apply(arg1,arg2); };")
+	native static <T extends JSObject, U extends JSObject, R extends JSObject> void declare(String name,
+			JSBiFunction<T, U, R> fun);
+
+	@JSBody(params = { "name", "fun" }, script = "turtleduck[name] = fun;")
+	native static void declare(String name, JSStringConsumer fun);
 	
 	/**
 	 * TODO: make sure html code is sane

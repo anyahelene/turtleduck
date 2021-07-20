@@ -92,7 +92,7 @@ class SockJSConnection extends BaseConnection {
 	public void connect() {
 		if (router == null)
 			throw new IllegalStateException("Router not configured yet");
-		Client.client.userlog("Connecting...", true);
+		Client.client.userlogWait("Connecting...");
 		do_connect();
 	}
 

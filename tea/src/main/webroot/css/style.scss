@@ -13,7 +13,7 @@
 }
 
 @mixin pixel-font {
-	font-family: "PressStart2P", "DeluxeFont", "Fantasque Sans Mono","Monoid", monospace;
+	font-family: "PressStart2P", "Fantasque Sans Mono","Monoid", monospace;
 	font-size-adjust: .71428;
 }
 @mixin hires-font {
@@ -33,6 +33,7 @@
 pre, code, kbd, samp {
   @include normal-font;
 	font-size: inherit;
+	color: #8aff00;
 }
 
 @keyframes ScrollBackground {
@@ -40,6 +41,13 @@ pre, code, kbd, samp {
     60%{background-position:50% -100%}
     75%{background-position:50% 200%}
     100%{background-position:50% -100%}
+}
+.right {
+	float:right;
+}
+
+.left {
+	float:left;
 }
 
 .flashtext {
@@ -50,7 +58,7 @@ pre, code, kbd, samp {
 	background-repeat: no-repeat;
 	color: transparent;
 	animation: ScrollBackground 5s linear infinite;
-	background-color: #0f0;
+	background-color: $terminal;
 }
 #page {
 	background:$page-light;
@@ -93,7 +101,7 @@ body {
 	font-size-adjust: 0.6;
 }
 body.login {
-	border-color: #0f0;
+	border-color: $terminal;
 	height: auto;
 	min-height: 100vh;
 }
@@ -111,24 +119,31 @@ code,pre {
 	left: 100%;
 	height: 100%;
 	width: .6rem;
-	margin: -.25rem auto;
+	margin: 0 auto;
 	cursor: ew-resize;
 }
 .ns-resizer {
 	bottom: 100%;
 	width: 100%;
-	height: 1.25rem;
-	margin: auto -.25rem;
+	height: .6rem;
+	margin: -.25rem .25rem auto .25rem;
 	cursor: ns-resize;
 }
 
 a:link, a:visited {
-	color: inherit;
 	text-decoration: none;
 }
 
+a:link {
+	color: #9abaff;
+}
+a:visited {
+	color: #aa8aff;
+	text-decoration: none;
+}
 a:hover {
-	color: $water;
+	color: #ff8a4a;
+	text-decoration: underline;
 }
 *, *::before, *::after {
 	box-sizing: border-box;
@@ -153,7 +168,9 @@ button {
 	display:flex;
 	flex-direction:column;
 }
-
+.box.iconified {
+	display:none;
+}
 .dark .box {
 	background:$bgdark;	
 }
@@ -217,9 +234,9 @@ button {
 
 }
 #page.login .card {
-	color: #0f0;
+	color: $terminal;
 	background: #000c;
-	text-shadow: 0 0 .5rem #0f08;
+	text-shadow: 0 0 .5rem #5f08;
 	background: radial-gradient(ellipse at center, #0006 0%, #000c 100%);
 }
 
@@ -351,9 +368,43 @@ header .tabs {
 	margin: 0;
 	display:block;
 }
-.tabs .tab, .toolbar button, .window-tools button {
+.window-tools .min-button::before {
+	content: "🗕";
+}
+.window-tools .max-button::before {
+	content: "🗖";
+}
+.maximized .window-tools .max-button::before {
+	content: "🗗";
+}
+
+.tabs .tab, .toolbar button, .window-tools button, .iconbox button {
 	background-color: $button-bg-header;
 }
+.iconbox:empty {
+	display:none;
+}
+.iconbox {
+}
+.iconbox button {
+	margin: .2rem;
+	margin-bottom:.5rem;
+	box-shadow: .2rem .2rem .5rem $bgdark;
+	padding: 0.1rem;
+	font-size: .8rem;
+	display:none;
+}
+.iconbox button.iconified {
+	display:inline;
+}
+.iconbox button.iconified::before {
+	content: "🗖";
+}
+.iconbox button:active {
+	margin: .2rem;
+	box-shadow: none;
+}
+
 .tab button {
 	background: transparent;
 }
@@ -522,12 +573,12 @@ nav .clickable.disbled, nav button.disabled {
 
 #page.login h1 {
 	padding: .5rem;
-	color: #0f0;
-		text-shadow: 0 0 .5rem #0f0;
+	color: $terminal;
+		text-shadow: 0 0 .5rem $terminal;
 	@include pixel-font;
 }
 #page.login .card h1 {
-	background: #0f0;
+	background: $terminal;
 	color: #333;
 	padding: .5rem;
 	text-align: center;
@@ -542,14 +593,14 @@ nav .clickable.disbled, nav button.disabled {
 }
 #login li {
 	list-style-type: none;
-//	border: .2rem solid #0f0;
+//	border: .2rem solid $terminal;
 	//color: #8f8;
-	text-shadow: 0 0 .5rem #0f0;
+	text-shadow: 0 0 .5rem $terminal;
 }
 #login li:hover {
 	list-style-type: none;
-//	border: .2rem solid #0f0;
-    background: #0f0;
+//	border: .2rem solid $terminal;
+    background: $terminal;
 	color: #000 !important;
 	text-shadow: 0 0 .5rem #000;
 
@@ -567,8 +618,9 @@ nav .clickable.disbled, nav button.disabled {
 	color: inherit;
 }
 
-#terms li, #terms p {
-	@include hires-font;	
+#terms li, #terms p, .text li, .text p {
+	@include hires-font;
+	max-width: 70rem;
 }
 
 .screen svg {
@@ -710,6 +762,8 @@ button {
 #top button {
 	background-color: $button-bg-header;
 	//background-image:radial-gradient(ellipse at bottom right, #aab 0%, #667 100%);
+	//display: inline-block;
+	min-width: 8rem;
 }
 
 button:hover, #top button:hover {
@@ -749,8 +803,7 @@ button:active, #top button.active {
 	vertical-align: middle;
 	font-size:.7rem;
 	position:relative;
-	//margin-left:1rem;
-	min-width: 7rem;
+	margin-left:auto;
 	display: inline-block;
 }
 #top button span.shortcut {
@@ -847,8 +900,12 @@ button:active, #top button.active {
 	height: $head-height;
 }
 #top-right {
+	display: flex;
+	flex-flow: row wrap;
 	align-self:center;
-	margin-left:auto;
+	//margin-left:auto;
+	flex-grow: 1;
+	flex-shrink: 1;
 }
 #user {
 	padding:.2rem;
@@ -862,20 +919,20 @@ button:active, #top button.active {
 }
 
 #top-menu {
-	flex-shrink: .5;
-	flex-grow: .5;
 	align-items: last baseline;
 	margin: 0 .5em;
 	grid-template-columns: repeat(10, 1fr);
 	grid-template-rows: [row1] 50% [row2] 50%;
 	justify-content: stretch;
 	align-content: stretch;
-	display: grid;
+	display: flex;
+	flex-flow: row wrap;
 	gap: 0.1rem;
-	flex-grow: .5;
-	flex-shrink: 0;
+	flex-grow: 1;
+	flex-shrink: 1;
 	font-size: 0.8rem;
 	padding: 0.25rem;
+	max-width: calc(8rem * 9 + 2*8*0.1rem);
 }
 
 #top-menu .row1 {
@@ -1039,7 +1096,7 @@ nav li {
 	//border-color: $debug !important
 }
 .with-diag-none .cm-line {
-	background: #0f01;
+	background: #5f01;
 }
 .with-diag-debug {
 	background: linear-gradient(45deg,#1121 0%, #112 100%)
@@ -1298,7 +1355,7 @@ method h6 {
 .hints {
 	max-width: 60%;
 	background: #111;
-	color:#0f0;	
+	color:$terminal;	
 	border: 1px solid;
 	box-shadow: 0 0 5px;
 	padding:.5rem;
@@ -1306,7 +1363,7 @@ method h6 {
 .hints h1 {
 	@include pixel-font;
 	color:#000;
-	background:#0f0;
+	background:$terminal;
 	margin: -.5rem -.5rem .5rem -.5rem;
 	text-align: center;
 }
@@ -1440,17 +1497,17 @@ article, aside, footer, header, nav, section {
   display: block;
 }
 
-.cmt-comment {color: #880;}
-.cmt-typeName {color: #cc0;}
+.cmt-comment,.hljs-comment {color: #880;}
+.cmt-typeName, .hljs-builtin-name, .hljs-type {color: #cc0;}
 .cmt-literal {}
-.cmt-string {color: #98c379;}
-.cmt-number {color: #3f3;}
+.cmt-string, .hljs-string, .hljs-bullet {color: #98c379;}
+.cmt-number, .hljs-number {color: #3f3;}
 .cmt-heading {font-weight: bold; color: #3f3;}
-.cmt-keyword {color: #f6f;}
+.cmt-keyword, .hljs-selector-class, .hljs-keyword, .hljs-symbol, .hljs-literal {color: #f6f;}
 .cmt-operator {color: #56b6c2;}
 .cmt-punctuation {}
 .cmt-meta {color: #880;}
-.cmt-variableName {color: #3f3;}
+.cmt-variableName, .hljs-variable, .hljs-name, .hljs-params {color: #3f3;}
 .cmt-propertyName {color: #3f3;}
 .cmt-labelName {color: #3f3;}
 .cmt-namespace {color: #cc0;}
@@ -1467,5 +1524,57 @@ article, aside, footer, header, nav, section {
 .cmt-invalid {color: #ffffff;}
 .cmt-variableName .cmt-definition {}
 .cmt-variableName .cmt-local {}
-.cmt-variableName2 {color: #d19a66;}
+.cmt-variableName2,.hljs-attribute,.hljs-attr {color: #d19a66;}
 
+/*
+  xt256.css
+
+  Contact: initbar [at] protonmail [dot] ch
+         : github.com/initbar
+*/
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+}
+
+.hljs-subst {
+  color: #eaeaea;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+.hljs-selector-id,
+.hljs-quote {
+  color: #00ffff;
+}
+.hljs-title {
+  color: #00ffff;
+  font-weight: bold;
+}
+.hljs-tag,
+.hljs-section {
+  color: #000fff;
+}
+
+.hljs-selector-tag {
+  color: #000fff;
+  font-weight: bold;
+}
+
+.hljs-built_in,
+.hljs-regexp,
+.hljs-link {
+  color: #ff00ff;
+}
+
+.hljs-meta {
+  color: #fff;
+  font-weight: bolder;
+}

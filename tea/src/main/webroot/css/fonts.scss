@@ -54,12 +54,12 @@
   font-weight: 700;
   font-style: italic;
 }
-@font-face {
-  font-family: 'SH Pinscher';
-  src: url('../fonts/shpinscher/SHPinscher-Regular.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
-  font-weight: 400;
-  font-style: normal;
-}
+//@font-face {
+//  font-family: 'SH Pinscher';
+//  src: url('../fonts/shpinscher/SHPinscher-Regular.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+//  font-weight: 400;
+//  font-style: normal;
+//}
 /*
 @font-face {
   font-family: 'Monoid';
@@ -80,28 +80,28 @@
   font-style: normal;
 }
 */
-@font-face {
-	font-family: "DeluxeFont";
-	src: url("../fonts/DeluxefontRegular.woff") format("woff");
-	font-weight: normal;
-	font-style: normal;
-	/* font-size-adjust: 0.63 */
-}
+//@font-face {
+//	font-family: "DeluxeFont";
+//	src: url("../fonts/deluxefont/DeluxefontRegular.woff") format("woff");
+//	font-weight: normal;
+//	font-style: normal;
+//	/* font-size-adjust: 0.63 */
+//}
 @font-face {
     font-family: "PressStart2P";
-    src: url("../fonts/PressStart2P.woff") format("woff");
+    src: url("../fonts/pressstart2p/PressStart2P.woff") format("woff");
     font-weight: normal;
     font-style: normal;
 }
-@font-face {
-    font-family: "Glasstown-NBP";
-    src: url("../fonts/Glasstown-NBP.woff") format("woff");
-    font-weight: normal;
-    font-style: normal;
-}
+//@font-face {
+//    font-family: "Glasstown-NBP";
+//    src: url("../fonts/glasstown/Glasstown-NBP.woff") format("woff");
+//    font-weight: normal;
+//    font-style: normal;
+//}
 @font-face {
     font-family: "TeenyTinyPixls";
-    src: url("../fonts/TeenyTinyPixls.woff") format("woff");
+    src: url("../fonts/teenytinypixls/TeenyTinyPixls.woff") format("woff");
     font-weight: normal;
     font-style: normal;
 }
