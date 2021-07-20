@@ -1,0 +1,35 @@
+{
+    "andika" : {
+        "name": "Andika",
+        "from": "https://github.com/silnrsi/font-andika/releases/download/v6.001/Andika-6.001.tar.xz",
+        "archive" : ["tar.xz", "zip"],
+        "unpack": ["Andika-6.001/web/","Andika-6.001/README.txt","Andika-6.001/OFL.txt"],
+        "license-file": "OFL.txt",
+        "license": "OFL-1.1",
+        "copyright": "Copyright © 2004-2021 SIL International  (http://www.sil.org/)\nwith Reserved Font Names “Andika” and “SIL”."
+    },
+    "fantasque": {
+        "name": "Fantasque Sans Mono",
+        "from": "https://github.com/belluzj/fantasque-sans/releases/download/v1.8.0/FantasqueSansMono-Normal",
+        "archive": ["tar.gz", "zip"],
+        "unpack": ["README.md", "LICENSE.txt", "Webfonts/"],
+        "license": "OFL-1.1",
+        "license-file": "LICENSE.txt",
+        "copyright": "Copyright © 2013-2017, Jany Belluz (jany.belluz@hotmail.fr)"
+    },
+    "pressstart2p": {
+        "name": "PressStart2P",
+        "from": "pressstart2p/",
+        "license": "OFL-1.1",
+        "license-file":"PressStart2P-license.txt",
+        "copyright":"Copyright © 2011, Cody “CodeMan38” Boisclair (cody@zone38.net),\nwith Reserved Font Name Press Start."
+    },
+    "teenytinypixls": {
+        "name": "TeenyTinyPixls",
+        "from": "teenytinypixls/",
+        "license-text": "Teeny Tiny Pixls is 100% FREE for all use.\n\nEXCEPT: You may not redistribute the font file itself without permission from Chequered Ink Ltd."
+    },
+    "dist": ["fantasque/", "andika/", "pressstart2p/"]
+}
+
+

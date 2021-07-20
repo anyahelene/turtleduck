@@ -12,3 +12,5 @@ users.db
 pics
 *.iml
 py/pyodide
+.idea
+fonts
