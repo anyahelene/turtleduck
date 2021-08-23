@@ -1,12 +1,13 @@
 $head-height: 3rem;
 $foot-height: 2rem;
 $box-head-height: 1.4rem;
+$max-text-width: 70rem;
 
 #page {
 	min-height:100vh;
 	min-width:100vw;
-	height:100vh;
-	width:100vw;
+	width:100vw;		
+
 	display: grid;
 	grid-gap:1fr;
 //	grid-template-rows: $head-height calc(50% - #{$head-height}) calc(50% - #{$foot-height}) $foot-height;
@@ -14,6 +15,10 @@ $box-head-height: 1.4rem;
 	grid-template-rows: $head-height calc(100% - #{$head-height} - #{$foot-height}) $foot-height;
 //	grid-template-rows: $head-height repeat(12, calc((100% - #{$head-height} - #{$foot-height}) / 12)) $foot-height;
 	overflow:hidden;
+	
+	@include for-desktop-up {
+		height:100vh;
+	}
 }
 #page.login {
 	height:auto;
@@ -29,10 +34,12 @@ $box-head-height: 1.4rem;
 #mid {
 	grid-column: 1/-1;
 	grid-row: 2/-2;
-	display: grid;
-	grid-gap:1fr;
-	grid-template-columns: repeat(32, calc(99% / 32));
-	grid-template-rows: repeat(16, calc(99% / 16));
+	@include for-tablet-landscape-up {
+		display: grid;
+		grid-gap:1fr;
+		grid-template-columns: repeat(32, calc(99% / 32));
+		grid-template-rows: repeat(16, calc(99% / 16));
+	}
 
 }
 #bottom {

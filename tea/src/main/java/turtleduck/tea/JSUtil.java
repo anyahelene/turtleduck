@@ -90,6 +90,9 @@ public class JSUtil {
 
 	@JSBody(params = { "arg", "code" }, script = "return new Function(arg, code)")
 	native static JSFunction function(String arg, String code);
+	
+	@JSBody(params = { "title", "text", "caption", "style" }, script = "turtleduck.displayPopup(title, text, caption, style);")
+	native static void displayHint(String title, String text, String caption, String style);
 
 	@JSBody(params = { "code", "context", "onsuccess",
 			"onerror" }, script = "turtleduck.pyController.run(code, context, onsuccess, onerror)")
@@ -108,9 +111,14 @@ public class JSUtil {
 
 	@JSBody(params = { "elt", "code" }, script = "return turtleduck.md.render_unsafe(elt, code)")
 	native static void renderSafeMarkdown(HTMLElement elt, String code);
+	
+	@JSBody(params = { "opts" }, script = "return new turtleduck.MDRender(opts);")
+	native static MDRender mdRender(JSMapLike<JSObject> opts);
 
-	@JSBody(params = { "elt" }, script = "elt.scrollIntoView()")
+	@JSBody(params = { "elt" }, script = "elt.scrollIntoView({block: 'nearest'})")
 	native static void scrollIntoView(HTMLElement elt);
+	@JSBody(params = { "elt" }, script = "elt.scrollTop = elt.scrollTopMax;")
+	native static void scrollToBottom(HTMLElement elt);
 
 	@JSBody(params = { "elt", "icon", "text" }, script = "turtleduck.changeButton(elt, icon, text);")
 	native static void changeButton(HTMLElement elt, String icon, String text);
@@ -121,6 +129,8 @@ public class JSUtil {
 	@JSBody(params = {}, script = "return turtleduck.lastFocus")
 	native static Component activeComponent();
 
+	@JSBody(params = { "msg" }, script = "turtleduck._initializationComplete(msg);")
+	native static void initializationComplete(String msg);
 	@JSBody(params = { "name", "elt" }, script = "{const comp = turtleduck.createComponent(name, elt);return comp;}")
 	native static Component createComponent(String name, HTMLElement elt);
 
@@ -128,7 +138,7 @@ public class JSUtil {
 			"elt" }, script = "{if(elt.id) {const comp = turtleduck.createComponent(elt.id, elt);  return comp;} else {throw new Error(\"createComponent: element missing id\");}}")
 	native static Component createComponent(HTMLElement elt);
 
-	@JSBody(params = { "ev" }, script = "return ev.target.contains(ev.relatedTarget);")
+	@JSBody(params = { "ev" }, script = "console.log('relatedIsContained?', ev.currentTarget, ev.relatedTarget); return ev.currentTarget.contains(ev.relatedTarget);")
 	native static boolean relatedIsContained(Event ev);
 
 	@JSBody(params = { "config", "source" }, script = "turtleduck.setConfig(config, source);")

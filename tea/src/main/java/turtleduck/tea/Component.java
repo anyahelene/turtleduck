@@ -13,6 +13,8 @@ public interface Component  extends JSMapLike<JSObject> {
 	
 	void select();
 	
+	String title();
+	
 	Component current();
 	
 	Component parent();

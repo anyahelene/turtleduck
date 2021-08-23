@@ -63,14 +63,17 @@ public class Shell {
 		HTMLElement output = console.outputElement();
 		if (ex != null) {
 			if (output != null) {
-				HTMLElement trace = element("ul", clazz("traceback fold"));
+				HTMLElement trace = element("details", clazz("traceback fold"));
 				boolean first = true;
 				for (String s : ex.get(Reply.TRACEBACK).toListOf(String.class)) {
 					logger.info("trace: " + ex);
-					HTMLElement li = element("li", s);
+					HTMLElement li;
 					if (first) {
-						JSUtil.activateToggle(li, "open", trace);
+						li = element("summary", s);
+						//JSUtil.activateToggle(li, "open", trace);
 						first = false;
+					} else {
+						li = element("li", s);
 					}
 					trace.appendChild(li);
 				}
@@ -149,7 +152,7 @@ public class Shell {
 		String cmd = split[0];
 		String args = split.length == 2 ? split[1].trim() : "";
 		if (cmd.equals("/ls")) {
-			List<String> files = Client.client.fileSystem.list();
+			List<String> files = Client.client.oldFileSystem.list();
 			int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
 			int width = 80; // TODO terminal.getCols();
 			int cols = 1;
@@ -216,6 +219,7 @@ public class Shell {
 				String value = result.get(ShellService.VALUE);
 				String name = result.get(ShellService.NAME);
 				String type = result.get(ShellService.TYPE);
+				Dict display = result.get("display", Dict.create());
 				logger.info("result: {}, {}, {}", value, name, type);
 				if (value != null) {
 					if (output != null) {
@@ -229,6 +233,12 @@ public class Shell {
 							elt.appendChild(text(" = "));
 						}
 						elt.appendChild(span(value, clazz("cmt-literal")));
+						if("img".equals(display.getString("display"))) {
+							String url = display.getString("url");
+							if(url != null && url.startsWith("blob:")) {
+								elt.appendChild(element("img", attr("src", url)));
+							}
+						}
 						output.appendChild(elt);
 					} else {
 						String v = TEXTCOLOR.applyFg(value) + "\n";

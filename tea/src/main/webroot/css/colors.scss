@@ -10,6 +10,7 @@ $prompt: #fa6;
 $prompt-half: #880;
 $terminal: $PHOSPHOR_P1;
 $terminal-half: $PHOSPHOR_P19;
+$terminal-alt: $PHOSPHOR_P19;
 $sun: color.adjust($page, $hue: 180);
 $button-bg-header: color.scale($page, $lightness: -20%);
 $button-bg-normal: color.scale($sun, $lightness: -20%);

@@ -104,9 +104,17 @@
 				</button>
 			</nav>
 			<nav id="top-right">
+				<button id="open-camera" data-shortcut="ctrl+0" data-icon="" class="rows"
+					type="button">
+					<span class="the-text text-icon" style="font-size: 1.4rem;padding-bottom:.2rem; min-width: 0">📷</span>
+				</button>
+				<button id="open-qr" data-shortcut="shift+ctrl+0" data-icon="" class="rows"
+					type="button">
+					<span class="the-text text-icon" style="font-size: 1.4rem;min-width: 0"><img src="images/qr-code.png" style="height:1.4rem"></span>
+				</button>
 				<button id="help" data-shortcut="ctrl+?" data-icon="" class="rows"
 					type="button">
-					<span class="the-text" style="font-size: x-large; min-width: 0">?</span>
+					<span class="the-text text-icon" style="font-size: 1.4rem; min-width: 0">?</span>
 				</button>
 				<div id="user">
 					<img id="user-picture" style="height: 2.5rem; visibility: hidden" />
@@ -182,7 +190,7 @@
 			</section>
 
 			<!--div id="right-size" style="position:absolute;left:0px;margin-left:-5px;height:100%;width:5px;background:#ccc;z-index:100" ></div-->
-			<section id="screen" class="box screen focusable">
+			<section id="screen" class="box screen focusable advanced-mode intermediate-mode beginner-mode">
 				<header id="screen-head">
 					<nav id="screen-tabs" class="tabs"></nav>
 					<nav id="screen-tools" class="toolbar"></nav>
@@ -237,12 +245,14 @@
 				</aside>
 			</section>
 
-			<aside id="hints" class="popup hints">
+			<aside id="popup" class="popup">
 				<h1>HINT</h1>
 				<figure class="card">
 					<blockquote>“Do or do not... there is no try.”</blockquote>
 					<figcaption>— Yoda</figcaption>
 				</figure>
+			</aside>
+			<aside id="camera" class="popup camera">
 			</aside>
 		</div>
 		<footer id="bottom">
@@ -255,8 +265,8 @@
 				<span id="heapStatus" data-from="runtime.heapUse"></span>
 			</div>
 			<div id="foot-right">
-				<div>
-					<span id="sessionName" data-from="session.name"></span>
+				<div data-tooltip="sessionInfo">
+					<span id="sessionName" data-from="session.project||session.name"></span>
 				</div>
 				<div id="status" class="active">
 					<span>@<span id="user-name"></span></span>

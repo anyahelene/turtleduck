@@ -3,8 +3,12 @@ package turtleduck.tea;
 import static turtleduck.tea.HTMLUtil.*;
 
 import org.slf4j.Logger;
+import org.teavm.jso.JSObject;
 import org.teavm.jso.ajax.XMLHttpRequest;
 import org.teavm.jso.core.JSBoolean;
+import org.teavm.jso.core.JSMapLike;
+import org.teavm.jso.core.JSObjects;
+import org.teavm.jso.core.JSString;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.html.HTMLElement;
 import turtleduck.util.Logging;
@@ -17,6 +21,7 @@ public class DocDisplay {
 	private HTMLElement textElement;
 	private String name;
 	private String title;
+	private MDRender mdRender;
 	private static int docNum = 0;
 
 	public DocDisplay(Component parent) {
@@ -37,24 +42,35 @@ public class DocDisplay {
 	}
 
 	protected void reopen() {
-		if(textElement != null && mainElement != null && component == null) {
+		if (textElement != null && mainElement != null && component == null) {
 			this.component = JSUtil.createComponent(this.name, mainElement);
 			component.setParent(parent);
 			component.onclose(this::onclose);
 			component.setTitle(this.title);
-			component.register();	
+			component.register();
 		}
 	}
+
 	public void initFromUrl(String url, String title, boolean closeable) {
-		if (title == null)
+		if (title == null) {
 			title = url.replaceFirst("^.*/", "");
+		}
+
 		setup("doc_" + docNum++, title, closeable);
 
 		textElement.withText("loading ...");
 		XMLHttpRequest req = XMLHttpRequest.create();
 		req.onComplete(() -> {
 			if (req.getReadyState() == 4 && req.getStatus() == 200) {
-				JSUtil.renderSafeMarkdown(textElement, req.getResponseText());
+				if (mdRender == null) {
+					JSMapLike<JSObject> opts = JSObjects.create().cast();
+					opts.set("html", JSBoolean.valueOf(true));
+					if (url.contains("/")) {
+						opts.set("hrefPrefix", JSString.valueOf(url.replaceFirst("[^/]*$", "")));
+					}
+					mdRender = JSUtil.mdRender(opts);
+				}
+				mdRender.render_unsafe(textElement, req.getResponseText());
 			} else {
 				textElement
 						.withText(String.format("Error loading %s: %d %s", url, req.getStatus(), req.getStatusText()));
@@ -68,7 +84,7 @@ public class DocDisplay {
 	}
 
 	protected JSBoolean onclose(Component comp, Event ev) {
-		logger.info("closing document: name={}, title={}", name, title); 
+		logger.info("closing document: name={}, title={}", name, title);
 		component = null;
 		return JSBoolean.valueOf(true);
 	}

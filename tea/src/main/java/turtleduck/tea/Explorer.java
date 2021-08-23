@@ -21,11 +21,21 @@ import turtleduck.util.Logging;
 
 import static turtleduck.tea.HTMLUtil.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @MessageDispatch("turtleduck.tea.generated.ExplorerDispatch")
 public class Explorer implements ExplorerService {
+
+	// things that should use "help" to get more info
+	private static final Set<String> helpCategories = new HashSet<>(
+			Arrays.asList("class", "enum", "interface", "anno", "type"));
+	// things that should use "dot suggestion" to get more info
+	private static final Set<String> dotCategories = new HashSet<>(Arrays.asList("var", "import"));
 	public static final Logger logger = Logging.getLogger(Explorer.class);
 	private HTMLElement completion;
 	private HTMLElement explorerElement;
@@ -33,8 +43,9 @@ public class Explorer implements ExplorerService {
 	private HTMLElement scroller;
 	private int scrollLeft = 0;
 	protected ShellService shellService;
+	private Component component;
 
-	public Explorer(HTMLElement element, ShellService service) {
+	public Explorer(HTMLElement element, Component parent, ShellService service) {
 		this.explorerElement = element;
 		this.shellService = service;
 		NodeList<? extends HTMLElement> nodeList = element.getElementsByTagName("section");
@@ -49,7 +60,10 @@ public class Explorer implements ExplorerService {
 			if (!JSUtil.relatedIsContained(e))
 				completion.getStyle().setProperty("display", "none");
 		});
-		JSUtil.createComponent(element);
+		component = JSUtil.createComponent(element);
+		component.addWindowTools();
+		component.setParent(parent);
+		component.register();
 	}
 
 	protected void dragstartHandler(Event ev) {
@@ -77,11 +91,9 @@ public class Explorer implements ExplorerService {
 		HTMLElement evElt = (HTMLElement) ev.getCurrentTarget();
 		ExplorerData evData = snippets.get(evElt.getAttribute("id"));
 		if (evData != null) {
-			if (evData.category.equals("var")) {
-				evData.lastFocus = JSUtil.activeComponent();
-				handleDotSuggestion(evData);
-				ev.preventDefault();
-			}
+			evData.lastFocus = JSUtil.activeComponent();
+			displayHelp(evData);
+			ev.preventDefault();
 		}
 	}
 
@@ -137,7 +149,7 @@ public class Explorer implements ExplorerService {
 						data.element.setAttribute("title", data.fullname);
 					}
 					data.element.setAttribute("class",
-							"java " + data.category + (data.sid.startsWith("s") ? " builtin" : ""));
+							"clickable " + data.category + (data.sid.startsWith("s") ? " builtin" : ""));
 					if (data.icon != null && !data.icon.isEmpty())
 						data.element.setAttribute("style", "list-style-type: \"" + data.icon + "\"");
 					data.element.withText(data.signature + data.sym);
@@ -151,13 +163,24 @@ public class Explorer implements ExplorerService {
 		}
 	}
 
-	protected void handleDotSuggestion(ExplorerData data) {
+	protected void displayHelp(ExplorerData data) {
 		String varName = data.signature;
 
 		if (data.completionData != null) {
 			logger.info("recompletion: activeelement: {}", data.lastFocus);
+			String focusTitle = data.lastFocus != null ? data.lastFocus.title() : "";
+			String pasteUrl = "insert://" + focusTitle + "/";
 			completion.clear();
-			completion.appendChild(element("h3", varName));
+			completion.appendChild(element("h3", data.completionTitle));
+			NodeList<? extends HTMLElement> allDetails = data.completionData.querySelectorAll("details");
+			for (int i = 0; i < allDetails.getLength(); i++) {
+				allDetails.get(i).removeAttribute("open");
+			}
+			NodeList<? extends HTMLElement> targets = data.completionData.querySelectorAll("a.paste");
+			for (int i = 0; i < targets.getLength(); i++) {
+				HTMLElement elt = targets.get(i);
+				elt.setAttribute("href", pasteUrl + elt.getAttribute("data-paste"));
+			}
 			completion.appendChild(data.completionData);
 			logger.info("completion height: {}", completion.getOffsetHeight());
 			completion.getStyle().setProperty("display", "flex");
@@ -167,35 +190,64 @@ public class Explorer implements ExplorerService {
 			completion.focus();
 			return;
 		}
+
+		if (dotCategories.contains(data.category)) {
+			doDotHelp(varName, data);
+
+		} else if (helpCategories.contains(data.category)) {
+			doPlainHelp(varName, data);
+		}
+	}
+
+	protected void doDotHelp(String varName, ExplorerData data) {
 		// HTMLElement element = data.element;
-		String generics = "<(?:[^>]|<(?:[^>]|<[^<>]*>)*>)*>";
-		Async<Dict> complete = shellService.complete(varName + ".", varName.length() + 1, 0);
+		String code = varName + ".";
+		Async<Dict> complete = shellService.complete(code, varName.length() + 1, 0);
 		complete.onSuccess(msg -> {
-			logger.info("complete reply: {}", msg);
+			logger.info("inspect reply: {}", msg);
 			int anchor = msg.get(CodeService.ANCHOR);
-			boolean matches = msg.get(CodeService.MATCHES);
+			boolean matches = msg.get(CodeService.MATCHES, false);
 			Array comps = msg.get(CodeService.COMPLETES);
+			String typename = msg.get(ShellService.TYPE, null);
+			String title = varName;
+			if (typename != null) {
+				title = title + " : " + typename;
+			}
 			HTMLElement list = element("ul");
 			completion.clear();
 
-			logger.info("completion: activeelement: {}", data.lastFocus);
+			logger.info("inspection: activeelement: {}", data.lastFocus);
 			for (String comp : comps.toListOf(String.class)) {
-				String continuation = comp;
-				String signature = varName;
-				int i = comp.indexOf('–');
-				if (i >= 0) {
-					continuation = comp.substring(0, i);
-					signature = comp.substring(i + 1)
-							.replaceAll("([a-zA-Z_]([a-zA-Z0-9_]|" + generics + ")*\\.)(?!\\.)", "")
-							.replaceAll("^(\\S+)\\s+(?:" + generics + ")?(.*)$", ".$2 → $1");
-				}
-				String text = varName + "." + continuation;
+				String[] result = comp.split("–");
+				String continuation = result[0];
+				String text = code.substring(0, anchor) + continuation;
+				String signature = result.length > 1 ? result[1] : "";
+				String doc = result.length > 2 ? result[2].trim() : ""; // .replaceAll("\n+$", "") : "";
 				int cursorAdj = 0;
 				if (text.endsWith("(")) {
 					text += ")";
 					cursorAdj = -1;
 				}
-				HTMLElement link = element("a", attr("href", "#paste(" + text + ")"), signature);
+				HTMLElement docElt = null;
+				if (!doc.isEmpty()) {
+					int i = doc.indexOf('\n');
+					if (i > 0) {
+						String synopsis = doc.substring(0, i);
+						doc = doc.substring(i);
+						docElt = element("details", clazz("doc"), element("summary", synopsis), doc);
+					} else {
+						docElt = element("details", clazz("doc summary-only"), element("summary", doc));
+						// docElt = element("span", clazz("doc"), doc);
+					}
+				}
+				if (!signature.isEmpty())
+					signature = prettySignature(signature);
+				else
+					signature = text;
+				String focusTitle = data.lastFocus != null ?  data.lastFocus.title() : "";
+				HTMLElement link = element("a", clazz("paste"),//
+						attr("href", "insert://" + focusTitle + "/" + text), //
+						attr("data-paste", text), signature);
 				JSUtil.activatePaste(link, "currentTarget", text, cursorAdj, e -> {
 					// completion.clear();
 					completion.getStyle().setProperty("display", "none");
@@ -205,10 +257,11 @@ public class Explorer implements ExplorerService {
 
 					}
 				});
-				list.appendChild(element("li", link));
+				list.appendChild(element("li", link, docElt));
 			}
+			data.completionTitle = title;
 			data.completionData = list;
-			completion.appendChild(element("h3", varName));
+			completion.appendChild(element("h3", title));
 			completion.appendChild(list);
 			logger.info("completion height: {}", completion.getOffsetHeight());
 			completion.getStyle().setProperty("display", "flex");
@@ -220,7 +273,67 @@ public class Explorer implements ExplorerService {
 		});
 	}
 
+	protected void doPlainHelp(String varName, ExplorerData data) {
+		Async<Dict> inspect = shellService.inspect(varName, 0, 0);
+		inspect.onSuccess(msg -> {
+			logger.info("inspect reply: {}", msg);
+			// Dict inspectData = msg.get(CodeService.DATA);
+			String signature = msg.get(ShellService.SIGNATURE, null);
+			String doc = msg.get(ShellService.TEXT, null);
+			String typename = msg.get(ShellService.TYPE, null);
+
+			String title = varName;
+			if (typename != null) {
+				title = title + " : " + typename;
+			}
+			completion.clear();
+
+			HTMLElement docElt = null;
+			if (!doc.isEmpty()) {
+				int i = doc.indexOf('\n');
+				if (i > 0) {
+					String synopsis = doc.substring(0, i);
+					doc = doc.substring(i);
+					docElt = element("details", clazz("doc"), element("summary", synopsis), doc);
+				} else {
+					docElt = element("details", clazz("doc summary-only"), element("summary", doc));
+					// docElt = element("span", clazz("doc"), doc);
+				}
+			}
+			if (!signature.isEmpty())
+				signature = prettySignature(signature);
+			else
+				signature = varName;
+			String focusTitle = data.lastFocus != null ?  data.lastFocus.title() : "";
+			HTMLElement link = element("a", clazz("paste"), 
+					attr("href", "insert://" + focusTitle + "/" + varName), 
+					attr("data-paste", varName), signature);
+			JSUtil.activatePaste(link, "currentTarget", varName, 0, e -> {
+				// completion.clear();
+				completion.getStyle().setProperty("display", "none");
+				if (data.lastFocus != null) {
+					data.lastFocus.focus();
+					logger.info("completion: focusing: {}", data.lastFocus);
+
+				}
+			});
+
+			data.completionTitle = title;
+			data.completionData = docElt;
+			completion.appendChild(element("h3", title));
+			completion.appendChild(docElt);
+			logger.info("completion height: {}", completion.getOffsetHeight());
+			completion.getStyle().setProperty("display", "flex");
+			completion.getStyle().setProperty("top", data.element.getOffsetTop() + "px");
+//			completion.getStyle().setProperty("left", data.element.getOffsetLeft() + "px");
+			completion.focus();
+		}).onFailure(msg -> {
+			logger.error("complete error: {}", msg);
+		});
+	}
+
 	class ExplorerData {
+		public String completionTitle;
 		HTMLElement element;
 		String eltId;
 		String snipkind;
@@ -235,4 +348,13 @@ public class Explorer implements ExplorerService {
 		HTMLElement completionData;
 		Component lastFocus;
 	}
+
+	private static String generics = "<(?:[^>]|<(?:[^>]|<[^<>]*>)*>)*>";
+	private static String genericsPattern1 = "([a-zA-Z_]([a-zA-Z0-9_]|" + generics + ")*\\.)(?!\\.)";
+	private static String genericsPattern2 = "^(\\S+)\\s+(?:" + generics + ")?(.*)$";
+
+	private static String prettySignature(String s) {
+		return s.replaceAll(genericsPattern1, "").replaceAll(genericsPattern2, ".$2 → $1");
+	}
+
 }

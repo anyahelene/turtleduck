@@ -3,8 +3,8 @@ import { HighlightStyle, tags } from '@codemirror/highlight';
 
 // Using https://github.com/one-dark/vscode-one-dark-theme/ as reference for the colors
 const type = "#cc0", name = "#3f3", op = "#56b6c2", invalid = "#ffffff", def = "#8f8", comment = "#880", // Brightened compared to original to increase contrast
-func = "#3f3", string = "#98c379", bool = "#d19a66", keyword = "#f6f", //
-darkBackground = "#121", highlightBackground = "#000", background = "#111", //
+func = "#3f3", string = "#a8e389", bool = "#d19a66", keyword = "#f6f", //
+darkBackground = "#3330", highlightBackground = "#1114", background = "#3330", //
 selection = "#3E4451", cursor = "#f00";
 /// The editor theme styles for One Dark.
 const darkDuckTheme = EditorView.theme({
@@ -13,6 +13,7 @@ const darkDuckTheme = EditorView.theme({
         backgroundColor: background,
         "& ::selection": { backgroundColor: selection },
         caretColor: cursor
+//		backgroundBlendMode: "normal"
     },
     ".cm-cursor": { display: "block", borderLeftColor: "#800", borderLeftWidth: ".5em" },
 	".cm-cursorLayer": { mixBlendMode: "exclusion" },
@@ -37,11 +38,11 @@ const darkDuckTheme = EditorView.theme({
         outline: "1px solid #515a6b"
     },
     ".cm-gutters": {
-		background: "linear-gradient(90deg, #220f 0%, #2200 100%)",
+//		background: "linear-gradient(90deg, #220f 0%, #2200 100%)",
         backgroundColor: background,
         color: comment,
-        border: "none"
-		//borderRight: "1px solid #8808"
+        border: "none",
+		borderRight: "1px solid #8808"
     },
     ".cm-lineNumbers .cm-gutterElement": { color: "inherit" },
     ".cm-foldPlaceholder": {

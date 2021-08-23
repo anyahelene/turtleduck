@@ -62,6 +62,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	private String name;
 	private String lang;
 	private LanguageConsole console;
+	private boolean historyEnabled = true;
 
 	CMTerminalServer(Component parent, Shell shell) {
 		logger.info("CMTerminalServer({},{},{})", parent.element(), name);
@@ -106,6 +107,10 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 
 	}
 
+	public void disableHistory() {
+		historyEnabled = false;
+	}
+
 	public LanguageConsole console() {
 		return console;
 	}
@@ -130,9 +135,16 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 					return true;
 				}
 			}
-			Client.client.history.put(historyId, line, redoLine).onSuccess(id -> {
-				enterLine(line, id);
-			});
+
+			if (historyEnabled) {
+				Client.client.history.put(historyId, line, redoLine).onSuccess(id -> {
+					enterLine(line, id);
+				});
+			} else {
+				logger.info("enterLine (w/o hist): {} {}", currentLine, line);
+				history.put(currentLine, new HistEntry(currentLine, line, line));
+				enterLine(line, currentLine);
+			}
 			return true;
 		} else if (eventName.equals("arrowUp")) {
 			if (currentLine > 1) {
@@ -163,7 +175,8 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 				.withAttr("data-user", user)//
 				.withText("[" + id + "] ");
 		HTMLElement highlighted = editor.highlightTree(elt);
-		history.clear();
+		if (historyEnabled)
+			history.clear();
 		redoLine = 0;
 		lastLine = id;
 		currentLine = id + 1;
@@ -189,7 +202,9 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	}
 
 	private void scrollIntoView() {
-		JSUtil.scrollIntoView(anchorElt);
+		outputContainer.setScrollTop(0);
+		JSUtil.scrollToBottom(wrapperElt);
+		//JSUtil.scrollIntoView(anchorElt);
 	}
 
 	private void goHistory(int next, State state) {
@@ -205,7 +220,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 			State newState = editor.createState(lang, nextLine.current, -1);
 			editor.switchState(newState);
 			scrollIntoView();
-		} else {
+		} else if (historyEnabled) {
 			Client.client.history.get(historyId, next).onSuccess(line -> {
 				history.put(next, new HistEntry(next, line, line));
 				currentLine = next;
@@ -243,7 +258,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		prompt(0, null);
 	}
 
-	private void promptReady() {
+	public void promptReady() {
 		prompt(1, null);
 	}
 
@@ -279,20 +294,21 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		historyId = (session + "/" + name).replace(" ", "");
 		String newOrExisting = msg.get(HelloService.EXISTING) ? "existing" : "new";
 		promptReady();
-		logger.info("connected! history:");
-		Client.client.history.currentId(historyId).onSuccess(id -> {
-			lastLine = id;
-			currentLine = id + 1;
-			logger.info("history currentId: {}", id);
+		if (historyEnabled) {
+			logger.info("connected! history:");
+			Client.client.history.currentId(historyId).onSuccess(id -> {
+				lastLine = id;
+				currentLine = id + 1;
+				logger.info("history currentId: {}", id);
 //			for (int i = 1; i <= id; i++) {
 //				int x = i;
 //				client.history.get(session, i).onSuccess(data -> logger.info("history {}: '{}'", x, data));
 //			}
-			cursor.println(Colors.GREEN.applyFg("Welcome ") + Colors.LIME.applyFg(user) //
-					+ Colors.GREEN.applyFg("! Using " + newOrExisting + " session ") //
-					+ Colors.LIME.applyFg(session));
-		});
-
+				cursor.println(Colors.GREEN.applyFg("Welcome ") + Colors.LIME.applyFg(user) //
+						+ Colors.GREEN.applyFg("! Using " + newOrExisting + " session ") //
+						+ Colors.LIME.applyFg(session));
+			});
+		}
 	}
 
 	public void disconnected(Connection conn) {
@@ -330,26 +346,26 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	@Override
 	public Async<Dict> update(Dict msg) {
 		try {
-		if (!msg.get(ShellService.PERSISTENT, true))
-			return null;
-		String sig = msg.get("signature", String.class);
-		if (!sig.isEmpty() && !sig.contains("$")) {
-			if ("main".equals(msg.get(ShellService.SNIP_NS, "main"))) {
-				String snipid = msg.get(ShellService.SNIP_ID);
-				String s = " " + msg.get("sym", String.class) + " " + msg.get("verb", String.class) + " ";
-				String t = msg.get(ShellService.TYPE);
-				HTMLElement div = div(element("a", clazz("prompt"), "[" + snipid + "]"), s, //
-						span(msg.get("category", String.class), clazz("cmt-keyword")), " ",
-						span(sig, clazz("cmt-variableName"), attr("data-snipid", snipid)));
-				if (t != null) {
-					div.appendChild(text(" : "));
-					div.appendChild(span(t, clazz("cmt-typeName")));
+			if (!msg.get(ShellService.PERSISTENT, true))
+				return null;
+			String sig = msg.get("signature", String.class);
+			if (!sig.isEmpty() && !sig.contains("$")) {
+				if ("main".equals(msg.get(ShellService.SNIP_NS, "main"))) {
+					String snipid = msg.get(ShellService.SNIP_ID);
+					String s = " " + msg.get("sym", String.class) + " " + msg.get("verb", String.class) + " ";
+					String t = msg.get(ShellService.TYPE);
+					HTMLElement div = div(element("a", clazz("prompt"), "[" + snipid + "]"), s, //
+							span(msg.get("category", String.class), clazz("cmt-keyword")), " ",
+							span(sig, clazz("cmt-variableName"), attr("data-snipid", snipid)));
+					if (t != null) {
+						div.appendChild(text(" : "));
+						div.appendChild(span(t, clazz("cmt-typeName")));
+					}
+					outputElt.appendChild(div);// , span(def, type)));
 				}
-				outputElt.appendChild(div);// , span(def, type)));
+				scrollIntoView();
 			}
-			scrollIntoView();
-		}
-		return null;
+			return null;
 		} catch (Throwable t) {
 			logger.error("update trouble: {}", t);
 			throw t;

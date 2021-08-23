@@ -11,7 +11,7 @@ import {basicSetup} from "@codemirror/basic-setup"
 import {java} from "@codemirror/lang-java"
 import {python} from "@codemirror/lang-python"
 import {html} from "@codemirror/lang-html"
-import {markdown} from "@codemirror/lang-markdown"
+import {markdown, insertNewlineContinueMarkup} from "@codemirror/lang-markdown"
 import {css} from "@codemirror/lang-css"
 import {oneDark} from "@codemirror/theme-one-dark"
 import {darkDuck, darkDuckHighlightStyle} from "./darktheme.js"
@@ -70,6 +70,8 @@ function langConfig(lang) {
 			langext = html();
 		} else if(lang == "markdown") {
 			langext = markdown();
+		} else if(lang == "chat") {
+			langext = markdown({addKeymap:false});
 		} else if(lang == "css") {
 			langext = css();
 		} 
@@ -167,12 +169,13 @@ export const wordHover = hoverTooltip((view, pos, side) => {
 
 
 class TDEditor extends Component {
-	constructor(name, outer, elt, text, lang, exts,tdstate) {
+	constructor(name, outer, elt, text, lang, exts,tdstate, preExts = []) {
 		super(name, outer, tdstate);
 
-		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, text, exts, tdstate)
+		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, text, exts, tdstate,preExts)
 		this.elt = elt;
 		this.exts = exts;
+		this.preExts = preExts;
 
 		elt.addEventListener("dragenter", e => {
 			if(e.dataTransfer.types.includes("text/plain"))
@@ -311,7 +314,7 @@ class TDEditor extends Component {
 			console.log("createState: ", text, selection);
 		const state = EditorState.create({
 			doc: text,
-     		extensions: [langConfig(lang), this.exts],
+     		extensions: [this.preExts, langConfig(lang), this.exts],
 			selection: selection
   		});
 		if(this._debugState)
@@ -383,7 +386,7 @@ window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 		
 		return handler("enter", state);
 	}
-	
+	const shiftEnter = (lang === 'markdown' || lang === 'chat') ? insertNewlineContinueMarkup : insertNewlineAndIndent
 	function arrowUp({ state, dispatch }) {
 		return handler("arrowUp", state);
 	}
@@ -398,7 +401,6 @@ window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 		elt = elts[0];
 		
 	let editor = new TDEditor(outer.id, outer, elt, text, lang, [
-		keymap.of([{ key: "Enter", run: enter, shift: insertNewlineAndIndent }]),
 		fontConfig(elt), stdConfig(),
 		EditorView.theme({
 		  '.cm-lineNumbers .cm-gutterElement':{
@@ -406,7 +408,8 @@ window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 		  }
 		}),
 		keymap.of([{ key: "ArrowUp", run: arrowUp }, { key: "ArrowDown", run: arrowDown }])
-	], window.turtleduck);
+	], window.turtleduck,
+	[keymap.of([{ key: "Enter", run: enter, shift: shiftEnter }])]);
 
 	return editor;
 }

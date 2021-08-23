@@ -222,7 +222,15 @@ class Component {
 			this._icon.classList.remove('maximized');
 			this._element.classList.remove("maximized");
 		}
-	}	
+	}
+	
+	isIconified() {
+		return this._element.classList.contains("iconified");
+	}
+	
+	isMaximized() {
+		return this._element.classList.contains("maximized");
+	}
 	_findFocusElement(elt) {
 		if(elt.classList.contains('focusable')) {
 			return elt;

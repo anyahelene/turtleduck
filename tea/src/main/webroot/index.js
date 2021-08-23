@@ -4,14 +4,14 @@ import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 import jquery from 'jquery';
 import animals from './animals.txt';
 import hints from './hints.txt';
-import { fileSystem, FileSystem } from './FileSystem';
+import { vfs, fileSystem, FileSystem } from './FileSystem';
 import { History } from './History';
 import { Component } from './Component';
 import { TilingWM, TilingWindow} from './TilingWM';
 import { PyController } from './js/pycontroller';
 import { ShellServiceProxy } from './ShellServiceProxy';
 import { MDRender } from './js/MDRender';
-
+import { Camera } from './js/Media';
 //import { XTermJS } from './XTermJS';
 //import ace from "ace-builds";
 //import "ace-builds/webpack-resolver";
@@ -21,8 +21,12 @@ import defaultConfig from './config.json';
 var turtleduck = window['turtleduck'] || {};
 window.turtleduck = turtleduck;
 turtleduck.MDRender = MDRender;
-turtleduck.md = new MDRender({hrefPrefix:'examples/dgc/'});
+turtleduck.Camera = Camera;
+turtleduck.Camera.addSubscription('copy','builtin', 'qr','Copy','📋', 'Copy to clipboard');
+turtleduck.Camera.addSubscription('copy','builtin', 'camera','Copy','📋', 'Copy to clipboard');
+turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
+turtleduck.vfs = vfs;
 turtleduck.history = new History(fileSystem);
 turtleduck.defaultConfig = defaultConfig;
 turtleduck.configs = [/*override */{}, /*session*/{}, /*user*/{}, /*remote*/{}, defaultConfig];
@@ -64,6 +68,43 @@ turtleduck.setConfig = function(config, source) {
 	const src = ['override','session','user','remote','default'].indexOf(source);
 	if(src >= 0) {
 		turtleduck.configs[src] = jquery.extend(true, turtleduck.configs[src], config);
+		console.log("setConfig", config, source, "=>", turtleduck.configs[src]);
+	}
+}
+turtleduck.openCamera = function(config) {
+	const elt = document.getElementById('camera');
+	if(elt) {
+		if(!turtleduck.camera) {
+			turtleduck.camera = new turtleduck.Camera();
+		} 
+		turtleduck.camera.attach(elt);
+		elt.classList.add('active');
+		return turtleduck.camera.initialize(config);
+	}
+}
+
+turtleduck.closeCamera = function(now = false) {
+	const elt = document.getElementById('camera');
+	if(elt) {
+		elt.classList.remove('active');		
+	}
+	if(turleduck.camera) {
+		turtleduck.camera.dispose();
+		
+	}
+}
+
+turtleduck.displayPopup = function(title, text, caption, style) {
+	const elt = document.getElementById("popup");
+	if(elt) {
+		elt.className = "popup active " + style;
+		elt.querySelector("h1").innerText = title;
+		elt.querySelector("blockquote").innerText = text;
+		elt.querySelector("figcaption").innerText = caption;
+
+		document.getElementById("page").addEventListener("click",
+			(e) => {console.log("f17", e); elt.className = "popup";},
+			{once: true});
 	}
 }
 /*
@@ -157,8 +198,19 @@ turtleduck.loadConfig = function() {
 	}
 }
 
+const saveConfigTimers = {};
+function autoSaveConfig(source) {
+	if(saveConfigTimers[source]) {
+		clearTimeout(saveConfigTimers[source]);
+	}
+	saveConfigTimers[source] = window.setTimeout(() => {
+		console.log("autosaved config ", source);
+		turtleduck.saveConfig(source);
+		saveConfigTimers[source] = undefined;
+	}, 3000);
+}
 turtleduck.configs[0] = {
-	session: { name: 'Crowned Cormorant', private: true, offline: true}
+	session: { project: 'CoronaPass', private: true, offline: true}
 }
 //ace.config.loadModule("ace/ext/language_tools", function(m) { turtleduck.editor_language_tools = m; });
 //ace.config.loadModule('ace/ext/options', function(m) { turtleduck.editor_options = m; });
@@ -269,7 +321,18 @@ turtleduck.tabSelect = function(tabsId, key) {
 
 turtleduck.updateInfo = function() {
 	jquery('[data-from]').each(function() {
-		jquery(this).text(turtleduck.getConfig(jquery(this).attr('data-from')) || "");
+		const froms = (jquery(this).attr('data-from') || "").split("||");
+		for(var i = 0; i < froms.length; i++) {
+			const from = froms[i].trim();
+			if(from) {
+				const val = turtleduck.getConfig(from);
+				if(val) {
+					jquery(this).text(val);
+					return;
+				}
+			}
+		}
+		jquery(this).text("");
 	});
 }
 
@@ -291,27 +354,20 @@ async function handleKey(key, button, event) {
 		});
 		return next;
 	}
-	
+	var param = undefined;
+	var m = key.match(/^([a-z]*):\/\/(.*)$/);
+	if(m != null) {
+		key = m[1];
+		param = m[2];
+	}
 	console.log("handleKey", key, button, event);
 	
 	switch (key) {
 		case "f6":
-			unsetLayout();
-			page.toggleClass('main-and-figure', true);
-			if(turtleduck.editor)
-				turtleduck.editor.focus();
-			break;
-		case "f7":
-			if(turtleduck.shell)
-				turtleduck.shell.focus();
-			break;
-		case "~f8":
-			if (jquery("#page").hasClass('main-alone')) {
-				jquery("#page").toggleClass('main-alone', false);
-				jquery("#page").toggleClass('figure-alone', false);
-				jquery("#page").toggleClass('main-and-figure', true);
-			}
-			turtleduck.screen.focus();
+			if(turtleduck.pyshell)
+				turtleduck.pyshell.focus();
+			else if(turtleduck.jshell)
+				turtleduck.jshell.focus();
 			break;
 		case "f8":
 			const nextLayout = jquery(this).attr('data-target');
@@ -327,18 +383,55 @@ async function handleKey(key, button, event) {
 				page.toggleClass('show-splash-help', false);
 			}
 			break;
-		case "f17":
-			const elt = document.getElementById("hints");
-			if(elt) {
-				elt.classList.add("active");
-				const qs = turtleduck.hints.random();
-				elt.querySelector("blockquote").innerText = qs[0];
-				elt.querySelector("figcaption").innerText = qs[1];
-				document.getElementById("page").addEventListener("click",
-					(e) => {console.log("f17", e); elt.classList.remove("active");},
-					{once: true});
+		case "f17": {
+			const qs = turtleduck.hints.random();
+
+			turtleduck.displayPopup("HINT", qs[0], qs[1], "hints");
+
+			break;
+		}
+		case "focus": {
+			const win = turtleduck[param];
+			console.log("focus:", param, win);
+			if(win) {
+				win.focus();
 			}
 			break;
+		}
+		case "snap": {
+			const config = {mode:'camera', once:true};
+			if(param) {
+				config.fake = param;
+				config.mirror = false;
+			}
+			const r = turtleduck.openCamera(config);
+			event.stopPropagation();
+			event.preventDefault();
+			return r;
+		}
+		case "qrscan": {
+			const config = {mode:'qr', once:true};
+			if(param) {
+				config.fake = param;
+				config.mirror = false;
+			}
+			const r = turtleduck.openCamera(config);
+			event.stopPropagation();
+			event.preventDefault();
+			return r;			
+		}
+		case "open-camera": {
+				const r = turtleduck.openCamera({mode:'camera'});
+				event.stopPropagation();
+				event.preventDefault();
+				return r;
+		}
+		case "open-qr": {
+				const r = turtleduck.openCamera({mode:'qr'});
+				event.stopPropagation();
+				event.preventDefault();
+				return r;
+		}
 		default:
 			if(button.dataset.showMenu) {
 				const elt = document.getElementById(button.dataset.showMenu);
@@ -346,7 +439,7 @@ async function handleKey(key, button, event) {
 				elt.classList.add("show");
 			} else {
 				//console.log(key, button, event);
-				const r = turtleduck.actions.handle(key, {}, event);
+				const r = turtleduck.actions.handle(key, {button:button}, event);
 				//console.log("r =>", r);
 				event.stopPropagation();
 				event.preventDefault();
@@ -555,6 +648,23 @@ jquery(function() {
 			e.stopPropagation();
 		});
 	});
+	
+	jquery('[data-tooltip]').each(function(index) {
+		const id = this.dataset.tooltip;
+		const tipElt = document.createElement("div");
+		tipElt.className = "tooltip";
+		this.appendChild(tipElt);
+		this.style.position = 'relative';
+		this.addEventListener("mouseenter", async e => {
+			const r = await turtleduck.actions.handle('tooltip:'+id, {}, event);
+			tipElt.replaceChildren(r);
+			tipElt.classList.add("show");
+
+		});
+		this.addEventListener("mouseleave", e => {
+			tipElt.classList.remove("show");
+		});
+	});
 	jquery('[data-below]').each(function(index) {
 		console.log(index, this);
 		const belowElt = this;
@@ -627,15 +737,29 @@ jquery(document).ready(() => {
 			console.log(document.getElementById('page').classList);
 		}	
 	}
-
 	handleColorPreference(mqlDark);
 	//handleColorPreference(mqlLight);
 	mqlDark.onchange = handleColorPreference;
 	mqlLight.onchange = handleColorPreference;
+
+	const mqlPortrait = window.matchMedia('(max-width: 899px)');
+	turtleduck.initializeWM = function handleMediaSizePortrait() {
+		console.log('media size change: ', mqlPortrait)
+		if(mqlPortrait.matches) {
+			turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout-portrait');		
+		} else {
+			turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout');
+		}
+		if(turtleduck.layoutSpec && turtleduck.layoutPrefs)
+			turtleduck.wm.initialize(turtleduck.layoutSpec, turtleduck.layoutPrefs);
+	}
+	mqlPortrait.onchange = turtleduck.initializeWM;
 	
+	if(false) {
 	if(turtleduck.localStorage.getItem('alwaysShowSplashHelp') || !turtleduck.localStorage.getItem('hasSeenSplashHelp')) {
 		jquery('#page').toggleClass('show-splash-help', true);
 		turtleduck.localStorage.setItem('hasSeenSplashHelp', true);
+	}
 	}
 	
 	const resizeObserver = new ResizeObserver(entries => {
@@ -643,22 +767,20 @@ jquery(document).ready(() => {
 	})
 	resizeObserver.observe(document.getElementById('shell'));
 	
-	turtleduck.layoutSpec = {
-		"dir":"H","items": [
-			{"size":3,"dir":"V","items": [
-				//{"size":2,"item":"iconbox"},
-				{"size":16,"item":"explorer"}]},
-			{"size":29,"dir":"V","max_container":true,"items": [
-				{"size":9,"dir":"H","items":[
-					{"size":15,"item":"editor"},
-					{"size":14,"item":"screen"}]},
-	 			{"size":7,"item":"shell"}]}]};
-	turtleduck.wm.initialize();
-	turtleduck.wm.layout(turtleduck.layoutSpec);
-	turtleduck.wm.setupResizing();
 
 })
 
+turtleduck._initializationComplete = function(err) {
+	if(err) {
+		console.error(err);
+	}
+	turtleduck.layoutSpec = turtleduck.getConfig('layout');
+	turtleduck.initializeWM();
+	turtleduck.wm.onchange((wm,sizes) => {
+		//turtleduck.setConfig({"prefs":{"layout":sizes}}, "session");
+		//autoSaveConfig('session');
+	});	
+}
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;
 window.$ = jquery;

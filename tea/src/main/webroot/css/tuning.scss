@@ -1,0 +1,19 @@
+
+// Reduce/remove animations if user prefers-reduced-motion
+@media (prefers-reduced-motion) {
+
+}
+
+// if the user's primary input mechanism can hover over elements
+@media (hover: none / hover) { }
+
+// if user's has a primary pointing device, and how accurate it is
+// (e.g., for adjusting size of UI elements)
+@media (pointer: none / course / fine) { }
+
+// we test for this in index.js
+//@media (prefers-color-scheme: dark) { }
+//@media (prefers-color-scheme: light) { }
+
+// experimental
+// @media (prefers-contrast: no-preference / more / less) { }

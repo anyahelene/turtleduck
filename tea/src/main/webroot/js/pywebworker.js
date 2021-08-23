@@ -5,6 +5,11 @@ const routes = {
 	eval_request: 'ShellService'
 }
 
+util = {
+	id: function(arg) { return arg; },
+	log: function(arg) { console.log(arg); }
+};
+
 pymsg = function(e) {
 	console.log(e);
 	self.postMessage({header: {msg_type: 'python_status', msg_id:"i1"},
@@ -29,6 +34,8 @@ send = function(msg) {
 	self.postMessage(msg);
 }
 
+waiting_for = null;
+
 onmessage = async function(e) {
   try {
     const data = e.data;
@@ -39,11 +46,11 @@ onmessage = async function(e) {
 		return;
 	}
 	
-    if (typeof self.__pyodideLoading === "undefined") {
-      self.postMessage({header: {msg_type: 'python_status', msg_id:"i0"},
+     if (!loadPyodide.inProgress) {
+		self.postMessage({header: {msg_type: 'python_status', msg_id:"i0"},
 		content: { status: 'Loading Pyodide...', wait: true}});
-      await loadPyodide({indexURL : '../py/'});
-       self.postMessage({header: {msg_type: 'python_status', msg_id:"i1"},
+		self.pyodide = await loadPyodide({indexURL : '../py/'});
+		self.postMessage({header: {msg_type: 'python_status', msg_id:"i1"},
 		content: { status: 'Pyodide loaded.'}});
     }
     if (data.python) {
@@ -54,6 +61,7 @@ onmessage = async function(e) {
 	        self[key] = data[key];
 	      }
 	    }
+		await self.pyodide.loadPackagesFromImports(content.code);
 	    let res = await self.pyodide.runPythonAsync(data.python);
         self.postMessage({status : 'ok', results : res});
     } else if (data.header) {
@@ -62,28 +70,32 @@ onmessage = async function(e) {
 		const content = data.content;
 		console.log("msg_type", msg_type);
 		if(msg_type === 'init_python') {
+			console.log("init_python:", content.code);
+		    await self.pyodide.loadPackagesFromImports(content.code);
 			let res = await self.pyodide.runPythonAsync(content.code, self.pymsg, self.pyerr);
 			console.log("Python result: ", res);
        		self.postMessage({header: {msg_type: 'init_python_reply', ref_id: msg_id, msg_id:"r"+msg_id},
 				 content: {status: 'ok'}});
-		} else if(msg_type === 'failure' || msg_type === 'error_reply') {
+		//} else if(msg_type === 'failure' || msg_type === 'error_reply') {
 			// ignore
-		}else {
+		} else {
 			self._msg = data;
-	        let res = await self.pyodide.runPythonAsync(routes[msg_type] + ".receive()", self.pymsg, self.pyerr);
-			console.log("Python result: ", res);
-			if(res instanceof Map) {
-				if(!(res.has('content') && res.has('header'))) {
+	        self.pyodide.runPythonAsync("ShellService.receive()", self.pymsg, self.pyerr).then(res => {
+				console.log("Python result: ", res);
+				if(res instanceof Map) {
+					if(!(res.has('content') && res.has('header'))) {
+						res = {header: {msg_type: msg_type + '_reply', ref_id: msg_id, msg_id:"r"+msg_id},
+								content: res};
+					} else {
+						res.get('header').set('ref_id', msg_id);
+					}
+				} else if (res) {
 					res = {header: {msg_type: msg_type + '_reply', ref_id: msg_id, msg_id:"r"+msg_id},
-							content: res};
-				} else {
-					res.get('header').set('ref_id', msg_id);
+								content: {result: res}};
 				}
-			} else {
-				res = {header: {msg_type: msg_type + '_reply', ref_id: msg_id, msg_id:"r"+msg_id},
-							content: {result: res}};
-			}
-	        self.postMessage(res);
+				if(res)
+		      	  self.postMessage(res);
+			})
 		}
     }
   } catch (e) {

@@ -2,6 +2,7 @@ package turtleduck.tea;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,7 @@ import turtleduck.tea.generated.CMDispatch;
 import turtleduck.tea.generated.CanvasDispatch;
 import turtleduck.tea.generated.EditorDispatch;
 import turtleduck.tea.generated.ExplorerDispatch;
+import turtleduck.tea.generated.FileServiceDispatch;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Key;
@@ -50,13 +52,16 @@ public class Client implements JSObject {
 	// protected TDEditor editor;
 	private int nextChannelId = 2;
 	protected String sessionName;
-	private Explorer explorer;
+	private Explorer javaExplorer;
 	protected CanvasServer canvas;
 	protected EditorServer editorImpl;
+	protected FileServer fileServer;
 	private int lastMessageIntervalId;
 
 //	public TextCursor cursor;
 	private CMTerminalServer jterminal;
+	private CMTerminalServer chatTerminal;
+	protected OldFileSystem oldFileSystem;
 	protected FileSystem fileSystem;
 	protected History history;
 	private Component shellComponent;
@@ -66,6 +71,9 @@ public class Client implements JSObject {
 	private PyConnection pyConn;
 	private CMTerminalServer pyterminal;
 	private Component screenComponent;
+	private String projectName;
+	private Explorer pyExplorer;
+	private Shell chat;
 
 	public void initialize() {
 		try {
@@ -81,6 +89,10 @@ public class Client implements JSObject {
 			history = new History(map.get("history").cast());
 			router = new Router();
 
+			fileSystem = new FileSystem(map.get("fileSystem"));
+			fileServer = new FileServer(fileSystem);
+			router.route(new FileServiceDispatch(fileServer));
+
 			if (getConfig("connections.remote-turtleduck.enabled", "").equals("always")) {
 				goOnline();
 			}
@@ -93,7 +105,7 @@ public class Client implements JSObject {
 
 			Storage localStorage = Storage.getLocalStorage();
 
-			fileSystem = new FileSystem(localStorage);
+			oldFileSystem = new OldFileSystem(localStorage);
 			Browser.document.addEventListener("visibilitychange", e -> {
 				logger.info("Document visibility: " + Browser.visibilityState());
 			}, false);
@@ -103,7 +115,7 @@ public class Client implements JSObject {
 			}, false);
 
 			Component wm = map.get("wm").cast();
-			
+
 			HTMLElement shellElt = Browser.document.getElementById("shell");
 			if (shellElt != null) {
 				this.shellComponent = JSUtil.createComponent(shellElt);
@@ -115,15 +127,16 @@ public class Client implements JSObject {
 			}
 
 			sessionName = getConfig("session.name", "?");
+			projectName = getConfig("session.project", null);
 
 			editorImpl = new EditorServer(Browser.document.getElementById("editor"), wm);
 			editorImpl.initialize();
 			router.route(new EditorDispatch(editorImpl));
 
 			JSUtil.declare("loadJava", this::loadJava);
-			JSUtil.declare("loadPython",this::loadPython);
-			JSUtil.declare("goOnline",this::goOnline);
-			JSUtil.declare("userlog", (JSStringConsumer)this::userlog);
+			JSUtil.declare("loadPython", this::loadPython);
+			JSUtil.declare("goOnline", this::goOnline);
+			JSUtil.declare("userlog", (JSStringConsumer) this::userlog);
 
 			HTMLElement screenElt = Browser.document.getElementById("screen");
 			if (screenElt != null) {
@@ -132,7 +145,7 @@ public class Client implements JSObject {
 				screenComponent.addWindowTools();
 				screenComponent.setParent(wm);
 				screenComponent.register();
-			}	
+			}
 			canvas = new CanvasServer(screenComponent);
 			router.route(new CanvasDispatch(canvas));
 
@@ -147,18 +160,20 @@ public class Client implements JSObject {
 			}
 
 			WINDOW_MAP.set("turtleduck", map);
-			//DocDisplay docDisplay = new DocDisplay(screenComponent);
-			//docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
+			// DocDisplay docDisplay = new DocDisplay(screenComponent);
+			// docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
 			DocDisplay docDisplay2 = new DocDisplay(screenComponent);
 			docDisplay2.initFromUrl("examples/dgc/koronasertifikat.md", null, true);
-			
+
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
 			updateInfo();
+			JSUtil.initializationComplete(null);
 		} catch (Throwable ex) {
+			JSUtil.initializationComplete("Startup failed: " + ex.getMessage());
 			logger.error("Client failed: ", ex);
 			throw ex;
-		}
+		} 
 	}
 
 	public void setupLanguages() {
@@ -266,6 +281,26 @@ public class Client implements JSObject {
 
 	}
 
+	public void loadChat() {
+		String config = getConfig("languages.chat.enabled", "optional");
+		if (!(config.equals("always") || config.equals("optional")))
+			return;
+		if (chat == null) {
+			ChatConnection chatConnection = new ChatConnection("local-chat", this);
+			router.connect(chatConnection, "chat");
+			chat = new Shell("chat", chatConnection);
+			chatTerminal = new CMTerminalServer(shellComponent, chat);
+			chatTerminal.disableHistory();
+			chatTerminal.initialize("chat");
+			map.set("chat", chatTerminal.editor);
+			router.route(new CMDispatch(chatTerminal));
+			Dict welcome = Dict.create();
+			welcome.put(HelloService.USERNAME, "T.Duck");
+			welcome.put(HelloService.EXISTING, false);
+			chatTerminal.connected(pyConn, welcome);
+		}
+	}
+
 	public void loadJava() {
 		String config = getConfig("languages.java.enabled", "optional");
 		if (!(config.equals("always") || config.equals("optional")))
@@ -278,13 +313,14 @@ public class Client implements JSObject {
 
 			jterminal = new CMTerminalServer(shellComponent, jshell);
 			jterminal.initialize("jshell");
+			map.set("jshell", jterminal.editor);
 			mainJavaConsole = jterminal.console();
 			router.route(new CMDispatch(jterminal));
 
 			HTMLElement exElt = Browser.document.getElementById("explorer");
 			if (exElt != null) {
-				explorer = new Explorer(exElt, jshell.service());
-				router.route(new ExplorerDispatch(explorer));
+				javaExplorer = new Explorer(exElt, map.get("wm").cast(), jshell.service());
+				router.route(new ExplorerDispatch(javaExplorer));
 			}
 
 			editorImpl.initializeLanguage(jshell, mainJavaConsole);
@@ -320,27 +356,40 @@ public class Client implements JSObject {
 			pyshell = new Shell("python", pyConn);
 			pyterminal = new CMTerminalServer(shellComponent, pyshell);
 			pyterminal.initialize("pyshell");
+			map.set("pyshell", pyterminal.editor);
 			router.route(new CMDispatch(pyterminal));
+
+			HTMLElement exElt = Browser.document.getElementById("explorer");
+			if (exElt != null) {
+				pyExplorer = new Explorer(exElt, map.get("wm").cast(), pyshell.service());
+				router.route(new ExplorerDispatch(pyExplorer));
+			}
 
 			String installs = getConfigs("languages.python.install", Array.create()).toListOf(String.class).stream()
 					.map(s -> "await micropip.install('" + s + "')\n").collect(Collectors.joining());
 
 			String imports = getConfigs("languages.python.import", Array.create()).toListOf(String.class).stream()
-					.map(s -> "import " + s + "\n").collect(Collectors.joining());
+					.map(s ->  s + "\\n").collect(Collectors.joining());
 
 			Message msg = Message.writeTo("pyshell", "init_python")//
 					.putContent(ShellService.CODE, "import micropip\n"//
+							+ "import unthrow\n"//
+							//+ "import PIL\n"//
 							+ "await micropip.install('../py/turtleduck-0.0.1-py3-none-any.whl')\n"//
+							+ installs//
 							+ "from pyodide import to_js\n"//
 							+ "from turtleduck import ShellService\n"//
 							+ "ShellService.setup_io('pyshell')\n"//
 							+ "ShellService.use_msg_io()\n"//
-							+ installs//
 							+ "await ShellService.do_imports('" + imports + "')\n" + "print(ShellService.banner())")
 					.done();
 			router.send(msg).onSuccess(res1 -> {
 				pyshell.logger.info("python init result: {}", res1);
 				Client.client.userlog("Python ready.");
+				Camera.Statics.addSubscription("qpaste:pyshell", "builtin", "qr", "→ Shell", "📋",
+						"Paste in Python Shell");
+				Camera.Statics.addSubscription("receive_str", "pyshell", "qr", "→ Python", "🐍", "Store in Python variable");
+				Camera.Statics.addSubscription("receive_img", "pyshell", "camera", "→ Python", "🐍", "Store in Python variable");
 				Dict welcome = Dict.create();
 				welcome.put(HelloService.USERNAME, "T.Duck");
 				welcome.put(HelloService.EXISTING, false);
@@ -455,6 +504,7 @@ public class Client implements JSObject {
 	public void userlog(String message) {
 		userlog(message, false);
 	}
+
 	public void userlogWait(String message) {
 		userlog(message, true);
 	}
@@ -507,6 +557,12 @@ public class Client implements JSObject {
 			logger.info("promise {}", p);
 			return p;
 		} else if (key.equals("f2")) {
+		} else if (key.equals("f4")) {
+			if(chatTerminal == null) {
+				loadChat();
+				chatTerminal.promptReady();
+			}
+			chatTerminal.editor.focus();
 		} else if (key.equals("menu:languages")) {
 			Dict d = JSUtil.decodeDict(data);
 			String lang = d.get("language", "");
@@ -518,6 +574,23 @@ public class Client implements JSObject {
 				return Promise.Util.resolve(JSString.valueOf("unknown language:" + lang));
 			}
 			JSUtil.changeButton("f9", d.getString("icon"), d.getString("title") + " ↓");
+		} else if (key.equals("tooltip:sessionInfo")) {
+			HTMLElement list = element("dl", element("dt", "Session"), element("dd", sessionName));
+			if (projectName != null) {
+				list.appendChild(element("dt", "Project"));
+				list.appendChild(element("dd", projectName));
+			}
+			return Promise.Util.resolve(list);
+		} else if (key.startsWith("f")) {
+			JSObject button = data.get("button");
+			if(button != null && Math.random() < .5) {
+				HTMLElement elt = (HTMLElement) button;
+				JSUtil.addClass(elt, "disappear");
+			} else {
+				JSUtil.displayHint("Warning", "Please do not press this button again.", "", "warning");
+			}
+			userlog("Sorry! Not implemented. 😕");
+			return Promise.Util.resolve(JSString.valueOf("unknown key:" + key));
 		}
 		return Promise.Util.resolve(JSString.valueOf("unknown key:" + key));
 	}

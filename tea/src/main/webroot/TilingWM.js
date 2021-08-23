@@ -1,4 +1,4 @@
-
+import { isEqual } from 'lodash';
 import { Component } from './Component';
 
 
@@ -55,12 +55,71 @@ class TilingWM {
 		this.windows = {};
 		this.xsize = xsize;
 		this.ysize = ysize;
+		this.modified = false;
+		this._onchange = null;
 	}
-	initialize() {
+	
+	initialize(spec,prefs) {
 		this.element = document.getElementById(this.name);
-		this.element.style.display = 'grid';
+		//this.element.style.display = 'grid';
 		this.element.style.gridTemplateColumns = `repeat(${this.xsize}, calc(100% / ${this.xsize}))`;
 		this.element.style.gridTemplateRows = `repeat(${this.ysize}, calc(100% / ${this.ysize}))`;
+
+		console.log("TilingWM.initialize", this, spec, prefs);
+		if(prefs) {
+			this._patchLayout(spec, prefs, '')
+			console.log("patch result", JSON.stringify(spec));
+		}
+		this.layout(spec);
+		this.setupResizing();
+	}
+	
+	_patchLayout(layout, prefs, dir) {
+		if(layout.item) {
+			if(prefs.hasOwnProperty(layout.item)) {
+				const pref = prefs[layout.item];
+				console.log("patching", layout, "with", pref);
+				if(pref.iconified) {
+					this._with_win(layout.item, (name, win) => win.iconified(true));
+				} else if(pref.maximized) {
+					this._with_win(layout.item, (name, win) => win.maximized(true));
+				}
+				if(pref.width && dir === 'H') {
+					layout.size = pref.width;
+				} else if(pref.height && dir === 'V') {
+					layout.size = pref.height;
+				}
+				console.log("patch result", JSON.stringify(layout));
+				if(pref.iconified) {
+					return [0,0];
+				} else {
+					return [pref.width || 0, pref.height || 0];
+				}
+			} else if (dir === 'H'){
+				return [layout.size, 0];
+			} else {
+				return [0, layout.size];
+			}
+		} else if(layout.items) {
+			var size = [0,0];
+			layout.items.forEach(item => {
+				const s = this._patchLayout(item, prefs, layout.dir);
+				console.log("=>", s, JSON.stringify(item));
+				if(layout.dir === 'H') {
+					size[0] += s[0];
+					size[1] = Math.max(size[1], s[1]);
+				} else {
+					size[1] += s[1];
+					size[0] = Math.max(size[0], s[0]);					
+				}
+			});
+			if(dir === 'H' && size[0] != 0) {
+				layout.size = size[0];
+			} else if(dir === 'V' && size[1] != 0) {
+				layout.size = size[1];		
+			}
+			return size;
+		}
 	}
 	addChild(win) {
 		this.windows[win.name] = win;
@@ -120,7 +179,7 @@ class TilingWM {
 		}
 		
 		if(!(win && this.windows.hasOwnProperty(name))) {
-			console.warn("maximize: unknown window: ", name, win, arg);
+			console.warn("_with_win: unknown window: ", name, win, arg);
 			return;
 		}	
 		
@@ -149,6 +208,10 @@ class TilingWM {
 		}
 	}
 	
+	_get_sizes() {
+
+		return obj;
+	}
 	/** traverse layout node, visit each window. for each container, sets _iconified if fun returns false for all children */
 	_visit_windows(layout, fun) {
 		var displayed = false;
@@ -158,9 +221,10 @@ class TilingWM {
 			} else if(item.item) {
 				const win = this.windows[item.item];
 				if(win) {
-					displayed = fun(win, item) || displayed;
+					displayed = fun(win, item, layout.dir) || displayed;
 				} else {
-					console.warn("can't find component for window ", item.item, item);				
+					console.warn("can't find component for window ", item.item, item);
+					displayed = true;			
 				}
 			}
 		});
@@ -172,24 +236,65 @@ class TilingWM {
 	recomputeLayout() {
 		if(this._layout) {
 			this.layout(this._layout);
+
 		}
 	}
 	
 	layout(spec) {
 		spec.id = '.';
+		const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+		const sizes = {};
+		
 		this._layout = layout(spec, new Area(1, this.xsize+1, 1, this.ysize+1),
-			(it, area) => {
+			(it, area, dir) => {
 			const elt = document.getElementById(it.item);
 			const win = this.windows[it.item];
+			sizes[it.item] = {
+				width: area.endX - area.startX,
+				height: area.endY - area.startY
+			};
+		
 			if(elt) {
 				console.log(`#${it.item}`, area);
+				console.log(`pre-width: ${elt.clientWidth}px`)
 				elt.style.gridColumnStart = area.startX;
 				elt.style.gridColumnEnd = area.endX;
 				elt.style.gridRowStart = area.startY;
 				elt.style.gridRowEnd = area.endY;
+				sizes[it.item].iconified = elt.classList.contains('iconified');
+				sizes[it.item].maximized = elt.classList.contains('maximized');
+				const width = elt.clientWidth / fontSize;
+				elt.classList.remove('is-very-narrow','is-narrow','is-wide','is-very-wide');
+				if(width <= 40) {
+					elt.classList.add('is-narrow');
+					if(width <= 20)
+						elt.classList.add('is-very-narrow');					
+				}
+				if(width >= 70) {
+					elt.classList.add('is-wide');
+					if(width >= 90)
+						elt.classList.add('is-very-wide');					
+				}				
+				if(win) {
+					win.width = width;
+				}
 			}
 		});
+		
+		if(!this._sizes) {
+			this._sizes = sizes;
+		} else if(!isEqual(this._sizes, sizes)) {
+			this._sizes = sizes;
+			if(this._onchange) {
+				this._onchange(this, sizes);
+			}
+		}
+		
 		return this._layout;
+	}
+	
+	onchange(fun) {
+		this._onchange = fun;
 	}
 	
 	setupResizing() {
@@ -247,53 +352,53 @@ class TilingWM {
 					k = 1;
 					this.element.appendChild(elt);			
 				}
-					elt.addEventListener("mousedown", e => {
-						const pos = this._resizeMoveCalc(dir, e);
-						console.log("resize starting at: ", pos, e);
-						var currentPos = pos;
-						const controller = new AbortController();
-						const signal = controller.signal;
-						this.element.addEventListener("mousemove", e2 => {
-							const newPos = this._resizeMoveCalc(dir,e2);
-							if(newPos != currentPos) {
-								console.log("mousemove!", `dir=${dir}, pos=${pos}, currentPos=${currentPos}, newPos=${newPos}`);		
-								const diff = newPos-currentPos;
-								const curItem = this._itemById(this._layout, curId);
-								const nxtItem = this._itemById(this._layout, nxtId);
-								if(curItem.size + diff >= curItem.minSize[k] && nxtItem.size - diff >= nxtItem.minSize[k]) {
-									console.log("resize!", curItem.minSize, nxtItem.minSize, `dir=${dir}, pos=${pos}, currentPos=${currentPos}, newPos=${newPos}`);		
-										currentPos = newPos;
-									if(dir === 'H') {
-										elt.style.gridColumnStart = currentPos-1;
-										elt.style.gridColumnEnd = currentPos+1;
-									} else {
-										elt.style.gridRowStart = currentPos;
-										elt.style.gridRowEnd = currentPos+1;
-									}
-									console.log("old layout:", JSON.stringify(this._layout));
-
-									curItem.size += diff;
-									nxtItem.size -= diff;
-									this.layout(this._layout);
-									console.log("new layout:", JSON.stringify(this._layout));
+				elt.addEventListener("mousedown", e => {
+					const pos = this._resizeMoveCalc(dir, e);
+					console.log("resize starting at: ", pos, e);
+					var currentPos = pos;
+					const controller = new AbortController();
+					const signal = controller.signal;
+					this.element.addEventListener("mousemove", e2 => {
+						const newPos = this._resizeMoveCalc(dir,e2);
+						if(newPos != currentPos) {
+							console.log("mousemove!", `dir=${dir}, pos=${pos}, currentPos=${currentPos}, newPos=${newPos}`);		
+							const diff = newPos-currentPos;
+							const curItem = this._itemById(this._layout, curId);
+							const nxtItem = this._itemById(this._layout, nxtId);
+							if(curItem.size + diff >= curItem.minSize[k] && nxtItem.size - diff >= nxtItem.minSize[k]) {
+								console.log("resize!", curItem.minSize, nxtItem.minSize, `dir=${dir}, pos=${pos}, currentPos=${currentPos}, newPos=${newPos}`);		
+									currentPos = newPos;
+								if(dir === 'H') {
+									elt.style.gridColumnStart = currentPos-1;
+									elt.style.gridColumnEnd = currentPos+1;
+								} else {
+									elt.style.gridRowStart = currentPos;
+									elt.style.gridRowEnd = currentPos+1;
 								}
+								console.log("old layout:", JSON.stringify(this._layout));
+
+								curItem.size += diff;
+								nxtItem.size -= diff;
+								this.layout(this._layout);
+								console.log("new layout:", JSON.stringify(this._layout));
 							}
-							e.stopPropagation();
-							e.preventDefault();	
-						}, {
-							capture: true, signal: signal
-						});
-						document.body.addEventListener("mouseup", e2 => {
-							console.log("mouseup!");
-							controller.abort();
-						}, { capture: true, once: true, signal: signal });
-						document.body.addEventListener("mouseleave", e2 => {
-							console.log("mouseleave!");
-							controller.abort();
-						}, { capture: false, once: true, signal: signal });
+						}
 						e.stopPropagation();
-						e.preventDefault();			
+						e.preventDefault();	
+					}, {
+						capture: true, signal: signal
 					});
+					document.body.addEventListener("mouseup", e2 => {
+						console.log("mouseup!");
+						controller.abort();
+					}, { capture: true, once: true, signal: signal });
+					document.body.addEventListener("mouseleave", e2 => {
+						console.log("mouseleave!");
+						controller.abort();
+					}, { capture: false, once: true, signal: signal });
+					e.stopPropagation();
+					e.preventDefault();			
+				});
 					
 			}
 			if(current.dir) {
@@ -414,11 +519,12 @@ function layout(item, area, fun) {
 			it.id = `${item.id}${i}.`;
 			if(it._iconified) {
 				it.alloc = 0;
+				it.area = allocArea;
 				it.minSize = [0,0];
 				if(it.items)
 					layout(it, allocArea, fun);
 				else if(fun)
-					fun(it, allocArea);
+					fun(it, allocArea, dir);
 				delete it._iconified;
 				
 				return it;
@@ -435,7 +541,7 @@ function layout(item, area, fun) {
 				item.minSize[k1] = Math.max(item.minSize[k1], it.minSize[k1]);
 			} else {
 				if(fun)
-					fun(it, allocArea);
+					fun(it, allocArea, dir);
 				item.minSize[k0] += 1;
 				item.minSize[k1] = Math.max(item.minSize[k1], 2);
 				it.alloc = alloc;
