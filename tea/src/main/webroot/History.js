@@ -21,7 +21,7 @@ class History {
 		if(typeof id != 'number') {
 			return this.currentId(session).then(id => this.get(session, id));
 		} else {
-			console.log("get", session, id);
+			//console.log("get", session, id);
 			const path = '/history/' + session + '/' + id;
 			return this.fs.read(path);
 		}
@@ -41,10 +41,10 @@ class History {
 	currentId(session) {
 		return db.historyIds.get(session).then(data => {
 			if(data) {
-			console.log("currentId", session, data.historyId);
+				//console.log("currentId", session, data.historyId);
 				return Promise.resolve(data.historyId);
 			} else {
-			console.log("currentId", session, 0);
+				//console.log("currentId", session, 0);
 				return Promise.resolve(0);
 			}
 		});

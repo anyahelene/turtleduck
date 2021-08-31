@@ -84,12 +84,22 @@ function langConfig(lang) {
 	}
 }
 function fontConfig(elt) {
+	var fontFamily = window.getComputedStyle(elt).fontFamily;
+	if(!fontFamily)
+		fontFamily = window.getComputedStyle(document.body).fontFamily;
 	const myFontTheme = EditorView.theme({
 		  '.cm-scroller':{
 		  //  fontSize: "18px"
-			fontFamily: window.getComputedStyle(elt).fontFamily,
-			textShadow: "0 0 .2rem currentColor"
+			fontFamily:fontFamily
+			//,textShadow: "0 0 .1rem currentColor"
+		  }/*,
+		  '.cm-scroller .cm-line':{
+			opacity: ".9"
+		  },
+		  '.cm-scroller .cm-line.cm-activeLine':{
+			opacity: "1"
 		  }
+*/
 	});
 	return myFontTheme;
 }
@@ -284,7 +294,11 @@ class TDEditor extends Component {
 				return r;
 			}), tr.selection.mainIndex);
 		}
+		tr.scrollIntoView = true;
 		this.view.dispatch(tr);
+		if(this._after_paste) {
+			this._after_paste();
+		}
 	}
 	switchState(newState) {
 		if(this._debugState)
@@ -411,5 +425,8 @@ window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 	], window.turtleduck,
 	[keymap.of([{ key: "Enter", run: enter, shift: shiftEnter }])]);
 
+	editor._after_paste = () => {
+		outer.scrollTop = outer.scrollTopMax;
+	};
 	return editor;
 }

@@ -30,17 +30,17 @@
 					type="button">
 					<span class="the-text">Save&Run</span>
 				</button>
-				<button id="f2" data-shortcut="ctrl+2" data-icon="🏃" class="row2"
+				<button id="f2" data-shortcut="ctrl+2" data-icon="🏃" class="row2 not-implemented"
 					type="button">
 					<span class="the-text">Run</span>
 				</button>
-				<button id="f3" data-shortcut="ctrl+3" data-icon="🧪" class="row2"
+				<button id="f3" data-shortcut="ctrl+3" data-icon="🧪" class="row2 not-implemented"
 					type="button">
 					<span class="the-text">Test</span>
 				</button>
 				<button id="f4" data-shortcut="ctrl+4" data-icon="🦜"
 					data-alt-icon="💬" class="row2" type="button">
-					<span class="the-text">Chat</span><span class="notification">2</span>
+					<span class="the-text">Chat</span><span id="chat-notification" class="notification">2</span>
 				</button>
 				<button id="f5" data-shortcut="ctrl+5" data-icon="🗺️" class="row2"
 					type="button">
@@ -67,27 +67,27 @@
 					</ul>
 				</button>
 				<button id="f11" data-shortcut="shift+ctrl+1" data-icon="📂"
-					class="row1" type="button">
+					class="row1 not-implemented" type="button">
 					<span class="the-text">Open</span>
 				</button>
 				<button id="f12" data-shortcut="shift+ctrl+2" data-icon="🐛"
-					class="row1" type="button">
+					class="row1 not-implemented" type="button">
 					<span class="the-text">Debug</span>
 				</button>
 				<button id="f13" data-shortcut="shift+ctrl+3" data-icon="🌐"
-					class="row1" type="button">
+					class="row1 not-implemented" type="button">
 					<span class="the-text">Publish</span>
 				</button>
 				<button id="f14" data-shortcut="shift+ctrl+4" data-icon="🙃"
-					class="row1" type="button">
+					class="row1 not-implemented" type="button">
 					<span class="the-text">Profile</span>
 				</button>
 				<button id="f15" data-shortcut="shift+ctrl+5" data-icon="🚧"
-					class="row1" type="button">
+					class="row1 not-implemented" type="button">
 					<span class="the-text">Projects</span>
 				</button>
 				<button id="f16" data-shortcut="shift+ctrl+6" data-icon="🧐"
-					class="row1" type="button">
+					class="row1 not-implemented" type="button">
 					<span class="the-text">Quality</span>
 				</button>
 				<button id="f17" data-shortcut="shift+ctrl+7" data-icon="✨"
@@ -95,11 +95,11 @@
 					<span class="the-text">Hints</span>
 				</button>
 				<button id="f18" data-shortcut="shift+ctrl+8" data-icon="👩‍🏫"
-					class="row1" type="button">
+					class="row1 not-implemented" type="button">
 					<span class="the-text">Demos</span>
 				</button>
 				<button id="f19" data-shortcut="shift+ctrl+9" data-icon="💅"
-					data-alt-icon="⚙️" class="row1" type="button">
+					data-alt-icon="⚙️" class="row1 not-implemented" type="button">
 					<span class="the-text">Settings</span>
 				</button>
 			</nav>
@@ -112,12 +112,16 @@
 					type="button">
 					<span class="the-text text-icon" style="font-size: 1.4rem;min-width: 0"><img src="images/qr-code.png" style="height:1.4rem"></span>
 				</button>
-				<button id="help" data-shortcut="ctrl+?" data-icon="" class="rows"
+				<button id="controllers" data-shortcut="shift+ctrl+g" data-icon="" class="rows not-implemented"
+					type="button">
+					<span class="the-text text-icon" style="font-size: 1.4rem;padding-bottom:.2rem;min-width: 0">🎮</span>
+				</button>
+				<button id="help" data-shortcut="ctrl+?" data-icon="" class="rows not-implemented"
 					type="button">
 					<span class="the-text text-icon" style="font-size: 1.4rem; min-width: 0">?</span>
 				</button>
 				<div id="user">
-					<img id="user-picture" style="height: 2.5rem; visibility: hidden" />
+					<img id="user-picture" style="height: 2.1rem; visibility: hidden" />
 				</div>
 			</nav>
 		</header>

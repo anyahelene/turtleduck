@@ -65,7 +65,8 @@ class Component {
 	_focusin(e) {
 		this._highlight(true);
 		const last = this._tdstate.currentFocus;
-		console.log("focusin", this.name, e, "this:", this, "last:", last);
+		if(this.debug)
+			console.log("focusin", this.name, e, "this:", this, "last:", last);
 		//console.log("  this:", this);
 		//console.log("  current:", last);
 		//console.log("  last:", tdstate.lastFocus);

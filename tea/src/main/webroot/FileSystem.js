@@ -162,9 +162,7 @@ class FileSystem {
 		const fs = this;
 		const path = this._filenameToPath(dirname);
 		const parent = dirname.startsWith('/') ? 0 : this.cwd;
-		console.warn("list", dirname);
 		return this._stat_nodev(path, parent, '').then(f => {
-			console.warn("f=", f);
 			if(f === undefined) {
 				return Promise.reject(new Error("file not found: " + dirname));
 			} else if(f.kind == 'f') {
@@ -286,7 +284,8 @@ class FileSystem {
 				console.log("looking for", n, path, parent, "in", fullpath);
 				
 			function check_result(f) {
-				console.log("result:", f);
+				if(fs._debug)
+					console.log("result:", f);
 				if(!f.kind) {
 					if(fs._debug)
 						console.log("not found");
@@ -300,7 +299,6 @@ class FileSystem {
 				}	
 			}
 			return this._stat_impl(n, parent, f => {
-				console.warn(f);
 				if(!f.kind && handler) {
 					if(fs._debug)
 						console.log("handling: ", f, n, path, parent, fullpath);
@@ -509,7 +507,7 @@ class VirtFileSystem extends FileSystem {
 }
 const fileSystem = new DBFileSystem(db);
 const vfs = new VirtFileSystem();
-vfs._debug = true;
+//vfs._debug = true;
 //await vfs._mount('usr', 0, fileSystem);
 
 export { fileSystem, FileSystem, vfs };

@@ -31,7 +31,8 @@ const darkDuckTheme = EditorView.theme({
     ".cm-searchMatch.cm-searchMatch-selected": {
         backgroundColor: "#6199ff2f"
     },
-    ".cm-activeLine": { backgroundColor: background, textShadow: "none" },
+    ".cm-activeLine": { backgroundColor: highlightBackground, textShadow: "none" },
+ //   ".cm-activeLine": { backgroundColor: background, textShadow: "none" },
     ".cm-selectionMatch": { backgroundColor: "#aafe661a" },
     ".cm-matchingBracket, .cm-nonmatchingBracket": {
         backgroundColor: "#bad0f847",

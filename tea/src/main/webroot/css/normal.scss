@@ -35,6 +35,7 @@ $max-text-width: 70rem;
 	grid-column: 1/-1;
 	grid-row: 2/-2;
 	@include for-tablet-landscape-up {
+		max-height:200vh;
 		display: grid;
 		grid-gap:1fr;
 		grid-template-columns: repeat(32, calc(99% / 32));

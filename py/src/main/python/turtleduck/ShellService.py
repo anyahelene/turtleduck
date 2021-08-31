@@ -10,6 +10,7 @@ import turtleduck
 import asyncio
 import unthrow
 import errno
+import os
 from pyodide import to_js
 
 
@@ -89,25 +90,26 @@ DATA = Key('data')
 TRANSIENT = Key('data')
 
 
-
+cwd = '/'
 context = {'__name__' : '__main__',
         '__doc__' : None,
         '__spec__': None,
         '__annotations__': {},
         '__package__': None,
-        '__meta__': globals()
+        '__meta__': globals(),
+        '__builtins__': __builtins__.copy()
         }
 completer = rlcompleter.Completer(context)
 msg_id = 0
 
 requests = {}
 tasks = []
-def run_tasks():
+async def run_tasks():
     global tasks
     if len(tasks) > 0:
         # run returns True if not finished
         debug('running tasks', tasks)
-        tasks = [t for t in tasks if t.run()]
+        tasks = [t for t in tasks if await t.run()]
     return len(tasks) == 0
 
 async def receive():
@@ -130,10 +132,10 @@ async def receive():
             handler(content, header)
         except Exception as ex:
             debug("reply handler failed", header, ex)
-        run_tasks()
+        await run_tasks()
         return to_js(None)
 
-    run_tasks()
+    await run_tasks()
 
     global msg_id
     msg_id = msg_id + 1
@@ -142,7 +144,7 @@ async def receive():
     if msg_type == "eval_request":
         reply_header['msg_type'] = 'evalReply'
         e = Evaluation(content['code'], content['ref'], content['opts'], reply)
-        if e.run():
+        if await e.run():
             debug('adding task')
             tasks.append(e)
     elif msg_type == "complete_request":
@@ -169,7 +171,7 @@ async def receive():
         code = f'global {varName}; {varName} = _data'
         debug(localVars)
         e = Evaluation(code, varName, {}, reply, localVars)
-        if e.run():
+        if await e.run():
             debug('adding task')
             tasks.append(e)
     elif msg_type == "receive_str":
@@ -186,7 +188,7 @@ async def receive():
         code = f'global {varName}; {varName} = _data'
         debug(localVars)
         e = Evaluation(code, varName, {}, reply, localVars)
-        if e.run():
+        if await e.run():
             debug('adding task')
             tasks.append(e)
     else:
@@ -250,8 +252,20 @@ class Evaluation:
         self.oldcontext = dict(context)
         self.changeMsg = {"old":self.oldcontext, "code":code}
 
-    def run(self):
+    async def run(self):
         debug("running task:", self.code)
+        if 'await' in self.code:
+            try:
+                #context['__stop__'] = self.resumer.stop
+                result = await pyodide.eval_code_async(self.code, globals=context, locals=self.localVars)
+                self.encode_result(result)
+            except unthrow.ResumableException as ex:
+                raise ex
+            except:
+                self.encode_except()
+            self.finish()
+            return False
+
         if not self.resumer.finished:
             self.resumer.run_once(self.loop, [])
 
@@ -314,7 +328,7 @@ def typenameOf(obj):
     try:
         typename = type(obj).__name__
         if typename == '_Printer' or typename == '_Helper':
-            typename = None
+            typename = 'NoneType'
         return typename
     except:
         return None
@@ -473,8 +487,14 @@ def send_and_wait(msg):
     return asyncio.get_running_loop().run_until_complete(fut).result()
 
 def open_file(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+    file = os.path.join(cwd, file)
+    debug(f'open_file({file})')
+
     if 'r' in mode:
-        fut = send_async({'content':{'path':file}, 'header':{'msg_type':'read'}})
+        if file.startswith('/examples'):
+            fut = send_async({'content':{'url':file[1:]}, 'header':{'msg_type':'fetch'}})
+        else:
+            fut = send_async({'content':{'path':file}, 'header':{'msg_type':'read'}})
         #fut = send_async({'content':{'command':'summary'}, 'header':{'msg_type':'$router'}})
         unthrow.stop({'wait_for':'$router_reply'})
         content = asyncio.get_running_loop().run_until_complete(fut).result()
@@ -486,7 +506,8 @@ def open_file(file, mode='r', buffering=-1, encoding=None, errors=None, newline=
             else:
                 return io.StringIO(data, newline)
         else:
-            raise OSError(errno.ENOENT, "file not found", file)
+            err = content.get('evalue', 'unknown error')
+            raise OSError(errno.ENOENT, "file not found: " + err, file)
     else:
         raise OSError(errno.EACCESS, "writing files not supported", file)
 
@@ -499,9 +520,12 @@ def setup_io(stream_name):
     _msg_stdout = io.TextIOWrapper(io.BufferedWriter(MsgBuffer(stream_name+"out")), line_buffering=True)
     _msg_stderr = io.TextIOWrapper(io.BufferedWriter(MsgBuffer(stream_name+"err")), line_buffering=True)
 
+
 def use_msg_io():
     sys.stdout = _msg_stdout
     sys.stderr = _msg_stderr
+    context['__builtins__']['open'] = open_file
+
 
 
 def banner():

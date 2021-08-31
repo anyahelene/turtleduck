@@ -1,6 +1,5 @@
 @use "sass:color";
-//@import "~xterm";
-@import '~normalize.css';
+@import 'normalize/normalize.scss';
 @import 'breakpoints.scss';
 @import 'colors.scss';
 @import 'normal.scss';
@@ -26,7 +25,7 @@
 }
 
 @mixin pixel-font {
-	font-family: "PressStart2P", "Fantasque Sans Mono","Monoid", monospace;
+	font-family: "PressStart2P Narrow", "Fantasque Sans Mono","Monoid", monospace;
 	font-size-adjust: .71428;
 }
 @mixin hires-font {
@@ -66,6 +65,7 @@ pre, code, kbd, samp {
 	font-size: inherit;
 	color: #8aff00;
 	white-space: pre-wrap;
+	word-break:break-all;
 }
 
 @keyframes ScrollBackground {
@@ -124,7 +124,13 @@ pre, code, kbd, samp {
 }
 
 html {
-	font-size: 16px;
+	font-size: 14px;
+	@include for-portrait-only {
+		font-size: 12px;
+	}
+	@include for-big-desktop-up {
+		font-size: 16px;
+	}
 		//scrollbar-width: thin; 
 	scrollbar-color: #fa0 #3338;
 }
@@ -227,18 +233,18 @@ button {
 .box main {
 	width: 100%;
 	height:100%;
-	//height: calc(100% - #{$box-head-height});
 	overflow:hidden;
 }
 .box header {
-	font-size: 0.8rem;
-	margin-top: -1.25rem;
+	font-size: 0.7rem;
+	font-size-adjust:none;
+	margin-top: -1.05rem;
 	margin-bottom: .25rem;
 	display:flex;
 	flex-direction:row;
 	align-items:stretch;
-	height:$box-head-height;
-	line-height: $box-head-height;
+	height:1.2rem;
+	line-height: 1.2rem;
 	justify-content:space-between;
 }
 #page.login .main {
@@ -318,7 +324,7 @@ figcaption {
 
 h1, h2, h3, h4, h5, h6 {
 	font-size: inherit;
-	margin: 0;
+	margin: .5em 0;
 	font-weight: normal;
 	padding:0;
 }
@@ -348,18 +354,25 @@ main.doc-display {
 	color: $pen-sharp;
 	//@include light-background;
 }
+.text p {
+	margin: .5em 0 .2em 0;
+}
 .text h1, .text h2, .text h3, .text h4, .text h5, .text h6 {
 	font-size: inherit;
-	margin: .2rem 0;
-	font-variant:small-caps;
+	margin: 1em 0 .2em 0;
+	@include pixel-font;
+//	font-variant:small-caps;
 		//color: $pen-sharp;
 	//background: #001800;
 	//padding: .5rem;
 }
+.text h1 {
+	margin: 1.5em 0 .2em 0;
+}
 .dark .text h1, .dark .text h2, .dark .text h3, .dark .text h4, .dark .text h5, .dark .text h6 {
 	//text-shadow: 0 0 .5rem;
 }
-.text h1 {
+.text h1.title {
 	font-size: 1.5rem;
     text-align: center;
 	margin: .2rem -.2rem;
@@ -367,14 +380,71 @@ main.doc-display {
 	font-variant:normal;
 }
 
-//.dark .text h1 {	
+.dark .text h1, .dark .text h2 {	
+	background: $terminal;
+	color: #333;
 //	background: #0308;
-//}
+}
 .text h2, .text h3 {
 	font-size: 1.2rem;
 }
+.text ol.table-of-contents {
+	margin:0;
+	padding:0;
+	list-style: none;
+	width:100%;
+	position:absolute;
+	bottom:0;
+	display:flex;
+	flex-direction:row;
+	justify-content:left;
+	overflow:hidden;
+	max-height:1.2rem;
+	opacity:75%;
+	max-width: none;
+}
+.dark .text ol.table-of-contents {
+	//color: #333;
+	//background: $terminal-alt;
+	color:$terminal-alt;
+	border-top: 1px solid $terminal-alt;
+	//background:#333;	
+	a:link, a:visited {
+		color: $terminal-alt;
+	}
+	a:hover, a:focus {
+		background: $terminal-alt;
+		color: #333;
+		text-decoration:none;
+	}
+}
+.doc-display.has-contents-bar {
+	margin-bottom:1.2rem;
+}
+.table-of-contents li {
+	font-size: .8rem;
+	line-height:1rem;
+	//font-style:italic;
+	padding:.1rem .2rem;
+	@include pixel-font;	
+	display:inline-block;
+}
+.table-of-contents li a {
+}
+.table-of-contents li a::before {
+	content:">";
+	visibility: hidden;
+}
+.table-of-contents li a::after {
+	content:"<";
+	visibility: hidden;
+}
+.table-of-contents li a.active::before, .table-of-contents li a.active::after,
+.table-of-contents li a:hover::before, .table-of-contents li a:hover::after {
+	visibility:visible;
+}
 .box header, .box footer {
-	@include hires-font;
+	@include pixel-font;
 	position:relative;
 }
 .box footer {
@@ -401,13 +471,26 @@ header .tabs {
 .toolbar .disabled, .window-tools .disabled {
 	color: #888;
 }
-.tabs .tab, .toolbar button {
-	line-height: 1.4rem;
+.tabs .tab, .toolbar button, .window-tools button {
 	padding: 0 .2rem;
 	display:block;
 	margin-right: .2rem;
 }
-
+.window-tools {
+	order: 9999;
+	button {
+		margin:0;
+	}
+}
+.window-tools .min-button::before {
+	content: "🗕";
+}
+.window-tools .max-button::before {
+	content: "🗖";
+}
+.maximized .window-tools .max-button::before {
+	content: "🗗";
+}
 div.camera {
 	position:relative;
 }
@@ -559,36 +642,23 @@ background-position: 50% 50%;
 .camera button.snap:disabled {
 	display:none;
 }
-.window-tools {
-	order: 9999;
-}
-.window-tools button {
-	line-height: 1.4rem;
-	padding: 0 .2rem;
-	margin: 0;
-	display:block;
-}
-.window-tools .min-button::before {
-	content: "🗕";
-}
-.window-tools .max-button::before {
-	content: "🗖";
-}
-.maximized .window-tools .max-button::before {
-	content: "🗗";
-}
+
 pre nav.toolbar {
 	position:relative;
 	padding-bottom:1rem;
 	font-size:80%;
+	float:right;
 }
+/*
 pre nav.toolbar button {
+	position:absolute;
+	left:0;
+}
+.is-very-wide pre nav.toolbar button {
 	position:absolute;
 	right:0;
 }
-.tabs .tab, .toolbar button, .window-tools button, .iconbox button {
-	background-color: $button-bg-header;
-}
+*/
 .iconbox:empty {
 	display:none;
 }
@@ -622,6 +692,12 @@ pre nav.toolbar button {
 .focused .tab.selected, .focused header .toolbar button, .focused .window-tools button {
 	background-color: #ff8;
 }
+.toolbar button, .window-tools button, .iconbox button {
+	background-color: #ccd;
+}
+.tabs .tab {
+	background-color: $button-bg-header;
+}
 .tab .tab-close {
 	margin-left: .2rem;
 	margin-right: -.2rem;
@@ -637,15 +713,15 @@ nav .clickable.disbled, nav button.disabled {
 	cursor:default !important;
 }
 
-.box nav .clickable:hover, .box nav button:hover {
-	text-shadow: 0 0 3px #888, 0 0 1px #000;
-}
+//.box nav .clickable:hover, .box nav button:hover {
+//	text-shadow: 0 0 3px #888, 0 0 1px #000;
+//}
 
 .box nav .clickable, .box nav .clickable.disabled:active, .box nav .clickable.disabled:hover, 
 .box nav button, .box nav button.disabled:active, .box nav button.disabled:hover 
 {
 	transition: background-color ease .25s;
-	background-color: $button-bg-header;
+	//background-color: $button-bg-header;
 	text-shadow: none;
 }
 .box nav .clickable:hover, .box nav button:hover {
@@ -837,7 +913,7 @@ details.summary-only summary {
 	color: inherit;
 }
 
-#terms li, #terms p, .text li, .text p, .text pre, .text details, .text div, .text h1, .text h2, .text h3, .text h4, .text h5, .text h6 {
+#terms li, #terms p, .text li, .text p, .text pre, .text details, .text div:not([data-level]), .text h1, .text h2, .text h3, .text h4, .text h5, .text h6, .text .table-of-contents {
 	@include hires-font;
 	max-width: $max-text-width;
 }
@@ -983,13 +1059,13 @@ button {
 	background-color: $button-bg-header;
 	//background-image:radial-gradient(ellipse at bottom right, #aab 0%, #667 100%);
 	//display: inline-block;
-	align-self:stretch;
+	//align-self:stretch;
 	min-height: 1rem;
 	@include for-portrait-only {
-		min-width: 2rem;
+		min-width: 2em;
 	}
 	@include for-tablet-landscape-up {
-		min-width: 8rem;
+		min-width: 9em;
 	}
 }
 
@@ -1112,6 +1188,7 @@ button:active, #top button.active {
 	opacity:100%;
 	z-index: 12;
 }
+
 #top button .notification {
 	@include tiny-font;
 	background: #f008;
@@ -1126,6 +1203,12 @@ button:active, #top button.active {
 	//position: relative;
 	//right: 0;
 	//top: -.5rem;
+}
+#top button.not-implemented {
+	display:none;
+	@include for-desktop-up {
+		display:inline-block;
+	}
 }
 #top button.disappear {
 	span.the-text, span.icon, span.shortcut {
@@ -1148,27 +1231,33 @@ button:active, #top button.active {
 	height: $head-height;
 }
 #top-right, #top-menu {
+	font-size:.7rem;
 	display: flex;
 	flex-flow: row wrap;
 	gap: 0.1rem;
-	flex-grow: 1;
-	flex-shrink: 1;
 	margin: 0 .5em;
 	justify-content: stretch;
-	align-content: stretch;
+	align-items: stretch;
 	padding: 0.25rem;
 }
-
+#top-right {
+	flex-grow: 1;
+	flex-shrink: 1;
+}
 #top-menu {
-	align-items: last baseline;
-	grid-template-columns: repeat(10, 1fr);
-	grid-template-rows: [row1] 50% [row2] 50%;
-	font-size: 0.8rem;
-	max-width: calc(8rem * 9 + 2*8*0.1rem);
+	//align-items: last baseline;
+	//grid-template-columns: repeat(10, 1fr);
+	//grid-template-rows: [row1] 50% [row2] 50%;
+	width: calc(9em * 9 + 2*8*0.1rem);
+	max-width:max-content;
+	flex-shrink:1;
+	flex-grow:0
 }
 #user {
 	padding:.2rem;
+	@include for-tablet-landscape-up {
 	margin-left:auto;
+	}
 }
 #user span, #user img {
 	vertical-align: middle;
@@ -1189,10 +1278,14 @@ button:active, #top button.active {
 }
 
 #top button.rows {
-	min-width: 3rem;
+	min-height:1rem;
+	min-width:1.5em;
+	@include for-desktop-up {
+		min-height:2rem;
+		min-width: 3em;
+	}
 	text-align:center;
 	margin-right:.1rem;
-	height:100%;
 }
 #logoimg {
 	height: $head-height;
@@ -1263,13 +1356,14 @@ nav li {
 .focused.console .cm-cursor {
 	border-left-color: #f00; 
 }
-.terminal .cm-editor {
+.console .cm-editor {
 	height: auto;
+	max-height: 70%;
 }
-.terminal .cm-editor {
+.console .cm-editor {
 	border-top: 0.1rem solid #ccd;
 }
-.terminal .cm-editor.cm-focused {
+.console .cm-editor.cm-focused {
 	border-top: 0.1rem solid #ff8;
 }
 .terminal-out-container {
@@ -1281,6 +1375,7 @@ nav li {
 }
 .terminal-out {
 	white-space: pre-wrap;
+	word-break:break-all;
 	padding: .2rem .5rem;
 }
 
@@ -1296,13 +1391,10 @@ nav li {
 	max-height: 100%;
 	max-width: 100%;
 }
-#shell .cm-editor {
-	border-top: 1px solid #8808;
-}
-#shell .cm-editor .cm-line:first-child::before {
+.console .cm-editor .cm-line:first-child::before {
 	content: "›››  "; //"〉"
 }
-#shell .cm-editor .cm-line::before {
+.console .cm-editor .cm-line::before {
 	content: "...  "; //"〉"
 	letter-spacing: -.5rem;
 	opacity: 1;
@@ -1310,15 +1402,15 @@ nav li {
 	margin-left: -.5rem;
 }
 
-#shell .running .cm-editor .cm-line::before,
-#shell .waiting .cm-editor .cm-line::before,
-#shell .waiting .cm-editor .cm-line:first-child::before {
+.console .running .cm-editor .cm-line::before,
+.console .waiting .cm-editor .cm-line::before,
+.console .waiting .cm-editor .cm-line:first-child::before {
 	opacity: 0;
 }
-#shell .waiting .cm-cursor {
+.console .waiting .cm-cursor {
 	border-left-color: #300; 
 }
-#shell .running .cm-cursor {
+.console .running .cm-cursor {
 	border-left-color: #030; 
 }
 
@@ -1677,7 +1769,7 @@ method h6 {
 	max-width: 60%;
 	background: #111;
 	border: 1px solid;
-	box-shadow: 0 0 5px;
+	box-shadow: 0 0 5px, 2px 2px 15px #000;
 	padding:.5rem;
 }
 .hints h1, .warning h1 {
@@ -1963,9 +2055,12 @@ aside.right.tip {
 	position:relative;
 	font-size: 1rem;
 	line-height:1.2rem;
-	margin: 0 0 .2rem .2rem;
 	border-left: 0.1rem solid #4dff0088;
 	padding: .5rem 0 .5rem .2rem;
+}
+aside.tip, aside.important {
+	background: #333;
+	margin:.2rem;
 }
 div#excavator {
 	background-size: 51px 26px;

@@ -87,12 +87,30 @@
 //	font-style: normal;
 //	/* font-size-adjust: 0.63 */
 //}
+/*
 @font-face {
     font-family: "PressStart2P";
     src: url("../fonts/pressstart2p/PressStart2P.woff") format("woff");
     font-weight: normal;
     font-style: normal;
 }
+*/
+@font-face {
+    font-family: "PressStart2P Narrow";
+    src: url("../fonts/pressstart2p/PressStart2P-Narrow.woff2") format("woff2"),
+		 url("../fonts/pressstart2p/PressStart2P-Narrow.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+/*
+@font-face {
+    font-family: "PressStart2P Tall";
+    src: url("../fonts/pressstart2p/PressStart2P-Tall.woff2") format("woff2"),
+		 url("../fonts/pressstart2p/PressStart2P-Tall.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+*/
 //@font-face {
 //    font-family: "Glasstown-NBP";
 //    src: url("../fonts/glasstown/Glasstown-NBP.woff") format("woff");

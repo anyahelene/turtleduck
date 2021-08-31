@@ -5,11 +5,134 @@ import json from 'highlight.js/lib/languages/json';
 import python from 'highlight.js/lib/languages/python';
 import java from 'highlight.js/lib/languages/java';
 import jquery from 'jquery';
+import slugify from 'slugify';
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('java', java);
 hljs.registerLanguage('json', json);
 hljs.registerLanguage('python', python);
 
+
+/** Convert a flat document to one with a tree-like section structure; i.e.,
+    each heading and associated text will be placed in a DIV, with subsections
+    nested within. Nodes are removed from `rootElt` and added to `destElt` */
+function doc2tree(rootElt, destElt) {
+	destElt.innerHTML = '';
+	var current = destElt;
+	var count = 0;
+	var title = '';
+	const stack = [destElt];
+	const path = [];
+
+	function newSection(elt, level) {
+		const newSection = document.createElement('div');
+		if(elt.id) {
+			newSection.id = elt.id;
+			elt.id = undefined;
+		}
+		var parent = null;
+		for(var i = stack.length-1; parent == null && i >= 0; i--) {
+			parent = stack[i];
+		}
+		parent.appendChild(newSection);
+		stack.push(newSection);
+		path.push(count+1);
+		newSection.dataset.level = path.length;
+		newSection.dataset.path =  path.join('.');
+		return newSection;
+	}
+
+	Array.from(rootElt.childNodes).forEach(elt => {
+		//console.log('doc2tree:', 'current', current, 'stack', stack, 'looking at', elt.innerHTML || elt.textContent);
+		var m;
+		if((m = elt.nodeName.match(/^H([123456])$/)) != null) {
+			const level = parseInt(m[1]);
+			if(!title && level === 1) {
+				title = elt.innerText;
+				elt.classList.add('title');
+			}
+			//console.log('looking at ', level, stack.length, stack, elt.innerHTML);
+			while(level < stack.length) { // unwind to level-1
+				current = stack.pop();
+				count = path.pop();
+				//console.log('doc2tree <=  ', path.join('.'), 'current', current, 'stack', JSON.stringify(stack), 'popping at', elt.innerHTML || elt.textContent)
+			}
+			while(level > stack.length) {
+				stack.push(null);
+				path.push(0);
+				count = 0;
+			}
+			current = newSection(elt);
+			//console.log('doc2tree ==  ', path.join('.'), 'current', current, 'stack', stack, 'pushing at', elt.innerHTML || elt.textContent)
+		} 
+		current.appendChild(elt);
+	});
+}
+function makeScrollToListener(elt, scroller) {
+	if(!scroller) {
+		console.warn('no doc-display parent found', elt);
+		return function(e) {
+			e.stopPropagation();
+			e.preventDefault();				
+		};
+	} else {
+		return function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			const target = e.currentTarget;
+			console.log("scrollTo", target, e);
+			if(target.href) {
+				const section = elt.querySelector(target.getAttribute('href'));
+				const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+				if(section) {
+					scroller.scrollTop = section.offsetTop - fontSize;
+				}
+			}
+		}
+	}
+}
+function makeToc(doc, elt, scroller) {
+	if(!scroller)
+		return [null,null,null];
+	const headers = [];
+	const sections = {};
+	var i = 1;
+	const toc = document.createElement('ol');
+	toc.className = "table-of-contents";
+	const listener = makeScrollToListener(elt, scroller);
+	doc.querySelectorAll('h1, h2').forEach(head => {
+		headers.push(head);
+		const a = head.querySelector('slug');
+		var title = head.textContent;
+		//console.log('title', title);
+		if(a) {
+			title = a.textContent;
+			a.remove();
+			//console.log("title'", title);
+		}
+		const slug = `_${i}_` + slugify(title);
+		//console.log('slug', slug);
+		head.id = slug;
+		const item = document.createElement('li');
+		const link = document.createElement('a');
+		sections[head.id] = {head: head, link: link};
+		link.id = '_link_' + slug;
+		link.href = '#' + slug;
+		link.textContent = title;
+		link.addEventListener('click', listener);
+		link.type = 'button';
+		item.appendChild(link);
+		toc.appendChild(item);
+	});
+
+
+	if(toc.childElementCount > 0) {
+		elt.appendChild(toc);
+		scroller.classList.add('has-contents-bar');
+	}
+	return [toc, headers, sections];
+}
+
+const thresholds = [0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1,0];
 class MDRender {
 	constructor(opts = {}) {
 		this.md = new Remarkable(jquery.extend({
@@ -34,10 +157,12 @@ class MDRender {
 		rules.paragraph_close = this._render_paragraph_close(rules.paragraph_close);
 	}
 	
+
 	render_unsafe(elt, code) {
 		this._snippets = [];
-		elt.innerHTML = this.md.render(code);
-		elt.querySelectorAll('a[data-action]').forEach(link => {
+		const doc = document.createElement('div');
+		doc.innerHTML = this.md.render(code);
+		doc.querySelectorAll('a[data-action]').forEach(link => {
 			const action = link.dataset.action;
 			//var m = link.href.match(/^([a-z]*):\/\/(.*)/);
 			//if(!m)
@@ -50,6 +175,35 @@ class MDRender {
 			});
 
 		});
+
+		var scroller = elt;
+		while(scroller && !scroller.classList.contains('doc-display')) {
+			scroller = scroller.parentElement;
+		}
+		
+		const [toc, headers, sections] = makeToc(doc, elt, scroller);
+			
+		doc2tree(doc, elt);
+		
+		if(toc) {
+			console.log('sections', sections);
+			const obs = new IntersectionObserver(entries => {
+				for(const entry of entries) {
+					const section = elt.querySelector('#'+entry.target.id);
+					const link = elt.querySelector('#_link_'+entry.target.id);
+					//console.log(section, link);
+					if(section) {
+						if(entry.intersectionRatio > 0) {
+							link.classList.add('active');
+						} else {
+							link.classList.remove('active');
+						}
+					}
+				}
+			},  {root: scroller, rootMargin: "-25% 0px", threshold: thresholds});
+			elt.querySelectorAll('div[data-level="2"], div[data-level="1"]').forEach(head => obs.observe(head));
+			elt.appendChild(toc);
+		}
 		elt.querySelectorAll('button[data-snippet]').forEach(btn => {
 			const snip = this._snippets[parseInt(btn.dataset.snippet)];
 			var code = snip.code;
@@ -90,7 +244,7 @@ class MDRender {
 								});
 				});				
 			}
-		})
+		});
 	}
 	
 	_remarkableHighlight() {
@@ -122,7 +276,7 @@ class MDRender {
 		return function(tokens, idx, options, env, instance) {
 			const l = md._snippets.length;
 			var r = old(tokens, idx, options, env, instance);
-			console.log('fence:', tokens[idx].params, r);
+			//console.log('fence:', tokens[idx].params, r);
 			if(l != md._snippets.length) {
 				const btn = `<nav class="toolbar"><button class="insert" type="button" data-action="insert" data-snippet="${l}"></button></nav>`;
 				const m = r.match(/^([\s\S]*?)(<\/pre>|)(\s*)$/);

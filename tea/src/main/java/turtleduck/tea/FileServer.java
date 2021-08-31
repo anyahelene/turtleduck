@@ -2,7 +2,9 @@ package turtleduck.tea;
 
 import turtleduck.annotations.MessageDispatch;
 import turtleduck.async.Async;
+import turtleduck.async.Async.Sink;
 import turtleduck.messaging.FileService;
+import turtleduck.messaging.Reply;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 
@@ -35,6 +37,19 @@ public class FileServer implements FileService {
 			return dict;
 		}).mapFailure(err -> err);
 	}
+	@Override
+	public Async<Dict> fetch(String url) {
+		Sink<Dict> sink = Async.create();
+		JSUtil.fetch(url, res -> {
+			Dict dict = Dict.create();
+			dict.put(TEXT, res.stringValue());
+			sink.success(dict);
+		}, err -> {
+			sink.success(error(err.stringValue()));
+		});
+		return sink.async();
+
+	}
 
 	@Override
 	public Async<Dict> stat(String path) {
@@ -48,5 +63,9 @@ public class FileServer implements FileService {
 		return fs.write(path, text).map(res -> {
 			return Dict.create().put(PATH, res.name());
 		}).mapFailure(err -> err);
+	}
+	
+	private Dict error(String msg) {
+		return Dict.create().put(Reply.STATUS, "error").put(Reply.EVALUE, msg).put(Reply.ENAME, "error");
 	}
 }

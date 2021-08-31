@@ -12,6 +12,7 @@ import turtleduck.util.Key;
 public interface FileService {
 	Key<String> TEXT = Key.strKey("text");
 	Key<String> PATH = Key.strKey("path");
+	Key<String> URL = Key.strKey("url");
 	Key<Dict> FILE = Key.dictKey("file");
 	Key<Array> FILES = Key.arrayKey("files", () -> Array.of(Dict.class));
 
@@ -20,6 +21,9 @@ public interface FileService {
 
 	@Request(type = "read", replyFields = { "TEXT" })
 	Async<Dict> read(@MessageField("PATH") String path);
+
+	@Request(type = "fetch", replyFields = { "TEXT" })
+	Async<Dict> fetch(@MessageField("URL") String url);
 
 	@Request(type = "stat", replyFields = { "FILE" })
 	Async<Dict> stat(@MessageField("PATH") String path);

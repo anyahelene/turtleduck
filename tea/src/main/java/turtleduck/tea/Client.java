@@ -163,7 +163,7 @@ public class Client implements JSObject {
 			// DocDisplay docDisplay = new DocDisplay(screenComponent);
 			// docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
 			DocDisplay docDisplay2 = new DocDisplay(screenComponent);
-			docDisplay2.initFromUrl("examples/dgc/koronasertifikat.md", null, true);
+			docDisplay2.initFromUrl("examples/dcc/koronasertifikat.md", null, true);
 
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
@@ -298,6 +298,8 @@ public class Client implements JSObject {
 			welcome.put(HelloService.USERNAME, "T.Duck");
 			welcome.put(HelloService.EXISTING, false);
 			chatTerminal.connected(pyConn, welcome);
+			HTMLElement notif = Browser.document.getElementById("chat-notification");
+			notif.getStyle().setProperty("display", "none");
 		}
 	}
 
@@ -371,6 +373,8 @@ public class Client implements JSObject {
 			String imports = getConfigs("languages.python.import", Array.create()).toListOf(String.class).stream()
 					.map(s ->  s + "\\n").collect(Collectors.joining());
 
+			String extraInits = getConfigs("languages.python.init", Array.create()).toListOf(String.class).stream()
+					.map(s ->  s + "\n").collect(Collectors.joining());
 			Message msg = Message.writeTo("pyshell", "init_python")//
 					.putContent(ShellService.CODE, "import micropip\n"//
 							+ "import unthrow\n"//
@@ -379,6 +383,7 @@ public class Client implements JSObject {
 							+ installs//
 							+ "from pyodide import to_js\n"//
 							+ "from turtleduck import ShellService\n"//
+							+ extraInits//
 							+ "ShellService.setup_io('pyshell')\n"//
 							+ "ShellService.use_msg_io()\n"//
 							+ "await ShellService.do_imports('" + imports + "')\n" + "print(ShellService.banner())")

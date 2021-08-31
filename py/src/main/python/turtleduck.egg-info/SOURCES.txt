@@ -1,4 +1,5 @@
 setup.py
+src/main/python/turtleduck/CoronaPass.py
 src/main/python/turtleduck/ShellService.py
 src/main/python/turtleduck/__init__.py
 src/main/python/turtleduck.egg-info/PKG-INFO

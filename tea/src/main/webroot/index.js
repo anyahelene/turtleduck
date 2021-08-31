@@ -392,7 +392,7 @@ async function handleKey(key, button, event) {
 		}
 		case "focus": {
 			const win = turtleduck[param];
-			console.log("focus:", param, win);
+			//console.log("focus:", param, win);
 			if(win) {
 				win.focus();
 			}
@@ -558,7 +558,7 @@ jquery(function() {
 			return false;
 
 		};
-		const shortcut = jquery(this).attr('data-shortcut');
+		const shortcut = this.classList.contains('not-implemented') ? '(not implemented)' : jquery(this).attr('data-shortcut');
 		const shortcutText = shortcut.replace('ctrl+', '⌘').replace('shift+', '↑');
 		jquery(this).prepend(jquery('<span class="icon"><span>'+jquery(this).attr('data-icon')+'</span></span>'))
 		jquery(this).prepend(jquery('<span></span>').addClass('bg'));
@@ -725,6 +725,22 @@ jquery(function() {
 	});
 });
 
+var mqlPortrait;
+turtleduck.initializeWM = function() {
+	if(!mqlPortrait) {
+		mqlPortrait = window.matchMedia('(max-width: 899px)');
+		mqlPortrait.onchange = turtleduck.initializeWM;
+	}
+	console.log('media size change: ', mqlPortrait)
+	if(mqlPortrait.matches) {
+		turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout-portrait');		
+	} else {
+		turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout');
+	}
+	if(turtleduck.layoutSpec && turtleduck.layoutPrefs)
+		turtleduck.wm.initialize(turtleduck.layoutSpec, turtleduck.layoutPrefs);
+}
+
 jquery(document).ready(() => {
 	const mqlDark = window.matchMedia('(prefers-color-scheme: dark)')
 	const mqlLight = window.matchMedia('(prefers-color-scheme: light)')
@@ -742,18 +758,7 @@ jquery(document).ready(() => {
 	mqlDark.onchange = handleColorPreference;
 	mqlLight.onchange = handleColorPreference;
 
-	const mqlPortrait = window.matchMedia('(max-width: 899px)');
-	turtleduck.initializeWM = function handleMediaSizePortrait() {
-		console.log('media size change: ', mqlPortrait)
-		if(mqlPortrait.matches) {
-			turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout-portrait');		
-		} else {
-			turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout');
-		}
-		if(turtleduck.layoutSpec && turtleduck.layoutPrefs)
-			turtleduck.wm.initialize(turtleduck.layoutSpec, turtleduck.layoutPrefs);
-	}
-	mqlPortrait.onchange = turtleduck.initializeWM;
+	turtleduck.runningOnSafari = window.safari !== undefined;
 	
 	if(false) {
 	if(turtleduck.localStorage.getItem('alwaysShowSplashHelp') || !turtleduck.localStorage.getItem('hasSeenSplashHelp')) {

@@ -3,6 +3,7 @@ const path = require('path');
 const marked = require("marked");
 const renderer = new marked.Renderer();
 
+
 module.exports = {
   mode: 'development',
   context: path.resolve(__dirname, 'src', 'main'),
@@ -18,6 +19,12 @@ module.exports = {
 //    publicPath: 'static/',
     filename: 'js/[name].[contenthash].js'
   },
+  //resolve: {
+  //  fallback: { 
+  //      "querystring": require.resolve("querystring-es3/"),
+  //      "buffer": require.resolve("buffer/")
+  //  }
+  //},
   optimization: {
       //runtimeChunk: 'single',
       //splitChunks: {
