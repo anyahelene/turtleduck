@@ -189,7 +189,8 @@ public class Router {
 						async.onSuccess(result -> {
 							if (DEBUG)
 								logger.info("REPLY msgid {} handler {}: {} ", msg.msgId(), handler, result);
-							send(result); // TODO: check that to.equals(from)?
+							if (result != null)
+								send(result); // TODO: check that to.equals(from)?
 						});
 						async.onFailure(fail -> {
 							logger.error("FAIL msgid {} handler {}: {}", msg.msgId(), handler, fail);

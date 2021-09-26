@@ -1,6 +1,6 @@
 package turtleduck.util;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -55,14 +55,14 @@ public interface Dict extends Iterable<Key<?>> {
 	<T> boolean has(String key);
 
 	<T> boolean has(String key, Class<T> type);
-
+	Iterable<Entry<String,Object>> entries();
 	String toJson();
 
 	static class DictImpl implements Dict {
 		private final Map<String, Object> dict;
 
 		public DictImpl() {
-			dict = new HashMap<>();
+			dict = new LinkedHashMap<>();
 		}
 
 		@SuppressWarnings("unchecked")
@@ -94,6 +94,10 @@ public interface Dict extends Iterable<Key<?>> {
 			};
 		}
 
+		public Iterable<Entry<String,Object>> entries() {
+			return dict.entrySet();
+		}
+		
 		@Override
 		public <T> T get(Key<T> key) {
 			Object obj = dict.get(key.key());

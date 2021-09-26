@@ -1,5 +1,7 @@
 package turtleduck.util;
 
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import turtleduck.colors.Color;
@@ -116,15 +118,14 @@ public class JsonUtil {
 		StringBuilder b = new StringBuilder();
 		b.append("{");
 		boolean first = true;
-		for (Key<?> k : d) {
+		for(Entry<String, Object> e : d.entries()) {
 			if (!first)
 				b.append(",");
 			else
 				first = false;
-			Object val = d.get(k);
-			b.append(encode(k.key()));
+			b.append(encode(e.getKey()));
 			b.append(":");
-			b.append(encode(val));
+			b.append(encode(e.getValue()));
 		}
 		b.append("}");
 		return b.toString();
@@ -161,7 +162,7 @@ public class JsonUtil {
 		else if (val instanceof Array)
 			return encode((Array) val);
 		else
-			return encode(val.toString());
+			return encode(Objects.toString(val));
 	}
 
 }
