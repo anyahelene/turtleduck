@@ -80,12 +80,11 @@ class GridDisplay:
 
         if '.' in value and not value.startswith('url('):
             if '/' not in value:
-                bg = f'url(images/{value})'
+                styleset['background-image'] = f'url(images/{value})'
             else:
-                bg = f'url({value})'
+                styleset['background-image'] = f'url({value})'
         else:
-            bg = value
-        styleset = {'background': bg}
+            styleset = {'background': value}
         if size != None:
             styleset['background-size'] = size
         if position != None:
