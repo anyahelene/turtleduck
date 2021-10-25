@@ -65,7 +65,6 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	private boolean historyEnabled = true;
 
 	CMTerminalServer(Component parent, Shell shell) {
-		logger.info("CMTerminalServer({},{},{})", parent.element(), name);
 		this.parent = parent;
 		this.shell = shell;
 		this.console = new LanguageConsole.ConsoleImpl();
@@ -74,6 +73,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	public void initialize(String name) {
 		this.name = name;
 		this.lang = shell.language();
+		logger.info("initialize({}, {},{})", name, lang, parent.element());
 		wrapperElt = element("main", attr("id", name), clazz("waiting"));
 		outerElt = element("div", clazz("terminal"));
 		wrapperElt.appendChild(outerElt);
@@ -204,7 +204,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	private void scrollIntoView() {
 		outputContainer.setScrollTop(0);
 		JSUtil.scrollToBottom(wrapperElt);
-		//JSUtil.scrollIntoView(anchorElt);
+		// JSUtil.scrollIntoView(anchorElt);
 	}
 
 	private void goHistory(int next, State state) {
@@ -229,6 +229,9 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 				scrollIntoView();
 			}).onFailure(err -> {
 				logger.error("history.get: {}", err);
+				if(next > 0) {
+					goHistory(next-1, state);
+				}
 			});
 		}
 	}
@@ -242,7 +245,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 			return;
 		} else {
 			Dict opts = Dict.create();
-			Location loc = new Location("file", "", "/history/" + historyId + "/" + id, 0, s.length(), -1);
+			Location loc = new Location("shell", "", historyId + "/" + id, 0, s.length(), -1);
 			opts.put(ShellService.LOC, loc.toString());
 			promptRunning();
 			shell.evalLine(s, id, opts, console.withOutputElement(output));
@@ -324,6 +327,24 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	}
 
 	@Override
+	public Async<Dict> display(Dict data, String stream) {
+		String url = data.getString("url");
+		ArrayView<?> arr = data.get("data", ArrayView.class);
+		if (arr != null) {
+			Browser.consoleLog("data", arr.get());
+			url = JSUtil.createObjectURL(arr.get(), data.get("format", "image/png"));
+			logger.info("image: {}", url);
+		}
+		if (url != null) {
+			outputElt.appendChild(element("img", attr("src", url)));
+
+			scrollIntoView();
+		}
+
+		return null;
+	}
+
+	@Override
 	public Async<Dict> write(String text, String stream) {
 		if (stream.equals("err") || stream.equals(name + "err"))
 			cursor.print(text, Colors.YELLOW);
@@ -334,6 +355,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 //		elt.withText(text);
 //		outputElt.appendChild(elt);
 //		terminal.write(text);
+		scrollIntoView();
 		return null;
 	}
 

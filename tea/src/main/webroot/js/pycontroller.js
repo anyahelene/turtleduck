@@ -2,8 +2,17 @@
 
 
 class PyController {
-	constructor() {
-		this.pyodideWorker = new Worker('./js/pywebworker.js');
+	constructor(shared = false, name = undefined) {
+		const q = false ? '?' + name : '';
+		if(shared) {
+			this.pyodideWorker = new SharedWorker('./js/pywebworker.js' + q);
+			this.port = this.pyodideWorker.port;	
+			this.shared = true;	
+		} else {
+			this.pyodideWorker = new Worker('./js/pywebworker.js' + q, name);
+			this.port = this.pyodideWorker;
+			this.shared = false;
+		}
 		this.pong = 0;
 		this.onmessage(e => {});
 	}
@@ -14,7 +23,7 @@ class PyController {
 	
 	onmessage(handler) {
 		console.log("onmessage: ", handler)
-		this.pyodideWorker.onmessage = msg => {
+		this.port.onmessage = msg => {
 			if(msg.data === "pong") {
 				console.log("received pong", msg);
 				this.pong++;
@@ -26,30 +35,36 @@ class PyController {
 	
 	ping() {
 		this.pong--;
-		this.pyodideWorker.postMessage("ping");
+		this.port.postMessage("ping");
+	}
+	debug(enable) {
+		if(enable)
+			this.port.postMessage("debug");
+		else
+			this.port.postMessage("!debug");
 	}
 	onerror(handler) {
 			console.log("onerror: ", handler)
-	this.pyodideWorker.onerror = handler;
+		this.port.onerror = handler;
 	}
 	
 	postMessage(msg) {
 		console.log("postmessage: ", msg)
-		this.pyodideWorker.postMessage(msg);
+		this.port.postMessage(msg);
 	}
 	
 	_post(msg, onSuccess, onError) {
-		const _oldOnSuccess = this.pyodideWorker.onmessage;
-		const _oldOnError = this.pyodideWorker.onerror;
-		this.pyodideWorker.onmessage = m => {
-			this.pyodideWorker.onmessage = _oldOnSuccess;
+		const _oldOnSuccess = this.port.onmessage;
+		const _oldOnError = this.port.onerror;
+		this.port.onmessage = m => {
+			this.port.onmessage = _oldOnSuccess;
 			return onSuccess(m);
 		};
-		this.pyodideWorker.onerror = m => {
-			this.pyodideWorker.onerror = _oldOnError;
-			return onSuccess(m);
+		this.port.onerror = m => {
+			this.port.onerror = _oldOnError;
+			return onError(m);
 		};
-		this.pyodideWorker.postMessage(msg);
+		this.port.postMessage(msg);
 	}
 	
 	run(script, context, onSuccess, onError) {
@@ -65,8 +80,24 @@ class PyController {
     	}, onSuccess, onError);
 	}
 	
+	close() {
+		if(this.shared) {
+			if(this.pyodideWorker) {
+				this.port.postMessage({header: {msg_type: 'goodbye', msg_id: "exit"},
+						content: {}});
+				this.pyodideWorker = null;
+				if(this._onclose) {
+					this._onclose();
+				}
+			}
+		} else {
+			this.terminate();
+		}
+	}
 	terminate() {
 		if(this.pyodideWorker) {
+			this.port.postMessage({header: {msg_type: 'goodbye', msg_id: "exit"},
+					content: {}});
 			this.pyodideWorker.terminate();
 			this.pyodideWorker = null;
 			if(this._onterminate) {

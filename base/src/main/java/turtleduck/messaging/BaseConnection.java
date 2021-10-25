@@ -55,6 +55,6 @@ public abstract class BaseConnection implements Connection {
 	public Async<Dict> send(Message msg) {
 		String to = msg.header(Message.TO);
 		logger.info("Sending to {} via {}: {}", to, id, msg);
-		return router.send(msg);
+		return router.send(msg, this);
 	}
 }

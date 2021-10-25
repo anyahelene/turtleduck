@@ -84,10 +84,16 @@ public class History {
 		return sink.async();
 	}
 
+	String getPathName(String session, int id) {
+		return histObj.getPathName(JSString.valueOf(session), JSNumber.valueOf(id)).stringValue();
+	}
+
 	interface JSHistory extends JSObject {
 		Promise<JSString> get(JSString session, JSNumber id);
 
 		Promise<JSString> get(JSString session);
+
+		JSString getPathName(JSString session, JSNumber id);
 
 		Promise<JSNumber> put(JSString session, JSString data);
 

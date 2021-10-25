@@ -18,6 +18,8 @@ import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.dom.xml.NodeList;
 import org.teavm.jso.json.JSON;
 import org.teavm.jso.typedarrays.ArrayBuffer;
+import org.teavm.jso.typedarrays.ArrayBufferView;
+import org.teavm.jso.typedarrays.Uint8Array;
 
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
@@ -31,6 +33,26 @@ public class JSUtil {
 
 	@JSBody(params = { "obj" }, script = "return Array.isArray(obj)")
 	native static boolean isArray(JSObject obj);
+
+	@JSBody(params = { "obj" }, script = "return obj instanceof Uint8Array")
+	native static boolean isUint8Array(JSObject obj);
+
+	@JSBody(params = { "obj" }, script = "return obj instanceof Uint16Array")
+	native static boolean isUint16Array(JSObject obj);
+
+	@JSBody(params = { "obj" }, script = "return obj instanceof Uint32Array")
+	native static boolean isUint32Array(JSObject obj);
+
+	@JSBody(params = { "obj" }, script = "return obj instanceof Int8Array")
+	native static boolean isInt8Array(JSObject obj);
+
+	@JSBody(params = { "obj" }, script = "return obj instanceof Int16Array")
+	native static boolean isInt16Array(JSObject obj);
+
+	@JSBody(params = { "obj" }, script = "return obj instanceof Int32Array")
+	native static boolean isInt32Array(JSObject obj);
+	@JSBody(params = { "obj" }, script = "return ArrayBuffer.isView(obj)")
+	native static boolean isArrayView(JSObject obj);
 
 	@JSBody(params = { "obj" }, script = "return obj instanceof Map")
 	native static boolean isMap(JSObject obj);
@@ -55,6 +77,13 @@ public class JSUtil {
 
 	@JSBody(params = { "keyName" }, script = "turtleduck.handleKey(keyName)")
 	native static void handleKey(String keyName);
+
+	
+	@JSBody(params = { "view", "type" }, script = "return URL.createObjectURL(new Blob([view], {type: type}));")
+	native static String createObjectURL(ArrayBufferView view, String type);
+	
+	@JSBody(params = { "url" }, script = "URL.revokeObjectURL(url);")
+	native static void revokeObjectURL(String url);
 
 	@JSBody(params = { "elt", "className" }, script = "elt.classList.remove(className)")
 	native static void removeClass(HTMLElement elt, String className);
@@ -181,8 +210,8 @@ public class JSUtil {
 	native static void declare(String name, JSStringConsumer fun);
 
 	@JSBody(params = { "url", "handler", "error" }, script = "fetch(url)"
-			+".then(function(resp) {if(resp.ok) resp.text().then(handler); else error(resp.statusText);})"
-			+".catch(function() { error('fetch failed'); })")
+			+ ".then(function(resp) {if(resp.ok) resp.text().then(handler); else error(resp.statusText);})"
+			+ ".catch(function() { error('fetch failed'); })")
 	native static Promise<JSObject> fetch(String url, JSConsumer<JSString> handler, JSConsumer<JSString> error);
 
 	/**
@@ -287,12 +316,15 @@ public class JSUtil {
 		default:
 			System.err.println("don't know how to deal with " + JSObjects.typeOf(jsobj));
 		case "object":
-//			System.out.println("object: ");
-//			Browser.consoleLog(jsobj);
 			if (isArray(jsobj)) {
 //				System.out.println("it's an array!");
 				return decodeArray((JSArray<?>) jsobj);
-			} else {
+			} else if(isArrayView(jsobj)) {
+				return new ArrayView<ArrayBufferView>((ArrayBufferView)jsobj);
+				//ArrayBuffer buf = ((ArrayBufferView)jsobj).getBuffer();
+				//if(isUint8Array(jsobj)) {
+				//}
+			}else {
 				return decodeDict((JSMapLike<?>) jsobj);
 			}
 		}
@@ -334,6 +366,9 @@ public class JSUtil {
 		}
 		return arr;
 	}
+	static <T extends ArrayBufferView> T encode(ArrayView<T> a) {
+		return a.get();
+	}
 
 	static JSObject encode(Object val) {
 		if (val == null)
@@ -350,6 +385,8 @@ public class JSUtil {
 			return encode((Dict) val);
 		else if (val instanceof Array)
 			return encode((Array) val);
+		else if(val instanceof ArrayView) 
+			return encode((ArrayView<?>) val);
 		else
 			return encode(val.toString());
 	}

@@ -1,25 +1,28 @@
 //import {EditorState} from "@codemirror/state"
 //import {EditorView, keymap} from "@codemirror/view"
 //import {defaultKeymap} from "@codemirror/commands"
-import {EditorView, Decoration, keymap, WidgetType} from "@codemirror/view"
-import {EditorState, EditorSelection, StateField, StateEffect} from "@codemirror/state"
-import {defaultTabBinding,insertNewlineAndIndent} from "@codemirror/commands"
-import { syntaxTree } from '@codemirror/language';
+import { EditorView, Decoration, keymap, WidgetType } from "@codemirror/view"
+import { EditorState, EditorSelection, StateField, StateEffect } from "@codemirror/state"
+import { indentWithTab,indentMore,indentLess,insertNewlineAndIndent } from "@codemirror/commands"
+import { syntaxTree, getIndentation, IndentContext, LanguageSupport } from '@codemirror/language';
 import { highlightTree, classHighlightStyle } from '@codemirror/highlight';
+import { StreamLanguage } from "@codemirror/stream-parser";
+import { autocompletion, completionStatus, currentCompletions, } from "@codemirror/autocomplete";
 
-import {basicSetup} from "@codemirror/basic-setup"
-import {java} from "@codemirror/lang-java"
-import {python} from "@codemirror/lang-python"
-import {html} from "@codemirror/lang-html"
-import {markdown, insertNewlineContinueMarkup} from "@codemirror/lang-markdown"
-import {css} from "@codemirror/lang-css"
-import {oneDark} from "@codemirror/theme-one-dark"
-import {darkDuck, darkDuckHighlightStyle} from "./darktheme.js"
-import {hoverTooltip} from "@codemirror/tooltip"
-import {showPanel} from "@codemirror/panel"
-import {closeLintPanel, lintKeymap, linter, nextDiagnostic, openLintPanel, setDiagnostics} from "@codemirror/lint"
-import { NodeProp } from 'lezer-tree';
-import { Component } from './Component';
+import { basicSetup } from "@codemirror/basic-setup"
+import { java } from "@codemirror/lang-java"
+import { python } from "@codemirror/lang-python"
+import { html } from "@codemirror/lang-html"
+import { markdown, insertNewlineContinueMarkup } from "@codemirror/lang-markdown"
+import { css } from "@codemirror/lang-css"
+import { z80 } from "@codemirror/legacy-modes/mode/z80"
+import { oneDark } from "@codemirror/theme-one-dark"
+import { darkDuck, darkDuckHighlightStyle } from "./darktheme.js"
+import { hoverTooltip } from "@codemirror/tooltip"
+import { showPanel } from "@codemirror/panel"
+import { closeLintPanel, lintKeymap, linter, nextDiagnostic, openLintPanel, setDiagnostics } from "@codemirror/lint"
+import { NodeProp } from '@lezer/common';
+import { Component } from './js/Component';
 
 function isBetweenBrackets(state, pos) {
     if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
@@ -53,7 +56,7 @@ class PromptWidget extends WidgetType {
 }
 
 function stdConfig() {
-	return [basicSetup, markKeymap, keymap.of(defaultTabBinding), darkDuck];
+	return [basicSetup, markKeymap, keymap.of({key: 'Tab', run: indentMore, shift: indentLess}), darkDuck];
 }
 const configs = {'' : []};
 function langConfig(lang) {
@@ -74,7 +77,13 @@ function langConfig(lang) {
 			langext = markdown({addKeymap:false});
 		} else if(lang == "css") {
 			langext = css();
-		} 
+		} else if(lang == "z80") {
+			console.log("z80");
+			langext = new LanguageSupport(StreamLanguage.define(z80));
+			console.log(langext);
+		} else if(lang == "plain") {
+			langext = [];
+		}
 		if(langext) {
 			configs[lang] = langext;
 			return langext;
@@ -300,6 +309,9 @@ class TDEditor extends Component {
 			this._after_paste();
 		}
 	}
+	paste_to_file(filename = '', text = '', language = '') {
+		this._paste_to_file.accept(filename, text, language);
+	}
 	switchState(newState) {
 		if(this._debugState)
 			console.log("switchState");
@@ -392,13 +404,51 @@ window.turtleduck.darkDuck = darkDuck;
 
 window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 	function enter({ state, dispatch }) {
-	    let changes = state.changeByRange(({ from, to }) => {
-	        let between =  isBetweenBrackets(state, from);
-			console.log("enter key pressed: from=%o, to=%o, between=%o, state=%o", from, to, between, state);
-			return { range: {from,to}};
+		let isComplete = true;
+	    let changes = state.changeByRange(range => {
+			console.log("enter key pressed at ", range);
+
+			let text = state.sliceDoc(range.from)
+			console.log("text: ", JSON.stringify(text));
+			// check if we're in the middle of the text
+			if(text.length > 0 && !text.match(/^\r?\n/)) { // TODO: line-break setting?
+				isComplete = true;
+				return { range };
+			}
+	        let explode = range.from == range.to && isBetweenBrackets(state, range.from);
+	        let cx = new IndentContext(state, { simulateBreak: range.from, simulateDoubleBreak: !!explode });
+	        let indent = getIndentation(cx, range.from);
+			console.log("indent0: ", indent);
+		    if (indent == null)
+		        indent = /^\s*/.exec(state.doc.lineAt(range.from).text)[0].length;
+			console.log("indent1: ", indent, "explode: ", explode);
+			if (indent || explode)
+				isComplete = false;
+
+			const tree = syntaxTree(state);
+			console.log("tree", tree);
+		    let context = tree.resolve(range.anchor);
+			console.log("context", context);
+			console.log("enter key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o", range.from, range.to, range.anchor, range.head, state);
+			return { range };
 		})
-		
-		return handler("enter", state);
+		console.log("changes: ", changes);
+		if (isComplete) {
+			return handler("enter", state);
+		} else {
+			return insertNewlineAndIndent({state, dispatch});
+		}
+	}
+	function tab({ state, dispatch }) {
+		let changes = state.changeByRange(range => {
+			console.log("enter key pressed at ", range);
+			console.log("tab key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o", range.from, range.to, range.anchor, range.head, state);
+		    let context = syntaxTree(state).resolve(range.from);
+			console.log("context", context);
+			return { range };
+		});
+		console.log("changes: ", changes);
+		return indentMore({state, dispatch});
 	}
 	const shiftEnter = (lang === 'markdown' || lang === 'chat') ? insertNewlineContinueMarkup : insertNewlineAndIndent
 	function arrowUp({ state, dispatch }) {
@@ -423,7 +473,7 @@ window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 		}),
 		keymap.of([{ key: "ArrowUp", run: arrowUp }, { key: "ArrowDown", run: arrowDown }])
 	], window.turtleduck,
-	[keymap.of([{ key: "Enter", run: enter, shift: shiftEnter }])]);
+	[keymap.of([{ key: "Enter", run: enter, shift: shiftEnter }, { key: "Tab", run: tab, shift: indentLess }])]);
 
 	editor._after_paste = () => {
 		outer.scrollTop = outer.scrollTopMax;

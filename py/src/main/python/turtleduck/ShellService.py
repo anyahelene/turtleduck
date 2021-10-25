@@ -11,6 +11,8 @@ import asyncio
 import unthrow
 import errno
 import os
+import pprint
+import importlib
 from pyodide import to_js
 
 
@@ -99,6 +101,8 @@ context = {'__name__' : '__main__',
         '__meta__': globals(),
         '__builtins__': __builtins__.copy()
         }
+context['__builtins__']['pprint'] = pprint.pp
+
 completer = rlcompleter.Completer(context)
 msg_id = 0
 
@@ -155,6 +159,8 @@ async def receive():
         reply['content'] = await inspect(content['code'], content.get('cursor_pos',0), content.get('detailLevel', 0))
         reply_header['msg_type'] = 'inspect_reply'
         send(reply)
+    elif msg_type == "refresh":
+        refresh_explorer()
     elif msg_type == "receive_img":
         from PIL import Image
         img = Image.open(io.BytesIO(content.get('data')))
@@ -209,7 +215,7 @@ def send(message, handler = None):
     message['header']['msg_id'] = f'{msg_id}'
     if handler:
         requests[f'{msg_id}'] = handler
-    js.send(to_js(message))
+    js._send(to_js(message))
 
 def send_async(message):
     fut = asyncio.get_running_loop().create_future()
@@ -233,6 +239,7 @@ class Evaluation:
         self.code = code
         self.ref = ref
         self.opts = opts
+        self.loc = opts.get('loc', 'shell://').split('#')[0]
         self.reply = reply
         self.evalResult = {}
         self.localVars = localVars
@@ -245,7 +252,7 @@ class Evaluation:
         d = {}
         CODE.putInto(d, code)
         COMPLETE.putInto(d, True)
-        LOC.putInto(d, '')
+        LOC.putInto(d, self.loc)
         REF.putInto(d, '')
         SNIP_KIND.putInto(d, 'py')
         self.resultData = d
@@ -257,7 +264,7 @@ class Evaluation:
         if 'await' in self.code:
             try:
                 #context['__stop__'] = self.resumer.stop
-                result = await pyodide.eval_code_async(self.code, globals=context, locals=self.localVars)
+                result = await pyodide.eval_code_async(self.code, globals=context, locals=self.localVars, filename=self.loc)
                 self.encode_result(result)
             except unthrow.ResumableException as ex:
                 raise ex
@@ -278,7 +285,7 @@ class Evaluation:
     def loop(self):
         try:
             #context['__stop__'] = self.resumer.stop
-            result = pyodide.eval_code(self.code, globals=context, locals=self.localVars)
+            result = pyodide.eval_code(self.code, globals=context, locals=self.localVars, filename=self.loc)
             self.encode_result(result)
         except unthrow.ResumableException as ex:
             raise ex
@@ -338,12 +345,62 @@ def encode_data(obj):
     rep = repr(obj)
     disp = None
     if 'Image' in typename:
-        fn = getattr(obj, 'filename')
-        if fn != None and fn != '':
-            disp = {'display':'img', 'url':fn}
+        disp = encode_image(obj)
     return (rep, typename, disp)
 
-def diffContext(old, new, code):
+def encode_image(obj):
+    fn = getattr(obj, 'filename', None)
+    if fn != None and fn != '':
+        return {'display':'img', 'url':fn}
+    else:
+        with io.BytesIO() as stream:
+            try:
+                obj.save(stream, 'PNG')
+                buf = stream.getbuffer()
+                disp = {'display':'img', 'data':buf.tobytes(), 'format':'image/png'}
+                buf.release()
+                return disp
+            except Exception as e:
+                debug("failed to save image", e)
+
+def read_qrcode(img = None):
+    '''Scan a QR code from image or camera
+
+    Parameters:
+        img:  a PIL image, a file name, or None to use the camera
+
+    Returns:
+        str: the scan result, or None if no code was found'''
+    if isinstance(img, str):
+        content = {'url': img}
+    elif img == None:
+        content = {'url': 'qrscan://'}
+    else:
+        content = encode_image(img)
+    fut = send_async({'content':content, 'header':{'msg_type':'qrscan'}})
+    unthrow.stop({'wait_for':'$router_reply'})
+    result = asyncio.get_running_loop().run_until_complete(fut).result()
+    debug("read qrcode:", result)
+    if result.get('status') == 'ok':
+        return result.get('text')
+    else:
+        raise RuntimeError(result.get('error'))
+
+import PIL.ImageShow
+
+class TurtleDuckViewer(PIL.ImageShow.Viewer):
+
+    format = "PNG"
+    options = {"compress_level": 1}
+
+    def show_image(self, image, **options):
+        disp = encode_image(image)
+        _msg_outbuf.display(disp)
+        return 1
+
+PIL.ImageShow.register(TurtleDuckViewer)
+
+def diffContext(old, new, code, ns = 'main'):
     deleted = set()
     changed = {}
     changeMsg = {"old":old, "new":new, "code":code, "iscontext": True}
@@ -353,7 +410,7 @@ def diffContext(old, new, code):
 
     for k in new:
         if not k.startswith("__") and (k not in old or not(new[k] is old[k])):
-            send_update(k, old.get(k), new.get(k))
+            send_update(k, old.get(k), new.get(k), ns)
             if onContextChangeHandler != None:
                 try:
                     changeMsg['name'] = k
@@ -364,7 +421,7 @@ def diffContext(old, new, code):
 
     return deleted, changed
 
-def send_update(name, oldVal, newVal):
+def send_update(name, oldVal, newVal, ns = 'main'):
     data = {'kind':'snippet','sym':'','new':False}
     if oldVal is None:
         data[VERB.key] = 'created'
@@ -393,6 +450,7 @@ def send_update(name, oldVal, newVal):
     data[NAME.key] = name
     data[FULL_NAME.key] = name
     data[TYPE.key] = typename
+    data[SNIP_NS.key] = ns
 
     message = {'header':{'msg_type':'update'}, 'content':{'info':data}}
     send(message)
@@ -481,6 +539,12 @@ class MsgBuffer(io.RawIOBase):
         send(message)
         return len(data)
 
+    def display(self, data):
+        message = {'header':{'msg_type':'display'},
+                    'content':{'data':data, 'stream':self.name}}
+        send(message)
+        return len(data)
+
 def send_and_wait(msg):
     fut = send_async(msg)
     unthrow.stop({'wait_for':'reply'})
@@ -514,19 +578,24 @@ def open_file(file, mode='r', buffering=-1, encoding=None, errors=None, newline=
 def setup_io(stream_name):
     global _old_stdout, _old_stderr, _old_stdin
     global _msg_stdout, _msg_stderr, _msg_stdin
+    global _msg_outbuf, _msg_errbuf
     _old_stdout = sys.stdout
     _old_stderr = sys.stderr
     _old_stdin = sys.stdin
-    _msg_stdout = io.TextIOWrapper(io.BufferedWriter(MsgBuffer(stream_name+"out")), line_buffering=True)
-    _msg_stderr = io.TextIOWrapper(io.BufferedWriter(MsgBuffer(stream_name+"err")), line_buffering=True)
+    _msg_outbuf = MsgBuffer(stream_name+"out")
+    _msg_errbuf = MsgBuffer(stream_name+"err")
+    _msg_stdout = io.TextIOWrapper(io.BufferedWriter(_msg_outbuf), line_buffering=True)
+    _msg_stderr = io.TextIOWrapper(io.BufferedWriter(_msg_errbuf), line_buffering=True)
 
 
 def use_msg_io():
     sys.stdout = _msg_stdout
     sys.stderr = _msg_stderr
     context['__builtins__']['open'] = open_file
+    context['__builtins__']['qrscan'] = read_qrcode
 
-
+def refresh_explorer():
+    diffContext({}, context, '', 'refresh')
 
 def banner():
     # from https://github.com/pyodide/pyodide/blob/f890e5b35fbe1b7101cd22278f51bfbff737debc/src/pyodide-py/pyodide/console.py#L243
@@ -536,7 +605,13 @@ def banner():
     build = f"({', '.join(platform.python_build())})"
     return f'Python {version} ({platform.system()}/WebAssembly), TurtleDuck {turtleduck.__version__}, Pyodide {pyodide.__version__}\n{info}'
 
-async def do_imports(code):
-    if code != '':
-        await pyodide.eval_code_async(code, globals=context)
-
+def do_imports(imports):
+    for imp in imports:
+        if imp.startswith('builtin '):
+            imp = imp[8:]
+            module = importlib.import_module(imp)
+            for key in module.__dict__:
+                if not key.startswith('_'):
+                    context['__builtins__'][key] = module.__dict__[key]
+        else:
+            pyodide.eval_code(imp, globals=context)

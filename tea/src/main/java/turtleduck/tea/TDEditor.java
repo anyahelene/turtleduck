@@ -16,6 +16,10 @@ public interface TDEditor extends Component {
 	State createState(String lang, String text);
 
 	State createState(String lang, String text, int pos);
+	
+	void paste(String text);
+	
+	void paste(String text, int cursorAdj);
 
 	HTMLElement highlightTree();
 

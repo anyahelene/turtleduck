@@ -18,12 +18,15 @@ import static turtleduck.tea.Diagnostics.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.teavm.jso.dom.html.HTMLElement;
+import org.teavm.jso.typedarrays.Uint8Array;
 
 import static turtleduck.tea.HTMLUtil.*;
 
@@ -39,13 +42,14 @@ public class Shell {
 
 	Shell(String languageName, Connection conn) {
 		this.language = languageName;
-		this.service = new ShellServiceProxy(conn.id(), conn.router());
+		this.service = conn != null ? new ShellServiceProxy(conn.id(), conn.router()) : null;
 		this.conn = conn;
 	}
 
 	public Connection connection() {
 		return conn;
 	}
+
 	public String language() {
 		return language;
 	}
@@ -70,7 +74,7 @@ public class Shell {
 					HTMLElement li;
 					if (first) {
 						li = element("summary", s);
-						//JSUtil.activateToggle(li, "open", trace);
+						// JSUtil.activateToggle(li, "open", trace);
 						first = false;
 					} else {
 						li = element("li", s);
@@ -152,54 +156,84 @@ public class Shell {
 		String cmd = split[0];
 		String args = split.length == 2 ? split[1].trim() : "";
 		if (cmd.equals("/ls")) {
-			List<String> files = Client.client.oldFileSystem.list();
-			int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
-			int width = 80; // TODO terminal.getCols();
-			int cols = 1;
-			logger.info("0: max={}, width={}, cols={}", max, width, cols);
-			if (max > 0 && max < width) {
-				cols = Math.min(files.size(), width / (max + 1));
-				max = width / cols;
+			if (false) { // old file system
+				List<String> files = Client.client.oldFileSystem.list();
+
+			} else {
+				console.promptBusy();
+				Client.client.fileSystem.list(args).onComplete(tdfiles -> {
+					List<String> files = tdfiles.stream().map(file -> file.name()).collect(Collectors.toList());
+					int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
+					int width = 80; // TODO terminal.getCols();
+					int cols = 1;
+					logger.info("0: max={}, width={}, cols={}, files={}", max, width, cols, files);
+					if (max > 0 && max < width) {
+						cols = Math.min(files.size(), width / (max + 1));
+						max = width / cols;
+					}
+					logger.info("1: max={}, width={}, cols={}", max, width, cols);
+					int c = 0;
+					for (String str : files) {
+						console.print(String.format("%-" + max + "s", str));
+						if (++c >= cols) {
+							console.println();
+							c = 0;
+						}
+					}
+					if (c != 0)
+						console.println();
+					console.promptNormal();
+				}, err -> {
+				});
 			}
-			logger.info("1: max={}, width={}, cols={}", max, width, cols);
-			int c = 0;
-			for (String str : files) {
-				console.print(String.format("%-" + max + "s", str));
-				if (++c >= cols) {
-					console.println();
-					c = 0;
-				}
-			}
-			if (c != 0)
-				console.println();
-			console.prompt1();
 			return true;
 		} else if (cmd.equals("/loadpython")) {
 			Client.client.loadPython();
-			console.prompt1();
+			console.promptNormal();
 			return true;
 		} else if (cmd.equals("/open")) {
 			String l = Languages.extToLang(args);
-			if(l.isEmpty())
+			if (l.isEmpty())
 				l = language;
 			Client.client.editorImpl.open(args, null, l);
 			Client.client.editorImpl.focus();
-			console.prompt1();
+			console.promptNormal();
 			return true;
-		} else if (cmd.equals("/router_local")) {
+		} else if (cmd.equals("//router_local")) {
 			console.print(Client.client.router.command(args));
-			console.prompt1();
+			console.promptNormal();
 			return true;
 		} else if (cmd.equals("/echo")) {
 			console.println(args);
-			console.prompt1();
+			console.promptNormal();
 			return true;
-			} else if (cmd.equals("/router_remote")) {
-			Message msg = Message.writeTo("$remote", "$router").putContent(Router.COMMAND, args).done();
-			conn.send(msg).onSuccess(result -> {
-				console.print(result.get(Router.RESULT));
-			});
-			console.prompt1();
+		} else if (cmd.equals("//router_remote")) {
+			if (conn != null) {
+				Message msg = Message.writeTo("$remote", "$router").putContent(Router.COMMAND, args).done();
+				conn.send(msg).onSuccess(result -> {
+					console.print(result.get(Router.RESULT));
+				});
+				console.promptNormal();
+			}
+			return true;
+		} else if(cmd.equals("//send")) {
+			if (conn != null) {
+				String msg_type = args;
+				int i = args.indexOf(' ');
+				Dict content;
+				if(i >= 0) {
+					msg_type = args.substring(0,  i);
+					args = args.substring(i);
+					content = JSUtil.decodeDict(args);
+				} else {
+					content = Dict.create();
+				}
+				Message msg = Message.writeTo("$remote", msg_type).content(content).done();
+				conn.send(msg).onSuccess(result -> {
+					console.print(result.get(Router.RESULT));
+				});
+				console.promptNormal();
+			}
 			return true;
 		}
 		return false;
@@ -212,7 +246,7 @@ public class Shell {
 		logger.info("complete: {}", msg.get(ShellService.COMPLETE));
 		logger.info("multi: {}", msg.get(ShellService.MULTI));
 		logger.info("multi-s: {}", msg.getArray("multi"));
-	if (msg.get(ShellService.COMPLETE) || processIncomplete) {
+		if (msg.get(ShellService.COMPLETE) || processIncomplete) {
 			for (Dict result : msg.get(ShellService.MULTI).toListOf(Dict.class)) {
 				printDiags(result, console);
 				printExceptions(result, console);
@@ -233,10 +267,19 @@ public class Shell {
 							elt.appendChild(text(" = "));
 						}
 						elt.appendChild(span(value, clazz("cmt-literal")));
-						if("img".equals(display.getString("display"))) {
+						if ("img".equals(display.getString("display"))) {
+							ArrayView<?> data = display.get("data", ArrayView.class);
 							String url = display.getString("url");
-							if(url != null && url.startsWith("blob:")) {
+							if (data != null) {
+								Browser.consoleLog("data", data.get());
+								url = JSUtil.createObjectURL(data.get(), display.get("format", "image/png"));
+								logger.info("image: {}", url);
+							}
+
+							if (url != null && url.startsWith("blob:")) {
 								elt.appendChild(element("img", attr("src", url)));
+								// if(data != null)
+								// JSUtil.revokeObjectURL(url);
 							}
 						}
 						output.appendChild(elt);
@@ -283,9 +326,9 @@ public class Shell {
 				.onSuccess(msg -> {
 					Client.client.userlog("Eval: finished");
 					if (processResult(msg, false, console)) {
-						console.prompt1();
+						console.promptNormal();
 					} else {
-						console.prompt2(line);
+						console.promptMore(line);
 					}
 				})//
 				.onFailure(msg -> {
@@ -298,7 +341,7 @@ public class Shell {
 					for (String frame : trace.toListOf(String.class)) {
 						console.println(frame, Colors.MAROON);
 					}
-					console.prompt1();
+					console.promptNormal();
 
 				});
 //}

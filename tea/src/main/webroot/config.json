@@ -83,6 +83,19 @@
 				"jshell": "ShellService"
 			}
 		},
+		"z80": {
+			"title": "Z80",
+			"enabled": "optional",
+			"shellName": "z80shell",
+			"shellTitle": "Z80Shell",
+			"editMode": "jz80",
+			"icon": "🧬",
+			"extensions": [
+				"z80"
+			],
+			"services": {
+			}
+		},
 		"python": {
 			"title": "Python",
 			"enabled": "always",
@@ -102,19 +115,18 @@
 			"install": [
 				"../py/base45-0.4.0-py3-none-any.whl",
 				"../py/cbor2-5.4.0.post3-py3-none-any.whl",
-				"../py/pyzbar-0.1.8-py2.py3-none-any.whl",
 				"ecdsa", "asn1crypto",
-				"Pillow"
+				"Pillow", "qrcode", "lark"
 			],
 			"import": [
-				"from turtleduck.CoronaPass import *",
+				"builtin turtleduck.CoronaPass",
 				"from base45 import b45decode",
 				"from base64 import b64decode",
-				"from zlib import decompress",
-				"from cbor2 import loads, dumps",
+				"import zlib",
+				"import cbor2",
 				"from datetime import datetime",
-				"from pprint import pp as pprint",
 				"import ecdsa",
+				"import qrcode",
 				"from ecdsa import VerifyingKey"
 			]
 		},

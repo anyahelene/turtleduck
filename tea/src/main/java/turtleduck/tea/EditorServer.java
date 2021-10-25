@@ -13,6 +13,7 @@ import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.core.JSArray;
+import org.teavm.jso.core.JSString;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.HTMLDocument;
@@ -48,7 +49,7 @@ public class EditorServer implements EditorService {
 	private EventListener<?> saveListener;
 	private EventListener<?> closeListener;
 	private JSArray<JSObject> cmDiags;
-	private TDEditor editor;
+	protected TDEditor editor;
 	private Map<String, EditLanguage> languages = new HashMap<>();
 	private boolean langInitialized = false;
 	private HTMLElement modeFooterElement;
@@ -103,10 +104,13 @@ public class EditorServer implements EditorService {
 		this.tabs = JSUtil.getElementsByClassName(element, "tabs").get(0);
 		this.modeFooterElement = element.querySelector(".editor-mode-foot");
 		this.editor = createEditor(element, "", "");
-		if(parent != null)
+		if (parent != null)
 			editor.setParent(parent);
 		editor.setTitle("Editor");
 		editor.addWindowTools();
+		editor.set("_paste_to_file", (JSTriConsumer<JSString, JSString, JSString>) (obj1, obj2,
+				obj3) -> paste(obj1.stringValue(), obj2.stringValue(), obj3.stringValue()));
+
 	}
 
 	private String defaultName() {
@@ -123,6 +127,20 @@ public class EditorServer implements EditorService {
 			cmDiags.push(diagnostic(l.start(), l.end(), //
 					d.getString("level"), d.get(Reply.ENAME) + ": " + d.get(Reply.EVALUE)));
 		}
+	}
+
+	public void initializeLanguage(String name) {
+		EditLanguage l = languages.get(name);
+		if (l == null)
+			l = new EditLanguage();
+		l.shell = null;
+		l.console = null;
+		l.name = name;
+		languages.put(name, l);
+		if (!langInitialized && currentSession.filename.startsWith("*") && isEmpty(editor.state())) {
+			open("*" + name + "*", "", l.name);
+		}
+		langInitialized = true;
 	}
 
 	public void initializeLanguage(Shell shell, LanguageConsole console) {
@@ -161,7 +179,7 @@ public class EditorServer implements EditorService {
 				logger.info("Tab op: {}", e);
 				HTMLElement target = (HTMLElement) e.getTarget();
 				HTMLElement tab = target;
-				while(tab.getAttribute("data-filename") == null && tab.getParentNode() != null)
+				while (tab.getAttribute("data-filename") == null && tab.getParentNode() != null)
 					tab = (HTMLElement) tab.getParentNode();
 				String session = tab.getAttribute("data-session");
 				String filename = tab.getAttribute("data-filename");
@@ -222,7 +240,7 @@ public class EditorServer implements EditorService {
 				return current.lang.shell.service().eval(contents, current.id, opts).map(msg -> {
 					cmDiags = JSArray.create();
 					lang.shell.processResult(msg, true, current.lang.console);
-					current.lang.console.prompt1();
+					current.lang.console.promptNormal();
 					current.state = setDiagnostics(editor.state(), cmDiags);
 					editor.switchState(current.state);
 					return Dict.create();
@@ -324,6 +342,21 @@ public class EditorServer implements EditorService {
 		}
 	}
 
+	public void paste(String filename, String text, String language) {
+		logger.info("paste({}, {}, {})", filename, text, language);
+		if (language == null || language.isEmpty())
+			language = Languages.extToLang(filename);
+		EditLanguage lang = getLanguage(language);
+		logger.info("language {}", lang);
+		EditSession sess = sessionsByName.get(filename);
+		if (sess == null) {
+			switchTo(createSession(filename, text, lang));
+		} else {
+			switchTo(sess);
+			editor.paste(text);
+		}
+	}
+
 	@Override
 	public Async<Dict> open(String filename, String text, String language) {
 		logger.info("Open: file " + filename + " language" + language + " text:\n" + (text != null ? text : "null"));
@@ -366,36 +399,41 @@ public class EditorServer implements EditorService {
 
 		EditSession sess = sessionsByName.get(filename);
 		if (sess == null) {
-			int id = nextSessionId++;
-			sess = new EditSession();
-			sess.tab = Browser.document.createElement("span").withAttr("class", "tab")
-					.withAttr("data-session", String.valueOf(id))//
-					.withAttr("data-filename", filename) //
-					.withAttr("data-language", language);
-			sess.tabName = Browser.document.createElement("span").withAttr("class", "tab-name")//
-					.withText(filename);
-			sess.tab.appendChild(sess.tabName);
-			sess.closeLink = Browser.document.createElement("button") //
-//					.withAttr("class", "ui-icon ui-icon-close") //
-					.withAttr("type", "button") //
-					.withAttr("class", "tab-close").withAttr("role", "presentation")//
-					.withText("×");
-			sess.tab.appendChild(sess.closeLink);
-
-			tabs.appendChild(sess.tab);
-			logger.info("editor tabs: {}", tabs);
-			sess.state = editor.createState(language, text);
-			sess.id = id;
-			sess.filename = filename;
-			sess.lang = lang;
-			sessionsByName.put(filename, sess);
-			sessionsById.put(id, sess);
+			sess = createSession(filename, text, lang);
 		} else {
 			sess.state = setDoc(sess.state, text);
-
 		}
 		switchTo(sess);
 		return null;
+	}
+
+	public EditSession createSession(String filename, String text, EditLanguage lang) {
+		logger.info("createSession({},{},{})", filename, text, lang.name);
+		int id = nextSessionId++;
+		EditSession sess = new EditSession();
+		sess.tab = Browser.document.createElement("span").withAttr("class", "tab")
+				.withAttr("data-session", String.valueOf(id))//
+				.withAttr("data-filename", filename) //
+				.withAttr("data-language", lang.name);
+		sess.tabName = Browser.document.createElement("span").withAttr("class", "tab-name")//
+				.withText(filename);
+		sess.tab.appendChild(sess.tabName);
+		sess.closeLink = Browser.document.createElement("button") //
+//				.withAttr("class", "ui-icon ui-icon-close") //
+				.withAttr("type", "button") //
+				.withAttr("class", "tab-close").withAttr("role", "presentation")//
+				.withText("×");
+		sess.tab.appendChild(sess.closeLink);
+
+		tabs.appendChild(sess.tab);
+		logger.info("editor tabs: {}", tabs);
+		sess.state = editor.createState(lang.name, text);
+		sess.id = id;
+		sess.filename = filename;
+		sess.lang = lang;
+		sessionsByName.put(filename, sess);
+		sessionsById.put(id, sess);
+		return sess;
 	}
 
 	public class EditSession {

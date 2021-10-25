@@ -12,6 +12,7 @@ import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.core.JSObjects;
 import org.teavm.jso.core.JSString;
 
+import turtleduck.colors.Colors;
 import turtleduck.messaging.BaseConnection;
 import turtleduck.messaging.Connection;
 import turtleduck.messaging.Message;
@@ -39,6 +40,22 @@ public class ChatConnection extends BaseConnection {
 		return map;
 	}
 
+	public void chat(String from, String text) {
+		chat(from, text, 700);
+	}
+
+	public void chat(String from, String text, int delay) {
+		Window.setTimeout(() -> {
+			Message r = Message.writeTo(null, "print")//
+					.content(Dict.create()//
+							.put(TerminalService.TEXT, String.format("[%s] %s", Colors.PURPLE.applyFg(from), text))//
+							.put(TerminalService.STREAM, "chatout"))
+					.done();
+			logger.info("sending chat message: ", r.toDict());
+			receiver.accept(r);
+		}, delay);
+	}
+
 	public void initialize() {
 	}
 
@@ -58,15 +75,20 @@ public class ChatConnection extends BaseConnection {
 			result.put(ShellService.CODE, code);
 			result.put(ShellService.MULTI, Array.create());
 			mw.content(result);
-			Window.setTimeout(() -> {
-				Message r = Message.writeTo(null,"print")//
-						.content(Dict.create()//
-								.put(TerminalService.TEXT, "Why do you say '" + code + "'?")//
-								.put(TerminalService.STREAM, "chatout")).done();
-				logger.info("sending chat reply: ", r.toDict());
-				receiver.accept(r);
-			}, 700);
-			
+			switch ((int) (Math.random() * 10)) {
+			case 0:
+				chat("Turtleduck", "I'll try to keep that in mind.");
+				break;
+			case 1:
+				chat("Turtleduck", "Sorry, I'm sleeping... 💤");
+				break;
+			case 2:
+				chat("Turtleduck", "Sorry, I'm actually not even hatched yet. Please try again later.");
+				break;
+			default:
+				chat("Turtleduck", "Why do you say '" + code + "'?");
+				break;
+			}
 		} else {
 			mw = msg.errorReply(new IllegalArgumentException(msgType));
 		}

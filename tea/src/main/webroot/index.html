@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html style="height: 100vh">
 <head>
-<title>TurtleDuck</title>
+<title>TurtleDuck – CoronaPass</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Hvordan funker koronasertifikatet?" />
+<meta property="og:description" content="Prøv selv (interaktivt!) med TurtleDuck og litt Python-programmering" />
+<meta property="og:url" content="https://puffling.no/coronapass/" />
+<meta property="og:image" content="https://puffling.no/coronapass/images/qrduck.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="527" />
+<meta property="og:image:height" content="330" />
 <link rel="icon" href="images/turtleduck-icon.png" type="image/png" />
 
 <script type="text/javascript" charset="utf-8" src="js/bundle.js"></script>
@@ -19,10 +27,13 @@
 		data-layouts="main-and-figure mainly-coding mainly-figure main-alone figure-alone">
 		<header id="top">
 			<nav id="top-left">
-				<img id="logoimg" src="images/turtleduck.svg" /> <a id="logotext"
-					href="#"> TurtleDuck <span class="version">v${project.version}</span>
+				<button type="button" id="logoimg" data-shortcut=""><img src="images/turtleduck.svg" /></button>
+				<button type="button" id="logotext"
+					data-shortcut=""> TurtleDuck 
+				<span id="logo-experimental">experimental</span>
+					<span class="version">v${project.version}</span>
 					<!-- span id="pond">&nbsp;</span-->
-				</a>
+				</button>
 
 			</nav>
 			<nav id="top-menu">

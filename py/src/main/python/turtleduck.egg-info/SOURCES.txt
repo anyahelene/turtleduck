@@ -1,8 +1,0 @@
-setup.py
-src/main/python/turtleduck/CoronaPass.py
-src/main/python/turtleduck/ShellService.py
-src/main/python/turtleduck/__init__.py
-src/main/python/turtleduck.egg-info/PKG-INFO
-src/main/python/turtleduck.egg-info/SOURCES.txt
-src/main/python/turtleduck.egg-info/dependency_links.txt
-src/main/python/turtleduck.egg-info/top_level.txt

@@ -15,6 +15,7 @@ import turtleduck.messaging.BaseConnection;
 import turtleduck.messaging.Connection;
 import turtleduck.messaging.Message;
 import turtleduck.messaging.Router;
+import turtleduck.messaging.generated.HelloServiceProxy;
 import turtleduck.util.Dict;
 import turtleduck.util.Logging;
 
@@ -31,6 +32,7 @@ public class PyConnection extends BaseConnection {
 	native static void postMessage(JSMapLike<?> message);
 
 	private final JSMapLike<JSObject> map;
+	private HelloServiceProxy welcomeService;
 
 	public PyConnection(String id, Client client) {
 		super(id);
@@ -44,11 +46,21 @@ public class PyConnection extends BaseConnection {
 		return map;
 	}
 
-	public void initialize() {
+	public void connect() {
+		Client.client.userlog("Connected. Sending hello...");
+		welcomeService.hello(Client.client.sessionName, Dict.create()).onSuccess(msg -> {
+			logger.info("Received welcome: {}", msg);
+			Client.client.userlog("Received welcome.");
+
+			for (BiConsumer<Connection, Dict> h : onConnectHandlers.values()) {
+				if (h != null)
+					h.accept(this, msg);
+			}
+		});
 	}
 
 	protected void receive(JSMapLike<JSObject> msgObj) {
-//		logger.info("received from worker: obj {}", msgObj);
+		logger.info("received from worker: obj {}", msgObj);
 		Dict msgDict = JSUtil.decodeDict((JSMapLike<?>) msgObj.get("data"));
 //		logger.info("received from worker: dict {}", msgDict);
 		Message msg = Message.fromDict(msgDict);
@@ -75,6 +87,11 @@ public class PyConnection extends BaseConnection {
 	@Override
 	public void socketSend(Message msg, ByteBuffer[] buffers) {
 		socketSend(msg);
+	}
+	@Override
+	public void receiver(Router router, Consumer<Message> receiver) {
+		super.receiver(router, receiver);
+		welcomeService = new HelloServiceProxy(id, router);
 	}
 
 }

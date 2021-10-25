@@ -4,6 +4,7 @@ hs_err*.log
 node_modules
 .settings
 base/src/main/resources/events/missing-gl
+*~
 *.tmp
 authsecrets.json
 */bin
@@ -14,3 +15,7 @@ pics
 py/pyodide
 .idea
 fonts
+tea/src/main/webroot/examples
+py/src/main/python/turtleduck.egg-info
+py/build
+py/pyodide-*

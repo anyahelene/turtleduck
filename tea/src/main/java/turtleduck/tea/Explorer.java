@@ -244,8 +244,8 @@ public class Explorer implements ExplorerService {
 					signature = prettySignature(signature);
 				else
 					signature = text;
-				String focusTitle = data.lastFocus != null ?  data.lastFocus.title() : "";
-				HTMLElement link = element("a", clazz("paste"),//
+				String focusTitle = data.lastFocus != null ? data.lastFocus.title() : "";
+				HTMLElement link = element("a", clazz("paste"), //
 						attr("href", "insert://" + focusTitle + "/" + text), //
 						attr("data-paste", text), signature);
 				JSUtil.activatePaste(link, "currentTarget", text, cursorAdj, e -> {
@@ -278,8 +278,8 @@ public class Explorer implements ExplorerService {
 		inspect.onSuccess(msg -> {
 			logger.info("inspect reply: {}", msg);
 			// Dict inspectData = msg.get(CodeService.DATA);
-			String signature = msg.get(ShellService.SIGNATURE, null);
-			String doc = msg.get(ShellService.TEXT, null);
+			String signature = msg.get(ShellService.SIGNATURE, "");
+			String doc = msg.get(ShellService.TEXT, "");
 			String typename = msg.get(ShellService.TYPE, null);
 
 			String title = varName;
@@ -304,9 +304,8 @@ public class Explorer implements ExplorerService {
 				signature = prettySignature(signature);
 			else
 				signature = varName;
-			String focusTitle = data.lastFocus != null ?  data.lastFocus.title() : "";
-			HTMLElement link = element("a", clazz("paste"), 
-					attr("href", "insert://" + focusTitle + "/" + varName), 
+			String focusTitle = data.lastFocus != null ? data.lastFocus.title() : "";
+			HTMLElement link = element("a", clazz("paste"), attr("href", "insert://" + focusTitle + "/" + varName),
 					attr("data-paste", varName), signature);
 			JSUtil.activatePaste(link, "currentTarget", varName, 0, e -> {
 				// completion.clear();
@@ -321,7 +320,8 @@ public class Explorer implements ExplorerService {
 			data.completionTitle = title;
 			data.completionData = docElt;
 			completion.appendChild(element("h3", title));
-			completion.appendChild(docElt);
+			if (docElt != null)
+				completion.appendChild(docElt);
 			logger.info("completion height: {}", completion.getOffsetHeight());
 			completion.getStyle().setProperty("display", "flex");
 			completion.getStyle().setProperty("top", data.element.getOffsetTop() + "px");

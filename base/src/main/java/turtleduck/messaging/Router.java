@@ -245,6 +245,14 @@ public class Router {
 		return m;
 	}
 
+	public Async<Dict> send(Message msg, Connection dest) {
+		numSent++;
+		Monitor m = new Monitor(msg.msgId());
+		dest.socketSend(msg);
+		m.sent = true;
+		return m;
+	}
+
 	protected List<Connection> findConnection(String to) {
 		Connection connection = connections.get(to);
 		if (connection != null)

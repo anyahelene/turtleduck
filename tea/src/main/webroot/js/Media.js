@@ -105,8 +105,9 @@ class Camera {
 	_updatePreviewToolbar(mode) {
 		const bar = this.toolbars['preview'];
 		bar.querySelectorAll('button').forEach(elt => elt.remove());
-		for(const id in cam_subscriptions) {
-			const s = cam_subscriptions[id];
+		const subs = this._override_subscriptions || cam_subscriptions;
+		for(const id in subs) {
+			const s = subs[id];
 			console.log(mode, s);
 			if(s.mode === mode) {
 				const btn = document.createElement('button');
@@ -206,10 +207,10 @@ class Camera {
 					if(this.mode.endsWith('qr')) {
 						navigator.clipboard.writeText(this.outputElt.textContent)
 							.then(() => {
-								turtleduck.userlog("Copied!");
-								this._reset();
-								if(this.config.once)
-									this.dispose();
+									turtleduck.userlog("Copied!");
+									this._reset();
+									if(this.config.once)
+										this.dispose();
 								},
 								err => {
 									turtleduck.userlog("Copy failed :(");
@@ -236,8 +237,8 @@ class Camera {
 							turtleduck[dest].paste("'" + this.outputElt.textContent + "'");
 							turtleduck.userlog("Pasted!");
 							this._reset();
-								if(this.config.once)
-									this.dispose();
+							if(this.config.once)
+								this.dispose();
 						} catch(e) {
 							turtleduck.userlog("Paste failed :(");
 							console.error(e);						
@@ -293,6 +294,15 @@ class Camera {
 		if(this.media) {
 			this.media.dispose();
 			this.media = undefined;
+		}
+		if(this._ondispose) {
+			this._ondispose();
+			this._ondispose = null;
+		}
+		if(this.request) {
+			const req = this.request;
+			this.request = undefined;
+			req.reject('Camera closed')
 		}
 	}
 	pause() {
@@ -355,7 +365,7 @@ class Camera {
 			this._updatePreviewToolbar('qr');
 			this.showPreview();
 			this.hideVideo();
-			this.pause();		
+			this.pause();
 		} else if(mode === 'init') {
 			this._setText('Waiting for camera...');
 			const ctx = this.canvas.getContext("2d");
@@ -373,7 +383,7 @@ class Camera {
 		this.outputElt.style.display = text ? 'block' : 'none';
 	}
 	initialize(config = {}) {
-		if(this.media && this.config.fake !== config.fake) {
+		if(this.media && this.config.params !== config.params) {
 			this.media.dispose();
 			this.media = undefined;
 		}
@@ -384,7 +394,7 @@ class Camera {
 			audio: false,
 			once: false,
 			mirror: true,
-			fake: undefined,
+			params: undefined,
 			mimeType:'image/png'
 		}, config);
 
@@ -393,10 +403,27 @@ class Camera {
 			return Promise.resolve(this);
 		}
 		this._setMode('init');
-		if(config.fake) {
-			this.media = new StaticMedia(config.fake, this, () => this.start(), (e) => {this._setText("Error starting camera: " + e)});
-			console.log("initMedia(fake)", this.media);
-			return Promise.resolve(this);
+		if(config.params) {
+			var data, url;
+			if(config.params.content) {
+				const content = config.params.content;
+				data = content.data;
+				url = content.url;
+				if(data) {
+					url = URL.createObjectURL(new Blob([data], {type: content.format || "image/png"}));
+				}
+			}
+			this.media = new StaticMedia(url, this, () => {
+					if(data) // we should release URL object
+						URL.revokeObjectURL(url);
+					this.start();
+				}, (e) => {
+					this._setText("Error starting camera: " + e);
+				});
+			return new Promise((resolve, reject) => {
+				this.request = {resolve: resolve, reject: reject};
+				console.log("initMedia(fake)", this.media);
+			});
 		} else if(Camera.hasMedia()) {
 			return navigator.mediaDevices.getUserMedia({
 				video: this.config.video,
@@ -443,11 +470,19 @@ class Camera {
 		function scanner() {
 			if(!control.isPlaying() || control.mode !== 'qr' || control.scanner != scanner) {
 				console.log("QR scanner stopped")
+				if(control.request) {
+					control.request.reject('no qr code found');
+					delete control.request;
+					control.dispose();
+				}
 				return;
 			}
 			if(control.media.isReady()) {
-				if(control._do_qrScan()) {
-					//return;
+				const result = control._do_qrScan();
+				if(result && control.request) {
+					control.request.resolve(result.data);
+					delete control.request;
+					control.dispose();
 				}
 			} else {
 				console.log('QR scanner: video not ready');
@@ -652,6 +687,7 @@ class StaticMedia {
 		return true;
 	}
 	dispose() {
+		this.pause();
 		if(this.image) {
 			this.image.remove();
 			this.image = undefined;

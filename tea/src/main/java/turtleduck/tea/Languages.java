@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface Languages {
-	public static final Map<String,Language> LANGUAGES = new HashMap<>();
-	public static final Map<String,String> EXTENSIONS = new HashMap<>();
-	public static final Map<String,String> SHELLS = new HashMap<>();
-	public static final Map<String,String> NAMES = new HashMap<>();
-	public static final Map<String,Language> LANGUAGES_BY_EXT = new HashMap<>();
+	public static final Map<String, Language> LANGUAGES = new HashMap<>();
+	public static final Map<String, String> EXTENSIONS = new HashMap<>();
+	public static final Map<String, String> SHELLS = new HashMap<>();
+	public static final Map<String, String> NAMES = new HashMap<>();
+	public static final Map<String, Language> LANGUAGES_BY_EXT = new HashMap<>();
 
 	static String langToExt(String lang, boolean preferShell) {
 		switch (lang) {
@@ -26,6 +26,7 @@ public interface Languages {
 			return lang;
 		}
 	}
+
 	static String langToShell(String lang) {
 		switch (lang) {
 		case "java":
@@ -37,21 +38,21 @@ public interface Languages {
 		}
 	}
 
-	static String extToLang(String ext) {
-		ext = ext.replaceAll("^.*\\.", "");
-		switch (ext) {
-		case "jsh":
-			return "java";
-		case "py":
-			return "python";
-		case "md":
-			return "markdown";
-		case "java":
-		case "html":
-		case "css":
-			return ext;
-		default:
+	static String extToLang(String filename) {
+		if (!filename.contains(".")) {
 			return "";
+		} else {
+			String ext = filename.replaceAll("^.*\\.", "");
+			switch (ext) {
+			case "jsh":
+				return "java";
+			case "py":
+				return "python";
+			case "md":
+				return "markdown";
+			default:
+				return ext;
+			}
 		}
 	}
 }

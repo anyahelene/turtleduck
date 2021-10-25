@@ -90,6 +90,22 @@ function makeScrollToListener(elt, scroller) {
 		}
 	}
 }
+
+function getIconFor(elt) {
+	if(elt.classList.contains('easy')) {
+		return "😊";
+	} else if(elt.classList.contains('medium')) {
+		return "🤔";
+	} else if(elt.classList.contains('tricky')) {
+		return "😬";
+	} else if(elt.classList.contains('experimental')) {
+		return "🧪";
+	} else if(elt.classList.contains('important')) {
+		return "";
+	} else {
+		return null;
+	}
+}
 function makeToc(doc, elt, scroller) {
 	if(!scroller)
 		return [null,null,null];
@@ -176,11 +192,8 @@ class MDRender {
 
 		});
 
-		var scroller = elt;
-		while(scroller && !scroller.classList.contains('doc-display')) {
-			scroller = scroller.parentElement;
-		}
-		
+		var scroller = elt.closest('.doc-display');
+
 		const [toc, headers, sections] = makeToc(doc, elt, scroller);
 			
 		doc2tree(doc, elt);
@@ -204,6 +217,49 @@ class MDRender {
 			elt.querySelectorAll('div[data-level="2"], div[data-level="1"]').forEach(head => obs.observe(head));
 			elt.appendChild(toc);
 		}
+		function stylePre(elt) {
+			const pre = elt.closest('pre');
+			if(pre) {
+				pre.classList.add('with-toolbar');
+			}
+		}
+		elt.querySelectorAll('p:first-child').forEach(p => {
+			p.classList.add('first');
+		});
+		elt.querySelectorAll('p:last-child').forEach(p => {
+			p.classList.add('last');
+		});
+		elt.querySelectorAll('details').forEach(details => {
+			const summary = details.querySelector('summary')
+			const text = getIconFor(details);
+			if(summary && text !== null) {
+				const icon = document.createElement('span');
+				icon.className = 'icon';
+				icon.textContent = text;
+				summary.insertBefore(icon, summary.firstChild);
+			}
+		});
+		elt.querySelectorAll('aside').forEach(aside => {
+			const text = getIconFor(aside);
+			if(text !== null) {
+				const icon = document.createElement('span');
+				icon.className = 'icon';
+				icon.textContent = text;
+				aside.insertBefore(icon, aside.firstChild);
+			}
+			const btn = document.createElement('button');
+			btn.type = 'button';
+			btn.className = 'open-close';
+			btn.addEventListener('click', e => {
+				console.log('click', e.target, e.currentTarget, e);
+				if(aside.matches('.is-narrow aside, .is-very-narrow aside')) {
+					aside.classList.toggle('open');
+					e.stopPropagation();
+					e.preventDefault();
+				}
+			});
+			aside.insertBefore(btn, aside.firstChild);
+		});
 		elt.querySelectorAll('button[data-snippet]').forEach(btn => {
 			const snip = this._snippets[parseInt(btn.dataset.snippet)];
 			var code = snip.code;
@@ -220,14 +276,38 @@ class MDRender {
 						}
 					});
 				}
-				btn.innerHTML = '<span class="icon">📋</span><span>→ PyShell</span>';	
-				btn.title = 'Paste Code in Python Shell';	
-				btn.addEventListener('click', e => {
-					e.preventDefault();
-					e.stopPropagation();
-					turtleduck.pyshell.paste(code);
-					turtleduck.pyshell.focus();
-				});
+				if(!snip.opts || snip.opts === 'pyshell') {
+					btn.innerHTML = '<span class="icon">📋</span><span>→ PyShell</span>';	
+					btn.title = 'Paste Code in Python Shell';	
+					btn.addEventListener('click', e => {
+						e.preventDefault();
+						e.stopPropagation();
+						turtleduck.pyshell.paste(code);
+						if(turtleduck.pyshell.iconified(false)) {
+							turtleduck.wm.recomputeLayout();
+						}
+						turtleduck.pyshell.focus();
+						//window.setTimeout(() =>	turtleduck.pyshell.focus(), 1);
+					});
+					stylePre(btn);
+				} else if(snip.opts.startsWith('editor')) {
+					const filename = snip.opts.substring(7) || 'pasted.py';
+					btn.innerHTML = '<span class="icon">📋</span><span>→ Editor</span>';	
+					btn.title = 'Paste Code in Python Editor';	
+					btn.addEventListener('click', e => {
+						e.preventDefault();
+						e.stopPropagation();
+						turtleduck.editor.paste_to_file(filename, code, 'python');
+						if(turtleduck.editor.iconified(false)) {
+							turtleduck.wm.recomputeLayout();
+						}
+						turtleduck.editor.focus();
+						//window.setTimeout(() =>	turtleduck.editor.focus(), 1);
+					});				
+					stylePre(btn);
+				} else {
+					btn.remove();
+				}
 			} else {
 				btn.innerHTML = '<span class="icon">📋</span><span>Copy</span>';
 				btn.title = 'Copy Code to Clipboard';
@@ -243,16 +323,18 @@ class MDRender {
 									console.error("Copy failed:", err);
 								});
 				});				
+				stylePre(btn);
 			}
 		});
 	}
 	
 	_remarkableHighlight() {
 		const md = this;
-		return function(str, lang) {
+		return function(str, lang, opts) {
+			console.log('Highlight: ', lang, opts);
 			if(lang && hljs.getLanguage(lang)) {
 				try {
-					md._snippets.push({language: lang, code: str});
+					md._snippets.push({language: lang, code: str, opts: opts});
 					const r = hljs.highlight(str, {language:lang}).value;
 					//console.log("hljs.highlight:", r);
 					return r;

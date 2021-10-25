@@ -15,6 +15,8 @@ public interface LanguageConsole {
 
 	LanguageConsole create();
 
+	void promptBusy();
+
 	LanguageConsole cursor(TextCursor cursor);
 
 	LanguageConsole diagHandler(BiConsumer<Dict, Location> diagHandler);
@@ -32,9 +34,9 @@ public interface LanguageConsole {
 	LanguageConsole withOutputElement(HTMLElement output);
 //	LanguageConsole withCursor(Consumer<TextCursor> todo);
 
-	void prompt1();
+	void promptNormal();
 
-	void prompt2(String incompleteCode);
+	void promptMore(String incompleteCode);
 
 	default void println(String text, Color color) {
 		print(text + "\n", color);
@@ -86,21 +88,28 @@ public interface LanguageConsole {
 			impl.outputElement = output;
 			return impl;
 		}
-
 		@Override
-		public void prompt1() {
+		public void promptBusy() {
 			if (prompt != null) {
-				prompt.accept(1, null);
+				prompt.accept(0, null);
 			} else if (delegate != null)
-				delegate.prompt1();
+				delegate.promptBusy();
 		}
 
 		@Override
-		public void prompt2(String incompleteCode) {
+		public void promptNormal() {
+			if (prompt != null) {
+				prompt.accept(1, null);
+			} else if (delegate != null)
+				delegate.promptNormal();
+		}
+
+		@Override
+		public void promptMore(String incompleteCode) {
 			if (prompt != null) {
 				prompt.accept(2, incompleteCode);
 			} else if (delegate != null)
-				delegate.prompt2(incompleteCode);
+				delegate.promptMore(incompleteCode);
 		}
 
 		@Override

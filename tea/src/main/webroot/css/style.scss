@@ -65,6 +65,8 @@ pre, code, kbd, samp {
 	font-size: inherit;
 	color: #8aff00;
 	white-space: pre-wrap;
+}
+pre {
 	word-break:break-all;
 }
 
@@ -84,6 +86,12 @@ pre, code, kbd, samp {
 	clear:left;
 }
 
+
+@media (hover: hover) and (pointer: fine) { 
+	.phone-only {
+		display:none;	
+	}
+}
 .flashtext {
 	background-image: linear-gradient(25deg, #0000 40%, #fff 50%, #0000 60%);
 	background-size: 100% 200%;
@@ -383,6 +391,10 @@ main.doc-display {
 .dark .text h1, .dark .text h2 {	
 	background: $terminal;
 	color: #333;
+	
+	code {
+		color: #333;
+	}
 //	background: #0308;
 }
 .text h2, .text h3 {
@@ -605,12 +617,12 @@ background-position: 50% 50%;
 	
 }
 .camera nav.toolbar button, .text button.insert {
-	margin:.2rem;
-	border-radius: 1rem;
-	padding:.2rem .8rem;
-	box-shadow: .1rem .1rem .5rem black;
-	min-height:1.8rem;
-	min-width:1.8rem;
+	margin:.2em;
+	border-radius: 1em;
+	padding:.2em .8em;
+	box-shadow: .1em .1em .5em black;
+	min-height:1.8em;
+	min-width:1.8em;
 }
 .camera nav.toolbar button:hover {
 	box-shadow: .1rem .1rem .3rem black;
@@ -643,11 +655,18 @@ background-position: 50% 50%;
 	display:none;
 }
 
-pre nav.toolbar {
+pre.with-toolbar {
 	position:relative;
-	padding-bottom:1rem;
+	padding-bottom: 1rem !important;
+}
+pre nav.toolbar {
+	position:absolute;
 	font-size:80%;
-	float:right;
+	bottom:-1rem;
+	right:0;
+}
+aside.right pre nav.toolbar {
+	display:none
 }
 /*
 pre nav.toolbar button {
@@ -1055,8 +1074,7 @@ button {
 
 }
 
-#top button {
-	background-color: $button-bg-header;
+#top-menu button {
 	//background-image:radial-gradient(ellipse at bottom right, #aab 0%, #667 100%);
 	//display: inline-block;
 	//align-self:stretch;
@@ -1069,6 +1087,9 @@ button {
 	}
 }
 
+#top-menu button, #top-right button {
+	background-color: $button-bg-header;
+}
 
 button:hover, #top button:hover {
 	background-color: $button-bg-hover;
@@ -1229,6 +1250,7 @@ button:active, #top button.active {
 	flex-grow: 0;
 	width: max-content;
 	height: $head-height;
+	position:relative;
 }
 #top-right, #top-menu {
 	font-size:.7rem;
@@ -1287,11 +1309,17 @@ button:active, #top button.active {
 	text-align:center;
 	margin-right:.1rem;
 }
-#logoimg {
+#logoimg img {
 	height: $head-height;
 }
-
-#logotext {
+#top-left button {
+	background-color:transparent !important;
+	text-align:left;
+	width:auto;	
+	padding:0;
+	margin:0;
+}
+#top-left #logotext {
 	@include pixel-font;
 	//font-size-adjust: 0.71;
 	//font-family: "PressStart2P", "DeluxeFont", "Fantasque Sans Mono", "Monoid", monospace;
@@ -1300,14 +1328,29 @@ button:active, #top button.active {
 	padding-top: 0.5rem;
 	padding-right: 0.5rem;
 	background-image: linear-gradient(rgba($water,0) 63%, $water 63%);
+	position:relative;
 }
 #logotext .version{
-	font-size: 0.5rem;
+	font-size: 0.6rem;
 	line-height: 1rem;
 	display:block;
 	padding: 0 2px;
 }
-
+#logo-experimental {
+	//@include normal-font;
+	font-size: .7rem;
+	line-height: normal;
+	display:block;
+	position:absolute;
+	transform: rotate(-10deg);
+	transform-origin: bottom left;
+	background:#ff4d00aa;
+	color:#000a;
+	bottom:-.3rem;
+	left:2rem;
+	padding:.1rem;
+	//text-shadow: 0 0 .2rem #000, .1rem .1rem .5rem #000;
+}
 .dark {
 	.tab a:visited, .tab a:link, .tab a:hover, .tab a:active,
 	nav a:visited, nav a:link, nav a:hover, nav a:active {
@@ -1941,6 +1984,9 @@ aside > figure {
 	padding: .5rem;
 	background: #333;
 }
+aside > .open-close {
+	display:none;
+}
 aside.small > figure {
 	padding: 0;
 	background: none;
@@ -1959,21 +2005,80 @@ figcaption {
 	font-size: 0.8rem;
 	color: $terminal-alt;
 }
-.is-wide aside.right, .is-wide aside.left {
-	width: 20rem;
+.is-wide {
+	aside.right, aside.left {
+		width: 20rem;
+	}
 }
-.is-narrow aside.right, .is-narrow aside.left {
-	width: 10rem;
+.is-very-wide {
+	aside.right, aside.left {
+		width: calc(100% - (#{$max-text-width} + 2rem));
+	}
 }
-.is-very-wide aside.right, .is-very-wide aside.left {
-	width: calc(100% - (#{$max-text-width} + 2rem));
+.is-wide {
+	aside > .icon {
+		display:block;
+		position: absolute;
+		top:-.5em;
+		left:-.5em;	
+	}
 }
+.is-narrow {
+	aside > .icon {
+		float:left;
+		margin-right: .5rem;
+	}
+	aside.tip {
+		position:relative;
+		float: none;
+		width: auto;
+		max-width: 100%;
+		margin: 1rem auto;
+		max-height: calc(1.4rem + 1rem); // line height + padding
+		overflow:hidden;
+		border-left: none;
+		border-right: none;
 
-.is-very-narrow aside.right, .is-very-narrow aside.left {
-	float: none;
-	width: auto;
-	max-width: 100%;
-	margin: 0 auto;
+		.open-close {
+			position:absolute;
+			display:block;
+			top:0;
+			left:0;
+			width:100%;
+			height:2.5rem;
+			background: none;
+			border:none;
+			padding:0;
+			margin:0;
+		}
+
+		&:not(.open) {
+			& > .icon::before {
+				content: counter(_, disclosure-closed) " "; // "⯈ ";
+				font-size: 1.2rem;
+			}
+			p {
+				overflow:hidden;
+				text-overflow:"…";
+				white-space:nowrap;
+			}
+			pre, code, kbd, samp  {
+				white-space:nowrap;
+				word-break:normal;
+			}		
+		}
+		&.open {
+			overflow:visible;
+			max-height:none;
+		}
+	
+	}
+}
+.is-narrow aside.right, .is-very-narrow aside.right {
+//	margin-left: 1.5rem;
+}
+.is-narrow aside.left, .is-very-narrow aside.left {
+//	margin-right: 1.5rem;
 }
 aside.right {
 	margin-left: 1rem;
@@ -1989,21 +2094,26 @@ aside.left.small, aside.right.small {
 	width:auto !important;
 	max-width:none !important;
 }
-aside > p:first-child, div > p:first-child {
+aside > p:first-child, div > p:first-child, aside > p.first, div > p.first {
 	margin-top:0; 
 }
 
-aside > p:last-child, dig > p:last-child {
+aside > p:last-child, div > p:last-child,  aside > p.first, div > p.first {
 	margin-bottom:0;
 }
 
 .important {
-	padding: .2rem;
 	color: $terminal-alt;
+}
+aside.important {
+	padding: .2rem;
 	border: .2rem solid;	
 }
 .for-beginner, .for-intermediate, .for-advanced {
 	display:none;
+}
+.for-nobody {
+	display:none !important;
 }
 div.for-beginner, div.for-intermediate, div.for-advanced {
 	margin: .2rem 0;
@@ -2024,7 +2134,7 @@ details.tricky, details.easy, details.medium {
 	summary {
 		position: relative;
 	}
-	summary::before {
+	summary > .icon {
 		display: inline;
 		font-style: normal;
 		display: block;
@@ -2034,33 +2144,20 @@ details.tricky, details.easy, details.medium {
 		top: 0;
 	}
 }
-details.tricky summary::before, aside.tricky::before {
-	content: "😬";
-}
-details.medium summary::before, aside.medium::before {
-	content: "🤔";
-}
-details.easy summary::before, aside.easy::before {
-	content: "😊";
-}
-aside.tricky::before, aside.medium::before, aside.easy::before {
-//	float: right;
-//	margin: 0 0 .2rem .2rem;
-	display:block;
-	position: absolute;
-	right: 100%;
-	margin-right:.2rem;
-}
+
 aside.right.tip {
 	position:relative;
 	font-size: 1rem;
-	line-height:1.2rem;
-	border-left: 0.1rem solid #4dff0088;
-	padding: .5rem 0 .5rem .2rem;
+	line-height:1.4rem;
+
+	//border-left: 0.1rem solid #4dff0088;
+	//padding: .5rem 0 .5rem .2rem;
 }
 aside.tip, aside.important {
 	background: #333;
 	margin:.2rem;
+	border: 0.1rem solid #4dff0088;
+	padding: .5rem;
 }
 div#excavator {
 	background-size: 51px 26px;
@@ -2170,4 +2267,19 @@ article, aside, footer, header, nav, section {
 .hljs-meta {
   color: #fff;
   font-weight: bolder;
+}
+main.grid > div {
+	display:grid;
+	width:100%;
+	height:100%;
+}
+
+main.grid > div > div {
+	color: $terminal;
+	position: relative;
+}
+main.grid span {
+	position:absolute;
+	width:100%;
+	height:100%;
 }

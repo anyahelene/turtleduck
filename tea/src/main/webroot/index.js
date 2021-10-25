@@ -4,14 +4,16 @@ import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 import jquery from 'jquery';
 import animals from './animals.txt';
 import hints from './hints.txt';
-import { vfs, fileSystem, FileSystem } from './FileSystem';
-import { History } from './History';
-import { Component } from './Component';
-import { TilingWM, TilingWindow} from './TilingWM';
+import { fileSystem, FileSystem } from './js/FileSystem';
+import { History } from './js/History';
+import { Component } from './js/Component';
+import { TilingWM, TilingWindow} from './js/TilingWM';
 import { PyController } from './js/pycontroller';
-import { ShellServiceProxy } from './ShellServiceProxy';
+import { ShellServiceProxy } from './js/ShellServiceProxy';
 import { MDRender } from './js/MDRender';
 import { Camera } from './js/Media';
+import { GridDisplayServer } from './js/GridDisplay';
+
 //import { XTermJS } from './XTermJS';
 //import ace from "ace-builds";
 //import "ace-builds/webpack-resolver";
@@ -26,14 +28,14 @@ turtleduck.Camera.addSubscription('copy','builtin', 'qr','Copy','📋', 'Copy to
 turtleduck.Camera.addSubscription('copy','builtin', 'camera','Copy','📋', 'Copy to clipboard');
 turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
-turtleduck.vfs = vfs;
+turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.history = new History(fileSystem);
 turtleduck.defaultConfig = defaultConfig;
 turtleduck.configs = [/*override */{}, /*session*/{}, /*user*/{}, /*remote*/{}, defaultConfig];
 //turtleduck.config = jquery.extend(true, {}, defaultConfig);
 //turtleduck.configSource = {};
-turtleduck.pyController = new PyController();
-turtleduck.shellServiceProxy = new ShellServiceProxy(turtleduck.pyController);
+
+turtleduck.userlog = msg => turtleduck.client.userlog(msg);
 //turtleduck.mergeConfig = function(config = {}) {
 //	turtleduck.config = jquery.extend(true, turtleduck.config, config);
 //}
@@ -294,6 +296,11 @@ if(!turtleduck.getConfig('session.name')) {
 	turtleduck.setConfig(cfg, 'session');
 	turtleduck.saveConfig('session');
 }
+
+turtleduck.pyController = new PyController(true, turtleduck.getConfig('session.name'));
+turtleduck.shellServiceProxy = new ShellServiceProxy(turtleduck.pyController);
+
+
 turtleduck.tabSelect = function(tabsId, key) {
 	let previous = undefined;
 	jquery('[data-tab="'+tabsId+'"]').each(function(index,elt) {
@@ -354,11 +361,20 @@ async function handleKey(key, button, event) {
 		});
 		return next;
 	}
-	var param = undefined;
+	var params = undefined;
+	if(event.header && event.header.msg_type === key) { // it's actually a message!
+		params = event.content;
+		// nop these
+		event.stopPropagation = () => {};
+		event.preventDefault = () => {};
+	}
 	var m = key.match(/^([a-z]*):\/\/(.*)$/);
 	if(m != null) {
+		const url = new URL(key);
+		params = {path: url.pathname.replace(/^\/\//, '')};
+		url.searchParams.forEach((v,k) => params[k] = v);
+		console.log('handleKey decoded url', key, m[1], params);
 		key = m[1];
-		param = m[2];
 	}
 	console.log("handleKey", key, button, event);
 	
@@ -391,7 +407,7 @@ async function handleKey(key, button, event) {
 			break;
 		}
 		case "focus": {
-			const win = turtleduck[param];
+			const win = turtleduck[params.path];
 			//console.log("focus:", param, win);
 			if(win) {
 				win.focus();
@@ -400,8 +416,8 @@ async function handleKey(key, button, event) {
 		}
 		case "snap": {
 			const config = {mode:'camera', once:true};
-			if(param) {
-				config.fake = param;
+			if(params) {
+				config.params = params;
 				config.mirror = false;
 			}
 			const r = turtleduck.openCamera(config);
@@ -411,8 +427,8 @@ async function handleKey(key, button, event) {
 		}
 		case "qrscan": {
 			const config = {mode:'qr', once:true};
-			if(param) {
-				config.fake = param;
+			if(params) {
+				config.params = params;
 				config.mirror = false;
 			}
 			const r = turtleduck.openCamera(config);
@@ -558,14 +574,19 @@ jquery(function() {
 			return false;
 
 		};
-		const shortcut = this.classList.contains('not-implemented') ? '(not implemented)' : jquery(this).attr('data-shortcut');
+		const shortcut = this.classList.contains('not-implemented') ? '(not implemented)' : this.dataset.shortcut;
 		const shortcutText = shortcut.replace('ctrl+', '⌘').replace('shift+', '↑');
-		jquery(this).prepend(jquery('<span class="icon"><span>'+jquery(this).attr('data-icon')+'</span></span>'))
-		jquery(this).prepend(jquery('<span></span>').addClass('bg'));
-		jquery(this).attr('data-shortcut-text', shortcutText);
-		jquery(this).append(jquery('<span class="shortcut"><span>'+shortcut+'</span></span>'))
+		const icon = this.dataset.icon;
+		if(icon) {
+			jquery(this).prepend(jquery('<span class="icon"><span>'+icon+'</span></span>'));
+		}
+		if(shortcut) {
+			jquery(this).prepend(jquery('<span></span>').addClass('bg'));
+			jquery(this).attr('data-shortcut-text', shortcutText);
+			jquery(this).append(jquery('<span class="shortcut"><span>'+shortcut+'</span></span>'))
+			Mousetrap.bindGlobal(shortcut, keyHandler);
+		}
 		//jquery(this).find(".icon").prepend(jquery('<span>'+shortcutText+'</span>'));//.attr('data-shortcut-text', shortcutText)
-		Mousetrap.bindGlobal(shortcut, keyHandler);
 		jquery(this).click(handler);
 	});
 	
@@ -742,6 +763,15 @@ turtleduck.initializeWM = function() {
 }
 
 jquery(document).ready(() => {
+	const mqlDesktop = window.matchMedia('(hover: hover) and (pointer: fine)');
+	function handleDesktop(mql) {
+		if(turtleduck.isDesktop !== undefined) {
+			console.warn("Desktop mode changed to ", mql.matches);
+		}
+		turtleduck.isDesktop = mql.matches;
+	}
+	handleDesktop(mqlDesktop);
+	mqlDesktop.onchange = handleDesktop;
 	const mqlDark = window.matchMedia('(prefers-color-scheme: dark)')
 	const mqlLight = window.matchMedia('(prefers-color-scheme: light)')
 	function handleColorPreference(mql) {
@@ -785,6 +815,24 @@ turtleduck._initializationComplete = function(err) {
 		//turtleduck.setConfig({"prefs":{"layout":sizes}}, "session");
 		//autoSaveConfig('session');
 	});	
+	turtleduck.client.route('qrscan', msg => {
+		console.log('routing qrscan', msg);
+			const config = {mode:'qr', once:true, params: msg, mirror: false};
+			return turtleduck.openCamera(config).then(qrcode => {
+				console.log('got qrcode', qrcode);
+				return Promise.resolve({header:{to: msg.header.from, msg_type: 'qrscan_reply', ref_id: msg.header.msg_id, msg_id: 'r' + msg.header.msg_id},
+			content: {text: qrcode, status: 'ok'}});
+			}).catch(err => {
+				console.warn('got error instead of qrcode', err);
+				return Promise.resolve({header:{to: msg.header.from, msg_type: 'qrscan_reply', ref_id: msg.header.msg_id, msg_id: 'r' + msg.header.msg_id},
+			content: {error: err, status: 'error'}});
+			});
+		return
+	});
+	turtleduck.client.route('grid-create', msg => turtleduck.gridDisplay.create(msg));
+	turtleduck.client.route('grid-update', msg => turtleduck.gridDisplay.update(msg));
+	turtleduck.client.route('grid-style', msg => turtleduck.gridDisplay.style(msg));
+	turtleduck.client.route('grid-dispose', msg => turtleduck.gridDisplay.dispose(msg));
 }
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;

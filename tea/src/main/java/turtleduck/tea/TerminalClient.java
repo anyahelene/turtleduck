@@ -358,4 +358,10 @@ public class TerminalClient implements TerminalService, ExplorerService {
 	public TextCursor cursor() {
 		return cursor;
 	}
+
+	@Override
+	public Async<Dict> display(Dict data, String stream) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
