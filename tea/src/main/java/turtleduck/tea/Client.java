@@ -31,6 +31,7 @@ import turtleduck.messaging.Reply;
 import turtleduck.messaging.Router;
 import turtleduck.messaging.ShellService;
 import turtleduck.messaging.generated.InputServiceProxy;
+import turtleduck.tea.FileSystem.TDFile;
 import turtleduck.tea.generated.CMDispatch;
 import turtleduck.tea.generated.CanvasDispatch;
 import turtleduck.tea.generated.EditorDispatch;
@@ -165,9 +166,10 @@ public class Client implements JSObject, ClientObject {
 			WINDOW_MAP.set("turtleduck", map);
 			// DocDisplay docDisplay = new DocDisplay(screenComponent);
 			// docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
-			DocDisplay docDisplay2 = new DocDisplay(screenComponent);
-			docDisplay2.initFromUrl("examples/dcc/koronasertifikat.md", null, true);
-
+			if (false) {
+				DocDisplay docDisplay2 = new DocDisplay(screenComponent);
+				docDisplay2.initFromUrl("examples/dcc/koronasertifikat.md", null, true);
+			}
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
 			updateInfo();
@@ -189,8 +191,12 @@ public class Client implements JSObject, ClientObject {
 			Languages.LANGUAGES.put(id, def);
 			for (var e : def.extensions) {
 				Languages.LANGUAGES_BY_EXT.put(e, def);
+				logger.info("language: {} => {}", e, id);
 			}
-
+			for (var e : def.shellExtensions) {
+				Languages.LANGUAGES_BY_EXT.put(e, def);
+				logger.info("language: {} => {} (shell)", e, id);
+			}
 			if (def.enabled > 0 && menu != null) {
 				HTMLElement item = element("li", clazz("menu-entry"), //
 						attr("data-language", id), attr("data-title", def.title), attr("data-icon", def.icon),
@@ -507,10 +513,8 @@ public class Client implements JSObject, ClientObject {
 		HTMLElement imgBox = Browser.document.getElementById("user-picture");
 		String imgUrl = getConfig("user.picture", null);
 		if (imgBox != null && imgUrl != null) {
-			if (imgUrl != null) {
 				imgBox.setAttribute("src", imgUrl);
 				imgBox.getStyle().setProperty("visibility", "visible");
-			}
 		}
 		HTMLElement nameBox = Browser.document.getElementById("user-name");
 		if (nameBox != null) {
@@ -604,13 +608,6 @@ public class Client implements JSObject, ClientObject {
 				return Promise.Util.resolve(JSString.valueOf("unknown language:" + lang));
 			}
 			JSUtil.changeButton("f9", d.getString("icon"), d.getString("title") + " ↓");
-		} else if (key.equals("tooltip:sessionInfo")) {
-			HTMLElement list = element("dl", element("dt", "Session"), element("dd", sessionName));
-			if (projectName != null) {
-				list.appendChild(element("dt", "Project"));
-				list.appendChild(element("dd", projectName));
-			}
-			return Promise.Util.resolve(list);
 		} else if (key.startsWith("f")) {
 			JSObject button = data.get("button");
 			if (button != null && Math.random() < .5) {

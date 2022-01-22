@@ -13,21 +13,22 @@ public interface Languages {
 	public static final Map<String, Language> LANGUAGES_BY_EXT = new HashMap<>();
 
 	static String langToExt(String lang, boolean preferShell) {
-		switch (lang) {
-		case "java":
-			return preferShell ? "jsh" : "java";
-		case "python":
-			return "py";
-		case "markdown":
-			return "md";
-		case "html":
-		case "css":
-		default:
-			return lang;
+		Language l = LANGUAGES.get(lang);
+		if (l != null) {
+			if (preferShell && !l.shellExtensions.isEmpty()) {
+				return l.shellExtensions.get(0);
+			} else if (!l.extensions.isEmpty()) {
+				return l.extensions.get(0);
+			}
 		}
+		return lang;
 	}
 
 	static String langToShell(String lang) {
+		Language l = LANGUAGES.get(lang);
+		if (l != null) {
+			return l.shellName;
+		}
 		switch (lang) {
 		case "java":
 			return "jshell";
@@ -43,16 +44,11 @@ public interface Languages {
 			return "";
 		} else {
 			String ext = filename.replaceAll("^.*\\.", "");
-			switch (ext) {
-			case "jsh":
-				return "java";
-			case "py":
-				return "python";
-			case "md":
-				return "markdown";
-			default:
+			Language lang = LANGUAGES_BY_EXT.get(ext);
+			if (lang != null)
+				return lang.id;
+			else
 				return ext;
-			}
 		}
 	}
 }

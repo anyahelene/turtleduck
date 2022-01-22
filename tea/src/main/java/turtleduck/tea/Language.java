@@ -17,6 +17,7 @@ public class Language {
 	String editMode;
 	String icon;
 	List<String> extensions = new ArrayList<>();
+	List<String> shellExtensions = new ArrayList<>();
 	Map<String, String> services = new HashMap<>();
 
 	public Language(String id, Dict desc) {
@@ -34,6 +35,8 @@ public class Language {
 			enabled = 0b00;
 		this.icon = desc.get("icon", "");
 		extensions.addAll(desc.get("extensions", Array.create()).toListOf(String.class));
+		shellExtensions.addAll(desc.get("shellExtensions", Array.create()).toListOf(String.class));
+		extensions.addAll(shellExtensions);
 		Dict srv = desc.get("services", Dict.create());
 		srv.forEach(key -> services.put(key.key(), srv.getString(key.key())));
 	}

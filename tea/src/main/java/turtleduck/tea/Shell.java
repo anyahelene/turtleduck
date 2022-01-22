@@ -156,13 +156,13 @@ public class Shell {
 		String cmd = split[0];
 		String args = split.length == 2 ? split[1].trim() : "";
 		if (cmd.equals("/ls")) {
-			if (false) { // old file system
-				List<String> files = Client.client.oldFileSystem.list();
+			List<String> files = Client.client.oldFileSystem.list();
 
-			} else {
+
 				console.promptBusy();
 				Client.client.fileSystem.list(args).onComplete(tdfiles -> {
-					List<String> files = tdfiles.stream().map(file -> file.name()).collect(Collectors.toList());
+					List<String> newFiles = tdfiles.stream().map(file -> file.name()).collect(Collectors.toList());
+					files.addAll(newFiles);
 					int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
 					int width = 80; // TODO terminal.getCols();
 					int cols = 1;
@@ -185,7 +185,7 @@ public class Shell {
 					console.promptNormal();
 				}, err -> {
 				});
-			}
+			
 			return true;
 		} else if (cmd.equals("/loadpython")) {
 			Client.client.loadPython();

@@ -24,9 +24,9 @@
 		}
 	},
 	"session" : {
-		"name" : "",
-		"private": false,
-		"offline": false
+		"name" : "CoronaPass",
+		"private": true,
+		"offline": true
 	},
 	"layout": {
 		"dir":"H","items": [

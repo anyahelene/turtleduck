@@ -8,7 +8,7 @@ public class Strings {
 		StringBuffer b = new StringBuffer(s.length());
 //		s.codePoints().forEach((cp) -> {
 		for (int i = 0; i < s.length(); i++) {
-			char cp = s.charAt(i);
+			char cp = s.charAt(i); // TODO: use codepoints (and make it work with TeaVM)
 			if (cp < 0x20) {
 				b.append('^');
 				b.appendCodePoint(cp + 0x40);

@@ -13,6 +13,7 @@ import { ShellServiceProxy } from './js/ShellServiceProxy';
 import { MDRender } from './js/MDRender';
 import { Camera } from './js/Media';
 import { GridDisplayServer } from './js/GridDisplay';
+import { html, render } from 'uhtml';
 
 //import { XTermJS } from './XTermJS';
 //import ace from "ace-builds";
@@ -211,9 +212,7 @@ function autoSaveConfig(source) {
 		saveConfigTimers[source] = undefined;
 	}, 3000);
 }
-turtleduck.configs[0] = {
-	session: { project: 'CoronaPass', private: true, offline: true}
-}
+
 //ace.config.loadModule("ace/ext/language_tools", function(m) { turtleduck.editor_language_tools = m; });
 //ace.config.loadModule('ace/ext/options', function(m) { turtleduck.editor_options = m; });
 
@@ -448,6 +447,24 @@ async function handleKey(key, button, event) {
 				event.preventDefault();
 				return r;
 		}
+		case "tooltip:sessionInfo": {
+			const projectName = turtleduck.getConfig('session.project');
+			const sessionName = turtleduck.getConfig('session.name');
+			render(button, html.node`<dl><dt>Session</dt><dd>${sessionName}</dd>
+				<dt>Project</dt><dd>${projectName ? projectName : html`<input type="text" name="projectName"></input>`}</dd></dl>`);
+			return button;
+
+			/*return fileSystem.list("/home/projects/").map(files -> {
+				HTMLElement l = element("ul");
+				for(TDFile file : files) {
+					String n = file.name();
+					l.appendChild(element("li", element("a", attr("href", "?project=" + n), n)));
+				}
+				list.appendChild(l);
+				return Promise.Util.resolve(list);
+			}).mapFailure(err -> Promise.Util.resolve(list));
+			*/
+		}
 		default:
 			if(button.dataset.showMenu) {
 				const elt = document.getElementById(button.dataset.showMenu);
@@ -677,9 +694,15 @@ jquery(function() {
 		this.appendChild(tipElt);
 		this.style.position = 'relative';
 		this.addEventListener("mouseenter", async e => {
-			const r = await turtleduck.actions.handle('tooltip:'+id, {}, event);
-			tipElt.replaceChildren(r);
-			tipElt.classList.add("show");
+			const r = await handleKey('tooltip:'+id, tipElt, event);
+			console.log("tooltip: ", r);
+				tipElt.classList.add("show");				
+/*			if(r) {
+				tipElt.replaceChildren(r);
+			} else {
+				tipElt.replaceChildren([]);
+				tipElt.classList.remove("show");			
+			}*/
 
 		});
 		this.addEventListener("mouseleave", e => {

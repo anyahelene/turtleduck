@@ -514,7 +514,7 @@ const fileSystem = new VirtFileSystem();
 db.open().then(db => {
 	console.log("FileSystem database opened", db);
 	dbFileSystem = new DBFileSystem(db);
-	return fileSystem._mount('storage', 0, dbFileSystem);
+	return fileSystem._mount('home', 0, dbFileSystem);
 }).catch(err => console.warn("FileSystem open failed", err));
 
 //vfs._debug = true;

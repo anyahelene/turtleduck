@@ -843,7 +843,9 @@ public class TShell implements ShellService {
 
 		public Dict update(SnippetEvent ev) {
 			String event = "";
-
+			if(event == "foo") {
+				System.out.println("bar");
+			}
 			String previous;
 			switch (ev.previousStatus()) {
 			case DROPPED:

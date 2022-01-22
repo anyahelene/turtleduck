@@ -12,13 +12,13 @@
 	"prefs":{
 		"layout":{
 			"explorer": {"height": 16},
-			"editor": {"width":15, "iconified":true},
+			"editor": {"width":15},
 			"screen": {"width":29},
 			"shell": {"height":7}
 		},
 		"layout-portrait":{
 			"explorer": {"height": 16, "iconified":true},
-			"editor": {"width":15, "iconified":true},
+			"editor": {"width":15},
 			"screen": {"width":29},
 			"shell": {"height":7}
 		}
@@ -75,12 +75,29 @@
 			"editMode": "java",
 			"icon": "☕",
 			"extensions": [
-				"jsh",
 				"java",
+				"jsh",
 				"jshell"
+			],
+			"shellExtensions": [
+				"jsh", "jshell"
 			],
 			"services": {
 				"jshell": "ShellService"
+			}
+		},
+		"cpp": {
+			"title": "C/C++",
+			"enabled": "optional",
+			"shellName": "cshell",
+			"shellTitle": "CShell",
+			"editMode": "cpp",
+			"icon": "🇨",
+			"extensions": [
+				"c", "h", "C", "H",
+				"cpp", "cc", "hpp"
+			],
+			"services": {
 			}
 		},
 		"z80": {
@@ -113,21 +130,9 @@
 				"ShellService.cwd = '/examples'"
 			],
 			"install": [
-				"../py/base45-0.4.0-py3-none-any.whl",
-				"../py/cbor2-5.4.0.post3-py3-none-any.whl",
-				"ecdsa", "asn1crypto",
-				"Pillow", "qrcode", "lark"
+				"Pillow", "lark"
 			],
 			"import": [
-				"builtin turtleduck.CoronaPass",
-				"from base45 import b45decode",
-				"from base64 import b64decode",
-				"import zlib",
-				"import cbor2",
-				"from datetime import datetime",
-				"import ecdsa",
-				"import qrcode",
-				"from ecdsa import VerifyingKey"
 			]
 		},
 		"plain": {

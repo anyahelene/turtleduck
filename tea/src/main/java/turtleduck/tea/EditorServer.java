@@ -326,11 +326,15 @@ public class EditorServer implements EditorService {
 		if (currentSession != null) {
 			currentSession.tab.setClassName(TABCLASS_INACTIVE);
 			currentSession.state = editor.state();
+			currentSession.scrollTop = editor.scrollDOM().getScrollTop();
 		}
 		sess.tab.setClassName(TABCLASS_ACTIVE);
 		currentSession = sess;
 		setFooter();
 		editor.switchState(currentSession.state);
+		if(currentSession.scrollTop >= 0) {
+			editor.scrollDOM().setScrollTop(currentSession.scrollTop);
+		}
 	}
 
 	private void setFooter() {
@@ -437,6 +441,7 @@ public class EditorServer implements EditorService {
 	}
 
 	public class EditSession {
+		int scrollTop = -1;
 		int id;
 		String filename;
 		String lastSave;

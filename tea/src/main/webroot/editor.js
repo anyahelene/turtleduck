@@ -4,13 +4,14 @@
 import { EditorView, Decoration, keymap, WidgetType } from "@codemirror/view"
 import { EditorState, EditorSelection, StateField, StateEffect } from "@codemirror/state"
 import { indentWithTab,indentMore,indentLess,insertNewlineAndIndent } from "@codemirror/commands"
-import { syntaxTree, getIndentation, IndentContext, LanguageSupport } from '@codemirror/language';
+import { syntaxTree, getIndentation, indentUnit, IndentContext, LanguageSupport } from '@codemirror/language';
 import { highlightTree, classHighlightStyle } from '@codemirror/highlight';
 import { StreamLanguage } from "@codemirror/stream-parser";
 import { autocompletion, completionStatus, currentCompletions, } from "@codemirror/autocomplete";
 
 import { basicSetup } from "@codemirror/basic-setup"
 import { java } from "@codemirror/lang-java"
+import { cpp } from "@codemirror/lang-cpp"
 import { python } from "@codemirror/lang-python"
 import { html } from "@codemirror/lang-html"
 import { markdown, insertNewlineContinueMarkup } from "@codemirror/lang-markdown"
@@ -56,7 +57,7 @@ class PromptWidget extends WidgetType {
 }
 
 function stdConfig() {
-	return [basicSetup, markKeymap, keymap.of({key: 'Tab', run: indentMore, shift: indentLess}), darkDuck];
+	return [basicSetup, EditorState.tabSize.of(4), markKeymap, keymap.of({key: 'Tab', run: indentMore, shift: indentLess}), darkDuck];
 }
 const configs = {'' : []};
 function langConfig(lang) {
@@ -77,6 +78,8 @@ function langConfig(lang) {
 			langext = markdown({addKeymap:false});
 		} else if(lang == "css") {
 			langext = css();
+		} else if(lang == "cpp") {
+			langext = [cpp(), indentUnit.of("    ")];
 		} else if(lang == "z80") {
 			console.log("z80");
 			langext = new LanguageSupport(StreamLanguage.define(z80));
@@ -211,6 +214,10 @@ class TDEditor extends Component {
 		this.$addMark = addMark;
 		this._debugState = false;
 
+	}
+	
+	scrollDOM() {
+		return this.view.scrollDOM;
 	}
 	
 	highlightTree(prompt) {

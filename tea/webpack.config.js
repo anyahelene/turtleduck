@@ -48,7 +48,7 @@ module.exports = {
 		    {
                 loader: 'html-loader',
                 options: { 
-                    attributes: { list: [
+                    sources: { list: [
                        { tag: 'img', attribute: 'src', type: 'src' },
                        { tag: 'link', attribute: 'href', type: 'src' },
                       //  { tag: 'script', attribute: 'src', type: 'src' },
@@ -66,7 +66,7 @@ module.exports = {
 		    {
                 loader: 'html-loader',
                 options: { 
-                    attributes: { list: [
+                    sources: { list: [
                        { tag: 'img', attribute: 'src', type: 'src' },
                        { tag: 'link', attribute: 'href', type: 'src' },
                       //  { tag: 'script', attribute: 'src', type: 'src' },

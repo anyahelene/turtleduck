@@ -16,7 +16,9 @@ public interface TDEditor extends Component {
 	State createState(String lang, String text);
 
 	State createState(String lang, String text, int pos);
-	
+
+	HTMLElement scrollDOM();
+
 	void paste(String text);
 	
 	void paste(String text, int cursorAdj);

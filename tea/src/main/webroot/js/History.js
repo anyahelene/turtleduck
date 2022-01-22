@@ -16,7 +16,7 @@ _db.open().then(dbobj => {
 	console.warn("HistoryDB open failed", err);
 });
 
-const histPath = '/storage/history/';
+const histPath = '/home/history/';
 class History {
 	constructor(fs) {
 		this.fs = fs;

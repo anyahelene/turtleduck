@@ -99,8 +99,8 @@ public class Router {
 	}
 
 	public void disconnect(Connection conn) {
-		connections.remove(conn.id());
 		if (conn != null) {
+			connections.remove(conn.id());
 			for (List<Connection> list : connectionGroups.values()) {
 				list.remove(conn);
 			}
