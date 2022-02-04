@@ -270,13 +270,13 @@ public class DemoScene implements TurtleDuckApp {
 				ink = green.mix(blue, (i - 120) / 119.0);
 			else
 				ink = blue.mix(red, (i - 240) / 119.0);
-			turtle.penChange().strokePaint(ink).done();
+			turtle.penChange().stroke(ink).done();
 			turtle.draw(step);
 			var sub = turtle.spawn().turn(90);
-			sub.penChange().strokeWidth(5).strokePaint(ink).done();
+			sub.penChange().strokeWidth(5).stroke(ink).done();
 			sub.draw(1);
 			ink = Colors.WHITE; // ink.brighter().brighter().brighter().brighter().brighter();
-			sub.penChange().strokeWidth(1).strokePaint(ink).done();
+			sub.penChange().strokeWidth(1).stroke(ink).done();
 			sub.draw(radius);
 			sub.done();
 			if (radius < 0) {
@@ -312,7 +312,7 @@ public class DemoScene implements TurtleDuckApp {
 
 	private static void footprint(Turtle turtle, double size) {
 		size /= 10;
-		turtle.penChange().strokePaint(Colors.WHITE).fillPaint(Colors.WHITE).fillOpacity(0.5).done();
+		turtle.penChange().stroke(Colors.WHITE).fill(Colors.WHITE).fillOpacity(0.5).done();
 		turtle.turn(60).draw(size * 15).turn(-45).draw(size * 100).turn(-150).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15);

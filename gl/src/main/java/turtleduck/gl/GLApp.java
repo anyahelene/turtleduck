@@ -39,7 +39,8 @@ public class GLApp {
 
 	public void mainLoop() {
 		while (!glfwWindowShouldClose(screen.window)) {
-			app.bigStep(0.1);
+			if (!screen.paused)
+				app.bigStep(0.1);
 			screen.render();
 			try {
 				Thread.sleep(0);

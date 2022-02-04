@@ -26,4 +26,7 @@ public interface MessageWriter {
 	MessageWriter header(Message parent, String msg_type);
 
 	MessageWriter header(String msg_type);
+
+
+	<T> MessageWriter putHeader(Key<T> key, T value);
 }

@@ -8,11 +8,9 @@ import javafx.scene.canvas.GraphicsContext;
 import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.Pen;
-import turtleduck.turtle.Stroke;
 
 public class JfxLayer extends BaseLayer<JfxScreen> implements Layer {
 	private static final int QUEUE_SIZE = 100;
@@ -74,7 +72,7 @@ public class JfxLayer extends BaseLayer<JfxScreen> implements Layer {
 		for (int i = 1; i < path.size(); i++) {
 			Point to = path.point(i);
 			if (pen != lastPen) {
-				changeStroke(pen);
+				changePen(pen);
 				lastPen = pen;
 			}
 			context.strokeLine(from.x(), from.y(), to.x(), to.y());
@@ -84,13 +82,10 @@ public class JfxLayer extends BaseLayer<JfxScreen> implements Layer {
 	}
 
 
-	protected void changeFill(Fill fill) {
-		context.setFill(JfxColor.toJfxPaint(fill.fillColor()));
-	}
-
-	protected void changeStroke(Stroke stroke) {
-		context.setStroke(JfxColor.toJfxPaint(stroke.strokeColor()));
-		context.setLineWidth(stroke.strokeWidth());
+	protected void changePen(Pen pen) {
+		context.setStroke(JfxColor.toJfxPaint(pen.strokeColor()));
+		context.setLineWidth(pen.strokeWidth());
+		context.setFill(JfxColor.toJfxPaint(pen.fillColor()));
 	}
 
 

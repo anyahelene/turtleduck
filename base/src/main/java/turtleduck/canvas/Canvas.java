@@ -2,7 +2,6 @@ package turtleduck.canvas;
 
 import turtleduck.annotations.Icon;
 import turtleduck.colors.Color;
-import turtleduck.display.Layer;
 import turtleduck.geometry.Point;
 import turtleduck.messaging.CanvasService;
 import turtleduck.shapes.Ellipse;

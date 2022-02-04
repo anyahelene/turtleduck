@@ -19,6 +19,7 @@ import org.joml.Vector2fc;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 //import org.lwjgl.opengl.GL;
@@ -98,12 +99,14 @@ public class GLScreen extends BaseScreen implements Screen {
 	public double fov = 50;
 	private boolean wireframe = false;
 	private int frameBuf;
-
+	boolean paused = false;
 	private GLStick joysticks;
 
 	private RuntimeException exception;
 
 	private GLLayer layer;
+
+	private double zoom;
 
 	@Override
 	public void clearBackground() {
@@ -148,52 +151,8 @@ public class GLScreen extends BaseScreen implements Screen {
 		return null;
 	}
 
-	@Override
-	public double getHeight() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public Predicate<KeyEvent> getKeyOverride() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Predicate<KeyEvent> getKeyPressedHandler() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Predicate<KeyEvent> getKeyReleasedHandler() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Predicate<KeyEvent> getKeyTypedHandler() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public double frameBufferHeight() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public double frameBufferWidth() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public double width() {
-		// TODO Auto-generated method stub
-		return 0;
+	public GLLayer getGLLayer() {
+		return layer;
 	}
 
 	@Override
@@ -204,8 +163,7 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	@Override
 	public boolean isFullScreen() {
-		// TODO Auto-generated method stub
-		return false;
+		return fullscreen;
 	}
 
 	@Override
@@ -239,37 +197,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	@Override
-	public void setFullScreen(boolean fullScreen) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void setHideFullScreenMouseCursor(boolean hideIt) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setKeyOverride(Predicate<KeyEvent> keyOverride) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setKeyPressedHandler(Predicate<KeyEvent> keyHandler) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setKeyReleasedHandler(Predicate<KeyEvent> keyReleasedHandler) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setKeyTypedHandler(Predicate<KeyEvent> keyTypedHandler) {
 		// TODO Auto-generated method stub
 
 	}
@@ -309,6 +237,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		} else {
 			this.fov = fov;
 		}
+		this.zoom = 50.0 / this.fov;
 		updateProjection();
 	}
 
@@ -324,26 +253,12 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void useAlternateShortcut(boolean useAlternate) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setPasteHandler(Predicate<String> pasteHandler) {
-		// TODO Auto-generated method stub
-
+		render();
 	}
 
 	@Override
 	public void clipboardPut(String copied) {
-		// TODO Auto-generated method stub
-
+		glfwSetClipboardString(window, copied);
 	}
 
 	public static GLScreen create(int config) {
@@ -368,6 +283,7 @@ public class GLScreen extends BaseScreen implements Screen {
 //					});
 
 		init(width, height);
+		System.out.println(dim);
 	}
 
 	protected void init(int width, int height) {
@@ -426,7 +342,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwSwapInterval(0);
 		glfwShowWindow(window);
 		glfwPollEvents();
-		setFullscreen(false);
+		setFullScreen(false);
 		if (WAIT_FOR_SYNC) {
 			if (glfwExtensionSupported("GLX_SGI_video_sync")) {
 				System.err.println("Has GLX_SGI_video_sync");
@@ -494,6 +410,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		cubeModel = new CubeModel();
 		cubeModel.scale(.2f, 0.05f, .1f);
 
+		fov(50);
 		updateProjection();
 		updateView();
 
@@ -550,9 +467,8 @@ public class GLScreen extends BaseScreen implements Screen {
 		}
 	}
 
-	public boolean setFullscreen(boolean fullscreen) {
+	public void setFullScreen(boolean fullscreen) {
 		if (this.fullscreen == fullscreen) {
-			return this.fullscreen;
 		} else {
 			long monitor = glfwGetPrimaryMonitor(); // glfwGetWindowMonitor(window);
 			GLFWVidMode vidmode = glfwGetVideoMode(monitor);
@@ -580,7 +496,6 @@ public class GLScreen extends BaseScreen implements Screen {
 				// HEIGHT) / 2);
 			}
 			this.fullscreen = fullscreen;
-			return this.fullscreen;
 		}
 	}
 
@@ -593,9 +508,12 @@ public class GLScreen extends BaseScreen implements Screen {
 			glfwSetWindowShouldClose(window, true);
 			callbackWindowClosed(window);
 		} else if (mods == 0) {
-		} else if (mods == GLFW_MOD_ALT && key == GLFW_KEY_W) {
-			wireframe = !wireframe;
-		}
+		} else if (mods == GLFW_MOD_ALT)
+			if (key == GLFW_KEY_W) {
+				wireframe = !wireframe;
+			} else if (key == GLFW_KEY_P) {
+				paused = !paused;
+			}
 	}
 
 	public Vector2f deviceToScreen(Vector2f coord) {
@@ -669,10 +587,14 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	public void updateProjection() {
+		float w = (float) dim.canvasWidth;
+		float h = (float) dim.canvasHeight;
 		perspectiveProjectionMatrix.setPerspective((float) Math.toRadians(fov), (float) (dim.winWidth / dim.winHeight),
 				1f, 1000.0f);
 		perspectiveProjectionMatrix.invertPerspective(perspectiveProjectionMatrixInv);
-		projectionMatrix.setOrtho(0, (float) dim.canvasWidth, 0, (float) dim.canvasHeight, -1, 1);
+		projectionMatrix.setOrtho(-w / 2, w / 2, -h / 2, h / 2, -1, 1);
+		projectionMatrix.scale(1, -1, 1);
+		projectionMatrix.scale((float)zoom);
 		projectionMatrix.invertOrtho(projectionMatrixInv);
 		System.err.println(projectionMatrix.transformProject(new Vector3f(0, 0, 0)));
 		System.err.println(projectionMatrix.transformProject(new Vector3f(640, 0, 0)));
@@ -784,10 +706,9 @@ public class GLScreen extends BaseScreen implements Screen {
 
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
-		glEnable(GL_CULL_FACE);
 		glDepthMask(true);
 //		glDisable(GL_CULL_FACE);
-		forEachLayer(true, (l) -> ((GLLayer) l).render(true));
+		forEachLayer(true, (l) -> ((GLLayer) l).render(true, false));
 
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(false);
@@ -795,7 +716,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 //		glEnable(GL_CULL_FACE);
 //		glDisable(GL_CULL_FACE);
-		forEachLayer(false, (l) -> ((GLLayer) l).render(false));
+		forEachLayer(false, (l) -> ((GLLayer) l).render(false, !paused));
 		glDepthMask(true);
 		glDisable(GL_BLEND);
 
@@ -843,5 +764,21 @@ public class GLScreen extends BaseScreen implements Screen {
 	@Override
 	public <T> InputControl<T> inputControl(Class<T> type, int code, int controller) {
 		return joysticks.inputControl(type, code, controller);
+	}
+
+	@Override
+	public ScreenControls controls() {
+		return this;
+	}
+
+	@Override
+	protected void exit() {
+		dispose();
+		System.exit(0);
+	}
+
+	@Override
+	protected String getClipboardString() {
+		return GLFW.glfwGetClipboardString(window);
 	}
 }

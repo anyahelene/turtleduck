@@ -21,9 +21,14 @@ void main()
 	float r = -aPos.x/0.866;
 	float b = 1.0 - r;
     fPos = uModel * vec4(aPos.xyz, 1.0);
+    //fPos = uModel * vec4(aPos.x,aPos.y,.5, 1.0);
     gl_Position = uProjView * fPos; // uModel * vec4(aPos.xyz, 1.0);
     fColor = vec4(aColor); // vec4(aPos.xyz, 1.0);
     fTexCoord = aTexCoord;
     //fNormal = vec4(mat3(transpose(inverse(uProjView))) * mat3(transpose(inverse(uModel))) * (aNormal),0);
     fNormal = uModel * vec4(aNormal,0);
+   //fNormal = normalize(fNormal);
+    //fNormal = vec4(aNormal, 0);
+    //fColor = vec4(aPos.z-.2)*6;
+    //fColor.a = 1;
 }

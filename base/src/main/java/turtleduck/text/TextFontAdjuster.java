@@ -142,13 +142,13 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 					return true;
 				} else if (code == 'S') {
 					if (event.isAltDown())
-						screen.fitScaling();
+						screen.controls().fitScaling();
 					else
-						screen.zoomCycle();
+						screen.controls().zoomCycle();
 					drawBackgroundGrid();
 					return true;
 				} else if (code == 'A') {
-					screen.cycleAspect();
+					screen.controls().cycleAspect();
 					return true;
 				} else if (code == 'G') {
 					grid = !grid;

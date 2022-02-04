@@ -1,9 +1,14 @@
 package turtleduck.turtle;
 
 import turtleduck.annotations.Icon;
+import turtleduck.colors.Color;
+import turtleduck.turtle.impl.BasePen;
 
 @Icon("🖋️")
 public interface Pen extends Stroke, Fill {
+	static PenBuilder<Pen> create() {
+		return new BasePen();
+	}
 	/**
 	 * Describes the smoothness of a path as it passes through a point. When
 	 * building a path, this can be used to create smooth paths without explicitly
@@ -63,5 +68,10 @@ public interface Pen extends Stroke, Fill {
 
 	@Override
 	boolean equals(Object other);
+	
+	/**
+	 * @return The current main pen color.
+	 */
+	Color color();
 
 }

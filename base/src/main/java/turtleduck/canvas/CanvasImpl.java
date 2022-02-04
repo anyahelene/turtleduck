@@ -69,9 +69,9 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 
 	public Canvas strokePaint(Color ink) {
 		if (ink == null)
-			return pen(pen.change().strokePaint(Colors.TRANSPARENT).done());
+			return pen(pen.change().stroke(Colors.TRANSPARENT).done());
 		else
-			return pen(pen.change().strokePaint(ink).done());
+			return pen(pen.change().stroke(ink).done());
 	}
 
 	public Canvas strokeOpacity(double opacity) {
@@ -80,9 +80,9 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 
 	public Canvas fillPaint(Color ink) {
 		if (ink == null)
-			return pen(pen.change().fillPaint(Colors.TRANSPARENT).done());
+			return pen(pen.change().fill(Colors.TRANSPARENT).done());
 		else
-			return pen(pen.change().fillPaint(ink).done());
+			return pen(pen.change().fill(ink).done());
 	}
 
 	public Canvas fillOpacity(double opacity) {

@@ -58,7 +58,7 @@ public class App implements JSObject {
 		HTMLElement page = document.getElementById("page");
 		System.out.print("start");
 		logger.info("start");
-		canvasServer = new CanvasServer();
+		canvasServer = new CanvasServer(null);
 		logger.info("server: {}", canvasServer);
 		screen = TeaDisplayInfo.INSTANCE.startPaintScene(canvasServer);
 		canvas = screen.createCanvas();

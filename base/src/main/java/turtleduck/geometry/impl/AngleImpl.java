@@ -6,6 +6,7 @@ import org.joml.Vector3f;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
+import turtleduck.geometry.Orientation;
 
 /**
  * 
@@ -166,11 +167,14 @@ public class AngleImpl implements DirectionVector, Direction {
 			return this;
 		else if (t >= 1.0)
 			return other;
+//		Vector3f thisVec = this.directionVector(null);
+//		Vector3f otherVec = other.directionVector(null);
+//		thisVec.lerp(otherVec, (float)t);
 		double x0 = dirX(), x1 = other.dirX();
 		double y0 = dirY(), y1 = other.dirY();
 		double x = x0 + (x1 - x0) * t;
 		double y = y0 + (y1 - y0) * t;
-		return new AngleImpl(atan2(x, y), absolute);
+		return new AngleImpl(atan2(y, x), absolute);
 	}
 
 	@Override
@@ -386,16 +390,22 @@ public class AngleImpl implements DirectionVector, Direction {
 
 	@Override
 	public Vector3f perpendicular(Vector3f dest) {
+		if (dest == null)
+			dest = new Vector3f();
 		return dest.set(dirX(), dirY(), 0).rotateZ((float) Math.PI / 2);
 	}
 
 	@Override
 	public Vector3f normalVector(Vector3f dest) {
+		if (dest == null)
+			dest = new Vector3f();
 		return dest.set(0, 0, 1);
 	}
 
 	@Override
 	public Vector3f directionVector(Vector3f dest) {
+		if (dest == null)
+			dest = new Vector3f();
 		return dest.set(dirX(), dirY(), 0);
 	}
 
@@ -405,12 +415,12 @@ public class AngleImpl implements DirectionVector, Direction {
 	}
 
 	@Override
-	public Direction pitch(double degrees) {
+	public Orientation pitch(double degrees) {
 		return new OrientImpl(this).pitch(degrees);
 	}
 
 	@Override
-	public Direction roll(double degrees) {
+	public Orientation roll(double degrees) {
 		return new OrientImpl(this).roll(degrees);
 	}
 

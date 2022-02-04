@@ -34,7 +34,6 @@ import turtleduck.text.TextWindow;
 public class JfxScreen extends BaseScreen {
 	private static final javafx.scene.paint.Color JFX_BLACK = javafx.scene.paint.Color.BLACK;
 	private Clipboard clipboard = Clipboard.getSystemClipboard();
-	protected int shortcutKeyMask = KeyEvent.SHORTCUT_MASK;
 
 	public static Screen startPaintScene(Stage stage, int configuration) {
 		Dimensions dim = computeDimensions(JfxDisplayInfo.INSTANCE, configuration);
@@ -126,13 +125,6 @@ public class JfxScreen extends BaseScreen {
 //	private double currentFit = 1.0;
 //	private double resolutionScale = 1.0;
 //	private int maxScale = 1;
-	private Predicate<KeyEvent> keyOverride = null;
-
-	private Predicate<KeyEvent> keyPressedHandler = null;
-
-	private Predicate<KeyEvent> keyTypedHandler = null;
-
-	private Predicate<KeyEvent> keyReleasedHandler = null;
 
 	private boolean debug = true;
 
@@ -140,7 +132,6 @@ public class JfxScreen extends BaseScreen {
 
 	private Cursor oldCursor;
 	private JfxLayer backgroundPainter;
-	private Predicate<String> pasteHandler;
 
 	public JfxScreen(Dimensions dim) {
 //	double width, double height, double pixWidth, double pixHeight, double canvasWidth,		double canvasHeight) {
@@ -177,16 +168,16 @@ public class JfxScreen extends BaseScreen {
 	@Override
 	public turtleduck.canvas.Canvas createCanvas() {
 		Canvas canvas = newCanvas();
-		JfxLayer layer = addLayer(new JfxLayer(newLayerId(), width(), getHeight(), this, canvas));
+		JfxLayer layer = addLayer(new JfxLayer(newLayerId(), width(), height(), this, canvas));
 		layerCanvases.put(layer, canvas);
-		return new CanvasImpl<>(layer.id(),this, width(), getHeight(), use3d -> layer.pathWriter(use3d), null);
+		return new CanvasImpl<>(layer.id(), this, width(), height(), use3d -> layer.pathWriter(use3d), null);
 	}
 
 	@Override
 	public TextWindow createTextWindow() {
 		Canvas canvas = newCanvas();
 		JfxTextWindow win = addLayer(
-				new JfxTextWindow(newLayerId(), TextMode.MODE_80X30, this, width(), getHeight(), canvas));
+				new JfxTextWindow(newLayerId(), TextMode.MODE_80X30, this, width(), height(), canvas));
 		win.drawCharCells();
 		win.redraw();
 		layerCanvases.put(win, canvas);
@@ -196,40 +187,17 @@ public class JfxScreen extends BaseScreen {
 	@Override
 	public Layer getBackgroundPainter() {
 		if (backgroundPainter == null) {
-			backgroundPainter = new JfxLayer(newLayerId(), width(), getHeight(), this, background);
+			backgroundPainter = new JfxLayer(newLayerId(), width(), height(), this, background);
 			layerMap.put(backgroundPainter.id(), backgroundPainter);
 		}
 		return backgroundPainter;
 	}
 
 	@Override
-	public double getHeight() {
+	public double height() {
 		return Math.floor(frameBufferHeight() / dim.resolutionScale());
 	}
 
-	/** @return the keyOverride */
-	@Override
-	public Predicate<KeyEvent> getKeyOverride() {
-		return keyOverride;
-	}
-
-	/** @return the keyHandler */
-	@Override
-	public Predicate<KeyEvent> getKeyPressedHandler() {
-		return keyPressedHandler;
-	}
-
-	/** @return the keyReleasedHandler */
-	@Override
-	public Predicate<KeyEvent> getKeyReleasedHandler() {
-		return keyReleasedHandler;
-	}
-
-	/** @return the keyTypedHandler */
-	@Override
-	public Predicate<KeyEvent> getKeyTypedHandler() {
-		return keyTypedHandler;
-	}
 
 	@Override
 	public double frameBufferHeight() {
@@ -261,33 +229,6 @@ public class JfxScreen extends BaseScreen {
 	}
 
 	@Override
-	public boolean minimalKeyHandler(KeyEvent event) {
-		int code = event.getCode();
-		if (event.isShortcutDown() && event.shortcutModifiers() == 0) {
-			if (code == 'Q') {
-				Platform.exit();
-			} else if (code == '+') {
-				zoomIn();
-				return true;
-			} else if (code == '-') {
-				zoomOut();
-				return true;
-			} else if (code == 'V' && pasteHandler != null) {
-				if (clipboard.hasString())
-					pasteHandler.test(clipboard.getString());
-				return true;
-			}
-		} else if (!event.isModified()) {
-			if (code == KeyCodes.Function.F11) {
-				setFullScreen(!isFullScreen());
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	@Override
 	public void moveToBack(Layer layer) {
 		Canvas canvas = layerCanvases.get(layer);
 		if (canvas != null) {
@@ -305,7 +246,7 @@ public class JfxScreen extends BaseScreen {
 	}
 
 	protected void recomputeLayout(boolean resizeWindow) {
-		if(subScene.getWidth() <= 1 || subScene.getHeight() <= 1)
+		if (subScene.getWidth() <= 1 || subScene.getHeight() <= 1)
 			return;
 		dim.winWidth = subScene.getWidth();
 		dim.winHeight = subScene.getHeight();
@@ -324,7 +265,8 @@ public class JfxScreen extends BaseScreen {
 						javafx.stage.Screen.getPrimary().getVisualBounds().getWidth(),
 						javafx.stage.Screen.getPrimary().getVisualBounds().getHeight(), subScene.getWidth(),
 						subScene.getHeight(), scene.getWidth(), scene.getHeight(), window.getWidth(),
-						window.getHeight(), hBorder, vBorder, myWidth, myHeight, frameBufferWidth(), frameBufferHeight());
+						window.getHeight(), hBorder, vBorder, myWidth, myHeight, frameBufferWidth(),
+						frameBufferHeight());
 			// this.setWidth(myWidth);
 			// this.setHeight(myHeight);
 			window.setWidth(myWidth + hBorder);
@@ -335,28 +277,29 @@ public class JfxScreen extends BaseScreen {
 						javafx.stage.Screen.getPrimary().getVisualBounds().getWidth(),
 						javafx.stage.Screen.getPrimary().getVisualBounds().getHeight(), subScene.getWidth(),
 						subScene.getHeight(), scene.getWidth(), scene.getHeight(), window.getWidth(),
-						window.getHeight(), hBorder, vBorder, myWidth, myHeight, frameBufferWidth(), frameBufferHeight());
+						window.getHeight(), hBorder, vBorder, myWidth, myHeight, frameBufferWidth(),
+						frameBufferHeight());
 		}
 
 		if (debug)
-			System.err.printf("Rescaling: virtual %1.2fx%1.2f subscene %1.2fx%1.2f, scale %1.2f, resscale %1.2f, aspect %.4f (%d), framebuffer %1.0fx%1.0f%n",
-					width(), getHeight(), subScene.getWidth(), subScene.getHeight(), dim.resolutionScale(), dim.scale, aspects.get(aspect), aspect, frameBufferWidth(),
-					frameBufferHeight());
+			System.err.printf(
+					"Rescaling: virtual %1.2fx%1.2f subscene %1.2fx%1.2f, scale %1.2f, resscale %1.2f, aspect %.4f (%d), framebuffer %1.0fx%1.0f%n",
+					width(), height(), subScene.getWidth(), subScene.getHeight(), dim.resolutionScale(), dim.scale,
+					aspects.get(aspect), aspect, frameBufferWidth(), frameBufferHeight());
 		for (Node n : root.getChildren()) {
 			if (debug)
-				System.err.printf(" *  layout< %1.2fx%1.2f, translate %1.2fx%1.2f, scale %1.2f%n", n.getLayoutX(), n.getLayoutY(),
-						n.getTranslateX(), n.getTranslateY(), n.getScaleX());
+				System.err.printf(" *  layout< %1.2fx%1.2f, translate %1.2fx%1.2f, scale %1.2f%n", n.getLayoutX(),
+						n.getLayoutY(), n.getTranslateX(), n.getTranslateY(), n.getScaleX());
 			var h = frameBufferHeight();
 			var dh = dim.fbHeight - h;
 			var dhScaled = dh * dim.scale;
 			dhScaled /= 2;
-			n.relocate(Math.floor(subScene.getWidth() / 2),
-					Math.floor(subScene.getHeight() / 2 + dhScaled));
+			n.relocate(Math.floor(subScene.getWidth() / 2), Math.floor(subScene.getHeight() / 2 + dhScaled));
 			n.setTranslateX(-Math.floor(dim.fbWidth / 2));
 			n.setTranslateY(-Math.floor(dim.fbHeight / 2));
 			if (debug)
-				System.err.printf(" *  layout> %1.2fx%1.2f, translate %1.2fx%1.2f, scale %1.2f%n", n.getLayoutX(), n.getLayoutY(),
-						n.getTranslateX(), n.getTranslateY(), dim.scale);
+				System.err.printf(" *  layout> %1.2fx%1.2f, translate %1.2fx%1.2f, scale %1.2f%n", n.getLayoutX(),
+						n.getLayoutY(), n.getTranslateX(), n.getTranslateY(), dim.scale);
 			n.setScaleX(dim.scale);
 			n.setScaleY(dim.scale);
 		}
@@ -404,47 +347,11 @@ public class JfxScreen extends BaseScreen {
 		hideFullScreenMouseCursor = hideIt;
 	}
 
-	/**
-	 * @param keyOverride the keyOverride to set
-	 */
-	@Override
-	public void setKeyOverride(Predicate<KeyEvent> keyOverride) {
-		this.keyOverride = keyOverride;
-	}
-
-	/**
-	 * @param keyHandler the keyHandler to set
-	 */
-	@Override
-	public void setKeyPressedHandler(Predicate<KeyEvent> keyHandler) {
-		this.keyPressedHandler = keyHandler;
-	}
-
-	/**
-	 * @param keyReleasedHandler the keyReleasedHandler to set
-	 */
-	@Override
-	public void setKeyReleasedHandler(Predicate<KeyEvent> keyReleasedHandler) {
-		this.keyReleasedHandler = keyReleasedHandler;
-	}
-
-	@Override
-	public void setPasteHandler(Predicate<String> pasteHandler) {
-		this.pasteHandler = pasteHandler;
-	}
-
 	@Override
 	public void clipboardPut(String copied) {
 		clipboard.setContent(Map.of(DataFormat.PLAIN_TEXT, copied));
 	}
 
-	/**
-	 * @param keyTypedHandler the keyTypedHandler to set
-	 */
-	@Override
-	public void setKeyTypedHandler(Predicate<KeyEvent> keyTypedHandler) {
-		this.keyTypedHandler = keyTypedHandler;
-	}
 
 	@Override
 	public void setMouseCursor(MouseCursor cursor) {
@@ -456,25 +363,29 @@ public class JfxScreen extends BaseScreen {
 		subScene.getScene().setCursor(Cursor.DEFAULT);
 	}
 
-
-
-
 	@Override
 	public void flush() {
 		layerMap.values().forEach(Layer::flush);
 	}
 
 	@Override
-	public void useAlternateShortcut(boolean useAlternate) {
-		if (useAlternate)
-			shortcutKeyMask = KeyEvent.SHORTCUT_MASK_ALT;
-		else
-			shortcutKeyMask = KeyEvent.SHORTCUT_MASK;
-	}
-
-	@Override
 	public <T> InputControl<T> inputControl(Class<T> type, int code, int controller) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public ScreenControls controls() {
+		return this;
+	}
+
+	@Override
+	protected void exit() {
+		Platform.exit();
+	}
+
+	@Override
+	protected String getClipboardString() {
+		return clipboard.getString();
 	}
 }

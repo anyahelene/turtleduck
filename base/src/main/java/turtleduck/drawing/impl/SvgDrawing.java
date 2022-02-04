@@ -9,9 +9,8 @@ import turtleduck.drawing.Drawing;
 import turtleduck.geometry.BoundingBox;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.impl.BoundingBoxImpl;
-import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
-import turtleduck.turtle.Stroke;
+import turtleduck.turtle.Pen;
 
 public class SvgDrawing implements Drawing {
 	private StringBuilder builder = new StringBuilder();
@@ -29,15 +28,15 @@ public class SvgDrawing implements Drawing {
 		}
 	}
 
-	protected void line(Stroke pen, Point from, Point to) {
+	protected void line(Pen pen, Point from, Point to) {
 		element("line", "x1", String.valueOf(from.x()), //
 				"y1", String.valueOf(from.y()), //
 				"x2", String.valueOf(to.x()), //
 				"y2", String.valueOf(to.y()), "style", toSvg(pen));
 	}
 
-	protected void polyline(Stroke pen, Fill fill, Point... points) {
-		element("polyline", "points", toSvg(points), "style", toSvg(pen) + toSvg(fill));
+	protected void polyline(Pen pen, Point... points) {
+		element("polyline", "points", toSvg(points), "style", toSvg(pen));
 	}
 
 	public Drawing clear() {
@@ -45,7 +44,7 @@ public class SvgDrawing implements Drawing {
 		return this;
 	}
 
-	public Drawing clear(Fill fill) {
+	public Drawing clear(Color color) {
 		builder = new StringBuilder();
 		return this;
 	}
@@ -81,23 +80,23 @@ public class SvgDrawing implements Drawing {
 		return sb.toString();
 	}
 
-	public String toSvg(Stroke stroke) {
-		if (stroke == null)
-			return "stroke:none;";
+	public String toSvg(Pen pen) {
+		String s = "";
+
+		if (pen.stroking())
+			s += "stroke:none;";
 		else
-			return "stroke:" + toSvg(stroke.strokeColor()) + ";stroke-width:" + stroke.strokeWidth() + ";";
+			s += "stroke:" + toSvg(pen.strokeColor()) + ";stroke-width:" + pen.strokeWidth() + ";";
+		if (pen.filling())
+			s += "fill:none;";
+		else
+			s += "fill:" + toSvg(pen.fillColor()) + ";";
+		return s;
 	}
 
 	public String toSvg(Color paint) {
 		return String.format("rgb(%d,%d,%d)", Math.round(paint.red() * 255), Math.round(paint.green() * 255),
 				Math.round(paint.blue() * 255));
-	}
-
-	public String toSvg(Fill fill) {
-		if (fill == null)
-			return "fill:none;";
-		else
-			return "fill:" + toSvg(fill.fillColor()) + ";";
 	}
 
 	public void element(String name, String... attrPairs) {

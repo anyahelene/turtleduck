@@ -20,7 +20,7 @@ import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.impl.BasePen;
 import turtleduck.turtle.impl.PathPointImpl;
 
-public abstract class ShapeImpl<T> implements Shape {
+public abstract class ShapeImpl<T> implements Shape, Shape.Builder<T> {
 	protected Point position;
 	protected Matrix3x2dc matrix;
 	protected Pen pen;
@@ -59,19 +59,39 @@ public abstract class ShapeImpl<T> implements Shape {
 		return (T) this;
 	}
 
+	@Override
 	public String stroke() {
-		return writePath(pathWriter, true, false);
+		Pen p = pen;
+		if (!p.stroking() || p.filling()) {
+			p = pen.change().stroke(true).fill(false).done();
+		}
+		return writePath(pathWriter, p);
 	}
 
+	@Override
 	public String fill() {
-		return writePath(pathWriter, false, true);
+		Pen p = pen;
+		if (p.stroking() || !p.filling()) {
+			p = pen.change().stroke(false).fill(true).done();
+		}
+		return writePath(pathWriter, p);
 	}
 
+	@Override
 	public String strokeAndFill() {
-		return writePath(pathWriter, true, true);
+		Pen p = pen;
+		if (!p.stroking() || !p.filling()) {
+			p = pen.change().stroke(true).fill(true).done();
+		}
+		return writePath(pathWriter, p);
 	}
 
-	protected abstract String writePath(PathWriter writer, boolean stroke, boolean fill);
+	@Override
+	public String done() {
+		return writePath(pathWriter, pen);
+	}
+
+	protected abstract String writePath(PathWriter writer, Pen pen);
 
 	public static abstract class ShapeWxH<T> extends ShapeImpl<T> implements WxHBuilder<T> {
 		protected double width = 1, height = 1;
@@ -107,12 +127,17 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, Pen pen) {
 			PathStroke ps = writer.addStroke();
 			double w = width / 2, h = height / 2;
+			double circ = 2 * width + 2 * height;
 			PathPointImpl start = new PathPointImpl(position.add(w, 0), pen);
 			ps.addPoint(start);
-			int step = 10;
+			int steps = Math.max(5, Math.min((int) circ / 3, 36));
+			while (360 % steps > 0) {
+				steps--;
+			}
+			int step = 360 / steps;
 			for (int i = step; i <= 360; i += step) {
 				double a = (2.0 * Math.PI * i) / 360.0;
 				ps.addPoint(position.add(Math.cos(a) * w, Math.sin(a) * h));
@@ -133,13 +158,10 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, Pen pen) {
 			Point p0 = position.add(-width / 2, -height / 2);
 			PathStroke ps = writer.addStroke();
-			if (!stroke)
-				pen = pen.change().strokePaint(Colors.TRANSPARENT).done();
-			if (!fill)
-				pen = pen.change().fillPaint(Colors.TRANSPARENT).done();
+
 			PathPointImpl start = new PathPointImpl(p0, pen);
 			String id = String.format("rect@%x", System.identityHashCode(this));
 			ps.group(id);
@@ -162,7 +184,7 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, Pen pen) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -228,20 +250,9 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, Pen pen) {
 			PathStroke ps = writer.addStroke();
 			System.out.println("write: " + text);
-			System.out.println("orig pen: " + pen);
-			if (fill) {
-				if (pen.fillColor() == Colors.TRANSPARENT)
-					pen = pen.change().fillPaint(pen.strokeColor()).done();
-				System.out.println("fill pen: " + pen);
-		} else {
-				pen = pen.change().fillPaint(Colors.TRANSPARENT).done();
-			}
-			if (!stroke)
-				pen = pen.change().strokePaint(Colors.TRANSPARENT).done();
-			System.out.println("final pen: " + pen);
 			PathPointImpl start = new PathPointImpl(position, pen);
 			start.annotation(Text.TEXT_ALIGN, align);
 			start.annotation(Text.TEXT_FONT_SIZE, size);
@@ -294,9 +305,10 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, Pen pen) {
 			if (closed)
 				this.stroke.addPoint(position);
+
 			String id = String.format("poly@%x", System.identityHashCode(this));
 			this.stroke.group(id);
 			this.stroke.endPath();
@@ -368,17 +380,19 @@ public abstract class ShapeImpl<T> implements Shape {
 		}
 
 		@Override
-		protected String writePath(PathWriter writer, boolean stroke, boolean fill) {
+		protected String writePath(PathWriter writer, Pen pen) {
 			finishStroke();
 			return id;
 		}
 
 	}
 
+	@Override
 	public PenBuilder<? extends T> penChange() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Pen pen() {
 		if (penBuilder != null) {
 			pen = penBuilder.done();
@@ -394,36 +408,33 @@ public abstract class ShapeImpl<T> implements Shape {
 		return (T) this;
 	}
 
+	@Override
 	public T strokeWidth(double pixels) {
 		return pen(pen.change().strokeWidth(pixels).done());
 	}
 
+	@Override
 	public T strokePaint(Color ink) {
 		if (ink == null)
 			throw new NullPointerException();
-		return pen(pen.change().strokePaint(ink).done());
+		return pen(pen.change().stroke(ink).done());
 	}
 
-	public T strokeOpacity(double opacity) {
-		return pen(pen.change().strokeOpacity(opacity).done());
-	}
-
+	@Override
 	public T fillPaint(Color ink) {
 		if (ink == null)
 			throw new NullPointerException();
-		return pen(pen.change().fillPaint(ink).done());
+		return pen(pen.change().fill(ink).done());
 	}
 
-	public T fillOpacity(double opacity) {
-		return pen(pen.change().fillOpacity(opacity).done());
-	}
-
+	@Override
 	public T smooth(SmoothType smooth) {
 		if (smooth == null)
 			throw new NullPointerException();
 		return pen(pen.change().smooth(smooth).done());
 	}
 
+	@Override
 	public T smooth(SmoothType smooth, double amount) {
 		if (smooth == null)
 			throw new NullPointerException();

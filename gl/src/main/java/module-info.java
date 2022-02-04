@@ -8,6 +8,7 @@ module turtleduck.gl {
 	requires org.joml;
 	requires org.lwjgl.stb;
 	requires org.lwjgl.assimp;
+	requires earcut4j;
 	provides turtleduck.display.MouseCursor with turtleduck.gl.GLCursor;
 	provides turtleduck.Launcher with turtleduck.gl.GLLauncher;
 	provides turtleduck.display.DisplayInfo with turtleduck.gl.GLDisplayInfo;

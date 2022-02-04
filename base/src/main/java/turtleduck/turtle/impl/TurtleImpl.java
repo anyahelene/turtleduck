@@ -302,7 +302,7 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS penColor(Color color) {
-		pen = pen.change().strokePaint(color).done();
+		pen = pen.change().stroke(color).done();
 		return (THIS) this;
 	}
 
@@ -323,21 +323,21 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS fill(Function<Color, Color> penColorMapping) {
-		pen = pen.change().fill(penColorMapping).done();
+		pen = pen.change().computedFill(penColorMapping).done();
 		return (THIS) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS stroke(Function<Color, Color> penColorMapping) {
-		pen = pen.change().stroke(penColorMapping).done();
+		pen = pen.change().computedStroke(penColorMapping).done();
 		return (THIS) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS fillColor(Color color) {
-		pen = pen.change().fillPaint(color).done();
+		pen = pen.change().fill(color).done();
 		return (THIS) this;
 	}
 

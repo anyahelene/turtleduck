@@ -20,11 +20,11 @@ public class Demos {
 				ink = green.mix(blue, (i - 120) / 119.0);
 			else
 				ink = blue.mix(red, (i - 240) / 119.0);
-			turtle.penChange().strokePaint(ink).done();
+			turtle.penChange().stroke(ink).done();
 			turtle.draw(step);
 			Turtle sub = turtle.spawn().turn(90);
 			for (int j = 20; j > 0; j--) {
-				sub.penChange().strokeWidth(j / 3.5).strokePaint(ink).done();
+				sub.penChange().strokeWidth(j / 3.5).stroke(ink).done();
 				sub.draw(radius / 20.0);
 				ink = ink.brighter();
 			}

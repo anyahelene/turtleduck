@@ -36,10 +36,6 @@ public class MessageImpl implements Message, MessageWriter {
 //		address = Array.of(to);
 	}
 
-	public MessageImpl(String to, String... toMore) {
-//		address = Array.of(to, toMore);
-	}
-
 	protected MessageImpl(Dict msg) {
 		msg.require(Message.HEADER);
 		header = msg.get(Message.HEADER);
@@ -194,6 +190,15 @@ public class MessageImpl implements Message, MessageWriter {
 		if (frozen)
 			throw new IllegalStateException("Message already written");
 		this.content = dict;
+		return this;
+	}
+	@Override
+	public <T> MessageWriter putHeader(Key<T> key, T value) {
+		if (frozen)
+			throw new IllegalStateException("Message already written");
+		if (header == null)
+			content = Dict.create();
+		header.put(key, value);
 		return this;
 	}
 

@@ -402,7 +402,7 @@ public abstract class WindowImpl<S extends Screen> extends BaseLayer<S> implemen
 			throw new IllegalArgumentException();
 		textMode = mode;
 		if (adjustDisplayAspect && screen != null)
-			screen.setAspect(textMode.getAspect());
+			screen.controls().setAspect(textMode.getAspect());
 		dirty(1, 1);
 		dirty(pageWidth(), pageHeight());
 		if (!useBuffer)

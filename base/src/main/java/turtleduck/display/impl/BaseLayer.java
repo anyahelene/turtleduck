@@ -17,7 +17,7 @@ public abstract class BaseLayer<S extends Screen> implements Layer {
 	}
 
 	public BaseLayer(String layerId, S screen) {
-		this(layerId, screen, screen.width(), screen.getHeight());
+		this(layerId, screen, screen.width(), screen.height());
 	}
 
 	@Override

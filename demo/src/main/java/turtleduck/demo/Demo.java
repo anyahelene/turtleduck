@@ -33,11 +33,11 @@ public class Demo implements TurtleDuckApp {
 				ink = green.mix(blue, (i - 120) / 119.0);
 			else
 				ink = blue.mix(red, (i - 240) / 119.0);
-			turtle.penChange().strokePaint(ink).done();
+			turtle.penChange().stroke(ink).done();
 			turtle.draw(step);
 			Turtle sub = turtle.spawn().turn(90);
 			for (int j = 20; j > 0; j--) {
-				sub.penChange().strokeWidth(j / 3.5).strokePaint(ink).done();
+				sub.penChange().strokeWidth(j / 3.5).stroke(ink).done();
 				sub.draw(radius / 20.0);
 				ink = ink.brighter();
 			}
@@ -70,7 +70,7 @@ public class Demo implements TurtleDuckApp {
 		Color green = Color.color(.5, 1, .5);
 		Color stem = grey.brighter().opacity(.7);
 		Color leaf = grey.opacity(.9);
-		turtle.penChange().strokeWidth(w).strokePaint(stem).done();
+		turtle.penChange().strokeWidth(w).stroke(stem).done();
 		turtle.turn(-10);
 		turtle.draw(35);
 		double r = 30;
@@ -79,11 +79,11 @@ public class Demo implements TurtleDuckApp {
 		double dr = 0.03, dl = 0.01;
 		double dal = 5.0 / 200.0;
 		for (int i = 0; i < 200; i++) {
-			turtle.spawn().penChange().strokePaint(leaf).strokeWidth(.5).done() //
+			turtle.spawn().penChange().stroke(leaf).strokeWidth(.5).done() //
 					.turn(-al).draw(l / 3).turn(al / 3).draw(l / 3) //
 					/* .changePen().strokePaint(leaf.mix(green, .5)).done() */.turn(al / 3).draw(l / 3).done();
-			turtle.spawn().penChange().strokePaint(leaf).strokeWidth(.5).done() //
-					.turn(ar).draw(r / 3).penChange().strokePaint(leaf.mix(green, .5)).done().turn(ar / 6).draw(r / 3)
+			turtle.spawn().penChange().stroke(leaf).strokeWidth(.5).done() //
+					.turn(ar).draw(r / 3).penChange().stroke(leaf.mix(green, .5)).done().turn(ar / 6).draw(r / 3)
 					.turn(-ar / 3).draw(r / 3).done();
 			w = w - 4.9 / 200.0;
 			if (i == 100) {
@@ -99,7 +99,7 @@ public class Demo implements TurtleDuckApp {
 			l -= dl;
 //			if (i > 150)
 //				a = a - i / 100.0;
-			turtle.penChange().strokePaint(stem).strokeWidth(w).done();
+			turtle.penChange().stroke(stem).strokeWidth(w).done();
 			stem = stem.darker().opacity((19 * stem.opacity() + 1) / 20.0);
 			turtle.turn(.1).draw(1);
 
@@ -109,7 +109,7 @@ public class Demo implements TurtleDuckApp {
 
 	public static void footprint(Turtle turtle, double size) {
 		size /= 10;
-		turtle.penChange().strokePaint(Colors.BLACK).fillPaint(Colors.BLACK).fillOpacity(0.5).done();
+		turtle.penChange().stroke(Colors.BLACK).fill(Colors.BLACK).fillOpacity(0.5).done();
 		turtle.turn(60).draw(size * 15).turn(-45).draw(size * 100).turn(-150).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15);
@@ -125,7 +125,7 @@ public class Demo implements TurtleDuckApp {
 		Color grey = Color.color(.5, .5, .5);
 		Color stem = grey.brighter().opacity(.7);
 		Color leaf = grey.opacity(.9);
-		turtle.penChange().strokeWidth(w).strokePaint(stem).done();
+		turtle.penChange().strokeWidth(w).stroke(stem).done();
 		turtle.turn(-10);
 		turtle.draw(35);
 		for (int i = 0; i < len; i++) {
@@ -179,7 +179,7 @@ public class Demo implements TurtleDuckApp {
 		screen.clearBackground();
 		canvas = screen.createCanvas();
 		debugCanvas = screen.debugCanvas();
-		debugPen = debugCanvas.pen().change().strokePaint(Colors.GREEN).strokeWidth(1).done();
+		debugPen = debugCanvas.pen().change().stroke(Colors.GREEN).strokeWidth(1).done();
 		duckCanvas = screen.createCanvas();
 
 		debugTurtle = debugCanvas.turtle().pen(debugPen);
@@ -193,7 +193,7 @@ public class Demo implements TurtleDuckApp {
 		Color blue = Color.color(0, 0, 1);
 		Turtle turt = turtle;
 		for(int i = 0; i < 100; i++) {
-			turtle.spawn().penChange().strokePaint(red.mix(green, i / 100.0)).done().turn(10).draw(200).done();
+			turtle.spawn().penChange().stroke(red.mix(green, i / 100.0)).done().turn(10).draw(200).done();
 //			turtle.changePen().strokePaint(red.mix(green, i / 100.0)).done().turn(10).draw(200).turnAround().move(200).turnAround().turn(-10);
 			turtle.turn(3).draw(10);
 		}

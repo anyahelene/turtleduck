@@ -11,7 +11,7 @@ public class TurtlePrelude {
 	Turtle turtle = canvas.turtle();
 
 	void init() {
-		turtle.penChange().strokePaint(Colors.BLACK).done();
+		turtle.penChange().stroke(Colors.BLACK).done();
 		turtle.jumpTo(10, 10);
 		turtleduck.shell.TShell.testValue = 5;
 	}

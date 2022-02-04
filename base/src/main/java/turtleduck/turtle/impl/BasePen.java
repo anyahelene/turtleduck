@@ -11,11 +11,9 @@ import turtleduck.turtle.Pen;
 import turtleduck.turtle.PenBuilder;
 
 public class BasePen implements Pen, PenBuilder<Pen> {
-	protected static final Function<Color, Color> IDENTITY = c -> c;
-	protected static final Function<Color, Color> NONE = c -> Colors.TRANSPARENT;
+	protected static final Color DEFAULT_COLOR = Colors.WHITE;
 	protected double strokeWidth;
-	protected Projection projection;
-	protected Color pen;
+	protected Color penColor, strokeColor, fillColor;
 	protected Function<Color, Color> strokeFun, fillFun;
 	protected boolean frozen = false;
 	protected boolean stroke = true, fill = false;
@@ -24,14 +22,14 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 
 	public BasePen() {
 		strokeWidth = 1;
-		projection = new OrthographicProjection(100, 100);
-		pen = Color.color(1, 1, 1);
+		penColor = null;
 	}
 
 	public BasePen(BasePen original) {
 		strokeWidth = original.strokeWidth;
-		projection = original.projection;
-		pen = original.pen;
+		penColor = original.penColor;
+		strokeColor = original.strokeColor;
+		fillColor = original.fillColor;
 		stroke = original.stroke;
 		fill = original.fill;
 		strokeFun = original.strokeFun;
@@ -47,9 +45,11 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	public Color strokeColor() {
 		if (stroke) {
 			if (strokeFun != null)
-				return strokeFun.apply(pen);
+				return strokeFun.apply(color());
+			else if (strokeColor != null)
+				return strokeColor;
 			else
-				return pen;
+				return color();
 		} else {
 			return Colors.TRANSPARENT;
 		}
@@ -59,12 +59,22 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	public Color fillColor() {
 		if (fill) {
 			if (fillFun != null)
-				return fillFun.apply(pen);
+				return fillFun.apply(color());
+			else if (fillColor != null)
+				return fillColor;
 			else
-				return pen;
+				return color();
 		} else {
 			return Colors.TRANSPARENT;
 		}
+	}
+
+	@Override
+	public Color color() {
+		if (penColor != null)
+			return penColor;
+		else
+			return DEFAULT_COLOR;
 	}
 
 	@Override
@@ -83,14 +93,16 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public PenBuilder<Pen> strokePaint(Color ink) {
+	public PenBuilder<Pen> stroke(Color ink) {
 		if (frozen)
 			throw new IllegalStateException("Changing pen properties after done()");
+		strokeFun = null;
 		if (ink == null) {
-			strokeFun = NONE;
 			stroke = false;
 		} else {
-			strokeFun = c -> ink; 
+			if (penColor == null)
+				penColor = ink;
+			strokeColor = ink;
 			stroke = true;
 		}
 		return this;
@@ -105,14 +117,29 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public PenBuilder<Pen> fillPaint(Color ink) {
+	public PenBuilder<Pen> stroke(boolean enable) {
+		stroke = enable;
+		return this;
+	}
+
+	@Override
+	public PenBuilder<Pen> stroke(Color ink, double pixels) {
+		strokeWidth = pixels;
+		return stroke(ink);
+	}
+
+	@Override
+	public PenBuilder<Pen> fill(Color ink) {
 		if (frozen)
 			throw new IllegalStateException("Changing pen properties after done()");
+		fillFun = null;
 		if (ink == null) {
-			fillFun = NONE;
+			fillColor = null;
 			fill = false;
 		} else {
-			fillFun = c -> ink;
+			if (penColor == null)
+				penColor = ink;
+			fillColor = ink;
 			fill = true;
 		}
 		return this;
@@ -127,12 +154,16 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public PenBuilder<Pen> projection(Projection proj) {
-		if (frozen)
-			throw new IllegalStateException("Changing pen properties after done()");
-		if (proj == null)
-			throw new IllegalArgumentException("Argument must not be null");
-		projection = proj;
+	public PenBuilder<Pen> computedFill(Function<Color, Color> colorOp) {
+		fillColor = null;
+		fill = true;
+		fillFun = colorOp;
+		return this;
+	}
+
+	@Override
+	public PenBuilder<Pen> fill(boolean enable) {
+		fill = enable;
 		return this;
 	}
 
@@ -144,13 +175,18 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 
 	@Override
 	public PenBuilder<Pen> smooth(SmoothType smooth) {
-		smoothType = smooth;
+		if (smooth == null)
+			smoothType = SmoothType.CORNER;
+		else
+			smoothType = smooth;
+		if (smoothAmount <= 0)
+			smoothAmount = 1;
 		return this;
 	}
 
 	@Override
 	public PenBuilder<Pen> smooth(SmoothType smooth, double amount) {
-		smoothType = smooth;
+		smooth(smooth);
 		smoothAmount = amount;
 		return this;
 	}
@@ -166,47 +202,78 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	public String toString() {
-		return String.format("Pen(color=%s, stroke=%s, fill=%s)", pen, stroke, fill);
+		return String.format("Pen(color=%s, stroke=%s, fill=%s)", penColor, stroke, fill);
 	}
 
 	@Override
 	public PenBuilder<Pen> color(Color ink) {
-		if (ink == null)
-			pen = Colors.TRANSPARENT;
-		else
-			pen = ink;
-		strokeFun = IDENTITY;
-		fillFun = IDENTITY;
+		penColor = ink;
+		strokeColor = null;
+		fillColor = null;
 		return this;
 	}
 
 	@Override
 	public PenBuilder<Pen> color(Function<Color, Color> colorOp) {
-		pen = colorOp.apply(pen);
+		penColor = colorOp.apply(color());
+		strokeColor = null;
+		fillColor = null;
 		return this;
 	}
 
 	@Override
-	public PenBuilder<Pen> stroke(Function<Color, Color> colorOp) {
+	public PenBuilder<Pen> computedStroke(Function<Color, Color> colorOp) {
 		strokeFun = colorOp;
+		strokeColor = null;
+		stroke = true;
+		return this;
+	}
+
+	@Override
+	public boolean hasStroke() {
+		return strokeColor != null;
+	}
+
+	@Override
+	public boolean hasComputedStroke() {
+		return strokeFun != null;
+	}
+
+	@Override
+	public boolean stroking() {
+		return stroke;
+	}
+
+	@Override
+	public boolean hasFill() {
+		return fillColor != null;
+	}
+
+	@Override
+	public boolean hasComputedFill() {
+		return fillFun != null;
+	}
+
+	@Override
+	public boolean filling() {
+		return fill;
+	}
+
+	@Override
+	public PenBuilder<Pen> stroke(Function<Color, Color> colorOp) {
+		if (strokeColor != null)
+			stroke(colorOp.apply(strokeColor));
+		else
+			stroke(colorOp.apply(color()));
 		return this;
 	}
 
 	@Override
 	public PenBuilder<Pen> fill(Function<Color, Color> colorOp) {
-		fillFun = colorOp;
-		return this;
-	}
-
-	@Override
-	public PenBuilder<Pen> stroke(boolean enable) {
-		stroke = enable;
-		return this;
-	}
-
-	@Override
-	public PenBuilder<Pen> fill(boolean enable) {
-		fill = enable;
+		if (fillColor != null)
+			fill(colorOp.apply(fillColor));
+		else
+			fill(colorOp.apply(color()));
 		return this;
 	}
 

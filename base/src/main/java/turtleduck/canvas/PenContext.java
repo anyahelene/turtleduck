@@ -29,8 +29,6 @@ public interface PenContext<T> {
 	 */
 	T strokePaint(Color ink);
 
-	T strokeOpacity(double opacity);
-
 	/**
 	 * Set colour used for filling.
 	 * 
@@ -38,8 +36,6 @@ public interface PenContext<T> {
 	 * @return {@code this}, for sending more draw commands
 	 */
 	T fillPaint(Color ink);
-
-	T fillOpacity(double opacity);
 
 	T smooth(SmoothType smooth);
 

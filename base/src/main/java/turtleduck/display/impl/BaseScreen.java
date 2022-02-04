@@ -6,16 +6,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import turtleduck.Debug;
 import turtleduck.canvas.Canvas;
 import turtleduck.display.DisplayInfo;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
+import turtleduck.events.KeyCodes;
+import turtleduck.events.KeyEvent;
 import turtleduck.objects.IdentifiedObject;
 import turtleduck.scene.SceneWorld;
 import turtleduck.scene.impl.SceneImpl;
 
-public abstract class BaseScreen implements Screen {
+public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 	private static final double STD_CANVAS_WIDTH = 1280;
 	private static final List<Double> STD_ASPECTS = Arrays.asList(16.0 / 9.0, 16.0 / 10.0, 4.0 / 3.0);
 	protected final String id;
@@ -28,6 +32,15 @@ public abstract class BaseScreen implements Screen {
 	protected int aspect = 0;
 	private double scaling = 0;
 	public Dimensions dim;
+	protected int shortcutKeyMask = KeyEvent.SHORTCUT_MASK;
+	protected Predicate<KeyEvent> keyOverride = null;
+
+	protected Predicate<KeyEvent> keyPressedHandler = null;
+
+	protected Predicate<KeyEvent> keyTypedHandler = null;
+
+	protected Predicate<KeyEvent> keyReleasedHandler = null;
+	protected Predicate<String> pasteHandler;
 
 	public BaseScreen() {
 		id = IdentifiedObject.Registry.makeId(Screen.class, this);
@@ -39,10 +52,11 @@ public abstract class BaseScreen implements Screen {
 	}
 
 	public Screen clear() {
-		for(Layer l : layers)
+		for (Layer l : layers)
 			l.clear();
 		return this;
 	}
+
 	protected String newLayerId() {
 		return id + "." + nLayers++;
 	}
@@ -166,6 +180,23 @@ public abstract class BaseScreen implements Screen {
 			return winWidth / winHeight;
 		}
 
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("Dimensions [winWidth=").append(winWidth).append(", winHeight=").append(winHeight)
+					.append(", dispWidth=").append(dispWidth).append(", dispHeight=").append(dispHeight)
+					.append(", fbWidth=").append(fbWidth).append(", fbHeight=").append(fbHeight)
+					.append(", rawDispWidth=").append(rawDispWidth).append(", rawDispHeight=").append(rawDispHeight)
+					.append(", canvasAspect=").append(canvasAspect).append(", scale=").append(scale)
+					.append(", fitScale=").append(fitScale).append(", maxScale=").append(maxScale).append(", xScale=")
+					.append(xScale).append(", yScale=").append(yScale).append(", xMaxScale=").append(xMaxScale)
+					.append(", yMaxScale=").append(yMaxScale).append(", canvasWidth=").append(canvasWidth)
+					.append(", canvasHeight=").append(canvasHeight).append(", configFlags=").append(configFlags)
+					.append(", configScreen=").append(configScreen).append(", fbInUseHeight=").append(fbInUseHeight)
+					.append("]");
+			return builder.toString();
+		}
+
 	}
 
 	public static Dimensions computeDimensions(DisplayInfo info, int configuration) {
@@ -222,16 +253,15 @@ public abstract class BaseScreen implements Screen {
 		}
 
 		/*
-		if (debug) {
-			Debug.printf("Screen setup:%n");
-			Debug.printf("  Display: %.0fx%.0f (raw %.0fx%.0f)%n", dim.dispWidth, dim.dispHeight, dim.rawDispWidth,
-					dim.rawDispHeight);
-			Debug.printf("  Window:  %.0fx%.0f%n", dim.winWidth, dim.winHeight);
-			Debug.printf("  Canvas:  physical %.0fx%.0f, logical %.0fx%.0f%n", dim.fbWidth, dim.fbHeight,
-					dim.canvasWidth, dim.canvasHeight);
-			Debug.printf("  Aspect:  %.5f   Scale: %.5f%n", dim.canvasAspect, dim.scale);
-		}
-		*/
+		 * if (debug) { Debug.printf("Screen setup:%n");
+		 * Debug.printf("  Display: %.0fx%.0f (raw %.0fx%.0f)%n", dim.dispWidth,
+		 * dim.dispHeight, dim.rawDispWidth, dim.rawDispHeight);
+		 * Debug.printf("  Window:  %.0fx%.0f%n", dim.winWidth, dim.winHeight);
+		 * Debug.printf("  Canvas:  physical %.0fx%.0f, logical %.0fx%.0f%n",
+		 * dim.fbWidth, dim.fbHeight, dim.canvasWidth, dim.canvasHeight);
+		 * Debug.printf("  Aspect:  %.5f   Scale: %.5f%n", dim.canvasAspect, dim.scale);
+		 * }
+		 */
 		return dim;
 	}
 
@@ -284,7 +314,11 @@ public abstract class BaseScreen implements Screen {
 		recomputeLayout(true);
 	}
 
-	protected abstract void recomputeLayout(boolean b);
+	/**
+	 * @param resizeWindow True if the application window should be resized to match
+	 *                     the new aspect/scale.
+	 */
+	protected abstract void recomputeLayout(boolean resizeWindow);
 
 	@Override
 	public void zoomFit() {
@@ -315,4 +349,125 @@ public abstract class BaseScreen implements Screen {
 		scenes.add(w);
 		return w;
 	}
+
+	/**
+	 * @param keyOverride the keyOverride to set
+	 */
+	@Override
+	public void setKeyOverride(Predicate<KeyEvent> keyOverride) {
+		this.keyOverride = keyOverride;
+	}
+
+	/**
+	 * @param keyHandler the keyHandler to set
+	 */
+	@Override
+	public void setKeyPressedHandler(Predicate<KeyEvent> keyHandler) {
+		this.keyPressedHandler = keyHandler;
+	}
+
+	/**
+	 * @param keyTypedHandler the keyTypedHandler to set
+	 */
+	@Override
+	public void setKeyTypedHandler(Predicate<KeyEvent> keyTypedHandler) {
+		this.keyTypedHandler = keyTypedHandler;
+	}
+
+	/**
+	 * @param keyReleasedHandler the keyReleasedHandler to set
+	 */
+	@Override
+	public void setKeyReleasedHandler(Predicate<KeyEvent> keyReleasedHandler) {
+		this.keyReleasedHandler = keyReleasedHandler;
+	}
+
+	@Override
+	public void setPasteHandler(Predicate<String> pasteHandler) {
+		this.pasteHandler = pasteHandler;
+	}
+
+	@Override
+	public void useAlternateShortcut(boolean useAlternate) {
+		if (useAlternate)
+			shortcutKeyMask = KeyEvent.SHORTCUT_MASK_ALT;
+		else
+			shortcutKeyMask = KeyEvent.SHORTCUT_MASK;
+	}
+
+	protected abstract void exit();
+
+	protected abstract String getClipboardString();
+
+	public boolean minimalKeyHandler(KeyEvent event) {
+		int code = event.getCode();
+		if (event.isShortcutDown() && event.shortcutModifiers() == 0) {
+			if (code == 'Q') {
+				exit();
+			} else if (code == '+') {
+				zoomIn();
+				return true;
+			} else if (code == '-') {
+				zoomOut();
+				return true;
+			} else if (code == 'V' && pasteHandler != null) {
+				String s = getClipboardString();
+				if (s != null)
+					pasteHandler.test(s);
+				return true;
+			}
+		} else if (!event.isModified()) {
+			if (code == KeyCodes.Function.F11) {
+				setFullScreen(!isFullScreen());
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
+	public double height() {
+		return dim.canvasHeight;
+	}
+
+	@Override
+	public double width() {
+		return dim.canvasWidth;
+	}
+
+	@Override
+	public double frameBufferHeight() {
+		return dim.fbHeight;
+	}
+
+	@Override
+	public double frameBufferWidth() {
+		return dim.fbWidth;
+	}
+
+	/** @return the keyOverride */
+	@Override
+	public Predicate<KeyEvent> getKeyOverride() {
+		return keyOverride;
+	}
+
+	/** @return the keyHandler */
+	@Override
+	public Predicate<KeyEvent> getKeyPressedHandler() {
+		return keyPressedHandler;
+	}
+
+	/** @return the keyReleasedHandler */
+	@Override
+	public Predicate<KeyEvent> getKeyReleasedHandler() {
+		return keyReleasedHandler;
+	}
+
+	/** @return the keyTypedHandler */
+	@Override
+	public Predicate<KeyEvent> getKeyTypedHandler() {
+		return keyTypedHandler;
+	}
+
 }

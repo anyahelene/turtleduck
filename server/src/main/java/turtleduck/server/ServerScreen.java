@@ -68,7 +68,7 @@ public class ServerScreen extends BaseScreen {
 	}
 
 	@Override
-	public double getHeight() {
+	public double height() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
@@ -233,6 +233,23 @@ public class ServerScreen extends BaseScreen {
 
 	@Override
 	public <T> InputControl<T> inputControl(Class<T> type, int code, int controller) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ScreenControls controls() {
+		return this;
+	}
+
+	@Override
+	protected void exit() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected String getClipboardString() {
 		// TODO Auto-generated method stub
 		return null;
 	}

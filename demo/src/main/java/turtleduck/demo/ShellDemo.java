@@ -110,12 +110,12 @@ public class ShellDemo implements TurtleDuckApp {
 				return true;
 			} else if (code == 'S' || ch.equals("s")) {
 				if (event.isAltDown())
-					screen.fitScaling();
+					screen.controls().fitScaling();
 				else
-					screen.zoomCycle();
+					screen.controls().zoomCycle();
 				return true;
 			} else if (code == 'A'|| ch.equals("a")) {
-				screen.cycleAspect();
+				screen.controls().cycleAspect();
 				return true;
 			} else if (code == 'D' || ch.equals("d")) {
 //				tshell.charKey("D");
