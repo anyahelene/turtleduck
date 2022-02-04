@@ -104,7 +104,7 @@ public class TerminalClient implements TerminalService, ExplorerService {
 
 		hostSide = new HostSide(terminal);
 		cursor = new TermCursorImpl(hostSide, terminal::paste);
-		shell = new Shell(lang, null);	
+		shell = new Shell(Languages.LANGUAGES.get(lang), null);	
 		readline.attach(hostSide);
 		readline.handler(this::lineHandler);
 		prompt(1);

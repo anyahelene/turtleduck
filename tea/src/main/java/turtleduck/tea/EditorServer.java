@@ -144,27 +144,43 @@ public class EditorServer implements EditorService {
 	}
 
 	public void initializeLanguage(Shell shell, LanguageConsole console) {
-		EditLanguage l = languages.get(shell.language());
+		logger.info("initializing editor language services for {}", shell.language());
+		String name = shell.language().id;
+		EditLanguage l = languages.get(name);
 		if (l == null)
 			l = new EditLanguage();
 		l.shell = shell;
-		l.console = console.create().diagHandler(this::addDiag);
-		l.name = shell.language();
-		languages.put(shell.language(), l);
+		l.lang = shell.language();
+		if (console != null) {
+			l.console = console.create().diagHandler(this::addDiag);
+		}
+		l.name = name;
+		languages.put(name, l);
 		if (!langInitialized && currentSession.filename.startsWith("*") && isEmpty(editor.state())) {
-			open("*" + shell.shellName() + "*", "", l.name);
+			open("*" + shell.shellName() + "*", "", l.lang);
 		}
 		langInitialized = true;
 	}
 
-	public EditLanguage getLanguage(String name) {
-		if (name.isEmpty())
-			name = "plain";
-		EditLanguage l = languages.get(name);
+	public EditLanguage getLanguage(Language lang) {
+		if(lang == null) {
+			lang = Languages.LANGUAGES.get("plain");
+			if(lang == null) {
+				// TODO: replicates stuff from Client::setupLanguages
+				lang = new Language("plain", Dict.create());
+				Languages.LANGUAGES.put("plain", lang);
+			}
+		}
+
+		EditLanguage l = languages.get(lang.id);
 		if (l == null) {
+			logger.info("adding dummy editor language for {}", lang.id);
 			l = new EditLanguage();
-			l.name = name;
-			languages.put(name, l);
+			l.name = lang.id;
+			l.lang = lang;
+			languages.put(lang.id, l);
+			if (l.lang != null)
+				Client.client.loadLanguage(lang.id);
 		}
 		return l;
 	}
@@ -236,11 +252,15 @@ public class EditorServer implements EditorService {
 				Location loc = new Location("file", "editor", current.filename, 0, contents.length(), -1);
 				opts.put(ShellService.LOC, loc.toString());
 				opts.put(ShellService.COMPLETE, true);
-				lang.console.println();
+				if (lang.console != null) {
+					lang.console.println();
+				}
 				return current.lang.shell.service().eval(contents, current.id, opts).map(msg -> {
 					cmDiags = JSArray.create();
-					lang.shell.processResult(msg, true, current.lang.console);
-					current.lang.console.promptNormal();
+					if (lang.console != null) {
+						lang.shell.processResult(msg, true, current.lang.console);
+						current.lang.console.promptNormal();
+					}
 					current.state = setDiagnostics(editor.state(), cmDiags);
 					editor.switchState(current.state);
 					return Dict.create();
@@ -250,10 +270,12 @@ public class EditorServer implements EditorService {
 					String ename = msg.get(Reply.ENAME);
 					String evalue = msg.get(Reply.EVALUE, null);
 					Array trace = msg.get(Reply.TRACEBACK);
-					lang.console.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""),
-							Colors.RED);
-					for (String frame : trace.toListOf(String.class)) {
-						lang.console.println(frame, Colors.MAROON);
+					if (lang.console != null) {
+						lang.console.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""),
+								Colors.RED);
+						for (String frame : trace.toListOf(String.class)) {
+							lang.console.println(frame, Colors.MAROON);
+						}
 					}
 					return msg;
 				});
@@ -332,7 +354,7 @@ public class EditorServer implements EditorService {
 		currentSession = sess;
 		setFooter();
 		editor.switchState(currentSession.state);
-		if(currentSession.scrollTop >= 0) {
+		if (currentSession.scrollTop >= 0) {
 			editor.scrollDOM().setScrollTop(currentSession.scrollTop);
 		}
 	}
@@ -346,10 +368,11 @@ public class EditorServer implements EditorService {
 		}
 	}
 
-	public void paste(String filename, String text, String language) {
-		logger.info("paste({}, {}, {})", filename, text, language);
-		if (language == null || language.isEmpty())
-			language = Languages.extToLang(filename);
+	public void paste(String filename, String text, String langName) {
+		logger.info("paste({}, {}, {})", filename, text, langName);
+		if (langName == null || langName.isEmpty())
+			langName = Languages.extToLang(filename);
+		Language language = Languages.LANGUAGES.get(langName);
 		EditLanguage lang = getLanguage(language);
 		logger.info("language {}", lang);
 		EditSession sess = sessionsByName.get(filename);
@@ -362,10 +385,14 @@ public class EditorServer implements EditorService {
 	}
 
 	@Override
-	public Async<Dict> open(String filename, String text, String language) {
+	public Async<Dict> open(String filename, String text, String langName) {
+		if (langName == null || langName.isEmpty())
+			langName = Languages.extToLang(filename);
+		Language language = Languages.LANGUAGES.get(langName);
+		return open(filename, text, language);
+	}
+	public Async<Dict> open(String filename, String text, Language language) {
 		logger.info("Open: file " + filename + " language" + language + " text:\n" + (text != null ? text : "null"));
-		if (language == null || language.isEmpty())
-			language = Languages.extToLang(filename);
 		EditLanguage lang = getLanguage(language);
 		logger.info("language {}", lang);
 		if (currentSession != null) {
@@ -384,13 +411,13 @@ public class EditorServer implements EditorService {
 				if (lang == currentSession.lang)
 					editor.switchState(setDoc(editor.state(), text));
 				else
-					editor.switchState(editor.createState(language, text));
+					editor.switchState(editor.createState(lang.lang.editMode, text));
 				currentSession.filename = filename;
 				currentSession.lang = lang;
 				sessionsByName.put(filename, currentSession);
 				currentSession.tab.withAttr("data-session", String.valueOf(currentSession.id))//
 						.withAttr("data-filename", filename)//
-						.withAttr("data-language", language);
+						.withAttr("data-language", lang.lang.editMode);
 				currentSession.tabName.withText(filename);
 				setFooter();
 				return null;
@@ -457,11 +484,12 @@ public class EditorServer implements EditorService {
 		Shell shell;
 		LanguageConsole console;
 		String name;
+		Language lang;
 
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
-			builder.append("EditLanguage [shell=").append(shell).append(", console=").append(console).append(", name=")
+			builder.append("EditLanguage [shell=").append(shell).append(", lang=").append(lang).append(", console=").append(console).append(", name=")
 					.append(name).append("]");
 			return builder.toString();
 		}

@@ -9,14 +9,12 @@ import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.geometry.Point;
 import turtleduck.tea.net.SockJS;
-import turtleduck.turtle.Fill;
 import turtleduck.turtle.Path;
 import turtleduck.turtle.PathPoint;
 import turtleduck.turtle.PathStroke;
 import turtleduck.turtle.PathWriter;
 import turtleduck.turtle.PathWriterImpl;
 import turtleduck.turtle.Pen;
-import turtleduck.turtle.Stroke;
 
 public class NativeTLayer extends BaseLayer<NativeTScreen> {
 
@@ -57,7 +55,7 @@ public class NativeTLayer extends BaseLayer<NativeTScreen> {
 
 	}
 
-	protected void drawLine(Stroke pen, Point from, Point to) {
+	protected void drawLine(Pen pen, Point from, Point to) {
 
 	}
 
@@ -70,7 +68,7 @@ public class NativeTLayer extends BaseLayer<NativeTScreen> {
 			Point to = path.point(i);
 			if (pen != lastPen) {
 				context.stroke();
-				changeStroke(pen);
+				changePen(pen);
 				lastPen = pen;
 			}
 
@@ -83,13 +81,10 @@ public class NativeTLayer extends BaseLayer<NativeTScreen> {
 		return this;
 	}
 
-	protected void changeFill(Fill fill) {
-		context.setFillStyle(fill.fillColor().toString());
-	}
-
-	protected void changeStroke(Stroke stroke) {
-		context.setStrokeStyle(stroke.strokeColor().toString());
-		context.setLineWidth(stroke.strokeWidth());
+	protected void changePen(Pen pen) {
+		context.setStrokeStyle(pen.strokeColor().toString());
+		context.setLineWidth(pen.strokeWidth());
+		context.setFillStyle(pen.fillColor().toString());
 	}
 
 	public void receive(String obj) {
@@ -109,7 +104,7 @@ public class NativeTLayer extends BaseLayer<NativeTScreen> {
 					PathPoint to = points.get(i);
 					if (pen != lastPen) {
 						context.stroke();
-						changeStroke(pen);
+						changePen(pen);
 						lastPen = pen;
 					}
 

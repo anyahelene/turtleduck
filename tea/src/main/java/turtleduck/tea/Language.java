@@ -16,6 +16,7 @@ public class Language {
 	int enabled;
 	String editMode;
 	String icon;
+	boolean addToMenu;
 	List<String> extensions = new ArrayList<>();
 	List<String> shellExtensions = new ArrayList<>();
 	Map<String, String> services = new HashMap<>();
@@ -27,9 +28,9 @@ public class Language {
 		this.shellTitle = desc.get("shellTitle", title + "Shell");
 		this.editMode = desc.get("editMode", id);
 		String en = desc.get("enabled", "optional");
-		if(en.equals("always"))
+		if (en.equals("always"))
 			enabled = 0b11;
-		else if(en.equals("optional"))
+		else if (en.equals("optional"))
 			enabled = 0b01;
 		else
 			enabled = 0b00;
@@ -39,5 +40,23 @@ public class Language {
 		extensions.addAll(shellExtensions);
 		Dict srv = desc.get("services", Dict.create());
 		srv.forEach(key -> services.put(key.key(), srv.getString(key.key())));
+		if (!services.isEmpty() || desc.get("addToMenu", false)) {
+			this.addToMenu = true;
+		}
+	}
+
+	void enable() {
+		enabled |= 0b10;
+	}
+
+	boolean isEnabled() {
+		return enabled > 1;
+	}
+
+	boolean isOptional() {
+		return (enabled & 1) == 1;
+	}
+	public String toString() {
+		return id;
 	}
 }

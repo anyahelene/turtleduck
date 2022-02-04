@@ -13,6 +13,7 @@ public interface Languages {
 	public static final Map<String, Language> LANGUAGES_BY_EXT = new HashMap<>();
 
 	static String langToExt(String lang, boolean preferShell) {
+		// TODO: move this to Language
 		Language l = LANGUAGES.get(lang);
 		if (l != null) {
 			if (preferShell && !l.shellExtensions.isEmpty()) {

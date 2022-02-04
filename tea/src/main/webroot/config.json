@@ -1,42 +1,90 @@
 {
-	"user" : {
+	"user": {
 		"id": "__anon__",
 		"name": "Anas Chelonia",
 		"username": "tduck",
 		"nickname": "",
-		"website" : "",
+		"website": "",
 		"picture": "images/turtleduck-icon.png",
 		"profile": "",
 		"email": "tduck@example.com"
 	},
-	"prefs":{
-		"layout":{
-			"explorer": {"height": 16},
-			"editor": {"width":15},
-			"screen": {"width":29},
-			"shell": {"height":7}
+	"prefs": {
+		"layout": {
+			"explorer": {
+				"height": 16
+			},
+			"editor": {
+				"width": 15
+			},
+			"screen": {
+				"width": 29
+			},
+			"shell": {
+				"height": 7
+			}
 		},
-		"layout-portrait":{
-			"explorer": {"height": 16, "iconified":true},
-			"editor": {"width":15},
-			"screen": {"width":29},
-			"shell": {"height":7}
+		"layout-portrait": {
+			"explorer": {
+				"height": 16,
+				"iconified": true
+			},
+			"editor": {
+				"width": 15
+			},
+			"screen": {
+				"width": 29
+			},
+			"shell": {
+				"height": 7
+			}
 		}
 	},
-	"session" : {
-		"name" : "",
+	"session": {
+		"name": "",
 		"private": false,
 		"offline": false
 	},
 	"layout": {
-		"dir":"H","items": [
-			{"size":3,"dir":"V","items": [
-				{"size":16,"item":"explorer"}]},
-			{"size":29,"dir":"V","max_container":true,"items": [
-				{"size":9,"dir":"H","items":[
-					{"size":15,"item":"editor"},
-					{"size":14,"item":"screen"}]},
-	 			{"size":7,"item":"shell"}]}]},
+		"dir": "H",
+		"items": [
+			{
+				"size": 3,
+				"dir": "V",
+				"items": [
+					{
+						"size": 16,
+						"item": "explorer"
+					}
+				]
+			},
+			{
+				"size": 29,
+				"dir": "V",
+				"max_container": true,
+				"items": [
+					{
+						"size": 9,
+						"dir": "H",
+						"items": [
+							{
+								"size": 15,
+								"item": "editor"
+							},
+							{
+								"size": 14,
+								"item": "screen"
+							}
+						]
+					},
+					{
+						"size": 7,
+						"item": "shell"
+					}
+				]
+			}
+		]
+	},
 	"connections": {
 		"remote-turtleduck": {
 			"kind": "SockJSConnection",
@@ -58,14 +106,16 @@
 	"languages": {
 		"chat": {
 			"title": "Chat",
-			"enabled": "always",
+			"enabled": "optional",
 			"shellName": "chat",
 			"shellTitle": "Chat",
-			"editMode": "🦜",
+			"editMode": "plain",
+			"icon": "🦜",
 			"editable": false,
-			"icon": "",
-			"extensions":[],
-			"services": {}
+			"extensions": [],
+			"services": {
+				
+			}
 		},
 		"java": {
 			"title": "Java",
@@ -80,7 +130,8 @@
 				"jshell"
 			],
 			"shellExtensions": [
-				"jsh", "jshell"
+				"jsh",
+				"jshell"
 			],
 			"services": {
 				"jshell": "ShellService"
@@ -94,10 +145,31 @@
 			"editMode": "cpp",
 			"icon": "🇨",
 			"extensions": [
-				"c", "h", "C", "H",
-				"cpp", "cc", "hpp"
+				"c",
+				"h",
+				"C",
+				"H",
+				"cpp",
+				"cc",
+				"hpp"
 			],
 			"services": {
+				
+			}
+		},
+		"markdown": {
+			"title": "Markdown",
+			"enabled": "optional",
+			"shellName": "mdshell",
+			"shellTitle": "MDShell",
+			"editMode": "markdown",
+			"icon": "📝",
+			"extensions": [
+				"md",
+				"markdown"
+			],
+			"services": {
+				"mdshell": "ShellService"
 			}
 		},
 		"z80": {
@@ -111,6 +183,7 @@
 				"z80"
 			],
 			"services": {
+				
 			}
 		},
 		"python": {
@@ -130,17 +203,17 @@
 				"ShellService.cwd = '/examples'"
 			],
 			"install": [
-				"Pillow", "lark"
+				"Pillow",
+				"lark"
 			],
-			"import": [
-			]
+			"import": []
 		},
 		"plain": {
 			"title": "plain",
 			"enabled": "fallback",
 			"shellName": "shell",
 			"shellTitle": "Shell",
-			"editMode": "",
+			"editMode": "plain",
 			"icon": "",
 			"extensions": [],
 			"services": {

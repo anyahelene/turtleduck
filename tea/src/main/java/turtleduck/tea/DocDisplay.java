@@ -41,6 +41,10 @@ public class DocDisplay {
 		component.register();
 	}
 
+	public boolean isopen() {
+		return component != null;
+	}
+
 	protected void reopen() {
 		if (textElement != null && mainElement != null && component == null) {
 			this.component = JSUtil.createComponent(this.name, mainElement);
@@ -49,6 +53,25 @@ public class DocDisplay {
 			component.setTitle(this.title);
 			component.register();
 		}
+	}
+
+	public void displayText(String filename, String title, String text, boolean closeable) {
+		if (title == null) {
+			if (filename != null) {
+				title = filename.replaceFirst("^.*/", "");
+			} else
+				title = "Markdown";
+		}
+		if (this.name == null) {
+			setup("doc_" + docNum++, title, closeable);
+		}
+		if (filename == null) {
+			filename = name;
+		}
+		if (mdRender == null) {
+			mdRender = setupEngine(filename);
+		}
+		mdRender.render_unsafe(textElement, text);
 	}
 
 	public void initFromUrl(String url, String title, boolean closeable) {
@@ -63,12 +86,7 @@ public class DocDisplay {
 		req.onComplete(() -> {
 			if (req.getReadyState() == 4 && req.getStatus() == 200) {
 				if (mdRender == null) {
-					JSMapLike<JSObject> opts = JSObjects.create().cast();
-					opts.set("html", JSBoolean.valueOf(true));
-					if (url.contains("/")) {
-						opts.set("hrefPrefix", JSString.valueOf(url.replaceFirst("[^/]*$", "")));
-					}
-					mdRender = JSUtil.mdRender(opts);
+					mdRender = setupEngine(url);
 				}
 				mdRender.render_unsafe(textElement, req.getResponseText());
 			} else {
@@ -83,9 +101,29 @@ public class DocDisplay {
 		req.send();
 	}
 
+	private MDRender setupEngine(String url) {
+		JSMapLike<JSObject> opts = JSObjects.create().cast();
+		opts.set("html", JSBoolean.valueOf(true));
+		if (url.contains("/")) {
+			opts.set("hrefPrefix", JSString.valueOf(url.replaceFirst("[^/]*$", "")));
+		}
+		return JSUtil.mdRender(opts);
+	}
+
 	protected JSBoolean onclose(Component comp, Event ev) {
 		logger.info("closing document: name={}, title={}", name, title);
 		component = null;
 		return JSBoolean.valueOf(true);
 	}
+
+	public void focus() {
+		if (component != null)
+			component.focus();
+	}
+
+	public void select() {
+		if (component != null)
+			component.select();
+	}
+
 }

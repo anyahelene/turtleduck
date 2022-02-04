@@ -2,6 +2,7 @@ package turtleduck.tea;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -69,7 +70,6 @@ public class Client implements JSObject, ClientObject {
 	protected FileSystem fileSystem;
 	protected History history;
 	private Component shellComponent;
-	private LanguageConsole mainJavaConsole;
 	private Shell jshell;
 	private Shell pyshell;
 	private PyConnection pyConn;
@@ -78,6 +78,7 @@ public class Client implements JSObject, ClientObject {
 	private String projectName;
 	private Explorer pyExplorer;
 	private Shell chat;
+	private Shell markdown;
 
 	public void initialize() {
 		try {
@@ -156,12 +157,7 @@ public class Client implements JSObject, ClientObject {
 			router.route(new CanvasDispatch(canvas));
 
 			updateInfo();
-			if (getConfig("languages.java.enabled", "optional").equals("always")) {
-				loadJava();
-			}
-			if (getConfig("languages.python.enabled", "optional").equals("always")) {
-				loadPython();
-			}
+			loadLanguages();
 
 			WINDOW_MAP.set("turtleduck", map);
 			// DocDisplay docDisplay = new DocDisplay(screenComponent);
@@ -197,13 +193,22 @@ public class Client implements JSObject, ClientObject {
 				Languages.LANGUAGES_BY_EXT.put(e, def);
 				logger.info("language: {} => {} (shell)", e, id);
 			}
-			if (def.enabled > 0 && menu != null) {
+			if (def.addToMenu && menu != null) {
 				HTMLElement item = element("li", clazz("menu-entry"), //
 						attr("data-language", id), attr("data-title", def.title), attr("data-icon", def.icon),
 						def.title + " " + def.icon);
 				menu.appendChild(item);
 			}
 		});
+	}
+
+	public void loadLanguages() {
+		for(Entry<String, Language> entry : Languages.LANGUAGES.entrySet()) {
+			if (entry.getValue().isEnabled()) {
+				loadLanguage(entry.getValue().id);
+			}
+			
+		}
 	}
 
 	public String getConfig(String option, String def) {
@@ -290,14 +295,37 @@ public class Client implements JSObject, ClientObject {
 
 	}
 
-	public void loadChat() {
+	public boolean loadLanguage(String lang) {
+		Language language = Languages.LANGUAGES.get(lang);
+		if (lang == null) {
+			logger.warn("Language '{}' not defined in config.json", lang);
+			return false;
+		}
+		if (lang.equals("java")) {
+			loadJava(language);
+			return true;
+		} else if (lang.equals("python")) {
+			loadPython(language);
+			return true;
+		} else if (lang.equals("markdown")) {
+			loadMarkdown(language);
+			return true;
+		} else if (lang.equals("chat")) {
+			loadChat(language);
+			return true;
+		}
+		return false;
+	}
+
+	public void loadChat(Language lang) {
 		String config = getConfig("languages.chat.enabled", "optional");
 		if (!(config.equals("always") || config.equals("optional")))
 			return;
+
 		if (chat == null) {
 			ChatConnection chatConnection = new ChatConnection("local-chat", this);
 			router.connect(chatConnection, "chat");
-			chat = new Shell("chat", chatConnection);
+			chat = new Shell(lang, chatConnection);
 			chatTerminal = new CMTerminalServer(shellComponent, chat);
 			chatTerminal.disableHistory();
 			chatTerminal.initialize("chat");
@@ -311,10 +339,27 @@ public class Client implements JSObject, ClientObject {
 			chatConnection.chat("TurtleDuck", "I'm kind of busy right now, please try the chat later.", 1500);
 			HTMLElement notif = Browser.document.getElementById("chat-notification");
 			notif.getStyle().setProperty("display", "none");
+			lang.enable();
 		}
 	}
 
-	public void loadJava() {
+	public void loadMarkdown(Language lang) {
+		String config = getConfig("languages.markdown.enabled", "optional");
+		if (!(config.equals("always") || config.equals("optional")))
+			return;
+		if (markdown == null) {
+			markdown = new Shell(lang, new MarkdownService(screenComponent), null);
+			LanguageConsole console = null;
+			if (pyterminal != null)
+				console = pyterminal.console();
+			else if (jterminal != null)
+				console = jterminal.console();
+			editorImpl.initializeLanguage(markdown, null);
+			lang.enable();
+		}
+	}
+
+	public void loadJava(Language lang) {
 		String config = getConfig("languages.java.enabled", "optional");
 		if (!(config.equals("always") || config.equals("optional")))
 			return;
@@ -322,12 +367,11 @@ public class Client implements JSObject, ClientObject {
 			goOnline();
 		if (jshell == null) {
 			Client.client.userlog("Initializing Java environment...", true);
-			jshell = new Shell("java", sockConn);
+			jshell = new Shell(lang, sockConn);
 
 			jterminal = new CMTerminalServer(shellComponent, jshell);
 			jterminal.initialize("jshell");
 			map.set("jshell", jterminal.editor);
-			mainJavaConsole = jterminal.console();
 			router.route(new CMDispatch(jterminal));
 
 			HTMLElement exElt = Browser.document.getElementById("explorer");
@@ -339,7 +383,8 @@ public class Client implements JSObject, ClientObject {
 			Camera.Statics.addSubscription("receive_str", "jshell", "qr", "→ Java", "☕", "Store in Java variable");
 			Camera.Statics.addSubscription("receive_img", "jshell", "camera", "→ Java", "☕", "Store in Java variable");
 
-			editorImpl.initializeLanguage(jshell, mainJavaConsole);
+			editorImpl.initializeLanguage(jshell, jterminal.console());
+			lang.enable();
 			Client.client.userlog("Java environment initialized");
 			jshell.service().refresh();
 		}
@@ -357,7 +402,7 @@ public class Client implements JSObject, ClientObject {
 		editorImpl.initializeLanguage(name);
 	}
 
-	public void loadPython() {
+	public void loadPython(Language lang) {
 		String config = getConfig("languages.python.enabled", "optional");
 		if (!(config.equals("always") || config.equals("optional")))
 			return;
@@ -377,7 +422,7 @@ public class Client implements JSObject, ClientObject {
 		}
 		if (pyshell == null) {
 			Client.client.userlog("Initializing Python environment...", true);
-			pyshell = new Shell("python", pyConn);
+			pyshell = new Shell(lang, pyConn);
 			pyterminal = new CMTerminalServer(shellComponent, pyshell);
 			pyterminal.initialize("pyshell");
 			map.set("pyshell", pyterminal.editor);
@@ -418,6 +463,7 @@ public class Client implements JSObject, ClientObject {
 					pyterminal.focus();
 				}
 				JSUtil.changeButton("f9", "🐍", "Python ↓");
+				lang.enable();
 				pyshell.service().refresh();
 			}).onFailure(err -> {
 				logger.error("failed to initialize python: {}", err);
@@ -513,8 +559,8 @@ public class Client implements JSObject, ClientObject {
 		HTMLElement imgBox = Browser.document.getElementById("user-picture");
 		String imgUrl = getConfig("user.picture", null);
 		if (imgBox != null && imgUrl != null) {
-				imgBox.setAttribute("src", imgUrl);
-				imgBox.getStyle().setProperty("visibility", "visible");
+			imgBox.setAttribute("src", imgUrl);
+			imgBox.getStyle().setProperty("visibility", "visible");
 		}
 		HTMLElement nameBox = Browser.document.getElementById("user-name");
 		if (nameBox != null) {
@@ -593,18 +639,14 @@ public class Client implements JSObject, ClientObject {
 		} else if (key.equals("f2")) {
 		} else if (key.equals("f4")) {
 			if (chatTerminal == null) {
-				loadChat();
+				loadLanguage("chat");
 				chatTerminal.promptReady();
 			}
 			chatTerminal.editor.focus();
 		} else if (key.equals("menu:languages")) {
 			Dict d = JSUtil.decodeDict(data);
 			String lang = d.get("language", "");
-			if (lang.equals("java")) {
-				loadJava();
-			} else if (lang.equals("python")) {
-				loadPython();
-			} else {
+			if (!loadLanguage(lang)) {
 				return Promise.Util.resolve(JSString.valueOf("unknown language:" + lang));
 			}
 			JSUtil.changeButton("f9", d.getString("icon"), d.getString("title") + " ↓");
@@ -688,13 +730,8 @@ interface MessageHandler extends JSObject {
 
 @JSFunctor
 interface ClientObject extends JSObject {
-	void loadJava();
 
-	void loadPython();
-
-	void loadChat();
-
-	void loadGeneric(String name);
+	boolean loadLanguage(String name);
 
 	void setupLanguages();
 

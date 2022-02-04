@@ -36,13 +36,19 @@ public class Shell {
 	public static final Color VARCOLOR = Colors.OLIVE;
 	public static final Color TYPECOLOR = Colors.LIGHT_BLUE;
 	public static final Color TEXTCOLOR = Colors.LIME;
-	private String language;
 	private ShellService service;
 	private Connection conn;
+	private Language language;
 
-	Shell(String languageName, Connection conn) {
-		this.language = languageName;
+	Shell(Language lang, Connection conn) {
+		this.language = lang;
 		this.service = conn != null ? new ShellServiceProxy(conn.id(), conn.router()) : null;
+		this.conn = conn;
+	}
+
+	Shell(Language lang, ShellService service, Connection conn) {
+		this.language = lang;
+		this.service = service;
 		this.conn = conn;
 	}
 
@@ -50,16 +56,16 @@ public class Shell {
 		return conn;
 	}
 
-	public String language() {
+	public Language language() {
 		return language;
 	}
 
 	public String shellName() {
-		return Languages.langToShell(language);
+		return language.shellName;
 	}
 
 	public String fileExtension() {
-		return Languages.langToExt(language, true);
+		return Languages.langToExt(language.id, true);
 	}
 
 	public void printExceptions(Dict msg, LanguageConsole console) {
@@ -158,43 +164,42 @@ public class Shell {
 		if (cmd.equals("/ls")) {
 			List<String> files = Client.client.oldFileSystem.list();
 
-
-				console.promptBusy();
-				Client.client.fileSystem.list(args).onComplete(tdfiles -> {
-					List<String> newFiles = tdfiles.stream().map(file -> file.name()).collect(Collectors.toList());
-					files.addAll(newFiles);
-					int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
-					int width = 80; // TODO terminal.getCols();
-					int cols = 1;
-					logger.info("0: max={}, width={}, cols={}, files={}", max, width, cols, files);
-					if (max > 0 && max < width) {
-						cols = Math.min(files.size(), width / (max + 1));
-						max = width / cols;
-					}
-					logger.info("1: max={}, width={}, cols={}", max, width, cols);
-					int c = 0;
-					for (String str : files) {
-						console.print(String.format("%-" + max + "s", str));
-						if (++c >= cols) {
-							console.println();
-							c = 0;
-						}
-					}
-					if (c != 0)
+			console.promptBusy();
+			Client.client.fileSystem.list(args).onComplete(tdfiles -> {
+				List<String> newFiles = tdfiles.stream().map(file -> file.name()).collect(Collectors.toList());
+				files.addAll(newFiles);
+				int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
+				int width = 80; // TODO terminal.getCols();
+				int cols = 1;
+				logger.info("0: max={}, width={}, cols={}, files={}", max, width, cols, files);
+				if (max > 0 && max < width) {
+					cols = Math.min(files.size(), width / (max + 1));
+					max = width / cols;
+				}
+				logger.info("1: max={}, width={}, cols={}", max, width, cols);
+				int c = 0;
+				for (String str : files) {
+					console.print(String.format("%-" + max + "s", str));
+					if (++c >= cols) {
 						console.println();
-					console.promptNormal();
-				}, err -> {
-				});
-			
+						c = 0;
+					}
+				}
+				if (c != 0)
+					console.println();
+				console.promptNormal();
+			}, err -> {
+			});
+
 			return true;
-		} else if (cmd.equals("/loadpython")) {
-			Client.client.loadPython();
+		} else if (cmd.equals("/load_language")) {
+			Client.client.loadLanguage(args);
 			console.promptNormal();
 			return true;
 		} else if (cmd.equals("/open")) {
 			String l = Languages.extToLang(args);
 			if (l.isEmpty())
-				l = language;
+				l = language.id;
 			Client.client.editorImpl.open(args, null, l);
 			Client.client.editorImpl.focus();
 			console.promptNormal();
@@ -216,13 +221,13 @@ public class Shell {
 				console.promptNormal();
 			}
 			return true;
-		} else if(cmd.equals("//send")) {
+		} else if (cmd.equals("//send")) {
 			if (conn != null) {
 				String msg_type = args;
 				int i = args.indexOf(' ');
 				Dict content;
-				if(i >= 0) {
-					msg_type = args.substring(0,  i);
+				if (i >= 0) {
+					msg_type = args.substring(0, i);
 					args = args.substring(i);
 					content = JSUtil.decodeDict(args);
 				} else {

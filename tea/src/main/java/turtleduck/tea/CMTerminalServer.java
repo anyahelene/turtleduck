@@ -60,7 +60,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	private String user;
 	private Component parent;
 	private String name;
-	private String lang;
+	private Language lang;
 	private LanguageConsole console;
 	private boolean historyEnabled = true;
 
@@ -89,7 +89,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		outputElt = element("div", clazz("terminal-out")/* , style("overflow-anchor", "none") */);
 		outputContainer.appendChild(outputElt);
 
-		editor = EditorServer.createLineEditor(wrapperElt, "", lang, this::eventHandler);
+		editor = EditorServer.createLineEditor(wrapperElt, "", lang.editMode, this::eventHandler);
 		editor.setParent(parent);
 		editor.set("anchorElt", anchorElt);
 		editor.set("outerElt", outerElt);
@@ -183,7 +183,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 //		highlighted.insertBefore(elt, highlighted.getFirstChild());
 		outputElt.appendChild(highlighted);
 		lineHandler(line, id, highlighted);
-		State newState = editor.createState(lang, "");
+		State newState = editor.createState(lang.editMode, "");
 		editor.switchState(newState);
 	}
 
@@ -217,14 +217,14 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		HistEntry nextLine = history.get(next);
 		if (nextLine != null) {
 			currentLine = next;
-			State newState = editor.createState(lang, nextLine.current, -1);
+			State newState = editor.createState(lang.editMode, nextLine.current, -1);
 			editor.switchState(newState);
 			scrollIntoView();
 		} else if (historyEnabled) {
 			Client.client.history.get(historyId, next).onSuccess(line -> {
 				history.put(next, new HistEntry(next, line, line));
 				currentLine = next;
-				State newState = editor.createState(lang, line, -1);
+				State newState = editor.createState(lang.editMode, line, -1);
 				editor.switchState(newState);
 				scrollIntoView();
 			}).onFailure(err -> {
@@ -278,7 +278,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 			JSUtil.removeClass(wrapperElt, "running");
 
 			if (code != null) {
-				State newState = editor.createState(lang, code, -1);
+				State newState = editor.createState(lang.editMode, code, -1);
 				editor.switchState(newState);
 				redoLine = lastLine;
 				currentLine = lastLine;
