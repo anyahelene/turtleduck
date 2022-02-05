@@ -1,14 +1,19 @@
-package turtleduck.turtle;
+package turtleduck.paths.impl;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import turtleduck.annotations.Internal;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
+import turtleduck.paths.PathPoint;
+import turtleduck.paths.PathStroke;
+import turtleduck.paths.PathWriter;
 import turtleduck.turtle.impl.PathPointImpl;
 
+@Internal
 public class PathWriterImpl implements PathWriter {
 	protected boolean use3d = false;
 	protected Queue<PathStrokeImpl> strokes = new LinkedList<>();

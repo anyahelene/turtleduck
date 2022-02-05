@@ -8,9 +8,9 @@ import javafx.scene.canvas.GraphicsContext;
 import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Path;
-import turtleduck.turtle.PathWriter;
-import turtleduck.turtle.Pen;
+import turtleduck.paths.Path;
+import turtleduck.paths.PathWriter;
+import turtleduck.paths.Pen;
 
 public class JfxLayer extends BaseLayer<JfxScreen> implements Layer {
 	private static final int QUEUE_SIZE = 100;

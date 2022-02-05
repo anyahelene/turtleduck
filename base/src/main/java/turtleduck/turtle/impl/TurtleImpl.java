@@ -11,22 +11,22 @@ import turtleduck.canvas.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
+import turtleduck.paths.Path;
+import turtleduck.paths.PathPoint;
+import turtleduck.paths.PathStroke;
+import turtleduck.paths.PathWriter;
+import turtleduck.paths.Pen;
+import turtleduck.paths.PenBuilder;
 import turtleduck.sprites.Sprite;
 import turtleduck.sprites.SpriteImpl;
 import turtleduck.turtle.Annotation;
-import turtleduck.turtle.Chelonian;
+import turtleduck.turtle.BaseTurtle;
 import turtleduck.turtle.DrawingBuilder;
-import turtleduck.turtle.Path;
-import turtleduck.turtle.PathPoint;
-import turtleduck.turtle.PathStroke;
-import turtleduck.turtle.PathWriter;
-import turtleduck.turtle.Pen;
-import turtleduck.turtle.PenBuilder;
 import turtleduck.turtle.SpriteBuilder;
 import turtleduck.turtle.Turtle;
 
-public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends NavigatorImpl<THIS>
-		implements Chelonian<THIS, RESULT> {
+public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends BaseNavigatorImpl<THIS>
+		implements BaseTurtle<THIS, RESULT> {
 	public static class SpecificTurtle extends TurtleImpl<Turtle, Turtle> implements Turtle {
 
 		public SpecificTurtle(Point p, Direction b, Pen pen, Canvas canvas) {
@@ -280,81 +280,11 @@ public class TurtleImpl<THIS extends Chelonian<THIS, RESULT>, RESULT> extends Na
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public PenBuilder<? extends THIS> penChange() {
-		penBuilder = pen.change();
-		return new TurtlePenBuilder<THIS, RESULT>(penBuilder, (THIS) this);
+	public PenBuilder<THIS> penChange() {
+		penBuilder = pen.penChange();
+		return new PenBuilderDelegate<THIS>(penBuilder, (THIS) this);
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS pen(Color color) {
-		pen = pen.change().color(color).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS pen(Function<Color, Color> penColorMapping) {
-		pen = pen.change().color(penColorMapping).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS penColor(Color color) {
-		pen = pen.change().stroke(color).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS fill(boolean enable) {
-		pen = pen.change().fill(enable).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS stroke(boolean enable) {
-		pen = pen.change().stroke(enable).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS fill(Function<Color, Color> penColorMapping) {
-		pen = pen.change().computedFill(penColorMapping).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS stroke(Function<Color, Color> penColorMapping) {
-		pen = pen.change().computedStroke(penColorMapping).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS fillColor(Color color) {
-		pen = pen.change().fill(color).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS penWidth(double width) {
-		pen = pen.change().strokeWidth(width).done();
-		return (THIS) this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public THIS stroke() { // TODO?
-		beginPath();
-		pen = pen.change().stroke(true).fill(false).done();
-		return (THIS) this;
-	}
 
 	@SuppressWarnings("unchecked")
 	@Override

@@ -1,21 +1,34 @@
-package turtleduck.turtle;
+package turtleduck.paths.impl;
 
 import java.util.function.Function;
 
+import turtleduck.annotations.Internal;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
-import turtleduck.geometry.Projection;
-import turtleduck.turtle.Pen.SmoothType;
+import turtleduck.paths.Pen;
+import turtleduck.paths.PenBuilder;
+import turtleduck.paths.SmoothType;
 
-public interface PenBuilder<T> extends Pen {
+@Internal
+public interface PenSettings<T> {
+	/**
+	 * Start changing the pen settings
+	 * 
+	 * @return A PenBuilder; call {@link PenBuilder.done()} on it when done
+	 */
+	PenBuilder<?> penChange();
+
 	/**
 	 * Set the width of the pen's stroke
 	 *
-	 * @param pixels Line width, in pixels
+	 * @param width Line width
 	 * @return {@code this}, for sending more pen commands
-	 * @requires pixels >= 0
+	 * @requires width >= 0
 	 */
-	PenBuilder<T> strokeWidth(double pixels);
+	@SuppressWarnings("unchecked")
+	default T strokeWidth(double width) {
+		return (T) penChange().strokeWidth(width).done();
+	}
 
 	/**
 	 * Enable stroking and set colour used for drawing strokes.
@@ -28,7 +41,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param ink A colour or paint
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> stroke(Color ink);
+	@SuppressWarnings("unchecked")
+	default T stroke(Color ink) {
+		return (T) penChange().stroke(ink).done();
+	}
 
 	/**
 	 * Enable stroking and set colour and width for drawing strokes.
@@ -44,7 +60,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param ink A colour or paint
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> stroke(Color ink, double pixels);
+	@SuppressWarnings("unchecked")
+	default T stroke(Color ink, double width) {
+		return (T) penChange().stroke(ink, width).done();
+	}
 
 	/**
 	 * Set the main pen colour and forget the current stroke and fill color
@@ -62,7 +81,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param ink A colour or paint
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> color(Color ink);
+	@SuppressWarnings("unchecked")
+	default T color(Color ink) {
+		return (T) penChange().color(ink).done();
+	}
 
 	/**
 	 * Modify the main pen color by applying the function to the current color
@@ -72,7 +94,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param colorOp A function that computes a new color
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> color(Function<Color, Color> colorOp);
+	@SuppressWarnings("unchecked")
+	default T color(Function<Color, Color> colorOp) {
+		return (T) penChange().color(colorOp).done();
+	}
 
 	/**
 	 * Modify stroke color by applying the function to the current stroke color
@@ -94,7 +119,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @return {@code this}, for sending more pen commands
 	 * @see #computedStroke(Function)
 	 */
-	PenBuilder<T> stroke(Function<Color, Color> colorOp);
+	@SuppressWarnings("unchecked")
+	default T stroke(Function<Color, Color> colorOp) {
+		return (T) penChange().stroke(colorOp).done();
+	}
 
 	/**
 	 * Set the stroke color based on the main pen color
@@ -114,7 +142,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param colorOp A function to apply to compute stroke color from main color
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> computedStroke(Function<Color, Color> colorOp);
+	@SuppressWarnings("unchecked")
+	default T computedStroke(Function<Color, Color> colorOp) {
+		return (T) penChange().computedStroke(colorOp).done();
+	}
 
 	/**
 	 * Set the fill color based on the main pen color
@@ -134,7 +165,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param colorOp A function to apply to compute fill color from main color
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> computedFill(Function<Color, Color> colorOp);
+	@SuppressWarnings("unchecked")
+	default T computedFill(Function<Color, Color> colorOp) {
+		return (T) penChange().computedFill(colorOp).done();
+	}
 
 	/**
 	 * Enable or disable stroking.
@@ -144,7 +178,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param enable True to enable stroking, false to disable
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> stroke(boolean enable);
+	@SuppressWarnings("unchecked")
+	default T stroke(boolean enable) {
+		return (T) penChange().stroke(enable).done();
+	}
 
 	/**
 	 * Enable or disable filling.
@@ -154,14 +191,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param enable True to enable filling, false to disable
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> fill(boolean enable);
-
-	/**
-	 * Use <code>fill(c -> c.opacity(opacity))</code> instead.
-	 * 
-	 */
-	@Deprecated
-	PenBuilder<T> strokeOpacity(double opacity);
+	@SuppressWarnings("unchecked")
+	default T fill(boolean enable) {
+		return (T) penChange().fill(enable).done();
+	}
 
 	/**
 	 * Enable filling and set fill color.
@@ -174,7 +207,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @param ink A colour or paint
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> fill(Color ink);
+	@SuppressWarnings("unchecked")
+	default T fill(Color ink) {
+		return (T) penChange().fill(ink).done();
+	}
 
 	/**
 	 * Enable filling and compute fill color.
@@ -197,14 +233,10 @@ public interface PenBuilder<T> extends Pen {
 	 * @see #computedFill(Function) which continuously recomputes the fill color
 	 *      based on the current pen color
 	 */
-	PenBuilder<T> fill(Function<Color, Color> colorOp);
-
-	/**
-	 * Use <code>fill(c -> c.opacity(opacity))</code> instead.
-	 * 
-	 */
-	@Deprecated
-	PenBuilder<T> fillOpacity(double opacity);
+	@SuppressWarnings("unchecked")
+	default T fill(Function<Color, Color> colorOp) {
+		return (T) penChange().fill(colorOp).done();
+	}
 
 	/**
 	 * Set pen smoothing.
@@ -220,7 +252,10 @@ public interface PenBuilder<T> extends Pen {
 	 *               (no smoothing)
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> smooth(SmoothType smooth);
+	@SuppressWarnings("unchecked")
+	default T smooth(SmoothType smooth) {
+		return (T) penChange().smooth(smooth).done();
+	}
 
 	/**
 	 * Set pen smoothing.
@@ -244,12 +279,9 @@ public interface PenBuilder<T> extends Pen {
 	 * @param amount How much smoothing to apply, with 0 being no smoothing and 1
 	 * @return {@code this}, for sending more pen commands
 	 */
-	PenBuilder<T> smooth(SmoothType smooth, double amount);
+	@SuppressWarnings("unchecked")
+	default T smooth(SmoothType smooth, double amount) {
+		return (T) penChange().smooth(smooth, amount).done();
+	}
 
-	/**
-	 * Complete the pen change and produce an immutable pen.
-	 * 
-	 * @return A finished pen
-	 */
-	T done();
 }

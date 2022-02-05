@@ -6,12 +6,12 @@ import turtleduck.canvas.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.messaging.CanvasService;
-import turtleduck.turtle.impl.NavigatorImpl;
+import turtleduck.turtle.impl.BaseNavigatorImpl;
 import turtleduck.turtle.impl.PathPointImpl;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 
-public class SpriteImpl extends NavigatorImpl<Sprite> implements Sprite {
+public class SpriteImpl extends BaseNavigatorImpl<Sprite> implements Sprite {
 	protected Matrix3x2d matrix = new Matrix3x2d();
 	protected String transition = "0s";
 	private String objId;

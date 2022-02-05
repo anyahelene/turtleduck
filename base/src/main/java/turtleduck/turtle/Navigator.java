@@ -6,7 +6,7 @@ import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
 
 @Icon("🧭")
-public interface Navigator<T extends Navigator<T>> extends BasicNavigator<T> {
+public interface Navigator<T extends Navigator<T>> extends BaseNavigator<T> {
 
 	/**
 	 * Set the current position

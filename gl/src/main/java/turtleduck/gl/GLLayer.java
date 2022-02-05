@@ -32,12 +32,12 @@ import turtleduck.gl.objects.VertexArray;
 import turtleduck.gl.objects.VertexArrayFormat;
 import turtleduck.image.Image;
 import turtleduck.image.Tiles;
-import turtleduck.turtle.Path;
-import turtleduck.turtle.PathPoint;
-import turtleduck.turtle.PathStroke;
-import turtleduck.turtle.PathWriter;
-import turtleduck.turtle.PathWriterImpl;
-import turtleduck.turtle.Pen;
+import turtleduck.paths.Path;
+import turtleduck.paths.PathPoint;
+import turtleduck.paths.PathStroke;
+import turtleduck.paths.PathWriter;
+import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PathWriterImpl;
 
 public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 	public static double angle = 0;

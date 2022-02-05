@@ -4,12 +4,15 @@ import turtleduck.colors.Colors;
 
 import java.util.function.Function;
 
+import turtleduck.annotations.Internal;
 import turtleduck.colors.Color;
 import turtleduck.geometry.Projection;
 import turtleduck.geometry.impl.OrthographicProjection;
-import turtleduck.turtle.Pen;
-import turtleduck.turtle.PenBuilder;
+import turtleduck.paths.Pen;
+import turtleduck.paths.PenBuilder;
+import turtleduck.paths.SmoothType;
 
+@Internal(to = { Pen.class, PenBuilder.class })
 public class BasePen implements Pen, PenBuilder<Pen> {
 	protected static final Color DEFAULT_COLOR = Colors.WHITE;
 	protected double strokeWidth;
@@ -78,7 +81,7 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public PenBuilder<Pen> change() {
+	public PenBuilder<Pen> penChange() {
 		return new BasePen(this);
 	}
 
@@ -109,14 +112,6 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 	}
 
 	@Override
-	public PenBuilder<Pen> strokeOpacity(double opacity) {
-		if (frozen)
-			throw new IllegalStateException("Changing pen properties after done()");
-//		stroke = stroke.opacity(opacity);
-		return this;
-	}
-
-	@Override
 	public PenBuilder<Pen> stroke(boolean enable) {
 		stroke = enable;
 		return this;
@@ -142,14 +137,6 @@ public class BasePen implements Pen, PenBuilder<Pen> {
 			fillColor = ink;
 			fill = true;
 		}
-		return this;
-	}
-
-	@Override
-	public PenBuilder<Pen> fillOpacity(double opacity) {
-		if (frozen)
-			throw new IllegalStateException("Changing pen properties after done()");
-//		fill = fill.opacity(opacity);
 		return this;
 	}
 

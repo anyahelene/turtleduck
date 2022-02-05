@@ -1,8 +1,8 @@
-package turtleduck.turtle;
+package turtleduck.paths;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Path.PointType;
+import turtleduck.paths.Path.PointType;
 
 /**
  * An abstraction over the points in a path. Each {@link PointType#POINT} will
@@ -83,7 +83,7 @@ public interface PathNode {
 	 * @return The smoothness type of this node, determined based on the control
 	 *         points
 	 */
-	Pen.SmoothType smoothType();
+	SmoothType smoothType();
 
 	/**
 	 * @return A measure of the smoothness of the path at this point, based on the

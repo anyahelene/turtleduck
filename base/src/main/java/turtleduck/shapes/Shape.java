@@ -1,14 +1,14 @@
 package turtleduck.shapes;
 
 import turtleduck.canvas.Canvas;
-import turtleduck.canvas.PenContext;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Pen;
+import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PenSettingsContext;
 
 public interface Shape {
 	Point position();
 
-	public interface Builder<T> extends PenContext<T> {
+	public interface Builder<T> extends PenSettingsContext<T> {
 		/**
 		 * End the current shape, and draw it by stroking
 		 * 

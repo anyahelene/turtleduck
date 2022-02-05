@@ -1,4 +1,4 @@
-package turtleduck.turtle;
+package turtleduck.paths;
 
 import java.util.Iterator;
 import java.util.List;
@@ -80,7 +80,7 @@ public interface Path {
 
 	PointType pointType(int i);
 
-	Pen.SmoothType pointSmooth(int i);
+	SmoothType pointSmooth(int i);
 
 	Iterable<PathNode> nodes();
 
@@ -129,7 +129,7 @@ public interface Path {
 		}
 
 		@Override
-		public Pen.SmoothType pointSmooth(int i) {
+		public SmoothType pointSmooth(int i) {
 			return points.get(i).pen().smoothType();
 		}
 

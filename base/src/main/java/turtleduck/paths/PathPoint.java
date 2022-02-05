@@ -1,8 +1,9 @@
-package turtleduck.turtle;
+package turtleduck.paths;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Path.PointType;
+import turtleduck.paths.Path.PointType;
+import turtleduck.turtle.Annotation;
 
 public interface PathPoint {
 

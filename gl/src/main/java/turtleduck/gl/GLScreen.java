@@ -108,6 +108,10 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	private double zoom;
 
+	private double visibleWidth;
+
+	private double visibleHeight;
+
 	@Override
 	public void clearBackground() {
 		// TODO Auto-generated method stub
@@ -444,6 +448,7 @@ public class GLScreen extends BaseScreen implements Screen {
 			dim.winHeight = height;
 			glViewport(0, 0, width, height);
 			createBuffers();
+			updateProjection();
 			System.err.println("Framebuffer size: " + width + ", " + height);
 		}
 	}
@@ -513,6 +518,8 @@ public class GLScreen extends BaseScreen implements Screen {
 				wireframe = !wireframe;
 			} else if (key == GLFW_KEY_P) {
 				paused = !paused;
+			} else if (key == GLFW_KEY_F) {
+				setFullScreen(!fullscreen);
 			}
 	}
 
@@ -587,14 +594,15 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	public void updateProjection() {
-		float w = (float) dim.canvasWidth;
-		float h = (float) dim.canvasHeight;
+		visibleWidth = dim.canvasWidth;
+		visibleHeight = dim.canvasHeight = (dim.canvasWidth * dim.winHeight / dim.winWidth);
+		float w = (float) visibleWidth, h = (float) visibleHeight;
 		perspectiveProjectionMatrix.setPerspective((float) Math.toRadians(fov), (float) (dim.winWidth / dim.winHeight),
 				1f, 1000.0f);
 		perspectiveProjectionMatrix.invertPerspective(perspectiveProjectionMatrixInv);
 		projectionMatrix.setOrtho(-w / 2, w / 2, -h / 2, h / 2, -1, 1);
 		projectionMatrix.scale(1, -1, 1);
-		projectionMatrix.scale((float)zoom);
+		projectionMatrix.scale((float) zoom);
 		projectionMatrix.invertOrtho(projectionMatrixInv);
 		System.err.println(projectionMatrix.transformProject(new Vector3f(0, 0, 0)));
 		System.err.println(projectionMatrix.transformProject(new Vector3f(640, 0, 0)));

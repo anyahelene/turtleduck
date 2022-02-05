@@ -7,12 +7,12 @@ import turtleduck.colors.Colors;
 import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.messaging.CanvasService;
+import turtleduck.paths.PathPoint;
+import turtleduck.paths.PathStroke;
+import turtleduck.paths.PathWriter;
+import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PathWriterImpl;
 import turtleduck.shapes.Text;
-import turtleduck.turtle.PathPoint;
-import turtleduck.turtle.PathStroke;
-import turtleduck.turtle.PathWriter;
-import turtleduck.turtle.PathWriterImpl;
-import turtleduck.turtle.Pen;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 

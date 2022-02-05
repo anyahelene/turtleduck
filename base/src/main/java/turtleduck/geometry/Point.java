@@ -83,7 +83,6 @@ public interface Point extends PositionVector {
 	 */
 	Point add(PositionVector other);
 
-
 	/**
 	 * Change point
 	 *
@@ -141,6 +140,14 @@ public interface Point extends PositionVector {
 	@Override
 	boolean equals(Object other);
 
+	/**
+	 * Fuzzy equals
+	 * 
+	 * @param other another point
+	 * @return True if the difference between this and other is < 10e-6
+	 */
+	boolean like(Point other);
+
 	static Point point(PositionVector point) {
 		if (point instanceof Point)
 			return (Point) point;
@@ -149,15 +156,17 @@ public interface Point extends PositionVector {
 		else
 			return point(point.x(), point.y(), point.z());
 	}
+
 	Vector3f toVector(Vector3f dest);
+
 	Vector3d toVector(Vector3d dest);
 
 	static Point point(Vector3d position) {
-		return point(position.x,position.y,position.z);
+		return point(position.x, position.y, position.z);
 	}
 
 	static Point point(Vector3f position) {
-		return point(position.x,position.y,position.z);
+		return point(position.x, position.y, position.z);
 	}
 
 }

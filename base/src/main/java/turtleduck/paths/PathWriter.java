@@ -1,4 +1,4 @@
-package turtleduck.turtle;
+package turtleduck.paths;
 
 public interface PathWriter {
 

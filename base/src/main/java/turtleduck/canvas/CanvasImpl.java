@@ -5,7 +5,6 @@ import java.util.function.Function;
 import org.joml.Matrix3x2d;
 
 import turtleduck.colors.Color;
-import turtleduck.colors.Colors;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.display.impl.BaseLayer;
@@ -14,24 +13,28 @@ import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.impl.Point3;
 import turtleduck.messaging.CanvasService;
+import turtleduck.paths.PathWriter;
+import turtleduck.paths.Pen;
+import turtleduck.paths.PenBuilder;
 import turtleduck.shapes.Ellipse.EllipseBuilder;
 import turtleduck.shapes.Image.ImageBuilder;
 import turtleduck.shapes.Path.PathBuilder;
 import turtleduck.shapes.Poly.LineBuilder;
 import turtleduck.shapes.Rectangle.RectangleBuilder;
 import turtleduck.shapes.Shape;
-import turtleduck.shapes.ShapeImpl;
 import turtleduck.shapes.Text.TextBuilder;
-import turtleduck.turtle.PathWriter;
-import turtleduck.turtle.Pen;
-import turtleduck.turtle.PenBuilder;
+import turtleduck.shapes.impl.EllipseImpl;
+import turtleduck.shapes.impl.ImageImpl;
+import turtleduck.shapes.impl.PathImpl;
+import turtleduck.shapes.impl.PolyImpl;
+import turtleduck.shapes.impl.RectangleImpl;
+import turtleduck.shapes.impl.TextImpl;
 import turtleduck.turtle.Turtle;
 import turtleduck.turtle.Turtle3;
-import turtleduck.turtle.Pen.SmoothType;
 import turtleduck.turtle.impl.BasePen;
+import turtleduck.turtle.impl.PenBuilderDelegate;
 import turtleduck.turtle.impl.TurtleImpl;
 import turtleduck.turtle.impl.TurtleImpl3;
-import turtleduck.util.Dict;
 
 public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas {
 	protected Canvas parent = null;
@@ -63,77 +66,47 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 		this.pathWriter = pathWriterFactory.apply(false);
 	}
 
-	public Canvas strokeWidth(double pixels) {
-		return pen(pen.change().strokeWidth(pixels).done());
-	}
-
-	public Canvas strokePaint(Color ink) {
-		if (ink == null)
-			return pen(pen.change().stroke(Colors.TRANSPARENT).done());
-		else
-			return pen(pen.change().stroke(ink).done());
-	}
-
-	public Canvas strokeOpacity(double opacity) {
-		return pen(pen.change().strokeOpacity(opacity).done());
-	}
-
-	public Canvas fillPaint(Color ink) {
-		if (ink == null)
-			return pen(pen.change().fill(Colors.TRANSPARENT).done());
-		else
-			return pen(pen.change().fill(ink).done());
-	}
-
-	public Canvas fillOpacity(double opacity) {
-		return pen(pen.change().fillOpacity(opacity).done());
-	}
-
-	public Canvas smooth(SmoothType smooth) {
-		if (smooth == null)
-			throw new NullPointerException();
-		return pen(pen.change().smooth(smooth).done());
-	}
-
-	public Canvas smooth(SmoothType smooth, double amount) {
-		if (smooth == null)
-			throw new NullPointerException();
-		return pen(pen.change().smooth(smooth, amount).done());
-	}
-
+	@Override
 	public Canvas reflect(Direction axis) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Canvas shear(double shearX, double shearY) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Canvas rotate(double degrees) {
 		matrix().rotate(degrees);
 		return this;
 	}
 
+	@Override
 	public Canvas scale(double scale) {
 		matrix().scale(scale);
 		return this;
 	}
 
+	@Override
 	public Canvas scale(double scaleX, double scaleY) {
 		matrix().scale(scaleX, scaleY);
 		return this;
 	}
 
+	@Override
 	public Canvas translate(double deltaX, double deltaY) {
 		matrix().translate(deltaX, deltaY);
 		return this;
 	}
 
+	@Override
 	public Canvas translate(Point delta) {
 		matrix().translate(delta.x(), delta.y());
 		return this;
 	}
 
+	@Override
 	public Canvas getMatrix(Matrix3x2d destMatrix) {
 		if (destMatrix == null)
 			throw new NullPointerException();
@@ -141,6 +114,7 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 		return this;
 	}
 
+	@Override
 	public Canvas multiply(Matrix3x2d rightMatrix) {
 		if (rightMatrix == null)
 			return this;
@@ -148,6 +122,7 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 		return this;
 	}
 
+	@Override
 	public Canvas multiply(TransformContext2<?> rightTransform) {
 		if (rightTransform == null)
 			return this;
@@ -157,6 +132,7 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 		return this;
 	}
 
+	@Override
 	public Canvas setMatrix(TransformContext2<?> sourceTransform) {
 		if (sourceTransform == null)
 			matrix().identity();
@@ -165,6 +141,7 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 		return this;
 	}
 
+	@Override
 	public Canvas setMatrix(Matrix3x2d sourceMatrix) {
 		if (sourceMatrix == null)
 			matrix().identity();
@@ -173,6 +150,7 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 		return this;
 	}
 
+	@Override
 	public Canvas clearMatrix() {
 		matrix().identity();
 		return this;
@@ -187,8 +165,9 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	}
 
 	@Override
-	public PenBuilder<? extends Canvas> penChange() {
-		throw new UnsupportedOperationException();
+	public PenBuilder<Canvas> penChange() {
+		penBuilder = pen.penChange();
+		return new PenBuilderDelegate<Canvas>(penBuilder, this);
 	}
 
 	@Override
@@ -215,43 +194,43 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	@Override
 	public PathBuilder path() {
 		matrixShared = true;
-		return new ShapeImpl.PathImpl(this, matrix, pathWriter, Point.ZERO, pen);
+		return new PathImpl(this, matrix, pathWriter, Point.ZERO, pen);
 	}
 
 	@Override
 	public RectangleBuilder rectangle() {
 		matrixShared = true;
-		return new ShapeImpl.RectangleImpl(this, matrix, pathWriter, Point.ZERO, pen);
+		return new RectangleImpl(this, matrix, pathWriter, Point.ZERO, pen);
 	}
 
 	@Override
 	public EllipseBuilder ellipse() {
 		matrixShared = true;
-		return new ShapeImpl.EllipseImpl(this, matrix, pathWriter, Point.ZERO, pen);
+		return new EllipseImpl(this, matrix, pathWriter, Point.ZERO, pen);
 	}
 
 	@Override
 	public TextBuilder text() {
 		matrixShared = true;
-		return new ShapeImpl.TextImpl(this, matrix, pathWriter, Point.ZERO, pen);
+		return new TextImpl(this, matrix, pathWriter, Point.ZERO, pen);
 	}
 
 	@Override
 	public ImageBuilder image() {
 		matrixShared = true;
-		return new ShapeImpl.ImageImpl(this, matrix, pathWriter, Point.ZERO, pen);
+		return new ImageImpl(this, matrix, pathWriter, Point.ZERO, pen);
 	}
 
 	@Override
 	public LineBuilder polygon() {
 		matrixShared = true;
-		return new ShapeImpl.PolyImpl(this, matrix, pathWriter, Point.ZERO, pen, true);
+		return new PolyImpl(this, matrix, pathWriter, Point.ZERO, pen, true);
 	}
 
 	@Override
 	public LineBuilder polyline() {
 		matrixShared = true;
-		return new ShapeImpl.PolyImpl(this, matrix, pathWriter, Point.ZERO, pen, false);
+		return new PolyImpl(this, matrix, pathWriter, Point.ZERO, pen, false);
 	}
 
 	@Override
@@ -281,7 +260,7 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 
 	@Override
 	public Canvas drawPoint(Point center) {
-		ellipse().at(center).radius(1).stroke();
+		ellipse().at(center).radius(pen.strokeWidth()).fill(pen.strokeColor()).fill();
 		return this;
 	}
 

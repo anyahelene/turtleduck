@@ -15,9 +15,9 @@ import turtleduck.gl.GLLayer.GLPathWriter3;
 import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.VertexArray;
 import turtleduck.gl.objects.VertexArrayFormat;
-import turtleduck.turtle.PathPoint;
-import turtleduck.turtle.PathStroke;
-import turtleduck.turtle.Pen;
+import turtleduck.paths.PathPoint;
+import turtleduck.paths.PathStroke;
+import turtleduck.paths.Pen;
 
 public class PathRenderer3 {
 	static final float HALF_PI = (float) (Math.PI / 2);

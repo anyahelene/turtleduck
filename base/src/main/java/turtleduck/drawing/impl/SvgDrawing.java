@@ -9,8 +9,8 @@ import turtleduck.drawing.Drawing;
 import turtleduck.geometry.BoundingBox;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.impl.BoundingBoxImpl;
-import turtleduck.turtle.Path;
-import turtleduck.turtle.Pen;
+import turtleduck.paths.Path;
+import turtleduck.paths.Pen;
 
 public class SvgDrawing implements Drawing {
 	private StringBuilder builder = new StringBuilder();

@@ -4,6 +4,7 @@ import turtleduck.annotations.Icon;
 import turtleduck.colors.Color;
 import turtleduck.geometry.Point;
 import turtleduck.messaging.CanvasService;
+import turtleduck.paths.impl.PenSettingsContext;
 import turtleduck.shapes.Ellipse;
 import turtleduck.shapes.Image;
 import turtleduck.shapes.Path;
@@ -19,12 +20,12 @@ import turtleduck.turtle.Turtle3;
  *
  */
 @Icon("🖼️")
-public interface Canvas extends PenContext<Canvas>, TransformContext2<Canvas> {
+public interface Canvas extends PenSettingsContext<Canvas>, TransformContext2<Canvas> {
 
 	/**
 	 * Create a new sub-canvas with its own drawing context.
 	 * 
-	 * Changing the style of the sub-canvas won't affect its parent and vice verse.
+	 * Changing the style of the sub-canvas won't affect its parent and vice versa.
 	 * Call {@link #done()} to retrieve the parent and continue drawing on it.
 	 * 
 	 * @return

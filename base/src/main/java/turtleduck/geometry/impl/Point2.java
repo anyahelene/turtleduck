@@ -8,6 +8,7 @@ import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
 
 public class Point2 implements Point {
+	static final double EPSILON = 10e-6;
 	protected final double x;
 	protected final double y;
 
@@ -18,6 +19,7 @@ public class Point2 implements Point {
 
 	@Override
 	public Direction directionTo(PositionVector otherPoint) {
+		// TODO: will crash with ArithmeticException if points are too close
 		return Direction.absolute(otherPoint.x() - x(), otherPoint.y() - y());
 	}
 
@@ -178,10 +180,18 @@ public class Point2 implements Point {
 		return true;
 	}
 
+	public boolean like(Point other) {
+		double dx = Math.abs(x - other.x());
+		double dy = Math.abs(y - other.y());
+		double dz = Math.abs(z() - other.z());
+		return dx < 10e-6 && dy < 10e-6 && dz < 10e-6;
+	}
+
 	@Override
 	public Vector3f toVector(Vector3f dest) {
 		return dest.set(x, y, 0);
 	}
+
 	@Override
 	public Vector3d toVector(Vector3d dest) {
 		return dest.set(x, y, 0);

@@ -6,14 +6,23 @@ import java.util.function.Function;
 
 import turtleduck.colors.Color;
 import turtleduck.annotations.Icon;
+import turtleduck.annotations.Internal;
 import turtleduck.canvas.Canvas;
 import turtleduck.drawing.Functional;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.objects.IdentifiedObject;
+import turtleduck.paths.Path;
+import turtleduck.paths.PathPoint;
+import turtleduck.paths.PathWriter;
+import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PenContext;
+import turtleduck.paths.impl.PenSettingsContext;
 
 @Icon("🐢")
-public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, Navigator<T>, IdentifiedObject {
+@Internal
+public interface BaseTurtle<T extends BaseTurtle<T, C>, C>
+		extends Functional<T>, Navigator<T>, PenSettingsContext<T>, IdentifiedObject {
 
 	/**
 	 * This method is used to convert the turtle to an other type, determined by the
@@ -143,49 +152,52 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, 
 		return direction(Direction.absolute(angle));
 	}
 
-	PenBuilder<? extends T> penChange();
-
-	Pen pen();
-
+	/**
+	 * Change pen
+	 * 
+	 * @param newPen The new pen
+	 * @return <code>this</code>
+	 */
 	T pen(Pen newPen);
 
-	@Deprecated
-	T penColor(Color color);
-
-	T pen(Color color);
-
-	T pen(Function<Color, Color> penColorMapping);
-
-	T stroke(boolean enable);
-
-	T fill(boolean enable);
-
+	/**
+	 * Enable stroking and disable filling.
+	 * 
+	 * The current colors are unchanged.
+	 * 
+	 * @return {@code this}
+	 */
+	@SuppressWarnings("unchecked")
 	default T strokeOnly() {
-		return stroke(true).fill(false);
+		penChange().stroke(true).fill(false).done();
+		return (T) this;
 	}
-
-	default T fillOnly() {
-		return stroke(false).fill(true);
-	}
-
-	default T strokeAndFill() {
-		return stroke(true).fill(true);
-	}
-
-	T stroke(Function<Color, Color> penColorMapping);
-
-	T fill(Function<Color, Color> penColorMapping);
-
-	T penWidth(double width);
 
 	/**
-	 * Start painting a stroke.
+	 * Enable filling and disable stroking.
 	 * 
-	 * Call {@link #done()} when you're done
+	 * The current colors are unchanged.
 	 * 
-	 * @return {@code this}, for sending more draw commands
+	 * @return {@code this}
 	 */
-	T stroke();
+	@SuppressWarnings("unchecked")
+	default T fillOnly() {
+		penChange().stroke(false).fill(true).done();
+		return (T) this;
+	}
+
+	/**
+	 * Enable stroking and filling.
+	 * 
+	 * The current colors are unchanged.
+	 * 
+	 * @return {@code this}
+	 */
+	@SuppressWarnings("unchecked")
+	default T strokeAndFill() {
+		penChange().stroke(true).fill(true).done();
+		return (T) this;
+	}
 
 	/**
 	 * Finish with whatever we're doing, and continue with whatever we were doing
@@ -236,8 +248,5 @@ public interface Chelonian<T extends Chelonian<T, C>, C> extends Functional<T>, 
 	<U> T annotate(Annotation<U> anno, U value);
 
 	<U> U annotation(Annotation<U> anno);
-
-	@Deprecated
-	T fillColor(Color color);
 
 }

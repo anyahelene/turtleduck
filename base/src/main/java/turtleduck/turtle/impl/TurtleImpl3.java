@@ -3,12 +3,12 @@ package turtleduck.turtle.impl;
 import turtleduck.canvas.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.Chelonian3;
-import turtleduck.turtle.Pen;
+import turtleduck.paths.Pen;
+import turtleduck.turtle.BaseTurtle3;
 import turtleduck.turtle.Turtle3;
 
-public class TurtleImpl3<THIS extends Chelonian3<THIS, RESULT>, RESULT> extends TurtleImpl<THIS, RESULT>
-		implements Chelonian3<THIS, RESULT> {
+public class TurtleImpl3<THIS extends BaseTurtle3<THIS, RESULT>, RESULT> extends TurtleImpl<THIS, RESULT>
+		implements BaseTurtle3<THIS, RESULT> {
 	public static class SpecificTurtle3 extends TurtleImpl3<Turtle3, Turtle3> implements Turtle3 {
 
 		public SpecificTurtle3(Point p, Direction b, Pen pen, Canvas canvas) {

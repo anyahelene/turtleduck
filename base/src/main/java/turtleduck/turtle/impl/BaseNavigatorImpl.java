@@ -3,19 +3,19 @@ package turtleduck.turtle.impl;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
+import turtleduck.paths.Path;
 import turtleduck.turtle.Navigator;
-import turtleduck.turtle.Path;
 
-public abstract class NavigatorImpl<T extends Navigator<T>> implements Navigator<T>, Cloneable {
+public abstract class BaseNavigatorImpl<T extends Navigator<T>> implements Navigator<T>, Cloneable {
 	protected boolean recordMoves = false;
 	protected boolean recordTurns = false;
 	protected PathPointImpl current;
 
-	public NavigatorImpl(NavigatorImpl<?> old) {
+	public BaseNavigatorImpl(BaseNavigatorImpl<?> old) {
 		current = old.current.copy();
 	}
 
-	public NavigatorImpl(Point p, Direction b) {
+	public BaseNavigatorImpl(Point p, Direction b) {
 		current = new PathPointImpl();
 		current.point = p;
 		current.bearing = b;

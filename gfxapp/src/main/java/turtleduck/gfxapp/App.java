@@ -11,6 +11,7 @@ import turtleduck.canvas.Canvas;
 import turtleduck.colors.Colors;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Point;
+import turtleduck.paths.Pen;
 import turtleduck.tea.CanvasServer;
 import turtleduck.tea.JSUtil;
 import turtleduck.tea.TeaDisplayInfo;
@@ -21,7 +22,6 @@ import turtleduck.geometry.Point;
 import turtleduck.geometry.Direction;
 import turtleduck.canvas.Canvas;
 import turtleduck.turtle.Turtle;
-import turtleduck.turtle.Pen;
 import turtleduck.text.TextCursor;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
@@ -63,7 +63,7 @@ public class App implements JSObject {
 		screen = TeaDisplayInfo.INSTANCE.startPaintScene(canvasServer);
 		canvas = screen.createCanvas();
 		canvas.drawCircle(Point.ZERO, 500);
-		 turtle = canvas.turtle().penColor(Colors.WHITE).jumpTo(0, 0);
+		 turtle = canvas.turtle().stroke(Colors.WHITE).jumpTo(0, 0);
 		try {
 			run();
 			screen.flush();
@@ -74,8 +74,8 @@ public class App implements JSObject {
 
 	}
 	void reset() {
-		canvas.strokePaint(Colors.WHITE).strokeWidth(1).fillPaint(Colors.TRANSPARENT).background(Colors.BLACK);
-		turtle.penColor(Colors.WHITE).penWidth(1).fillColor(Colors.TRANSPARENT).jumpTo(0, 0).turnTo(0);
+		canvas.stroke(Colors.WHITE, 1).fill(Colors.TRANSPARENT).background(Colors.BLACK);
+		turtle.stroke(Colors.WHITE, 1).fill(Colors.TRANSPARENT).jumpTo(0, 0).turnTo(0);
 		screen.clear();
 	}
 
@@ -86,7 +86,7 @@ public class App implements JSObject {
 		int a = (int) (angle + 15 * (Math.random() - .5));
 		turtle.turn(-60);
 		Turtle t2 = turtle.spawn();
-		turtle.fillColor(PURPLE.perturb()).penColor(PURPLE.darker());
+		turtle.fill(PURPLE.perturb()).stroke(PURPLE.darker());
 		for (int i = a; i < 360 - a; i++) {
 			turtle.draw(1).turn(1);
 			if (i == 180)
@@ -94,7 +94,7 @@ public class App implements JSObject {
 		}
 		t2.turn(a / 2);
 		a = 90;
-		t2.fillColor(BLACK.brighter().brighter().perturb().opacity(.3)).penColor(TRANSPARENT);
+		t2.fill(BLACK.brighter().brighter().perturb().opacity(.3)).stroke(TRANSPARENT);
 		for (int i = a; i < 360 - a; i++) {
 			t2.draw(.5).turn(1);
 			if (i == 180)
@@ -105,16 +105,16 @@ public class App implements JSObject {
 
 	void flower(Turtle turtle) {
 		for (int i = 0; i < 6; i++)
-			petal(turtle.turn(60).spawn().penWidth(3).penColor(GREEN).draw(15));
+			petal(turtle.turn(60).spawn().stroke(GREEN, 3).draw(15));
 		turtle.turn(30);
 		for (int i = 0; i < 6; i++)
-			turtle.turn(60).spawn().penColor(MAGENTA).draw(12);
+			turtle.turn(60).spawn().stroke(MAGENTA).draw(12);
 	}
 
 	private void run() {
 		reset();
 
-		turtle.penWidth(2);
+		turtle.strokeWidth(2);
 
 		flower(turtle.jumpTo(-100, 50));
 		flower(turtle.jumpTo(200, 11));

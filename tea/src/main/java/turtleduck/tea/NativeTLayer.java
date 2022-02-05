@@ -8,13 +8,13 @@ import org.teavm.jso.dom.html.HTMLCanvasElement;
 import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.geometry.Point;
+import turtleduck.paths.Path;
+import turtleduck.paths.PathPoint;
+import turtleduck.paths.PathStroke;
+import turtleduck.paths.PathWriter;
+import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PathWriterImpl;
 import turtleduck.tea.net.SockJS;
-import turtleduck.turtle.Path;
-import turtleduck.turtle.PathPoint;
-import turtleduck.turtle.PathStroke;
-import turtleduck.turtle.PathWriter;
-import turtleduck.turtle.PathWriterImpl;
-import turtleduck.turtle.Pen;
 
 public class NativeTLayer extends BaseLayer<NativeTScreen> {
 

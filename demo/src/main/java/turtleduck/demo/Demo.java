@@ -8,7 +8,7 @@ import turtleduck.canvas.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Direction;
-import turtleduck.turtle.Pen;
+import turtleduck.paths.Pen;
 import turtleduck.turtle.Turtle;
 
 public class Demo implements TurtleDuckApp {
@@ -109,7 +109,7 @@ public class Demo implements TurtleDuckApp {
 
 	public static void footprint(Turtle turtle, double size) {
 		size /= 10;
-		turtle.penChange().stroke(Colors.BLACK).fill(Colors.BLACK).fillOpacity(0.5).done();
+		turtle.penChange().stroke(Colors.BLACK).fill(Colors.BLACK.opacity(0.5)).done();
 		turtle.turn(60).draw(size * 15).turn(-45).draw(size * 100).turn(-150).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15);
@@ -179,7 +179,7 @@ public class Demo implements TurtleDuckApp {
 		screen.clearBackground();
 		canvas = screen.createCanvas();
 		debugCanvas = screen.debugCanvas();
-		debugPen = debugCanvas.pen().change().stroke(Colors.GREEN).strokeWidth(1).done();
+		debugPen = debugCanvas.pen().penChange().stroke(Colors.GREEN).strokeWidth(1).done();
 		duckCanvas = screen.createCanvas();
 
 		debugTurtle = debugCanvas.turtle().pen(debugPen);

@@ -19,7 +19,7 @@ import turtleduck.geometry.Orientation;
  *
  */
 public class AngleImpl implements DirectionVector, Direction {
-
+	static final double EPSILON = 10e-6;
 	static final double SIGN_LEFT = -1, SIGN_RIGHT = 1;
 	public static final double HALF_PI = Math.PI / 2;
 	public static final double TWO_PI = 2 * Math.PI;
@@ -309,13 +309,15 @@ public class AngleImpl implements DirectionVector, Direction {
 
 	public static int atan2(double y, double x) {
 		double absX = Math.abs(x), absY = Math.abs(y);
-		if (absX < 1e-10) {
-			if (absY < 1e-10)
-				throw new ArithmeticException(String.format("atan2(%g,%g", x, y));
-			else
+		double e = 1e-10;
+		if (absX < e || absY < e) { // special case when close to zero
+			if (absX == 0 && absY == 0) {
+				throw new ArithmeticException(String.format("atan2(%s,%s)", Double.toString(x), Double.toString(y)));
+			} else if (absX >= absY) {
+				return x > 0 ? 0 : -MI;
+			} else {
 				return y > 0 ? MI / 2 : -MI / 2;
-		} else if (absY < 1e-10) {
-			return x > 0 ? 0 : -MI;
+			}
 		} else {
 			int m = degreesToMilliArcSec(Math.toDegrees(Math.atan(y / x)));
 			if (x < 0)
@@ -428,7 +430,7 @@ public class AngleImpl implements DirectionVector, Direction {
 	public boolean like(Direction other) {
 		if (other instanceof AngleImpl) {
 			AngleImpl o = (AngleImpl) other;
-			return Math.abs(angle - o.angle) < 10e-6;
+			return Math.abs(angle - o.angle) < EPSILON;
 		} else if (other instanceof OrientImpl)
 			return other.equals(this);
 		return false;

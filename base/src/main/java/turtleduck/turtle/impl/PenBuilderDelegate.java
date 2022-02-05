@@ -3,17 +3,16 @@ package turtleduck.turtle.impl;
 import java.util.function.Function;
 
 import turtleduck.colors.Color;
-import turtleduck.geometry.Projection;
-import turtleduck.turtle.Pen;
-import turtleduck.turtle.PenBuilder;
-import turtleduck.turtle.Pen.SmoothType;
-import turtleduck.turtle.Chelonian;
+import turtleduck.paths.Pen;
+import turtleduck.paths.PenBuilder;
+import turtleduck.paths.SmoothType;
+import turtleduck.paths.impl.PenContext;
 
-public class TurtlePenBuilder<T extends Chelonian<T, C>, C> implements PenBuilder<T> {
+public class PenBuilderDelegate<T extends PenContext> implements PenBuilder<T> {
 	protected PenBuilder<Pen> pen;
 	protected T obj;
 
-	public TurtlePenBuilder(PenBuilder<Pen> pen, T obj) {
+	public <U extends T> PenBuilderDelegate(PenBuilder<Pen> pen, U obj) {
 		this.pen = pen;
 		this.obj = obj;
 	}
@@ -40,18 +39,8 @@ public class TurtlePenBuilder<T extends Chelonian<T, C>, C> implements PenBuilde
 		return this;
 	}
 
-	public PenBuilder<T> strokeOpacity(double opacity) {
-		pen.strokeOpacity(opacity);
-		return this;
-	}
-
 	public PenBuilder<T> fill(Color ink) {
 		pen.fill(ink);
-		return this;
-	}
-
-	public PenBuilder<T> fillOpacity(double opacity) {
-		pen.fillOpacity(opacity);
 		return this;
 	}
 
@@ -165,7 +154,7 @@ public class TurtlePenBuilder<T extends Chelonian<T, C>, C> implements PenBuilde
 	}
 
 	@Override
-	public PenBuilder<Pen> change() {
+	public PenBuilder<Pen> penChange() {
 		return pen;
 	}
 

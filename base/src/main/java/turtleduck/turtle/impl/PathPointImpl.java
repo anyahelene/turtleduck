@@ -5,10 +5,10 @@ import java.util.Map;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
+import turtleduck.paths.PathPoint;
+import turtleduck.paths.Pen;
+import turtleduck.paths.Path.PointType;
 import turtleduck.turtle.Annotation;
-import turtleduck.turtle.Path.PointType;
-import turtleduck.turtle.PathPoint;
-import turtleduck.turtle.Pen;
 
 public class PathPointImpl implements PathPoint, Cloneable {
 	public Point point;

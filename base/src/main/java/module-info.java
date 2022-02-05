@@ -16,8 +16,10 @@ module turtleduck.base {
 	exports turtleduck.sprites;
 	exports turtleduck.shapes;
 	exports turtleduck.grid;
-	exports turtleduck.scene.impl;
+	exports turtleduck.paths;
+	exports turtleduck.paths.impl;
 	exports turtleduck.scene;
+	exports turtleduck.scene.impl;
 	exports turtleduck.sim;
 	exports turtleduck.terminal;
 	exports turtleduck.text;
