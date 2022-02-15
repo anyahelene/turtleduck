@@ -2,8 +2,8 @@ package turtleduck.sprites;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.turtle.impl.BaseNavigatorImpl;
-import turtleduck.turtle.impl.PathPointImpl;
 
 public abstract class AbstractSprite extends BaseNavigatorImpl<Sprite> implements Sprite {
 	public AbstractSprite(Point p, Direction b) {

@@ -28,14 +28,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
 				<configuration>
-					<compilerArgs>
-						<!-- arg>-verbose</arg -->
-						<arg>-Xlint:all,-options,-path</arg>
-						<arg>-parameters</arg>
-						<arg>-g</arg>
-					</compilerArgs>
 					<generatedSourcesDirectory>${project.build.directory}/generated-sources/</generatedSourcesDirectory>
 					<annotationProcessorPaths>
 						<annotationProcessorPath>

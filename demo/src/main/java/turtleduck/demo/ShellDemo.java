@@ -111,8 +111,8 @@ public class ShellDemo implements TurtleDuckApp {
 			} else if (code == 'S' || ch.equals("s")) {
 				if (event.isAltDown())
 					screen.controls().fitScaling();
-				else
-					screen.controls().zoomCycle();
+//				else
+//					screen.controls().zoomCycle();
 				return true;
 			} else if (code == 'A'|| ch.equals("a")) {
 				screen.controls().cycleAspect();

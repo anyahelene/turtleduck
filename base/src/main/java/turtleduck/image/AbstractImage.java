@@ -8,7 +8,7 @@ import javax.imageio.ImageIO;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
 import turtleduck.image.impl.AwtPixelData;
-import turtleduck.image.impl.UniformTiles;
+import turtleduck.image.impl.UniformTilesImpl;
 
 public abstract class AbstractImage implements Image {
 
@@ -100,7 +100,7 @@ public abstract class AbstractImage implements Image {
 
 	@Override
 	public Tiles tiles(int width, int height) {
-		return new UniformTiles(this, width, height);
+		return new UniformTilesImpl(this, width, height);
 	}
 
 	public String toString() {
@@ -132,7 +132,7 @@ public abstract class AbstractImage implements Image {
 		}
 
 		public <T> T visit(Visitor<T> visitor) {
-			return visitor.visitCropped(translateX, translateY, height, width, source);
+			return visitor.visitCropped(translateX, translateY, width, height, source);
 		}
 
 		@Override

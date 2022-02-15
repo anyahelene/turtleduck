@@ -8,6 +8,7 @@ module turtleduck.base {
 	exports turtleduck.display.impl;
 	exports turtleduck.events;
 	exports turtleduck.image;
+	exports turtleduck.image.impl;
 	exports turtleduck.drawing;
 	exports turtleduck.geometry;
 	exports turtleduck.messaging;

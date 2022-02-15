@@ -1,7 +1,8 @@
 
-#version 330 core
+#version 430 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
 
 uniform mat4 uModel;
 uniform mat4 uNormal;
@@ -19,9 +20,9 @@ void main()
 	//float r = -aPos.x/0.866;
 	//float b = 1.0 - r;
 	
-    fPos = uModel * vec4(aPos.xyz, 1.0);
-    gl_Position = uProjView * vec4(aPos.xyz, 1.0); // uModel * vec4(aPos.xy, 0.0, 1.0);
+    fTexNum =  int(aPos.z);
+    fPos = uModel * vec4(aPos.xy,-aPos.z/10, 1.0);
+    gl_Position = uProjView * vec4(aPos.xy, -aPos.z/10, 1.0); // uModel * vec4(aPos.xy, 0.0, 1.0);
     fColor = aColor; // vec4(aPos.xy, 0.0, 1.0);
-    fTexCoord = aColor.xy;
-    fTexNum = 0; // int(aPos.z);
+    fTexCoord = aTexCoord; //aColor.xy;
 }

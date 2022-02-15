@@ -106,6 +106,7 @@ public class VertexArray {
 	public int bind() {
 		buffer.done();
 		int vao = vaos[buffer.currentBufferIndex()];
+//		glBindBuffer(GL_ARRAY_BUFFER, buffer.buffers[buffer.currentBufferIndex()]);
 		glBindVertexArray(vao);
 		return vao;
 	}

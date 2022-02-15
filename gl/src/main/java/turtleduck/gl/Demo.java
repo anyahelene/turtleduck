@@ -22,12 +22,13 @@ import turtleduck.grid.MyGrid;
 import turtleduck.image.Image;
 import turtleduck.image.ImageFactory;
 import turtleduck.image.Tiles;
+import turtleduck.image.impl.AwtPixelData;
 import turtleduck.messaging.CanvasService;
 import turtleduck.paths.Pen;
 import turtleduck.sprites.AbstractSprite;
 import turtleduck.sprites.Sprite;
 import turtleduck.turtle.Turtle;
-import turtleduck.turtle.Turtle;
+
 
 public class Demo implements TurtleDuckApp {
 	private final class DemoSprite extends AbstractSprite {
@@ -57,7 +58,7 @@ public class Demo implements TurtleDuckApp {
 			if (this == sprites.get(0)) {
 //				System.out.println("bearing: " + bearing() + ", rotation: " + rotation + ", azimuth: " + bearing().azimuth());
 			}
-			forward(speed);
+			go(speed);
 
 		}
 
@@ -108,7 +109,7 @@ public class Demo implements TurtleDuckApp {
 		fern(turtle.spawn().color(Colors.GREEN).goTo(200, 200).turnTo(135), 10, 5);
 		fern2(turtle.spawn().goTo(900, 200).turnTo(90), 5, 10);
 		tree(turtle.spawn().goTo(850, 200).color(Color.color(.5, .3, .0)).strokeWidth(2).turnTo(90), 10, 10);
-		wheel1(turtle.spawn().goTo(500, 200).turnTo(-2 * rotation).color(Color.color(0.5, 0, 0, 0.5)));
+		wheel1(turtle.spawn().goTo(0, 0).turnTo(-2 * rotation).color(Color.color(0.5, 0, 0, 1)));
 		rotation += 8 * deltaTime;
 //		canvas.drawImage(Point.point(100, 0), image2);
 //		canvas.drawImage(Point.point(200, 0), image2);
@@ -141,17 +142,17 @@ public class Demo implements TurtleDuckApp {
 		if (false) {
 
 			for (int y = 0; y < image2.height(); y++) {
-				turtle.jumpTo(300, 0 + y);
+				turtle.jumpTo(-200, 0 - y);
 				turtle.direction(Direction.DUE_EAST);
 				for (int x = 0; x < image2.width(); x++) {
 					Color p = image2.readPixel(x, y);
-					turtle.color(p);
+					turtle.color(p).strokeWidth(1);
 					turtle.draw(1);
 				}
 			}
 		}
 
-//		canvas.drawImage(Point.point(600, 0), image.transpose(Image.Transpose.FLIP_TOP_BOTTOM));
+		(screen.getGLLayer()).drawImage(Point.point(0, 0), image);
 //		canvas.drawImage(Point.point(900, 0),
 //				image.transpose(Image.Transpose.FLIP_TOP_BOTTOM).transpose(Image.Transpose.FLIP_LEFT_RIGHT));
 //		canvas.drawImage(Point.point(0, 300), image);
@@ -402,11 +403,11 @@ public class Demo implements TurtleDuckApp {
 		}
 
 //		turtle.turnTo(0);
-		turtle.strokeWidth(5);
-		for (int i = 0; i < segments; i++) {
-			turtle.spawn().jump(wheelRadius).draw(Direction.absolute(45), 2 * rimRadius).turn(90 + step / 2)
-					.draw(2 * wheelRadius * Math.sin(Math.PI / segments)).done().turn(step);
-		}
+//		turtle.strokeWidth(5);
+//		for (int i = 0; i < segments; i++) {
+//			turtle.spawn().jump(wheelRadius).draw(Direction.absolute(45), 2 * rimRadius).turn(-90 + step / 2)
+//					.draw(2 * wheelRadius * Math.sin(Math.PI / segments)).done().turn(step);
+//		}
 //		circle(turtle.child().turnTo(-30).jump(2*rimRadius).strokeWidth(20), wheelRadius, segments);
 
 	}

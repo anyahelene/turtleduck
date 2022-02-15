@@ -20,11 +20,18 @@ import turtleduck.gl.objects.Variables.TypeDesc;
 
 public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.ProgramData> {
 	private static ProgramData lastBound = null;
-
+	private final boolean debug = false;
 	public ShaderProgram(ProgramData data) {
 		super(data);
 	}
 
+	public static void unbind() {
+		if(lastBound != null) {
+			glUseProgram(0);
+			lastBound = null;
+		}
+	}
+	
 	public static ShaderProgram createProgram(String name, ShaderObject... shaders) throws IOException {
 		ProgramData data = ProgramData.getCached(name);
 		if (data != null) {
@@ -82,7 +89,8 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 			int[] props = { ARBProgramInterfaceQuery.GL_BLOCK_INDEX, ARBProgramInterfaceQuery.GL_TYPE, ARBProgramInterfaceQuery.GL_LOCATION };
 			int[] values = new int[props.length];
 			ARBProgramInterfaceQuery.glGetProgramResourceiv(program, ARBProgramInterfaceQuery.GL_UNIFORM, i, props, null, values);
-			System.out.println("uniform " + i + ": " + s + " " + Arrays.toString(values));
+			if(debug)
+				System.out.println("uniform " + i + ": " + s + " " + Arrays.toString(values));
 			if (s.startsWith("texture")) {
 				try {
 					int n = Integer.parseInt(s.substring(7));
@@ -97,7 +105,8 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 					var.name = s;
 					var.program = this;
 					data.vars.put(s, var);
-					System.out.println(var);
+					if(debug)
+				System.out.println(var);
 				}
 			} catch (IllegalArgumentException e) {
 				System.out.println(s + ": type=" + values[1] + ", loc=" + values[2]);
@@ -115,6 +124,7 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 				data.inputFormat.addField(s, values[1], typeDesc);
 			}
 		}
+		if(debug)
 		System.out.println("Input format: " + data.inputFormat);
 	}
 

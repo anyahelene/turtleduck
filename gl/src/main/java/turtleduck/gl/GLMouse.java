@@ -14,6 +14,7 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
+import turtleduck.display.Viewport;
 import turtleduck.display.impl.BaseScreen.Dimensions;
 
 public class GLMouse {
@@ -24,12 +25,12 @@ public class GLMouse {
 	protected int mouseButtons;
 	protected Vector2i mouseScrPos = new Vector2i();
 	protected Vector3f mouseObjPos = new Vector3f();
-	protected Dimensions dim;
+	protected Viewport viewport;
 	protected boolean hovered;
 
-	public GLMouse(GLScreen glScreen, Dimensions dim) {
+	public GLMouse(GLScreen glScreen, Viewport viewport) {
 		screen = glScreen;
-		this.dim = dim;
+		this.viewport = viewport;
 	}
 	
 	public void registerCallbacks(long window) {
@@ -85,29 +86,29 @@ public class GLMouse {
 		if (window == NULL) {
 			return;
 		}
-		mouseScrPos.set((int) x, (int) ((dim.winHeight - 1) - y)); // store position in screen coords
+		mouseScrPos.set((int) x, (int) ((viewport.screenHeight() - 1) - y)); // store position in screen coords
 		mouseNrmPos.set(mouseScrPos);
 		screen.deviceToScreen(mouseNrmPos);
-		screen.unproject(mouseScrPos, mouseObjPos); // store position in object coords
+		screen.camera3.unproject(mouseScrPos, mouseObjPos); // store position in object coords
 
 		if (but1ClickPos != null) {
 			float dx = (mouseNrmPos.x - but1ClickPos.x) / 1;
 			float dy = (mouseNrmPos.y - but1ClickPos.y) / 1;
 			if (DEBUG_MOUSE) {
 				System.out.printf("Clicked at: %s, current=(%5f,%5f), move=(%5f,%5f), orientation=%s%n", but1ClickPos,
-						x, y, dx, dy, screen.cameraOrientation);
+						x, y, dx, dy, screen.camera3.orientation);
 			}
-			float zoom = (float) ((screen.fov - 10) / 120);
-			screen.cameraOrientation.rotateX(dy).rotateY(dx).normalize();
-			screen.cameraPosition.add(dx * zoom, dy * zoom, 0, 0);
-			System.out.println(screen.cameraPosition);
+			float zoom = (float) ((screen.camera3.fov - 10) / 120);
+			screen.camera3.orientation.rotateX(dy).rotateY(dx).normalize();
+			screen.camera3.position.add(dx * zoom, dy * zoom, 0, 0);
+			System.out.println(screen.camera3.position);
 			// cameraFront.add(dy, dx, 0, 0).normalize();
 			but1ClickPos.set(mouseNrmPos);
-			screen.updateView();
+			screen.camera3.updateView();
 		}
 		if (DEBUG_MOUSE) {
 			System.out.println("mouseDevPos=" + mouseScrPos + ", mouseNrmPos=" + mouseNrmPos + ", mouseObjPos="
-					+ mouseObjPos + ", cameraPos=" + screen.cameraPosition);
+					+ mouseObjPos + ", cameraPos=" + screen.camera3.position);
 		}
 
 	}

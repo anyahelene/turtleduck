@@ -1,5 +1,9 @@
 package turtleduck.gl;
 
+import static org.lwjgl.opengl.GL11C.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11C.GL_STENCIL_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11C.glClear;
 import static org.lwjgl.opengl.GL20C.GL_FRAGMENT_SHADER;
 import static org.lwjgl.opengl.GL20C.GL_VERTEX_SHADER;
 import static org.lwjgl.opengl.GL33C.*;
@@ -19,6 +23,7 @@ import earcut4j.Earcut;
 import turtleduck.buffer.DataField;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
+import turtleduck.display.Camera;
 import turtleduck.display.Layer;
 import turtleduck.display.impl.BaseLayer;
 import turtleduck.drawing.Drawing;
@@ -46,15 +51,10 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 
 	private ArrayBuffer streamBuffer;
 	private VertexArray streamArray;
-	private VertexArray staticArray;
 	private VertexArray streamArray3;
-	private GLPathWriter pathWriter = new GLPathWriter();
-	private GLPathWriter pathWriter3 = new GLPathWriter3();
+	private GLPathWriter pathWriter;
+	private GLPathWriter pathWriter3;
 
-//	private VertexArrayBuilder vab;
-//	private VertexArrayBuilder vab2;
-//	private List<Point> currentPath = new ArrayList<>();
-//	private List<Stroke> currentPathStrokes = new ArrayList<>();
 	private List<DrawObject> drawObjects = new ArrayList<>();
 	private Map<String, ShaderProgram> programs = new HashMap<>();
 	int depth = 0;
@@ -63,42 +63,36 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 	private DataField<Color> aColorVec4;
 	private DataField<Vector3f> a3Normal3;
 	private DataField<Vector2f> a3TexCoord2;
-	private int quadVertices = -1;
 	private VertexArrayFormat format3;
 	private DataField<Vector3f> a3PosVec3;
 	private DataField<Color> a3ColorVec4;
+	private Camera camera2;
+	private Camera camera3;
+	private DataField<Vector2f> aTexCoord2;
 
-	public GLLayer(String layerId, GLScreen screen, double width, double height) {
+	public GLLayer(String layerId, GLScreen screen, Camera camera2, Camera camera3, double width, double height) {
 		super(layerId, screen, width, height);
 		this.format = screen.shader2d.format();
 		this.format3 = screen.shader3d.format();
-		System.out.println("Layer " + layerId);
-		System.out.println(format);
-		System.out.println(format3);
-		System.out.println(aPosVec3);
-		System.out.println(aColorVec4);
+		this.camera2 = camera2;
+		this.camera3 = camera3;
+		pathWriter = new GLPathWriter(camera2);
+		pathWriter3 = new GLPathWriter3(camera3);
 
 		aPosVec3 = format.setField("aPos", Vector3f.class);
 		aColorVec4 = format.setField("aColor", Color.class);
+		aTexCoord2 = format.setField("aTexCoord", Vector2f.class);
 		a3PosVec3 = format3.setField("aPos", Vector3f.class);
 		a3ColorVec4 = format3.setField("aColor", Color.class);
 		a3Normal3 = format3.setField("aNormal", Vector3f.class);
 		a3TexCoord2 = format3.setField("aTexCoord", Vector2f.class);
-		streamBuffer = new ArrayBuffer(GL_STREAM_DRAW, 2048);
+		streamBuffer = new ArrayBuffer(GL_STREAM_DRAW, format.numBytes() * 1024 * 1024);
 		streamArray = new VertexArray(format, streamBuffer);
 		streamArray.setFormat();
 		streamArray3 = new VertexArray(format3, GL_STREAM_DRAW, 2048);
 		streamArray3.setFormat();
-		staticArray = new VertexArray(format, GL_STATIC_DRAW, 2048);
-		staticArray.setFormat();
-		quadVertices = staticArray.nVertices();
-		staticArray.begin().put(aPosVec3, 0, 0, 0).put(aColorVec4, 0, 0, 0, 1).end();
-		staticArray.begin().put(aPosVec3, 0, 1, 0).put(aColorVec4, 0, 1, 0, 1).end();
-		staticArray.begin().put(aPosVec3, 1, 0, 0).put(aColorVec4, 1, 0, 0, 1).end();
 
-		staticArray.begin().put(aPosVec3, 1, 0, 0).put(aColorVec4, 1, 0, 0, 1).end();
-		staticArray.begin().put(aPosVec3, 0, 1, 0).put(aColorVec4, 0, 1, 0, 1).end();
-		staticArray.begin().put(aPosVec3, 1, 1, 0).put(aColorVec4, 1, 1, 0, 1).end();
+
 //		vab = screen.shader2d.format().build(GL_DYNAMIC_DRAW);
 
 	}
@@ -143,11 +137,29 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 
 	}
 
-	public Layer clear() {
-		// TODO Auto-generated method stub
-		return this;
+	protected void draw2Rectangle(VertexArray array, float x0, float y0, float x1, float y1) {
+		array.begin().put(aPosVec3, x0, y0, 0).put(aColorVec4, 0, 0, 0, 1).put(aTexCoord2, 0, 0).end();
+		array.begin().put(aPosVec3, x0, y1, 0).put(aColorVec4, 0, 1, 0, 1).put(aTexCoord2, 0, 1).end();
+		array.begin().put(aPosVec3, x1, y0, 0).put(aColorVec4, 1, 0, 0, 1).put(aTexCoord2, 1, 0).end();
+
+		array.begin().put(aPosVec3, x1, y0, 0).put(aColorVec4, 1, 0, 0, 1).put(aTexCoord2, 1, 0).end();
+		array.begin().put(aPosVec3, x0, y1, 0).put(aColorVec4, 0, 1, 0, 1).put(aTexCoord2, 0, 1).end();
+		array.begin().put(aPosVec3, x1, y1, 0).put(aColorVec4, 1, 1, 0, 1).put(aTexCoord2, 1, 1).end();
 	}
 
+	public Layer clear() {
+		streamArray.clear();
+		streamBuffer.clear();
+		streamArray3.clear();
+		drawObjects.clear();
+		int texNum = GL_TEXTURE0;
+		for (Texture tex : textures) {
+			tex.unbind(texNum++);
+		}
+		textures.clear();
+		depth = 0;
+		return this;
+	}
 
 	public void drawImage(Point at, Image img) {
 		drawImage(at, img, 0);
@@ -278,7 +290,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 		}
 		obj.blend = true;
 		obj.nVertices = streamArray3.nVertices() - obj.offset;
-		obj.projection = new Matrix4f(screen.perspectiveProjectionMatrix).mul(screen.perspectiveViewMatrix);
+		obj.projection = new Matrix4f(camera3.projectionMatrix).mul(camera3.viewMatrix);
 		obj.cull = GL_BACK;
 	}
 
@@ -373,7 +385,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 //				program.uniform("uProjection", Matrix4f.class).set(screen.projectionMatrix);
 //				program.uniform("uView", Matrix4f.class).set(screen.viewMatrix);
 				program.uniform("uProjView", Matrix4f.class)
-						.set(new Matrix4f(screen.projectionMatrix).mul(screen.viewMatrix));
+						.set(new Matrix4f(camera2.projectionMatrix).mul(camera2.viewMatrix));
 				programs.put(function, program);
 
 			} catch (IOException e) {
@@ -382,19 +394,21 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 			}
 		}
 		program.uniform("MAXITER", Float.class).set((float) 128 + count);
-		float zoom = (float) ((screen.fov - 10) / 120);
+		float zoom = (float) ((camera3.fov - 10) / 120);
 		program.uniform("zoom", Vector2f.class).set(new Vector2f(2.5f * zoom));
-		program.uniform("offset", Vector2f.class)
-				.set(new Vector2f(screen.cameraPosition.x - 1.8f, screen.cameraPosition.y - 1f));
+		program.uniform("offset", Vector2f.class).set(new Vector2f(camera3.position.x - 1.8f, camera3.position.y - 1f));
 
 		DrawObject obj = new DrawObject();
 		obj.shader = program;
-		obj.array = staticArray;
+		obj.array = streamArray;
+		obj.offset = streamArray.nVertices();
 		obj.drawMode = GL_TRIANGLES;
-		obj.transform.translation((float) at.x(), (float) at.y(), 0).scale((float) width, (float) height, 1);
+
+		float x = (float) at.x(), y = (float) at.y();
+		float w = (float) width, h = (float) height;
+		draw2Rectangle(obj.array, x, y, x + w, y + h);
 		obj.zOrder = depth++;
-		obj.offset = quadVertices;
-		obj.nVertices = 6;
+		obj.nVertices = streamArray.nVertices() - obj.offset;
 		obj.blend = true;
 		obj.type = "plot";
 		drawObjects.add(obj);
@@ -407,7 +421,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 		obj.array = streamArray;
 		obj.shader = screen.shader2d;
 		obj.drawMode = GL_TRIANGLES;
-		obj.transform.set(screen.modelMatrix);
+//		obj.transform.set(screen.modelMatrix);
 		obj.offset = streamArray.nVertices();
 		obj.zOrder = depth++;
 		obj.type = "image";
@@ -460,7 +474,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 		});
 
 		if (tex == null) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("No texture found for " + img);
 		}
 
 		int texNum = textures.indexOf(tex) + 1;
@@ -483,19 +497,19 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 		float cropX[] = { srcOffset.x / srcSize.x, srcCrop.x / srcSize.x };
 		float cropY[] = { srcOffset.y / srcSize.y, srcCrop.y / srcSize.y };
 
-		streamArray.begin().put(aPosVec3, p0, texNum)
-				.put(aColorVec4, cropX[texCoords[0][0]], cropY[texCoords[0][1]], 0, 0).end();
-		streamArray.begin().put(aPosVec3, p1, texNum)
-				.put(aColorVec4, cropX[texCoords[1][0]], cropY[texCoords[1][1]], 0, 0).end();
-		streamArray.begin().put(aPosVec3, p2, texNum)
-				.put(aColorVec4, cropX[texCoords[2][0]], cropY[texCoords[2][1]], 0, 0).end();
+		streamArray.begin().put(aPosVec3, p0, texNum).put(aColorVec4, Colors.BLACK)//
+				.put(aTexCoord2, cropX[texCoords[0][0]], cropY[texCoords[0][1]]).end();
+		streamArray.begin().put(aPosVec3, p1, texNum).put(aColorVec4, Colors.BLUE)//
+				.put(aTexCoord2, cropX[texCoords[1][0]], cropY[texCoords[1][1]]).end();
+		streamArray.begin().put(aPosVec3, p2, texNum).put(aColorVec4, Colors.RED)//
+				.put(aTexCoord2, cropX[texCoords[2][0]], cropY[texCoords[2][1]]).end();
 
-		streamArray.begin().put(aPosVec3, p2, texNum)
-				.put(aColorVec4, cropX[texCoords[2][0]], cropY[texCoords[2][1]], 0, 0).end();
-		streamArray.begin().put(aPosVec3, p3, texNum)
-				.put(aColorVec4, cropX[texCoords[3][0]], cropY[texCoords[3][1]], 0, 0).end();
-		streamArray.begin().put(aPosVec3, p1, texNum)
-				.put(aColorVec4, cropX[texCoords[1][0]], cropY[texCoords[1][1]], 0, 0).end();
+		streamArray.begin().put(aPosVec3, p2, texNum).put(aColorVec4, Colors.MAGENTA)//
+				.put(aTexCoord2, cropX[texCoords[2][0]], cropY[texCoords[2][1]]).end();
+		streamArray.begin().put(aPosVec3, p3, texNum).put(aColorVec4, Colors.GREEN)//
+				.put(aTexCoord2, cropX[texCoords[3][0]], cropY[texCoords[3][1]]).end();
+		streamArray.begin().put(aPosVec3, p1, texNum).put(aColorVec4, Colors.BROWN)//
+				.put(aTexCoord2, cropX[texCoords[1][0]], cropY[texCoords[1][1]]).end();
 		obj.nVertices = streamArray.nVertices() - obj.offset;
 
 		return;
@@ -533,27 +547,15 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 		obj.offset = obj.array.nVertices();
 		obj.type = "line";
 		obj.zOrder = depth++;
-		obj.transform.identity(); // .rotationX(-(float) Math.PI / 4);// + (step++) / 100.0f);
+		obj.transform.identity();
 		obj.projection = paths.projection();
 		drawObjects.add(obj);
-		DrawObject debugObj = new DrawObject();
-		debugObj.array = streamArray;
-		debugObj.shader = screen.shader2d;
-		debugObj.drawMode = GL_LINES;
-		debugObj.offset = streamArray.nVertices();
-		debugObj.type = "line";
-		debugObj.zOrder = depth - 1;
-//		debugObj.transform.translation(0, 0, -.01f).rotateX((float) Math.PI / 2);// + (step++) / 100.0f);
-		debugObj.projection = paths.projection();
-		// drawObjects.add(debugObj);
+
 		Vector3f fromVec = new Vector3f(), fromDir = new Vector3f();
-		Vector3f toVec = new Vector3f(), tmp2 = new Vector3f();
+		Vector3f toVec = new Vector3f();
 		Vector3f offset = new Vector3f();
-		Vector3f normal = new Vector3f();
-		Vector2f texCoord = new Vector2f();
-//		Vector3f tangent = new Vector3f();
+		Vector3f normal = new Vector3f(0, 0, 1);
 		Vector3f tmp = new Vector3f();
-		boolean first = true;
 		int index = obj.offset;
 		if (paths instanceof GLPathWriter3) {
 			PathRenderer3 ren = new PathRenderer3(obj.shader);
@@ -561,7 +563,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 			obj.cull = GL_BACK;
 
 		} else {
-			obj.cull = GL_FRONT;
+			obj.cull = GL_BACK;
 			while ((stroke = paths.nextStroke()) != null) {
 				List<PathPoint> points = stroke.points();
 
@@ -571,30 +573,32 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 					Pen pen = from.pen();
 					boolean strokeEnabled = pen.stroking() && pen.strokeWidth() > 0;
 					boolean fillEnabled = pen.filling();
-				
+
 					Color color = pen.strokeColor();
 
 					float w = (float) pen.strokeWidth() / 2;
-//				Direction fromDir = from.bearing(); // = tangents.get(line.get(0));
-					from.point().toVector(fromVec);
-					to.point().toVector(toVec);
-					from.bearing().directionVector(fromDir);
-					from.bearing().normalVector(normal);
-					toVec.sub(fromVec, fromDir).normalize();
-					normal.cross(fromDir, offset);
-
+					/*
+					 * from.point().toVector(fromVec); to.point().toVector(toVec);
+					 * from.bearing().directionVector(fromDir); from.bearing().normalVector(normal);
+					 * toVec.sub(fromVec, fromDir).normalize(); normal.cross(fromDir, offset);
+					 */
 					if (strokeEnabled) {
 						for (int i = 1; i < points.size(); i++) {
 							from = points.get(i - 1);
 							to = points.get(i);
+							if (from.equals(to)) {
+								pen = to.pen();
+								color = pen.strokeColor();
+								w = (float) pen.strokeWidth() / 2;
+								continue;
+							}
 							from.point().toVector(fromVec);
 							to.point().toVector(toVec);
-//					toVec.sub(fromVec, toDir).normalize();
-							from.bearing().directionVector(fromDir).normalize();
+//							from.bearing().directionVector(fromDir).normalize();
+							toVec.sub(fromVec, fromDir).normalize();
 
-//					fromDir.add(toDir).mul(.5f);
-							from.bearing().normalVector(normal).normalize();
-							normal.cross(fromDir, offset); // .normalize();
+//							from.bearing().normalVector(normal).normalize();
+//							normal.cross(fromDir, offset); // .normalize();
 							fromDir.cross(normal, offset);
 
 							if (Double.isNaN(fromVec.lengthSquared()))
@@ -619,17 +623,20 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 										.end();
 
 							}
-//					off2.add(off1).mul(.5f);
 							obj.blend |= color.opacity() < 1;
 
-							streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, offset)).put(aColorVec4, color)
-									.end();
-							streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, offset)).put(aColorVec4, color)
-									.end();
-							streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(-w, offset)).put(aColorVec4, color)
-									.end();
-							streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, offset)).put(aColorVec4, color)
-									.end();
+							streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(-w, offset))//
+									.put(aColorVec4, color)//
+									.put(aTexCoord2, 0, 0).end();
+							streamArray.begin().put(aPosVec3, tmp.set(fromVec).fma(w, offset))//
+									.put(aColorVec4, color)//
+									.put(aTexCoord2, 1, 0).end();
+							streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(-w, offset))//
+									.put(aColorVec4, color)//
+									.put(aTexCoord2, 0, 1).end();
+							streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, offset))//
+									.put(aColorVec4, color)//
+									.put(aTexCoord2, 1, 1).end();
 							indices.add(index + 0);
 							indices.add(index + 1);
 							indices.add(index + 2);
@@ -638,15 +645,10 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 							indices.add(index + 3);
 							index += 4;
 
-//					if (i == points.size() - 1)
-//						streamArray.begin().put(aPosVec3, tmp.set(toVec).fma(w, offset)).put(aColorVec4, color).end();
-
 							pen = to.pen();
 							color = pen.strokeColor();
 							w = (float) pen.strokeWidth() / 2;
-//					fromVec.set(toVec);
-//					fromDir.set(toDir);
-//					from = to;
+
 						}
 					}
 					if (fillEnabled) {
@@ -657,7 +659,9 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 							cutVertices[j++] = p.y();
 							cutVertices[j++] = p.z();
 							p.point().toVector(fromVec);
-							streamArray.begin().put(aPosVec3, fromVec).put(aColorVec4, p.pen().fillColor()).end();
+							streamArray.begin().put(aPosVec3, fromVec)//
+									.put(aColorVec4, p.pen().fillColor())//
+									.put(aTexCoord2, (float) p.x(), (float) p.y()).end();
 						}
 						List<Integer> earcut = Earcut.earcut(cutVertices, null, 3);
 						for (int i : earcut) {
@@ -666,13 +670,20 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 						index += points.size();
 					}
 				}
-//			System.out.println();
-//			pathWriter.clear();
-				obj.nVertices = obj.array.nVertices() - obj.offset;
-				obj.indices = indices.stream().mapToInt(i -> i).toArray();
-				debugObj.nVertices = streamArray.nVertices() - debugObj.offset;
-
 			}
+
+			obj.nVertices = obj.array.nVertices() - obj.offset;
+			// TODO: this is slow
+			obj.indices = indices.stream().mapToInt(i -> i).toArray();
+// This is slower:
+			// obj.indices = new int[indices.size()];
+//				for(int i = 0; i < indices.size(); i++) {
+//					obj.indices[i] = indices.get(i);
+//				}
+//				int i = 0;
+//				for(Integer ind : indices) {
+//					obj.indices[i++] = ind;
+//				}
 		}
 	}
 
@@ -720,7 +731,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 					uViewPos = shader.uniform("uViewPos", Vector4f.class);
 					projection = obj.projection;
 					if (uProjView != null) {
-						uProjView.set(projection == null ? screen.projectionMatrix : projection);
+						uProjView.set(projection == null ? camera2.projectionMatrix : projection);
 					}
 				}
 				if (uModel != null) {
@@ -736,20 +747,20 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 					uLightPos.set(light);
 				}
 				if (uViewPos != null) {
-					Vector4f camera = screen.cameraPosition.mul(16, new Vector4f());
+					Vector4f camera = camera2.position.mul(16, new Vector4f());
 //					System.out.println("camera: " + view);
 					uViewPos.set(camera);
 				}
 				if (obj.projection != projection) {
 					projection = obj.projection;
 					if (uProjView != null) {
-						uProjView.set(projection == null ? screen.projectionMatrix : projection);
+						uProjView.set(projection == null ? camera2.projectionMatrix : projection);
 					}
 				}
 				if (obj.indices != null) {
 					int eab = glGenBuffers();
 					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eab);
-					glBufferData(GL_ELEMENT_ARRAY_BUFFER, obj.indices, GL_DYNAMIC_DRAW);
+					glBufferData(GL_ELEMENT_ARRAY_BUFFER, obj.indices, GL_STREAM_DRAW);
 					glDrawElements(obj.drawMode, obj.indices.length, GL_UNSIGNED_INT, 0);
 					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 					glDeleteBuffers(eab);
@@ -758,18 +769,12 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 				}
 			}
 		}
-//		System.out.println("]");
-		if (clear) {
-			streamArray.clear();
-			streamBuffer.clear();
-			streamArray3.clear();
-			drawObjects.clear();
-			int texNum = GL_TEXTURE0;
-			for (Texture tex : textures) {
-				tex.unbind(texNum++);
-			}
-			textures.clear();
-			depth = 0;
+//		streamBuffer.dump(this.format, 10);
+//		System.out.println("---------------");
+//		System.out.println(streamArray);
+		ShaderProgram.unbind();
+		if (false && clear) {
+			clear();
 		}
 	}
 
@@ -790,14 +795,25 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 	}
 
 	class GLPathWriter extends PathWriterImpl {
+		protected Camera camera;
+
+		GLPathWriter(Camera cam) {
+			this.camera = cam;
+		}
+
 		Matrix4f projection() {
-			return screen.projectionMatrix;
+			return new Matrix4f(camera.projectionMatrix).mul(camera.viewMatrix); // camera.projectionMatrix;
 		}
 	}
 
 	class GLPathWriter3 extends GLPathWriter {
+
+		GLPathWriter3(Camera cam) {
+			super(cam);
+		}
+
 		Matrix4f projection() {
-			return new Matrix4f(screen.perspectiveProjectionMatrix).mul(screen.perspectiveViewMatrix);
+			return new Matrix4f(camera.projectionMatrix).mul(camera.viewMatrix);
 		}
 	}
 

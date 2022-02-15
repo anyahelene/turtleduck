@@ -2,7 +2,14 @@ package turtleduck.geometry.impl;
 
 import java.util.logging.Logger;
 
-import org.joml.Vector3f;
+import org.joml.AxisAngle4d;
+import org.joml.Matrix4f;
+import org.joml.Quaterniond;
+import org.joml.Quaternionf;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
@@ -18,12 +25,15 @@ import turtleduck.geometry.Orientation;
  * @author anya
  *
  */
-public class AngleImpl implements DirectionVector, Direction {
+public class AngleImpl implements DirectionVector, Orientation {
+	public static final Vector3dc POSITIVE_Z = new Vector3d(0, 0, 1);
 	static final double EPSILON = 10e-6;
 	static final double SIGN_LEFT = -1, SIGN_RIGHT = 1;
 	public static final double HALF_PI = Math.PI / 2;
 	public static final double TWO_PI = 2 * Math.PI;
 	public static final double THREE_PI = 2 * Math.PI;
+	static final String CW_ARROWS = "→↘↘↘↓↙↙↙←↖↖↖↑↗↗↗→";
+	static final String CCW_ARROWS = "→↗↗↗↑↖↖↖←↙↙↙↓↘↘↘→";
 
 	/**
 	 * There are 3600 arc seconds in a degree
@@ -43,12 +53,13 @@ public class AngleImpl implements DirectionVector, Direction {
 	public static final int TWO_MI = 360 * MARCSEC;
 	static final int ARCSEC_NORTH = Direction.DEGREES_NORTH * ARCSEC, //
 			ARCSEC_EAST = Direction.DEGREES_EAST * ARCSEC, //
-			ARCSEC_SOUTH = Direction.DEGREES_SOUTH * ARCSEC, //
+			ARCSEC_SOUTH = (360 + Direction.DEGREES_SOUTH) * ARCSEC, //
 			ARCSEC_WEST = Direction.DEGREES_WEST * ARCSEC;
 	static final int MARCSEC_NORTH = 1000 * ARCSEC_NORTH, MARCSEC_EAST = 1000 * ARCSEC_EAST, //
 			MARCSEC_SOUTH = 1000 * ARCSEC_SOUTH, MARCSEC_WEST = 1000 * ARCSEC_WEST;
 	public static final double HALF_SQRT_2 = Math.sqrt(2) / 2, HALF_SQRT_3 = Math.sqrt(3) / 2;
 	private final int angle;
+	private final double x, y;
 	private final boolean absolute;
 
 	protected AngleImpl(int mArcSecs, boolean absolute) {
@@ -60,6 +71,8 @@ public class AngleImpl implements DirectionVector, Direction {
 		}
 		this.angle = mArcSecs;
 		this.absolute = absolute;
+		this.x = cos(mArcSecs);
+		this.y = sin(mArcSecs);
 //		assert angle > -MI && angle <= MI;
 	}
 
@@ -131,9 +144,10 @@ public class AngleImpl implements DirectionVector, Direction {
 	}
 
 	@Override
-	public Direction add(Direction other) {
+	public Orientation add(Direction other) {
 		if (other.is3d())
-			return other.add(this);
+			return other.toOrientation().add(this);
+		// TODO
 		int b = ((AngleImpl) other).angle;
 		assert ((long) angle + (long) b) == angle + b;
 		if (!absolute)
@@ -147,31 +161,25 @@ public class AngleImpl implements DirectionVector, Direction {
 	}
 
 	@Override
-	public Direction sub(Direction other) {
+	public Orientation sub(Direction other) {
 		if (other.is3d())
 			return new OrientImpl(this).sub(other);
 		int b = ((AngleImpl) other).angle;
 		assert ((long) angle - (long) b) == angle - b;
-		if (!absolute)
-			return new AngleImpl(angle - b, other.isAbsolute());
-		else if (!other.isAbsolute()) {
-			return new AngleImpl(angle - b, true);
-		} else {
-			return new AngleImpl(angle - b, false);
-		}
+		return new AngleImpl(angle - b, absolute != other.isAbsolute());
 	}
 
 	@Override
-	public Direction interpolate(Direction other, double t) {
+	public Orientation interpolate(Direction other, double t) {
 		if (t <= 0.0)
 			return this;
 		else if (t >= 1.0)
-			return other;
-//		Vector3f thisVec = this.directionVector(null);
-//		Vector3f otherVec = other.directionVector(null);
+			return other.toOrientation();
+//		Vector3d thisVec = this.directionVector(null);
+//		Vector3d otherVec = other.directionVector(null);
 //		thisVec.lerp(otherVec, (float)t);
-		double x0 = dirX(), x1 = other.dirX();
-		double y0 = dirY(), y1 = other.dirY();
+		double x0 = x, x1 = other.dirX();
+		double y0 = y, y1 = other.dirY();
 		double x = x0 + (x1 - x0) * t;
 		double y = y0 + (y1 - y0) * t;
 		return new AngleImpl(atan2(y, x), absolute);
@@ -180,26 +188,29 @@ public class AngleImpl implements DirectionVector, Direction {
 	@Override
 	public String toNavString() {
 		double d = milliArcSecToDegrees(angle);
+		int a = angle;
 		if (absolute) {
 			if (d < 0)
-				d += MI;
-			assert angle >= 0 && angle < MARCSEC_NORTH : String.format("0 <= %d < %d", angle, MARCSEC_NORTH);
-			if (angle == 0) {
+				d += 360;
+			if (a < 0)
+				a += TWO_MI;
+//			assert angle >= 0 && angle < MARCSEC_NORTH : String.format("0 <= %d < %d", angle, MARCSEC_NORTH);
+			if (a == MARCSEC_NORTH) {
 				return "N";
-			} else if (angle == MARCSEC_EAST) {
+			} else if (a == MARCSEC_EAST || angle == TWO_MI) {
 				return "E";
-			} else if (angle == MARCSEC_SOUTH) {
+			} else if (a == MARCSEC_SOUTH) {
 				return "S";
-			} else if (angle == MARCSEC_WEST) {
+			} else if (a == MARCSEC_WEST) {
 				return "W";
-			} else if (angle < MARCSEC_EAST) {
-				return "N" + (d) + "°E";
-			} else if (angle < MARCSEC_SOUTH) {
-				return "S" + (180 - d) + "°E";
-			} else if (angle < MARCSEC_WEST) {
-				return "S" + (d - 180) + "°W";
-			} else if (angle < MARCSEC_NORTH) {
-				return "N" + (360 - d) + "°W";
+			} else if (a > MARCSEC_SOUTH) {
+				return String.format("S%.1f°E", d - 270);
+			} else if (a > MARCSEC_WEST) {
+				return String.format("S%.1f°W", 270 - d);
+			} else if (a > MARCSEC_NORTH) {
+				return String.format("N%.1f°W", d - 90);
+			} else if (a > MARCSEC_EAST) {
+				return String.format("N%.1f°E", d);
 			}
 			return String.format("%06.2f°", d);
 		} else {
@@ -222,11 +233,17 @@ public class AngleImpl implements DirectionVector, Direction {
 	}
 
 	public static String toArrow(int angle) {
-		String arrow = "→↘↘↘↓↙↙↙←↖↖↖↑↗↗↗→";
 		if (angle < 0)
 			angle += TWO_MI;
 		angle = (int) Math.round((16.0 * angle) / TWO_MI);
-		return arrow.substring(angle, angle + 1);
+		return CCW_ARROWS.substring(angle, angle + 1);
+	}
+
+	public static String toArrow(double radians) {
+		if (radians < 0)
+			radians += TWO_PI;
+		int index = (int) Math.round((16.0 * radians) / TWO_PI);
+		return CCW_ARROWS.substring(index, index + 1);
 	}
 
 	@Override
@@ -236,6 +253,7 @@ public class AngleImpl implements DirectionVector, Direction {
 		if (absolute && degs < 0) {
 			degs += 360;
 		}
+//		return (absolute ? "=" : "±") + angle; 
 		return String.format(format, toArrow(), degs);
 	}
 
@@ -336,12 +354,12 @@ public class AngleImpl implements DirectionVector, Direction {
 	 */
 	@Override
 	public double dirX() {
-		return cos(angle);
+		return x; // cos(angle);
 	}
 
 	@Override
 	public double dirY() {
-		return sin(angle);
+		return y; // sin(angle);
 	}
 
 	@Override
@@ -354,7 +372,7 @@ public class AngleImpl implements DirectionVector, Direction {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (absolute ? 1231 : 1237);
-		result = prime * result + Double.hashCode(degrees());
+		result = prime * result + angle;
 		return result;
 	}
 
@@ -391,28 +409,22 @@ public class AngleImpl implements DirectionVector, Direction {
 	}
 
 	@Override
-	public Vector3f perpendicular(Vector3f dest) {
-		if (dest == null)
-			dest = new Vector3f();
-		return dest.set(dirX(), dirY(), 0).rotateZ((float) Math.PI / 2);
+	public Vector3d perpendicular(Vector3d dest) {
+		return dest.set(x, y, 0).rotateZ((float) Math.PI / 2);
 	}
 
 	@Override
-	public Vector3f normalVector(Vector3f dest) {
-		if (dest == null)
-			dest = new Vector3f();
+	public Vector3d normalVector(Vector3d dest) {
 		return dest.set(0, 0, 1);
 	}
 
 	@Override
-	public Vector3f directionVector(Vector3f dest) {
-		if (dest == null)
-			dest = new Vector3f();
-		return dest.set(dirX(), dirY(), 0);
+	public Vector3d directionVector(Vector3d dest) {
+		return dest.set(x, y, 0);
 	}
 
 	@Override
-	public Direction yaw(double degrees) {
+	public Orientation yaw(double degrees) {
 		return new AngleImpl(angle + degreesToMilliArcSec(degrees), absolute);
 	}
 
@@ -434,5 +446,40 @@ public class AngleImpl implements DirectionVector, Direction {
 		} else if (other instanceof OrientImpl)
 			return other.equals(this);
 		return false;
+	}
+
+	@Override
+	public Orientation rotateTo(Direction other) {
+		return other.toOrientation();
+	}
+
+	@Override
+	public Orientation toOrientation() {
+		return this;
+	}
+
+	@Override
+	public double altRadians() {
+		return 0;
+	}
+
+	@Override
+	public Quaterniond toQuaternion(Quaterniond dest) {
+		return dest.set(new AxisAngle4d(radians(), OrientImpl.UP_VEC));
+	}
+
+	@Override
+	public Quaternionf toQuaternion(Quaternionf dest) {
+		return dest.set(new AxisAngle4d(radians(), OrientImpl.UP_VEC));
+	}
+
+	@Override
+	public Matrix4f toMatrix(Matrix4f dest) {
+		return dest.set(new AxisAngle4d(radians(), OrientImpl.UP_VEC));
+	}
+
+	@Override
+	public Orientation rotateTo(double angle) {
+		return absolute(angle);
 	}
 }

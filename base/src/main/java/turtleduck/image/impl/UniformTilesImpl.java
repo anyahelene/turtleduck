@@ -4,7 +4,7 @@ import turtleduck.image.Image;
 import turtleduck.image.ImageMode;
 import turtleduck.image.Tiles;
 
-public class UniformTiles implements Tiles {
+public class UniformTilesImpl implements Tiles {
 
 	private int width;
 	private int height;
@@ -13,7 +13,7 @@ public class UniformTiles implements Tiles {
 	private int rows;
 	private Image[] tiles;
 
-	public UniformTiles(Image source, int width, int height) {
+	public UniformTilesImpl(Image source, int width, int height) {
 		this.width = width;
 		this.height = height;
 		this.source = source;

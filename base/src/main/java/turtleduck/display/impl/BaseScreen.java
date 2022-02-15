@@ -13,6 +13,8 @@ import turtleduck.canvas.Canvas;
 import turtleduck.display.DisplayInfo;
 import turtleduck.display.Layer;
 import turtleduck.display.Screen;
+import turtleduck.display.Viewport;
+import turtleduck.display.Viewport.ViewportBuilder;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
 import turtleduck.objects.IdentifiedObject;
@@ -31,7 +33,8 @@ public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 	protected Canvas debugLayer;
 	protected int aspect = 0;
 	private double scaling = 0;
-	public Dimensions dim;
+//	public Dimensions dim;
+	protected Viewport viewport;
 	protected int shortcutKeyMask = KeyEvent.SHORTCUT_MASK;
 	protected Predicate<KeyEvent> keyOverride = null;
 
@@ -42,8 +45,9 @@ public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 	protected Predicate<KeyEvent> keyReleasedHandler = null;
 	protected Predicate<String> pasteHandler;
 
-	public BaseScreen() {
+	public BaseScreen(Viewport vp) {
 		id = IdentifiedObject.Registry.makeId(Screen.class, this);
+		viewport = vp;
 	}
 
 	@Override
@@ -123,7 +127,10 @@ public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 	@Override
 	public void setAspect(int aspect) {
 		this.aspect = (aspect) % aspects.size();
-		recomputeLayout(false);
+		ViewportBuilder vpb = viewport.change();
+		vpb.aspect(aspects.get(aspect));
+		viewport = vpb.done();
+		recomputeLayout(true);
 	}
 
 	public static class Dimensions {
@@ -272,8 +279,7 @@ public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 	 * @param dim
 	 * @param currentRatio
 	 */
-	protected void setupAspects(Dimensions dim) {
-		double currentRatio = dim.winAspectRatio();
+	protected void setupAspects(double currentRatio) {
 		aspect = 0;
 		for (double a : STD_ASPECTS)
 			if (Math.abs(currentRatio - a) < 0.01) {
@@ -292,26 +298,10 @@ public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 	 * 
 	 * @param info
 	 */
-	protected void recomputeDimensions(DisplayInfo info) {
-		dim.rawDispWidth = info.getDisplayWidth();
-		dim.rawDispHeight = info.getDisplayHeight();
-		dim.fbInUseHeight = Math.floor(dim.fbWidth / aspects.get(aspect));
-		dim.xScale = dim.winWidth / dim.fbWidth;
-		dim.yScale = dim.winHeight / dim.fbInUseHeight;
-		dim.xMaxScale = dim.rawDispWidth / dim.fbWidth;
-		dim.yMaxScale = dim.rawDispHeight / dim.fbInUseHeight;
-		dim.fitScale = Math.min(dim.xScale, dim.yScale);
-		dim.maxScale = (int) Math.max(1, Math.ceil(Math.min(dim.xMaxScale, dim.yMaxScale)));
-
-		dim.scale = scaling == 0 ? dim.fitScale : scaling;
-	}
-
-	@Override
-	public void zoomCycle() {
-		scaling++;
-		if (scaling > dim.maxScale)
-			scaling = ((int) scaling) % dim.maxScale;
-		recomputeLayout(true);
+	protected void recomputeDimensions(int x, int y, int width, int height) {
+		ViewportBuilder vpb = viewport.change();
+		vpb.screenArea(x, y, width, height);
+		viewport = vpb.done();
 	}
 
 	/**
@@ -328,7 +318,7 @@ public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 
 	@Override
 	public void zoomIn() {
-		scaling = Math.min(10, dim.scale + 0.2);
+		scaling = Math.min(10, scaling + 0.2);
 		recomputeLayout(false);
 	}
 
@@ -340,7 +330,7 @@ public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 
 	@Override
 	public void zoomOut() {
-		scaling = Math.max(0.1, dim.scale - 0.2);
+		scaling = Math.max(0.1, scaling - 0.2);
 		recomputeLayout(false);
 	}
 
@@ -428,22 +418,22 @@ public abstract class BaseScreen implements Screen, Screen.ScreenControls {
 
 	@Override
 	public double height() {
-		return dim.canvasHeight;
+		return viewport.height();
 	}
 
 	@Override
 	public double width() {
-		return dim.canvasWidth;
+		return viewport.width();
 	}
 
 	@Override
 	public double frameBufferHeight() {
-		return dim.fbHeight;
+		return viewport.viewHeight();
 	}
 
 	@Override
 	public double frameBufferWidth() {
-		return dim.fbWidth;
+		return viewport.viewWidth();
 	}
 
 	/** @return the keyOverride */

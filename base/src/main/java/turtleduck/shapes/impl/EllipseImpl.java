@@ -7,9 +7,9 @@ import turtleduck.geometry.Point;
 import turtleduck.paths.PathStroke;
 import turtleduck.paths.PathWriter;
 import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.shapes.Ellipse;
 import turtleduck.shapes.Ellipse.EllipseBuilder;
-import turtleduck.turtle.impl.PathPointImpl;
 
 public class EllipseImpl extends BaseShapeWxH<Ellipse.EllipseBuilder> implements Ellipse.EllipseBuilder {
 

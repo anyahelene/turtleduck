@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.joml.Vector2f;
+import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import turtleduck.buffer.DataField;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
+import turtleduck.geometry.Orientation;
 import turtleduck.gl.GLLayer.DrawObject;
 import turtleduck.gl.GLLayer.GLPathWriter;
 import turtleduck.gl.GLLayer.GLPathWriter3;
@@ -23,12 +25,12 @@ public class PathRenderer3 {
 	static final float HALF_PI = (float) (Math.PI / 2);
 	static final float TWO_PI = (float) (Math.PI * 2);
 	private ShaderProgram shader;
-	private Vector3f fromVec = new Vector3f();
-	private Vector3f fromDir = new Vector3f();
-	private Vector3f toVec = new Vector3f();
+	private Vector3d fromVec = new Vector3d();
+	private Vector3d fromDir = new Vector3d();
+	private Vector3d toVec = new Vector3d();
 	private Vector3f tmp2 = new Vector3f();
 //	private Vector3f offset = new Vector3f();
-	private Vector3f normal = new Vector3f();
+	private Vector3d normal = new Vector3d();
 	private Vector2f texCoord = new Vector2f();
 	private Vector3f tmp = new Vector3f();
 	private DataField<Vector3f> aPos;
@@ -80,18 +82,23 @@ public class PathRenderer3 {
 	public void drawLine(PathPoint from, PathPoint to, Pen pen, boolean isStart, boolean isEnd) {
 		from.point().toVector(fromVec);
 		to.point().toVector(toVec);
-		from.bearing().directionVector(fromDir).normalize();
+		if (fromVec.equals(toVec))
+			return;
+		Orientation orient = from.orientation();
+		if(orient == null)
+			orient = Orientation.orientation(from.point(), to.point());
+		orient.directionVector(fromDir);
 		float w = (float) (pen.strokeWidth() / 2);
 		Color color = pen.strokeColor();
 //		fromDir.add(toDir).mul(.5f);
-		from.bearing().normalVector(normal).normalize();
+		orient.normalVector(normal);
 
 		if (Double.isNaN(fromVec.lengthSquared()))
 			System.out.println("fromVec: " + fromVec);
 		if (Double.isNaN(toVec.lengthSquared()))
 			System.out.println("toVec: " + toVec);
 
-		float x = fromDir.x, y = fromDir.y, z = fromDir.z;
+		float x = (float) fromDir.x, y = (float) fromDir.y, z = (float) fromDir.z;
 		float n = Math.max(3, (int) Math.log((4 * w) * (4 * w)));
 		n = 4;
 		if (isStart) {
@@ -103,7 +110,7 @@ public class PathRenderer3 {
 				idx += 2;
 			}
 		} else {
-			int previdx = index - (int)(2*(n+1));
+			int previdx = index - (int) (2 * (n + 1));
 			int idx = index;
 			for (float i = 0; i < n; i++) {
 				indices.add(previdx + 3);
@@ -129,9 +136,10 @@ public class PathRenderer3 {
 		for (float i = n; i >= 0; i--) {
 			if (i == 0 || i == n)
 				normal.get(tmp2);
-			else
-				normal.rotateAxis((i / n) * TWO_PI, x, y, z, tmp2);
-
+			else {
+				normal.get(tmp2);
+				tmp2.rotateAxis((i / n) * TWO_PI, x, y, z);
+			}
 			array.begin()//
 					.put(aPos, tmp.set(fromVec).fma(w, tmp2))//
 					.put(aColor, color)//

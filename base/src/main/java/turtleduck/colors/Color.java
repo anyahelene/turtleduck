@@ -67,6 +67,14 @@ public interface Color {
 		return fromRGBA(r, g, b, 255);
 	}
 
+	static Color fromRGB(byte r, byte g, byte b) {
+		return fromRGBA(r & 0xff, g & 0xff, b & 0xff, 255);
+	}
+
+	static Color fromRGBA(byte r, byte g, byte b, byte a) {
+		return fromRGBA(r & 0xff, g & 0xff, b & 0xff, a & 0xff);
+	}
+
 	static Color fromRGBA(int r, int g, int b, int a) {
 		if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || a < 0 || a > 255)
 			throw new IllegalArgumentException("Must be from 0 to 255: (" + r + ", " + g + ", " + b + ", " + a + ")");
@@ -81,22 +89,77 @@ public interface Color {
 		return color(r, g, b, 1);
 	}
 
+	/**
+	 * Create a new grey color
+	 * 
+	 * Equivalent to color(g, g, g, 1).
+	 * 
+	 * @param g The grey component (linear)
+	 * @return
+	 */
 	static Color grey(double g) {
 		return color(g, g, g, 1);
 	}
 
+	/**
+	 * Create a new color, from hue/saturation/value
+	 * 
+	 * @param h Hue, in degrees, 0–360
+	 * @param s Saturation, 0–1
+	 * @param v Value, 0–1
+	 * @return A color
+	 */
 	static Color hsv(double h, double s, double v) {
 		return ColorRGB.hsv((float) h, (float) s, (float) v, 1);
 	}
 
+	/**
+	 * Create a new color, from hue/saturation/value
+	 * 
+	 * @param h Hue, in degrees, 0–360
+	 * @param s Saturation, 0–1
+	 * @param v Value, 0–1
+	 * @param a Alpha/opacity, 0–1
+	 * @return A color
+	 */
 	static Color hsva(double h, double s, double v, double a) {
 		return ColorRGB.hsv((float) h, (float) s, (float) v, (float) a);
 	}
 
+	/**
+	 * Create a new color, from linear floating-point components.
+	 * 
+	 * Use {@link #sRGB(double, double, double, double)} if your color components is
+	 * in sRGB (compressed) color space.
+	 * 
+	 * @param r Red component, 0.0–1.0
+	 * @param g Green component, 0.0–1.0
+	 * @param b Blue component, 0.0–1.0
+	 * @param a Alpha component 0.0–1.0
+	 * @return A color
+	 */
 	static Color color(double r, double g, double b, double a) {
 		if (r < 0 || r > 1 || g < 0 || g > 1 || b < 0 || b > 1 || a < 0 || a > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + r + ", " + g + ", " + b + ", " + a + ")");
 		return new ColorRGB((float) r, (float) g, (float) b, (float) a, true);
+	}
+
+	/**
+	 * Create a new color, from sRGB floating-point components.
+	 * 
+	 * Use {@link #color(double, double, double, double)} if your color components
+	 * is in linear color space.
+	 * 
+	 * @param r Red component, 0.0–1.0
+	 * @param g Green component, 0.0–1.0
+	 * @param b Blue component, 0.0–1.0
+	 * @param a Alpha component 0.0–1.0
+	 * @return A color
+	 */
+	static Color sRGB(double r, double g, double b, double a) {
+		if (r < 0 || r > 1 || g < 0 || g > 1 || b < 0 || b > 1 || a < 0 || a > 1)
+			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + r + ", " + g + ", " + b + ", " + a + ")");
+		return new ColorRGB((float) r, (float) g, (float) b, (float) a, false);
 	}
 
 	float red();

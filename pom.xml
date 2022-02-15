@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.nuthatchery</groupId>
@@ -11,10 +9,18 @@
 	<name>TurtleDuck POM Parent</name>
 	<url>http://maven.apache.org</url>
 
+	<distributionManagement>
+		<site>
+			<id>website</id>
+			<url>file://tmp/m2/</url>
+		</site>
+	</distributionManagement>
+
 	<properties>
 		<project.java.version>13</project.java.version>
 		<maven.compiler.target>13</maven.compiler.target>
 		<maven.compiler.source>13</maven.compiler.source>
+		<maven.compiler.release>13</maven.compiler.release>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<junit.jupiter.version>5.5.2</junit.jupiter.version>
@@ -23,6 +29,7 @@
 		<vertx.version>4.0.0.CR1</vertx.version>
 		<joml.version>1.9.25</joml.version>
 		<jackson.version>2.12.3</jackson.version>
+		<turtleduck.version>0.1.1-SNAPSHOT</turtleduck.version>
 	</properties>
 
 	<dependencyManagement>
@@ -97,46 +104,99 @@
 
 	<build>
 		<plugins>
-			<!-- COMPILING -->
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
-				<configuration>
-					<compilerArgs>
-						<!-- arg>-verbose</arg -->
-						<arg>-Xlint:all,-options,-path</arg>
-						<arg>-parameters</arg>
-						<arg>-g</arg>
-					</compilerArgs>
-				</configuration>
 			</plugin>
-			<!-- TESTING -->
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M4</version>
-				<configuration>
-					<useModulePath>false</useModulePath>
-					<argLine></argLine>
-				</configuration>
 			</plugin>
-			<!-- PACKAGE SOURCE JARS -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.0</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
 			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
-
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-project-info-reports-plugin</artifactId>
+					<version>3.2.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.7.1</version>
+				</plugin>
+				<!-- COMPILING -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.8.1</version>
+					<configuration>
+						<compilerArgs>
+							<!-- arg>-verbose</arg -->
+							<arg>-Xlint:all,-options,-path</arg>
+							<arg>-parameters</arg>
+							<arg>-g</arg>
+						</compilerArgs>
+					</configuration>
+				</plugin>
+				<!-- TESTING -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.0.0-M4</version>
+					<configuration>
+						<useModulePath>false</useModulePath>
+						<argLine></argLine>
+					</configuration>
+				</plugin>
+				<!-- PACKAGE SOURCE JARS -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.2.0</version>
+					<executions>
+						<execution>
+							<id>attach-sources</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<!-- PACKAGE JAVADOC JARS -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>3.2.0</version>
+					<configuration>
+						<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+						<skip>true</skip>
+					</configuration>
+					<executions>
+						<execution>
+							<id>attach-javadocs</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+							<configuration>
+								<useStandardDocletOptions>false</useStandardDocletOptions>
+								<attach>true</attach>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>exec-maven-plugin</artifactId>
@@ -148,6 +208,13 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-file</artifactId>
+				<version>3.5.1</version>
+			</extension>
+		</extensions>
 	</build>
 	<reporting>
 		<plugins>
@@ -193,4 +260,6 @@
 		<module>server</module>
 		<!-- module>py</module -->
 	</modules>
+
+
 </project>

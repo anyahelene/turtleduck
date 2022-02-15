@@ -11,7 +11,6 @@ import turtleduck.geometry.Point;
 import turtleduck.paths.PathPoint;
 import turtleduck.paths.PathStroke;
 import turtleduck.paths.PathWriter;
-import turtleduck.turtle.impl.PathPointImpl;
 
 @Internal
 public class PathWriterImpl implements PathWriter {
@@ -41,20 +40,13 @@ public class PathWriterImpl implements PathWriter {
 
 	class PathStrokeImpl implements PathStroke {
 		protected List<PathPoint> points = new ArrayList<>();
-		protected boolean updating = false;
 		protected boolean finished = false;
 		protected boolean added = false;
 		protected int read = 0;
 		protected int lengthSq = 0;
 		protected PathPoint current;
 		String text;
-		protected  String group = null;
-
-		@Override
-		public void addLine(PathPoint from) {
-			addLine(from, from);
-			updating = true;
-		}
+		protected String group = null;
 
 		@Override
 		public void addPoint(PathPoint point) {
@@ -72,15 +64,8 @@ public class PathWriterImpl implements PathWriter {
 			} else {
 				PathPointImpl from = (PathPointImpl) current;
 				PathPointImpl to = from.copy();
-				if (!from.point.equals(point))
-					from.bearing = from.point.directionTo(point);
-				else if (from.bearing == null)
-					from.bearing = Direction.DUE_NORTH;
-				if (from.incoming == null)
-					from.incoming = from.bearing;
 				to.point = point;
-				to.incoming = from.bearing;
-				to.bearing = from.bearing;
+
 				addLine(from, to);
 			}
 		}
@@ -90,35 +75,12 @@ public class PathWriterImpl implements PathWriter {
 			if (from.pen() == null || to.pen() == null)
 				throw new IllegalArgumentException();
 			lengthSq += from.point().distanceToSq(to.point());
-			if (!updating) {
-				if (points.isEmpty())
-					points.add(from);
-//				else if (points.get(points.size() - 2) != from)
-//					throw new IllegalArgumentException("Invalid update: addLine(" + from + ", " + to + ")");
+			if (points.isEmpty())
+				points.add(from);
 
-				points.add(to);
-				current = to;
-			} else {
-				updating = false;
-			}
-//			if (currentStroke.size() >= 3) {
-//				PathPoint from2 = points.get(currentStroke.get(currentStroke.size() - 3));
-//				tangents.set(currentStroke.get(currentStroke.size() - 2),
-//						from2.bearing().interpolate(from.bearing(), 0.5));
-//			}
-			if (!added) {
-				added = true;
-				strokes.add(this);
-			}
-		}
-
-		public void updateLine(PathPoint from, PathPoint to) {
-			if (!updating)
-				throw new IllegalStateException("updateLine(p1,p2) without previous addLine(p)");
-			if (points.get(points.size() - 2) != from)
-				throw new IllegalArgumentException("Invalid update: updateLine(" + from + ", " + to + ")");
-			points.set(points.size() - 1, to);
+			points.add(to);
 			current = to;
+
 			if (!added) {
 				added = true;
 				strokes.add(this);
@@ -126,10 +88,7 @@ public class PathWriterImpl implements PathWriter {
 		}
 
 		public void endPath() {
-			PathPoint first = points.get(0);
-			if (first != null) {
-				if (first.point().distanceToSq(current.point()) < 0.1) {
-				}
+			if (points.size() > 1) {
 				if (!added) {
 					added = true;
 					strokes.add(this);
@@ -147,10 +106,10 @@ public class PathWriterImpl implements PathWriter {
 			return current.point();
 		}
 
-		@Override
-		public Direction currentDirection() {
-			return current.bearing();
-		}
+//		@Override
+//		public Direction currentDirection() {
+//			return current.bearing();
+//		}
 
 		@Override
 		public void clear() {
@@ -162,7 +121,7 @@ public class PathWriterImpl implements PathWriter {
 		@Override
 		public List<PathPoint> points() {
 			List<PathPoint> list = new ArrayList<>(points.subList(read, points.size()));
-			read += list.size()-1;
+			read += list.size() - 1;
 			return list;
 		}
 
@@ -196,12 +155,12 @@ public class PathWriterImpl implements PathWriter {
 				strokes.add(this);
 			}
 		}
-		
+
 		@Override
 		public void group(String group) {
 			this.group = group;
 		}
-		
+
 		public String group() {
 			return group;
 		}
@@ -212,5 +171,5 @@ public class PathWriterImpl implements PathWriter {
 			stroke.clear();
 		}
 	}
-	
+
 }

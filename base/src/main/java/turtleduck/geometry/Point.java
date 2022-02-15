@@ -26,7 +26,11 @@ public interface Point extends PositionVector {
 	 * @param otherPoint
 	 * @return
 	 */
-	Direction directionTo(PositionVector otherPoint);
+	default Direction directionTo(PositionVector otherPoint) {
+		return directionTo(otherPoint, Direction.DUE_NORTH);
+	}
+
+	Direction directionTo(PositionVector otherPoint, Direction dflt);
 
 	/**
 	 * Calculate direction towards other point

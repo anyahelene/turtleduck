@@ -2,7 +2,12 @@ package turtleduck.gl;
 
 import static turtleduck.gl.Vectors.*;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL33C.*;
+import static org.lwjgl.opengl.GL11C.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11C.GL_STENCIL_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11C.glClear;
+import static org.lwjgl.opengl.GL11C.glEnable;
+import static org.lwjgl.opengl.GL43C.*;
 
 import org.lwjgl.BufferUtils;
 import static org.lwjgl.system.MemoryUtil.NULL;
@@ -41,15 +46,18 @@ import turtleduck.canvas.Canvas;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
+import turtleduck.display.Viewport;
+import turtleduck.display.Viewport.ViewportBuilder;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
 import turtleduck.gl.objects.CubeModel;
+import turtleduck.gl.objects.FloatMath;
 import turtleduck.gl.objects.ShaderObject;
 import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Uniform;
 import turtleduck.gl.objects.VertexArrayFormat;
-import turtleduck.scene.Camera;
+import turtleduck.display.Camera;
 import turtleduck.scene.SceneNode;
 import turtleduck.scene.SceneObject2;
 import turtleduck.scene.SceneObject3;
@@ -62,43 +70,21 @@ public class GLScreen extends BaseScreen implements Screen {
 	private static final int STD_WIDTH = 1280, STD_HEIGHT = 720;
 
 	private static final boolean DOUBLE_BUFFER = true;
-	private static final boolean WAIT_FOR_SYNC = false;
+	private static final boolean WAIT_FOR_SYNC = true;
 	long window;
 	private boolean sgiVideoSync;
 	private GLCapabilities caps;
 	private Callback debugProc;
 	public ShaderProgram shader2d, shader3d;
 	private final int[] oldWindowGeometry = new int[4];
-	Uniform<Matrix4f> uModel;
-	private Uniform<Matrix4f> uView;
-	private Uniform<Matrix4f> uProjection;
-	private Uniform<Matrix4f> uProjView;
-	public final Matrix4f perspectiveProjectionMatrix = new Matrix4f();
-	public final Matrix4f perspectiveProjectionMatrixInv = new Matrix4f();
-	public final Matrix4f projectionMatrix = new Matrix4f();
-	public final Matrix4f modelMatrix = new Matrix4f();
-	public final Matrix4f viewMatrix = new Matrix4f();
-	public final Matrix4f perspectiveViewMatrix = new Matrix4f();
-	public final Matrix4f projectionMatrixInv = new Matrix4f();
-	public final Matrix4f viewMatrixInv = new Matrix4f();
-//	public final Vector4f lightPosition = vec4(-1.2f,0f,5f, 1f);// .rotateX(pi(1f/8));
+
 	public final Vector4f lightPosition = vec4(0f, -2.5f, -2.5f, 1f);// .rotateX(pi(1f/8));
-	public final Vector4f defaultCameraPosition = vec4(0f, 0f, 25f, 1f);
-	private final Quaternionf defaultCameraOrientation = new Quaternionf(new AxisAngle4f(0, 0, 0, -1));
-	public final Vector4f cameraPosition = vec4(defaultCameraPosition);
-	final Quaternionf cameraOrientation = new Quaternionf(defaultCameraOrientation);
-	private ShaderProgram renderShader;
-	private ShaderProgram blurShader;
-	private CubeModel cubeModel;
-//	private int fbWidth;
-//	private int fbHeight;
-//	private int width;
-//	int height;
+
 	protected GLMouse mouse;
 	private boolean fullscreen;
-	public double fov = 50;
+
 	private boolean wireframe = false;
-	private int frameBuf;
+
 	boolean paused = false;
 	private GLStick joysticks;
 
@@ -106,11 +92,9 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	private GLLayer layer;
 
-	private double zoom;
+	public Camera camera2, camera3;
 
-	private double visibleWidth;
-
-	private double visibleHeight;
+	private int frameBuf;
 
 	@Override
 	public void clearBackground() {
@@ -119,9 +103,15 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	@Override
+	public Screen clear() {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		return this;
+	}
+
+	@Override
 	public Canvas createCanvas() {
-		Canvas canvas = new CanvasImpl<>(newLayerId(), this, dim.winWidth, dim.winHeight,
-				use3d -> layer.pathWriter(use3d), null);
+		Canvas canvas = new CanvasImpl<>(newLayerId(), this, viewport.width(), viewport.height(),
+				use3d -> layer.pathWriter(use3d), () -> layer.clear(), null);
 		return canvas;
 	}
 
@@ -219,30 +209,18 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	@Override
-	public void zoomCycle() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void zoomFit() {
 	}
 
 	@Override
 	public void zoomIn() {
-		fov(fov / 1.05);
+		camera2.zoomIn();
+		camera3.zoomIn();
 	}
 
 	public void fov(double fov) {
-		if (fov < 10.0f) {
-			this.fov = 10.0f;
-		} else if (fov > 120.0f) {
-			this.fov = 120.0f;
-		} else {
-			this.fov = fov;
-		}
-		this.zoom = 50.0 / this.fov;
-		updateProjection();
+		camera2.fov(fov);
+		camera3.fov(fov);
 	}
 
 	@Override
@@ -252,7 +230,8 @@ public class GLScreen extends BaseScreen implements Screen {
 
 	@Override
 	public void zoomOut() {
-		fov(fov * 1.05);
+		camera2.zoomOut();
+		camera3.zoomOut();
 	}
 
 	@Override
@@ -266,16 +245,19 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	public static GLScreen create(int config) {
-		Dimensions dim = computeDimensions(GLDisplayInfo.INSTANCE, config);
+		ViewportBuilder vpb = Viewport.create(GLDisplayInfo.INSTANCE);
+		int w = 1600, h = 900;
+		Viewport vp = vpb.screenArea(0, 0, 0, 0).width(1280).height(720).fit().done();
 
-		return new GLScreen(dim);
+		return new GLScreen(vp);
 	}
 
-	public GLScreen(Dimensions dim) {
-		int width = (int) Math.floor(dim.winWidth);
-		int height = (int) Math.floor(dim.winHeight);
-		this.dim = dim;
-		setupAspects(dim);
+	public GLScreen(Viewport vp) {
+		super(vp);
+
+		camera3 = viewport.create3dCamera();
+		camera2 = viewport.create2dCamera();
+		setupAspects(vp.aspect());
 //			background = new Canvas(dim.fbWidth, dim.fbHeight);
 //			background.getGraphicsContext2D().scale(dim.resolutionScale(), dim.resolutionScale());
 //			setBackground(bgColor);
@@ -286,11 +268,8 @@ public class GLScreen extends BaseScreen implements Screen {
 //						recomputeLayout(false);
 //					});
 
-		init(width, height);
-		System.out.println(dim);
-	}
+		int width = vp.screenWidth(), height = vp.screenHeight();
 
-	protected void init(int width, int height) {
 		glfwSetErrorCallback(this::callbackGlfwError);
 		if (!glfwInit()) {
 			throw new RuntimeException("Failed to initialize OpenGL");
@@ -334,7 +313,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwSetWindowSizeCallback(window, this::callbackWindowSize);
 		glfwSetKeyCallback(window, this::processInput);
 		glfwSetWindowCloseCallback(window, this::callbackWindowClosed);
-		mouse = new GLMouse(this, dim);
+		mouse = new GLMouse(this, viewport);
 		mouse.registerCallbacks(window);
 		joysticks = new GLStick(this);
 		joysticks.init();
@@ -361,6 +340,7 @@ public class GLScreen extends BaseScreen implements Screen {
 				glfwSwapInterval(1);
 			}
 		}
+		glDrawBuffer(GL_FRONT);
 
 		try (MemoryStack frame = MemoryStack.stackPush()) {
 			IntBuffer framebufferSize = frame.mallocInt(2);
@@ -370,17 +350,15 @@ public class GLScreen extends BaseScreen implements Screen {
 		}
 
 		debugProc = GLUtil.setupDebugMessageCallback();
+		glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null,
+				false);
+		glEnable(GL_DEBUG_OUTPUT);
 
 //		glEnable(GL_MULTISAMPLE);
 
 		System.err.println("Creating buffers");
 
 		try {
-			ShaderObject rvs = ShaderObject.create("/turtleduck/gl/shaders/render-vs.glsl", GL_VERTEX_SHADER);
-			ShaderObject rfs = ShaderObject.create("/turtleduck/gl/shaders/render-fs.glsl", GL_FRAGMENT_SHADER);
-			renderShader = ShaderProgram.createProgram("render", rvs, rfs);
-			ShaderObject bfs = ShaderObject.create("/turtleduck/gl/shaders/blur-fs.glsl", GL_FRAGMENT_SHADER);
-			blurShader = ShaderProgram.createProgram("blur", rvs, bfs);
 			ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/simple-vs.glsl", GL_VERTEX_SHADER);
 			ShaderObject fs = ShaderObject.create("/turtleduck/gl/shaders/color-fs.glsl", GL_FRAGMENT_SHADER);
 			shader3d = ShaderProgram.createProgram("shader3d", vs, fs);
@@ -390,6 +368,7 @@ public class GLScreen extends BaseScreen implements Screen {
 			VertexArrayFormat format = new VertexArrayFormat();
 			format.addField("aPos", Vector3f.class);
 			format.addField("aColor", Color.class);
+			format.addField("aTexCoord", Vector2f.class);
 			VertexArrayFormat format3 = new VertexArrayFormat();
 			format3.addField("aPos", Vector3f.class);
 			format3.addField("aColor", Color.class);
@@ -411,21 +390,21 @@ public class GLScreen extends BaseScreen implements Screen {
 			e.printStackTrace();
 //			throw new RuntimeException("Error loading shaders", e);
 		}
-		cubeModel = new CubeModel();
-		cubeModel.scale(.2f, 0.05f, .1f);
 
 		fov(50);
-		updateProjection();
-		updateView();
-
+		camera2.updateProjection();
+		camera2.updateView();
+		camera3.updateProjection();
+		camera3.updateView();
 		glfwSetCursorPos(window, width / 2, height / 2);
 		glClearColor(0.1f, 0.15f, 0.15f, 0.0f);
 		glClearColor(0f, 0f, 0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glfwPollEvents();
 		mouse.callbackMousePosition(0, width / 2, height / 2);
-
-		layer = new GLLayer(newLayerId(), this, dim.winWidth, dim.winHeight);
+System.out.println("new layer");
+		layer = new GLLayer(newLayerId(), this, camera2, camera3, viewport.width(), viewport.height());
+		System.out.println(layer);
 		addLayer(layer);
 	}
 
@@ -443,12 +422,12 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	public void callbackFramebufferSize(long window, int width, int height) {
-		if (width > 0 && height > 0 && (dim.winWidth != width || dim.winHeight != height)) {
-			dim.winWidth = width;
-			dim.winHeight = height;
-			glViewport(0, 0, width, height);
+		if (width > 0 && height > 0 && (viewport.screenWidth() != width || viewport.screenHeight() != height)) {
+			recomputeDimensions(0, 0, width, height);
+			glViewport(viewport.screenX(), viewport.screenY(), viewport.screenWidth(), viewport.screenHeight());
 			createBuffers();
-			updateProjection();
+			camera2.updateProjection();
+			camera3.updateProjection();
 			System.err.println("Framebuffer size: " + width + ", " + height);
 		}
 	}
@@ -465,9 +444,9 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	public void callbackWindowSize(long window, int width, int height) {
-		if (width > 0 && height > 0 && (dim.winWidth != width || dim.winHeight != height)) {
-			dim.winWidth = width;
-			dim.winHeight = height;
+		if (width > 0 && height > 0 && (viewport.screenWidth() != width || viewport.screenHeight() != height)) {
+//			recomputeDimensions(200, 200, width-200, height-200);
+
 			System.err.println("Window size: " + width + ", " + height);
 		}
 	}
@@ -513,6 +492,26 @@ public class GLScreen extends BaseScreen implements Screen {
 			glfwSetWindowShouldClose(window, true);
 			callbackWindowClosed(window);
 		} else if (mods == 0) {
+			if (key == GLFW_KEY_A) {
+				camera2.position.add(-8f, 0, 0, 0);
+				camera2.updateView();
+			} else if (key == GLFW_KEY_S) {
+				camera2.position.add(0, 8f, 0, 0);
+				camera2.updateView();
+			} else if (key == GLFW_KEY_D) {
+				camera2.position.add(8f, 0, 0, 0);
+				camera2.updateView();
+			} else if (key == GLFW_KEY_W) {
+				camera2.position.add(0, -8f, 0, 0);
+				camera2.updateView();
+			} else if (key == GLFW_KEY_Q) {
+				camera2.orientation.rotateLocalZ(-FloatMath.PI / 8f);
+				camera2.updateView();
+			} else if (key == GLFW_KEY_E) {
+				camera2.orientation.rotateLocalZ(FloatMath.PI / 8f);
+				camera2.updateView();
+
+			}
 		} else if (mods == GLFW_MOD_ALT)
 			if (key == GLFW_KEY_W) {
 				wireframe = !wireframe;
@@ -532,7 +531,8 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	public Vector2f deviceToScreen(double x, double y, Vector2f dest) {
-		dest.set((2f * (float) x + 1f) / (float) dim.winWidth - 1f, (2f * (float) y + 1f) / (float) dim.winHeight - 1f);
+		dest.set((2f * (float) x + 1f) / (float) viewport.screenWidth() - 1f,
+				(2f * (float) y + 1f) / (float) viewport.screenHeight() - 1f);
 		return dest;
 	}
 
@@ -549,98 +549,18 @@ public class GLScreen extends BaseScreen implements Screen {
 		// coord.mul(0.5f,0.5f);
 	}
 
-	/**
-	 * Reverse project a screen position to a position in object space.
-	 *
-	 * @param mousePos A screen position
-	 * @return A new vector representing a position somewhere on a line through the
-	 *         camera and the given screen position
-	 */
-	public Vector3f unproject(Vector2f mousePos) {
-		Vector3f v = vec3(mousePos, 0f);
-		projectionMatrixInv.transformProject(v);
-		viewMatrixInv.transformPosition(v);
-
-		return v;
-	}
-
-	/**
-	 * Reverse project a screen position to a position in object space, store result
-	 * in dest.
-	 *
-	 * @param mousePos A screen position
-	 * @return dest
-	 */
-	public Vector3f unproject(Vector2i mousePos, Vector3f dest) {
-		dest.set(mousePos, 0);
-		projectionMatrixInv.transformProject(dest);
-		viewMatrixInv.transformPosition(dest);
-
-		return dest;
-	}
-
-	/**
-	 * Project pos according to current view and projection matrices.
-	 *
-	 * @param pos
-	 * @return A new vector, P*V*pos
-	 */
-	public Vector3f project(Vector3f pos) {
-		Vector3f v = vec3(pos);
-		viewMatrix.transformPosition(v);
-		projectionMatrix.transformProject(v);
-
-		return v;
-	}
-
-	public void updateProjection() {
-		visibleWidth = dim.canvasWidth;
-		visibleHeight = dim.canvasHeight = (dim.canvasWidth * dim.winHeight / dim.winWidth);
-		float w = (float) visibleWidth, h = (float) visibleHeight;
-		perspectiveProjectionMatrix.setPerspective((float) Math.toRadians(fov), (float) (dim.winWidth / dim.winHeight),
-				1f, 1000.0f);
-		perspectiveProjectionMatrix.invertPerspective(perspectiveProjectionMatrixInv);
-		projectionMatrix.setOrtho(-w / 2, w / 2, -h / 2, h / 2, -1, 1);
-		projectionMatrix.scale(1, -1, 1);
-		projectionMatrix.scale((float) zoom);
-		projectionMatrix.invertOrtho(projectionMatrixInv);
-		System.err.println(projectionMatrix.transformProject(new Vector3f(0, 0, 0)));
-		System.err.println(projectionMatrix.transformProject(new Vector3f(640, 0, 0)));
-		System.err.println(projectionMatrix.transformProject(new Vector3f(-640, 0, 0)));
-		System.err.println(projectionMatrix.transformProject(new Vector3f(0, 360, 0)));
-		System.err.println(projectionMatrix.transformProject(new Vector3f(0, -360, 0)));
-//		if (uProjection != null) {
-//			uProjection.set(projectionMatrix);
-//		}
-	}
-
-	public void updateView() {
-		cameraOrientation.get(perspectiveViewMatrix);
-		perspectiveViewMatrix.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z).scale(1f / 16f);
-		viewMatrix.identity();
-		viewMatrix.invertAffine(viewMatrixInv);
-//		if (uView != null) {
-//			uView.set(viewMatrix);
-//		}
-//		if (uProjView != null) {
-//			uProjView.set(new Matrix4f(projectionMatrix).mul(viewMatrix));
-//		}
-	}
-
 	@Override
 	protected void recomputeLayout(boolean b) {
 		// TODO Auto-generated method stub
 
 	}
 
-	Stats stats = new Stats();
 
 	public void render() {
 //		updateProjection();
 //		updateView();
 
 //		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuf);
-		stats.startFrame();
 		glfwPollEvents();
 		joysticks.processInput();
 		if (wireframe) {
@@ -679,14 +599,13 @@ public class GLScreen extends BaseScreen implements Screen {
 				}
 
 				@Override
-				public Void visitCamera(Camera camera, GLRenderContext context) {
+				public Void visitCamera(turtleduck.scene.Camera camera, GLRenderContext context) {
 					context.proj = new Matrix4f();
 					if (camera.isPerspective())
-						context.proj.setPerspective((float) camera.fieldOfView(),
-								(float) (dim.winWidth / dim.winHeight), (float) camera.nearClip(),
-								(float) camera.farClip());
+						context.proj.setPerspective((float) camera.fieldOfView(), (float) viewport.aspect(),
+								(float) camera.nearClip(), (float) camera.farClip());
 					else
-						context.proj.setOrtho(0, (float) dim.canvasWidth, 0, (float) dim.canvasHeight,
+						context.proj.setOrtho(0, (float) viewport.width(), 0, (float) viewport.height(),
 								(float) camera.nearClip(), (float) camera.farClip());
 //					Orientation orient = camera.orientation();
 //					Matrix4f view = orient.toMatrix(new Matrix4f());
@@ -707,32 +626,21 @@ public class GLScreen extends BaseScreen implements Screen {
 		glCullFace(GL_BACK);
 		glDisable(GL_CULL_FACE);
 //		glDisable(GL_FRAMEBUFFER_SRGB); 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		shader2d.bind();
-		modelMatrix.identity();
+//		shader2d.bind();
+//		modelMatrix.identity();
 //		uModel.set(modelMatrix);
 
 		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
 		glDepthMask(true);
-//		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
 		forEachLayer(true, (l) -> ((GLLayer) l).render(true, false));
 
-		glEnable(GL_DEPTH_TEST);
 		glDepthMask(false);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-//		glEnable(GL_CULL_FACE);
-//		glDisable(GL_CULL_FACE);
 		forEachLayer(false, (l) -> ((GLLayer) l).render(false, !paused));
-		glDepthMask(true);
-		glDisable(GL_BLEND);
-
-//		shader3d.bind();
-//		cubeModel.moveTo(-0,0, 3);
-//		cubeModel.rotate(0.01f, 0.01f, 0.01f);
-//		cubeModel.scale(2f);
-//		cubeModel.render(this);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -741,16 +649,16 @@ public class GLScreen extends BaseScreen implements Screen {
 			glDrawBuffer(GL_BACK);
 //			 glBlitFramebuffer(0, 0, width, height, 0, 0, fbWidth, fbHeight, GL_COLOR_BUFFER_BIT/*|GL_DEPTH_BUFFER_BIT*/, GL_LINEAR);
 			glfwSwapBuffers(window);
+//			glFinish();
 		} else {
-//			glFlush();
-			glFinish();
+			glFlush();
+//			glFinish();
 			if (sgiVideoSync) {
 				int[] count = new int[1];
 				GLXSGIVideoSync.glXGetVideoSyncSGI(count);
 				GLXSGIVideoSync.glXWaitVideoSyncSGI(2, (count[0] + 1) % 2, count);
 			}
 		}
-		stats.endFrame(true);
 	}
 
 	public void dispose() {

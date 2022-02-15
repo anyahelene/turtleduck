@@ -6,8 +6,8 @@ import turtleduck.canvas.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.messaging.CanvasService;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.turtle.impl.BaseNavigatorImpl;
-import turtleduck.turtle.impl.PathPointImpl;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 
@@ -25,12 +25,12 @@ public class SpriteImpl extends BaseNavigatorImpl<Sprite> implements Sprite {
 
 	@Override
 	protected void addPoint(PathPointImpl point) {
-		System.out.println("old: " + point.point + ", " + point.bearing);
+		System.out.println("old: " + point.point + ", ");
 	}
 
 	@Override
 	public Sprite update() {
-		matrix.translation(current.point.x(), current.point.y()).rotate(current.bearing.radians());
+		matrix.translation(current.point.x(), current.point.y()).rotate(direction.radians());
 		Dict dict = Dict.create();
 		dict.put("_transform", // String.format("matrix(%f, %f, %f, %f, %f, %f)", //
 				Array.of(matrix.m00, matrix.m01, matrix.m10, //

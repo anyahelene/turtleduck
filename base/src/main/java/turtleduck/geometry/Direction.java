@@ -1,15 +1,16 @@
 package turtleduck.geometry;
 
-import org.joml.Vector3f;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
 
 import turtleduck.geometry.impl.AngleImpl;
-import turtleduck.geometry.impl.OrientImpl;
+import turtleduck.geometry.impl.DirVecImpl;
 
 public interface Direction {
-	static final int DEGREES_NORTH = -90, DEGREES_WEST = 180, DEGREES_SOUTH = 90, DEGREES_EAST = 0;
+	static final int DEGREES_NORTH = 90, DEGREES_WEST = 180, DEGREES_SOUTH = -90, DEGREES_EAST = 0;
 	static final Direction DUE_NORTH = absolute(DEGREES_NORTH), DUE_WEST = absolute(DEGREES_WEST),
 			DUE_SOUTH = absolute(DEGREES_SOUTH), DUE_EAST = absolute(DEGREES_EAST);
-	static final Direction FORWARD = relative(0), RIGHT = relative(90), BACK = relative(180), LEFT = relative(-90);
+	static final Direction FORWARD = relative(0), RIGHT = relative(-90), BACK = relative(180), LEFT = relative(90);
 
 	/**
 	 * Create a new absolute direction
@@ -194,39 +195,73 @@ public interface Direction {
 	double altDegrees();
 
 	/**
-	 * Find a Vector3f perpendicular to this direction
+	 * Find a Vector3d perpendicular to this direction
 	 * 
-	 * The result is written to *dest*, or a new vector is created if *dest* is
-	 * null.
+	 * The result is written to *dest*
 	 * 
-	 * @param dest destination vector or null
-	 * @return a vector perpendicular to {@link #directionVector(Vector3f)}
+	 * @param dest destination vector, not null
+	 * @return dest, set to a vector perpendicular to
+	 *         {@link #directionVector(Vector3d)}
 	 */
-	Vector3f perpendicular(Vector3f dest);
+	Vector3d perpendicular(Vector3d dest);
 
 	/**
-	 * Convert to Vector3f
+	 * Find a Vector3d perpendicular to this direction
 	 * 
-	 * The result is written to *dest*, or a new vector is created if *dest* is
-	 * null.
+	 * The result might be a shared constant.
 	 * 
-	 * @param dest destination vector or null
+	 * @return a vector perpendicular to this direction
+	 */
+	default Vector3dc perpendicular() {
+		return perpendicular(new Vector3d());
+	}
+
+	/**
+	 * Convert to Vector3d
+	 * 
+	 * The result is written to *dest*
+	 * 
+	 * @param dest destination vector, not null
+	 * @return dest, set to this direction
+	 */
+	Vector3d directionVector(Vector3d dest);
+
+	/**
+	 * Convert to Vector3d
+	 * 
+	 * For 3D directions, the result is most likely a shared constant.
+	 * 
 	 * @return this direction as a vector
 	 */
-	Vector3f directionVector(Vector3f dest);
+	default Vector3dc directionVector() {
+		return directionVector(new Vector3d());
+	}
 
 	/**
 	 * Get the normal (the "up" direction) of this direction.
 	 * 
-	 * The result is written to *dest*, or a new vector is created if *dest* is
-	 * null.
+	 * The result is written to *dest*
 	 * 
 	 * For 2D directions this will be (0,0,1), i.e., the Z-axis points up.
 	 * 
 	 * @param dest destination vector or null
-	 * @return the normal
+	 * @return dest, set to this direction's normal
 	 */
-	Vector3f normalVector(Vector3f dest);
+	Vector3d normalVector(Vector3d dest);
+
+	/**
+	 * Get the normal (the "up" direction) of this direction.
+	 * 
+	 * The result might be a shared constant.
+	 * 
+	 * For 2D directions this will be a shared constant (0,0,1), i.e., the Z-axis
+	 * points up.
+	 * 
+	 * @return this direction's normal vector
+	 */
+	default Vector3dc normalVector() {
+		return normalVector(new Vector3d());
+	}
 
 	/**
 	 * Rotate *angle* degrees
@@ -269,5 +304,11 @@ public interface Direction {
 	 * @return True if the difference between this and other is < 10e-6
 	 */
 	boolean like(Direction other);
+
+	Direction rotateTo(Direction other);
+
+	Orientation toOrientation();
+
+	Direction rotateTo(double angle);
 
 }

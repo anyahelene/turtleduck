@@ -4,8 +4,11 @@
 		<groupId>org.nuthatchery</groupId>
 		<artifactId>turtleduck</artifactId>
 		<version>0.1.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
-
+	<artifactId>turtleduck-gl</artifactId>
+	<packaging>jar</packaging>
+	<name>TurtleDuck OpenGL Backend</name>
 	<profiles>
 		<profile>
 			<id>lwjgl-natives-linux-amd64</id>
@@ -56,6 +59,18 @@
 			</properties>
 		</profile>
 		<profile>
+			<id>lwjgl-natives-macos-aarch64</id>
+			<activation>
+				<os>
+					<family>mac</family>
+					<arch>aarch64</arch>
+				</os>
+			</activation>
+			<properties>
+				<lwjgl.natives>natives-macos-arm64</lwjgl.natives>
+			</properties>
+		</profile>
+		<profile>
 			<id>lwjgl-natives-windows-amd64</id>
 			<activation>
 				<os>
@@ -67,6 +82,30 @@
 				<lwjgl.natives>natives-windows</lwjgl.natives>
 			</properties>
 		</profile>
+		<profile>
+			<id>lwjgl-natives-windows-x86</id>
+			<activation>
+				<os>
+					<family>windows</family>
+					<arch>x86</arch>
+				</os>
+			</activation>
+			<properties>
+				<lwjgl.natives>natives-windows-x86</lwjgl.natives>
+			</properties>
+		</profile>
+		<profile>
+			<id>lwjgl-natives-windows-aarch64</id>
+			<activation>
+				<os>
+					<family>windows</family>
+					<arch>aarch64</arch>
+				</os>
+			</activation>
+			<properties>
+				<lwjgl.natives>natives-windows-arm64</lwjgl.natives>
+			</properties>
+		</profile>
 	</profiles>
 
 	<properties>
@@ -74,9 +113,7 @@
 		<joml.version>1.9.25</joml.version>
 	</properties>
 
-	<artifactId>turtleduck-gl</artifactId>
-	<packaging>jar</packaging>
-	<name>TurtleDuck OpenGL Backend</name>
+
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>

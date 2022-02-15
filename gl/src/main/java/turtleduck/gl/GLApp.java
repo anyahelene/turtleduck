@@ -13,6 +13,10 @@ public class GLApp {
 	private static long startMillis = 0, appTime = 0, appFrames = 0;
 	private static GLScreen screen;
 	private TurtleDuckApp app;
+	private int cam2rev = 0, cam3rev = 0;
+	private int step = 0;
+	Stats stats = new Stats();
+	private boolean autoClear = true;
 
 	public GLApp(String[] args, TurtleDuckApp app) {
 		this.app = app;
@@ -39,15 +43,29 @@ public class GLApp {
 
 	public void mainLoop() {
 		while (!glfwWindowShouldClose(screen.window)) {
+//			screen.clear();
+			stats.startFrame();
+			if (step < 0 || screen.camera2.revision != cam2rev || screen.camera3.revision != cam3rev) {
+				cam2rev = screen.camera2.revision;
+				cam3rev = screen.camera3.revision;
+				screen.getGLLayer().clear();
+				app.smallStep(0);
+			} else if (autoClear) {
+				screen.getGLLayer().clear();
+			}
 			if (!screen.paused)
 				app.bigStep(0.1);
+			stats.startRender();
 			screen.render();
+			stats.endFrame(true);
+
 			try {
 				Thread.sleep(0);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 				throw new RuntimeException("Interrupted!", e);
 			}
+			step++;
 		}
 
 	}

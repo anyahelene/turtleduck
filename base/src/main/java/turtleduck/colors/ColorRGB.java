@@ -119,7 +119,8 @@ public class ColorRGB implements Color {
 	public Color opacity(double a) {
 		if (a < 0 || a > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + a + ")");
-		return new ColorRGB(red, green, blue, (float) a, true);
+		float f = (float) a;
+		return new ColorRGB(red*f, green*f, blue*f, f, true);
 	}
 
 	@Override

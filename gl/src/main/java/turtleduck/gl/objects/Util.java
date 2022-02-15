@@ -14,8 +14,10 @@ import org.lwjgl.BufferUtils;
 /**
  * From {@link org.lwjgl.demo.opengl.util.DemoUtils}.
  * 
- * <p>Copyright © 2012-present Lightweight Java Game Library. All rights
- * reserved. License terms: <a href="https://www.lwjgl.org/license">https://www.lwjgl.org/license</a>
+ * <p>
+ * Copyright © 2012-present Lightweight Java Game Library. All rights reserved.
+ * License terms:
+ * <a href="https://www.lwjgl.org/license">https://www.lwjgl.org/license</a>
  * 
  * @author <a href="https://www.lwjgl.org/">LWJGL</a>
  * 
@@ -26,7 +28,7 @@ public class Util {
 	 * Reads the specified resource and returns the raw data as a ByteBuffer.
 	 *
 	 * 
-	 * @param url   the url to read
+	 * @param url        the url to read
 	 * @param bufferSize the initial buffer size
 	 *
 	 * @return the resource data
@@ -56,7 +58,10 @@ public class Util {
 						break;
 					}
 					if (buffer.remaining() < bytes) {
-						buffer = resizeBuffer(buffer, buffer.capacity() * 2);
+						int needed = buffer.capacity() + bytes - buffer.remaining();
+						System.err.println("Need space for " + bytes + ", got " + buffer.remaining()
+								+ ", increasing to " + needed);
+						buffer = resizeBuffer(buffer, needed);
 					}
 					buffer.put(buf, 0, bytes);
 				}
@@ -65,6 +70,7 @@ public class Util {
 		}
 		return buffer;
 	}
+
 	/**
 	 * Reads the specified resource and returns the raw data as a ByteBuffer.
 	 *
@@ -84,7 +90,7 @@ public class Util {
 		} else {
 			return urlToByteBuffer(url, bufferSize);
 		}
-		
+
 	}
 
 	private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {

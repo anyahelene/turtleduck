@@ -92,16 +92,18 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 			if (image == null) {
 				throw new IOException("Failed to load image: " + stbi_failure_reason());
 			}
-			int intformat = GL_RGB8, format = GL_RGB;
-			if (channels == 4) {
-				intformat = GL_RGBA8;
-				intformat = GL_SRGB_ALPHA;
-				format = GL_RGBA;
-			} else if (channels == 1) {
-				intformat = GL_R8;
-				format = GL_RED;
-			}
+			int format = formatFromChannels(channels);
+			int intformat = internalFormatFromFormat(format, params.srgb);
+
 			glTexImage2D(params.type, 0, intformat, w.get(0), h.get(0), 0, format, GL_UNSIGNED_BYTE, image);
+			byte[] imgData = null;
+			if (params.readable) {
+				int position = image.position();
+				imgData = new byte[image.limit()];
+				image.rewind();
+				image.get(imgData);
+				image.position(position);
+			}
 			stbi_image_free(image);
 			image = null;
 			if (params.genMipMap) {
@@ -109,6 +111,8 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 			}
 
 			TextureData data = new TextureData(tex, params.type, w.get(0), h.get(0), 0, channels, pathName);
+			if (imgData != null)
+				data.imgData = imgData;
 			textures.put(pathName, data);
 			tex = 0;
 			return new Texture(data);
@@ -176,7 +180,7 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 				if (format == 0) {
 					format = formatFromChannels(params.channels);
 				}
-				int intformat = internalFormatFromFormat(format);
+				int intformat = internalFormatFromFormat(format, params.srgb);
 				glTexImage2D(params.type, 0, intformat, params.width, params.height, 0, format, GL_UNSIGNED_BYTE, buf);
 			}
 			TextureData data = new TextureData(tex, params.type, params.width, params.height, params.depth, 3, name);
@@ -194,28 +198,30 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 		switch (nChannels) {
 		case 0:
 		case 4:
-			return GL_RGBA8;
+			return GL_RGBA;
 		case 1:
-			return GL_R8;
+			return GL_DEPTH_COMPONENT; // GL_RED;
 		case 2:
-			return GL_RG8;
+			return GL_DEPTH_STENCIL; // GL_RG;
 		case 3:
-			return GL_RGB8;
+			return GL_RGB;
 		default:
 			throw new IllegalArgumentException("" + nChannels);
 		}
 	}
 
-	public static int internalFormatFromFormat(int format) {
+	public static int internalFormatFromFormat(int format, boolean srgb) {
 		switch (format) {
-		case GL_R8:
-			return GL_RED;
-		case GL_RG8:
-			return GL_RG;
-		case GL_RGB8:
-			return GL_RGB;
-		case GL_RGBA8:
-			return GL_RGBA;
+		case GL_DEPTH_COMPONENT:
+		case GL_RED:
+			return GL_R8;
+		case GL_DEPTH_STENCIL:
+		case GL_RG:
+			return GL_RG8;
+		case GL_RGB:
+			return srgb ? GL_SRGB8 : GL_RGB8;
+		case GL_RGBA:
+			return srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8;
 		default:
 			throw new UnsupportedOperationException("Don't know which format corresponds to " + format);
 		}
@@ -243,6 +249,18 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 
 	public String getPath() {
 		return data().name;
+	}
+
+	public byte read(int index) {
+		byte[] imgData = data().imgData;
+		if (imgData != null)
+			return imgData[index];
+		else
+			return 0;
+	}
+
+	public boolean isReadable() {
+		return data().imgData != null;
 	}
 
 	/**
@@ -295,6 +313,7 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 	}
 
 	static class TextureData extends DataObject {
+		public byte[] imgData;
 		final int width;
 		final int height;
 		final int depth;
@@ -323,6 +342,8 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 		int channels = 0;
 		boolean multisample = false;
 		boolean genMipMap = true;
+		boolean readable = false;
+		boolean srgb = true;
 
 		public int getType() {
 			switch (dim + (multisample ? 10 : 0)) {
@@ -369,6 +390,11 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 			return this;
 		}
 
+		public TextureParams readable() {
+			readable = true;
+			return this;
+		}
+
 		public TextureParams multisample(boolean enable) {
 			multisample = enable;
 			return this;
@@ -390,31 +416,89 @@ public class Texture extends DataHandle<Texture, Texture.TextureData> {
 			return this;
 		}
 
+		/**
+		 * Specifise *nearest* interpolation for rimage scaling
+		 * 
+		 * @return this
+		 */
 		public TextureParams nearest() {
 			filter(GL_NEAREST);
 			return this;
 		}
 
+		/**
+		 * Specifies *linear* interpolation for image scaling
+		 * 
+		 * @return this
+		 */
 		public TextureParams linear() {
 			filter(GL_LINEAR);
 			return this;
 		}
 
+		/**
+		 * The texture contains linear data rather than nonlinear/sRGB colors
+		 * 
+		 * This is likely the case for non-image data, and is the default for one or two
+		 * channels. For grayscale images, use {@link #nonlinearColor()} (which is
+		 * already the default for color images).
+		 * 
+		 * @return this
+		 * @see #nonlinearColor()
+		 */
+		public TextureParams linearColor() {
+			srgb = false;
+			return this;
+		}
+
+		/**
+		 * The texture contains nonlinear/sRGB color data.
+		 * 
+		 * This is the default for three or four channels, and should be correct for
+		 * normal images. For grayscale images this should be enabled manually.
+		 * 
+		 * @return this
+		 * @see #linearColor()
+		 */
+		public TextureParams nonlinearColor() {
+			srgb = false;
+			return this;
+		}
+
+		/**
+		 * @param nChannels number of color/data channels (1–4)
+		 * @return this
+		 */
 		public TextureParams channels(int nChannels) {
 			channels = nChannels;
 			return this;
 		}
 
+		/**
+		 * Use *mirrored repeat* texture wrapping.
+		 * 
+		 * @return this
+		 */
 		public TextureParams mirroredRepeat() {
 			wrap(GL_MIRRORED_REPEAT, GL_MIRRORED_REPEAT, GL_MIRRORED_REPEAT);
 			return this;
 		}
 
+		/**
+		 * Use *repeat* texture wrapping.
+		 * 
+		 * @return this
+		 */
 		public TextureParams repeat() {
 			wrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
 			return this;
 		}
 
+		/**
+		 * Use *clamp to edge* texture wrapping.
+		 * 
+		 * @return this
+		 */
 		public TextureParams clamp() {
 			wrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 			return this;

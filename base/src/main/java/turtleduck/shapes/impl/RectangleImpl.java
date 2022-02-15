@@ -7,9 +7,9 @@ import turtleduck.geometry.Point;
 import turtleduck.paths.PathStroke;
 import turtleduck.paths.PathWriter;
 import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.shapes.Rectangle;
 import turtleduck.shapes.Rectangle.RectangleBuilder;
-import turtleduck.turtle.impl.PathPointImpl;
 
 public class RectangleImpl extends BaseShapeWxH<Rectangle.RectangleBuilder>
 		implements Rectangle.RectangleBuilder {

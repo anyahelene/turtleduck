@@ -4,30 +4,32 @@ import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
 import turtleduck.paths.Path;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.turtle.Navigator;
 
 public abstract class BaseNavigatorImpl<T extends Navigator<T>> implements Navigator<T>, Cloneable {
 	protected boolean recordMoves = false;
 	protected boolean recordTurns = false;
 	protected PathPointImpl current;
+	protected Direction direction;
 
 	public BaseNavigatorImpl(BaseNavigatorImpl<?> old) {
 		current = old.current.copy();
+		direction = old.direction;
 	}
 
 	public BaseNavigatorImpl(Point p, Direction b) {
 		current = new PathPointImpl();
 		current.point = p;
-		current.bearing = b;
-		current.incoming = b;
+		direction = b;
 		current.type = Path.PointType.POINT;
 	}
 
-	protected abstract void addPoint(PathPointImpl point); 
+	protected abstract void addPoint(PathPointImpl point);
 
 	@Override
 	public Direction direction() {
-		return current.bearing;
+		return direction;
 	}
 
 	@Override
@@ -35,31 +37,31 @@ public abstract class BaseNavigatorImpl<T extends Navigator<T>> implements Navig
 		return current.point;
 	}
 
+	public T go(double dist) {
+		if (dist != 0) {
+			PathPointImpl pp = current.copy();
+			pp.point = pp.point.add(direction, dist);
+			addPoint(pp);
+			current = pp;
+		}
+		return (T) this;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public T go(PositionVector off, RelativeTo rel) {
 		PathPointImpl pp = current.copy();
 		pp.point = findPoint(off, rel);
-		pp.incoming = current.bearing; // current.point.bearingTo(pp.point);
-		addPoint(pp);
-		current = pp;
+		if (!pp.point.equals(current.point)) {
+			addPoint(pp);
+			current = pp;
+		}
 		return (T) this;
 	}
 
-//	protected void updateBearing(Direction b) {
-//		if (recordTurns) {
-//			PathPointImpl pp = current.copy();
-//			pp.bearing = current.bearing.add(b);
-//			addPoint(pp);
-//			current = pp;
-//		} else {
-//			current.bearing = current.bearing.add(b);
-//		}
-//	}
-
 	@SuppressWarnings("unchecked")
 	public T turnTo(PositionVector dest) {
-		direction(Direction.absolute(dest.x() - current.point.x(), dest.y() - current.point.y()).sub(current.bearing));
+		direction(current.point.directionTo(dest));
 		return (T) this;
 	}
 
@@ -67,9 +69,9 @@ public abstract class BaseNavigatorImpl<T extends Navigator<T>> implements Navig
 	@Override
 	public T direction(Direction dest) {
 		if (dest.isAbsolute())
-			current.bearing = dest;
+			direction = direction.rotateTo(dest);
 		else
-			current.bearing = current.bearing.add(dest);
+			direction = direction.add(dest);
 		return (T) this;
 	}
 
@@ -90,17 +92,17 @@ public abstract class BaseNavigatorImpl<T extends Navigator<T>> implements Navig
 
 	@Override
 	public double dirX() {
-		return current.bearing.dirX();
+		return direction.dirX();
 	}
 
 	@Override
 	public double dirY() {
-		return current.bearing.dirY();
+		return direction.dirY();
 	}
 
 	@Override
 	public double dirZ() {
-		return current.bearing.dirZ();
+		return direction.dirZ();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -109,7 +111,6 @@ public abstract class BaseNavigatorImpl<T extends Navigator<T>> implements Navig
 		if (!isAt(dest)) {
 			PathPointImpl pp = current.copy();
 			pp.point = dest;
-			pp.incoming = current.bearing; // current.point.bearingTo(pp.point);
 			addPoint(pp);
 			current = pp;
 		}
@@ -122,16 +123,22 @@ public abstract class BaseNavigatorImpl<T extends Navigator<T>> implements Navig
 
 	@Override
 	public Point findPoint(PositionVector point, RelativeTo rel) {
+		Point dest;
 		switch (rel) {
 		case POSITION:
-			return current.point.add(point);
+			dest = current.point.add(point);
+			break;
 		case SELF:
-			return current.point.add(current.bearing, point.y()); // TODO
+			dest = current.point.add(direction, point.y()); // TODO
+			break;
 		case WORLD:
-			return Point.point(point);
+			dest = Point.point(point);
+			break;
 		default:
 			throw new IllegalStateException();
 		}
+
+		return dest;
+
 	}
-	
 }

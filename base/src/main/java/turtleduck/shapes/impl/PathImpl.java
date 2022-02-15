@@ -7,9 +7,9 @@ import turtleduck.geometry.Point;
 import turtleduck.paths.PathStroke;
 import turtleduck.paths.PathWriter;
 import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.shapes.Path;
 import turtleduck.shapes.Path.PathBuilder;
-import turtleduck.turtle.impl.PathPointImpl;
 
 public class PathImpl extends BaseShapeImpl<Path.PathBuilder> implements Path.PathBuilder {
 	protected boolean closed;

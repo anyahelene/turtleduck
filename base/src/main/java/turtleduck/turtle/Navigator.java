@@ -41,7 +41,6 @@ public interface Navigator<T extends Navigator<T>> extends BaseNavigator<T> {
 	 */
 	default T turnTo(PositionVector to, RelativeTo rel) {
 		Point p = findPoint(to, rel);
-		point().directionTo(p);
 		return direction(point().directionTo(p));
 	}
 
@@ -92,9 +91,7 @@ public interface Navigator<T extends Navigator<T>> extends BaseNavigator<T> {
 	 * @param dist Distance to move
 	 * @return {@code this}, for sending more commands
 	 */
-	default T forward(double distance) {
-		return go(Point.point(0, distance), RelativeTo.SELF);
-	}
+	T go(double distance);
 
 	/**
 	 * Move a distance in the given direction

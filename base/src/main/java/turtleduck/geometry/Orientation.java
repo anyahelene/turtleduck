@@ -3,6 +3,9 @@ package turtleduck.geometry;
 import org.joml.Matrix4f;
 import org.joml.Quaterniond;
 import org.joml.Quaternionf;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
+import org.joml.Vector3fc;
 
 import turtleduck.geometry.impl.OrientImpl;
 
@@ -34,6 +37,15 @@ public interface Orientation extends Direction {
 
 	public static Orientation relativeVec(double dx, double dy, double dz) {
 		return OrientImpl.relativeVec(dx, dy, dz);
+	}
+
+	public static Orientation orientation(Point from, Point to) {
+		Quaterniond q = new Quaterniond();
+		Vector3d a = from.toVector(new Vector3d());
+		Vector3d b = to.toVector(new Vector3d());
+		b.sub(a);
+
+		return new OrientImpl(b, true);
 	}
 
 	/**
@@ -99,4 +111,8 @@ public interface Orientation extends Direction {
 	Quaternionf toQuaternion(Quaternionf dest);
 
 	Matrix4f toMatrix(Matrix4f dest);
+	
+	Orientation rotateTo(Direction other);
+	Orientation rotateTo(double angle);
+
 }

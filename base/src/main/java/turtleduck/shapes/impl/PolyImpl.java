@@ -7,9 +7,9 @@ import turtleduck.geometry.Point;
 import turtleduck.paths.PathStroke;
 import turtleduck.paths.PathWriter;
 import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.shapes.Poly;
 import turtleduck.shapes.Poly.LineBuilder;
-import turtleduck.turtle.impl.PathPointImpl;
 
 public class PolyImpl extends BaseShapeImpl<Poly.LineBuilder> implements Poly.LineBuilder {
 	protected boolean closed;

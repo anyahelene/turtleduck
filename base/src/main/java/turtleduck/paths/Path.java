@@ -6,7 +6,7 @@ import java.util.List;
 import turtleduck.colors.Color;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
-import turtleduck.turtle.impl.PathPointImpl;
+import turtleduck.paths.impl.PathPointImpl;
 
 public interface Path {
 	/**

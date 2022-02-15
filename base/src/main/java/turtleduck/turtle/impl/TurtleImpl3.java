@@ -35,16 +35,14 @@ public class TurtleImpl3<THIS extends BaseTurtle3<THIS, RESULT>, RESULT> extends
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS pitch(double angle) {
-		current.bearing = current.bearing.pitch(angle);
-		current.rotation += String.format("[pitch%+.1f°]", angle);
+		direction = direction.pitch(angle);
 		return (THIS) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS roll(double angle) {
-		current.bearing = current.bearing.roll(angle);
-		current.rotation += String.format("[roll%+.1f°]", angle);
+		direction = direction.roll(angle);
 		return (THIS) this;
 	}
 

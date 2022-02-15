@@ -1,6 +1,7 @@
 package turtleduck.testutil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -48,6 +49,7 @@ import java.util.function.Supplier;
  */
 public class EqualsProperties {
 	public static final int NEQUALS = 10;
+
 	/**
 	 * Test that all the standard properties of equals() hold for objects supplied
 	 * by the generator.
@@ -161,11 +163,13 @@ public class EqualsProperties {
 	 */
 	public static <T> void equalsGeneratorMakesEqualValues(Generator<T> gen, int n) {
 		for (int i = 0; i < n; i++) {
-			List<T> ss = gen.generateEquals(NEQUALS+1);
-			for(int j = 0; j < NEQUALS; j++)
-				assertEquals(ss.get(j), ss.get(j+1), "Generator should provide equal values: " + ss.get(j) + " != " + ss.get(j+1));
+			List<T> ss = gen.generateEquals(NEQUALS + 1);
+			for (int j = 0; j < NEQUALS; j++)
+				assertEquals(ss.get(j), ss.get(j + 1),
+						"Generator should provide equal values: " + ss.get(j) + " != " + ss.get(j + 1));
 		}
 	}
+
 	/**
 	 * Checks the equals/hashCode property, i.e. that s1.equals(s2) implies
 	 * s1.hashCode() == s2.hashCode().
@@ -195,10 +199,30 @@ public class EqualsProperties {
 	 * @param s1
 	 * @param s2
 	 */
-	public static <T> void strongToStringProperty(T s1, T s2) {
+	public static <T> void strongToStringProperty1(T s1, T s2) {
 		if (s2 != null) {
-			assertEquals(s1.equals(s2), s1.toString().equals(s2.toString()),
-					failed("a.equals(b) <=> a.toString().equals(b.toString())", s1, s2));
+			if (s1.toString().equals(s2.toString())) {
+				assertEquals(s1, s2);
+			} else {
+				assertNotEquals(s1, s2);
+			}
+
+		}
+	}
+
+	/**
+	 * Checks the equals/toString property (strong version), i.e. that s1.equals(s2)
+	 * if and only if s1.toString().equals(s2.toString()).
+	 *
+	 * @param s1
+	 * @param s2
+	 */
+	public static <T> void strongToStringProperty2(T s1, T s2) {
+		if (s2 != null) {
+			if (s1.equals(s2))
+				assertEquals(s1.toString(), s2.toString());
+			else
+				assertNotEquals(s1.toString(), s2.toString());
 		}
 	}
 
@@ -223,11 +247,15 @@ public class EqualsProperties {
 	 */
 	public static <T> void toStringEqualsStrongTest(Generator<T> gen, int n) {
 		for (int i = 0; i < n; i++) {
-			strongToStringProperty(gen.generate(), gen.generate());
+			T g1 = gen.generate();
+			T g2 = gen.generate();
+			strongToStringProperty1(g1, g2);
+			strongToStringProperty2(g1, g2);
 
 			List<T> ss = gen.generateEquals(NEQUALS);
 
-			strongToStringProperty(ss.get(0), ss.get(1));
+			strongToStringProperty1(ss.get(0), ss.get(1));
+			strongToStringProperty2(ss.get(0), ss.get(1));
 		}
 	}
 
@@ -273,7 +301,8 @@ public class EqualsProperties {
 	 */
 	public static <T> void weakToStringProperty(T s1, T s2) {
 		if (s2 != null && s1.equals(s2)) {
-			assertEquals(s1.toString(), s2.toString(), failed("a.equals(b) => a.toString().equals(b.toString())", s1, s2));
+			assertEquals(s1.toString(), s2.toString(),
+					failed("a.equals(b) => a.toString().equals(b.toString())", s1, s2));
 		}
 	}
 

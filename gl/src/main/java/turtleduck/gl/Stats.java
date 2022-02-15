@@ -8,23 +8,33 @@ public class Stats {
 	private double lastPrintTime;
 	private double deltaTime;
 	private double currentFrameTime;
+	private double currentRenderTime;
 	private double targetFps = 6000.0;
 	private Stat frames = new Stat();
 	private Stat render = new Stat();
+	private Stat steps = new Stat();
 
 	public float startFrame() {
 		lastFrameTime = currentFrameTime;
-		currentFrameTime = glfwGetTime();
+		currentFrameTime = currentRenderTime = glfwGetTime();
 		deltaTime = (float) (currentFrameTime - lastFrameTime);
 		frames.addSample(deltaTime);
 		// System.err.println(deltaTime);
 		return (float) deltaTime;
 	}
 
+	public float startRender() {
+		currentRenderTime = glfwGetTime();
+		double delta = currentRenderTime - currentFrameTime;
+		steps.addSample(delta);
+		// System.err.println(deltaTime);
+		return (float) delta;
+	}
+
 	public void endFrame(boolean sleep) {
 		double now = glfwGetTime();
-		double currentRenderTime = now - currentFrameTime;
-		render.addSample(currentRenderTime);
+		double delta = now - currentRenderTime;
+		render.addSample(delta);
 
 		double dt = (float) (now - currentFrameTime);
 		long sleepTime = (long) Math.max(0, 1000 * (1.0 / targetFps - dt));
@@ -37,8 +47,12 @@ public class Stats {
 		}
 		if (currentFrameTime - lastPrintTime > 1) {
 			lastPrintTime = currentFrameTime;
+			System.err.printf("frames: %5d, ", frames.n);
 			frames.print("FPS", "fps", true);
+			System.err.printf("gfx: ");
 			render.print("Render", "s", false);
+			System.err.printf("model: ");
+			steps.print("Step", "s", false);
 			System.err.println();
 		}
 	}
@@ -117,9 +131,8 @@ public class Stats {
 				unit = "";
 			}
 
-			System.err.printf(
-					"%-8s: cur=%8.2f %-4s, avg=%8.2f %-4s, ravg=%8.2f %-4s, min=%8.2f %-4s, max=%8.2f %-4s    ", title,
-					c * factor, unit, t * factor, unit, ra * factor, unit, mn * factor, unit, mx * factor, unit);
+			System.err.printf("%5.1f %s, ~%5.1f %s, %.1f ≤ %.1f ≤ %.1f %-4s  ", c * factor, unit, t * factor, unit,
+					mn * factor, ra * factor, mx * factor, unit);
 
 			sincePrint = 0;
 			nSincePrint = 0;

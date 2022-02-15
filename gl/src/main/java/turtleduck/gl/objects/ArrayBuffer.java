@@ -21,6 +21,8 @@ public class ArrayBuffer {
 	DataFormat current;
 	int currentField = 0;
 	private int initCapacity;
+	int mapBits = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT; // GL_MAP_READ_BIT
+	boolean debug = false;
 
 	public ArrayBuffer(int usage, int capacity) {
 		GL33C.glGenBuffers(buffers);
@@ -39,8 +41,10 @@ public class ArrayBuffer {
 		currentField = 0;
 		ensureSpaceFor(format.numBytes());
 		if (!isMapped[bufferIndex]) {
+			if (debug)
+				System.out.print("map..." + buffers[bufferIndex]);
 			glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
-			buffer = glMapBufferRange(GL_ARRAY_BUFFER, pos, bufferSizes[bufferIndex] - pos, GL_MAP_WRITE_BIT|GL_MAP_INVALIDATE_RANGE_BIT, buffer);
+			buffer = glMapBufferRange(GL_ARRAY_BUFFER, pos, bufferSizes[bufferIndex] - pos, mapBits, buffer);
 			if (buffer == null) {
 				throw new OutOfMemoryError("couldn't map buffer");
 			} else {
@@ -65,7 +69,7 @@ public class ArrayBuffer {
 			glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
 			glBufferData(GL_ARRAY_BUFFER, newCap, usage);
 			bufferSizes[bufferIndex] = newCap;
-			System.out.printf("to %d size %d (%sB)%n", buffers[bufferIndex], newCap,
+			System.out.printf("to %d size %d (%sB)", buffers[bufferIndex], newCap,
 					TextUtil.humanFriendlyBinary(newCap));
 			if (pos > 0) {
 				glBindBuffer(GL_COPY_READ_BUFFER, buffers[oldIndex]);
@@ -73,19 +77,23 @@ public class ArrayBuffer {
 					glUnmapBuffer(GL_COPY_READ_BUFFER);
 					isMapped[oldIndex] = false;
 				}
-				glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ARRAY_BUFFER, 0, 0, buffer.position());
+				glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ARRAY_BUFFER, 0, 0, pos);
 				glBufferData(GL_COPY_READ_BUFFER, newCap, usage);
 				bufferSizes[oldIndex] = newCap;
-//			glInvalidateBufferData(buffers[oldIndex]);
+				glInvalidateBufferData(buffers[oldIndex]);
 				glBindBuffer(GL_COPY_READ_BUFFER, 0);
+//				dump(current);
+				System.out.printf(", %sB copied", TextUtil.humanFriendlyBinary(pos));
 			}
-			buffer = glMapBufferRange(GL_ARRAY_BUFFER, pos, newCap - pos, GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT,
-					buffer);
+			System.out.println();
+			glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
+			buffer = glMapBufferRange(GL_ARRAY_BUFFER, pos, newCap - pos, mapBits, buffer);
 			if (buffer == null) {
 				throw new OutOfMemoryError("couldn't map buffer");
 			} else {
 				isMapped[bufferIndex] = true;
 			}
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 	}
 
@@ -101,8 +109,9 @@ public class ArrayBuffer {
 			throw new IllegalStateException("Writing after done()");
 		}
 		if (field != current.field(currentField)) {
-			if(!field.equals(current.field(currentField)))
-			throw new IllegalStateException("Expected data for " + current.field(currentField) + " but got " + field);
+			if (!field.equals(current.field(currentField)))
+				throw new IllegalStateException(
+						"Expected data for " + current.field(currentField) + " but got " + field);
 		}
 	}
 
@@ -147,25 +156,30 @@ public class ArrayBuffer {
 
 	public int done() {
 		if (isMapped[bufferIndex]) {
-				glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
-				glUnmapBuffer(GL_ARRAY_BUFFER);
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-				isMapped[bufferIndex] = false;
+			glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			isMapped[bufferIndex] = false;
 		}
 		return buffers[bufferIndex];
 	}
 
-	public void dump(DataFormat format) {
+	public void dump(DataFormat format, int maxVertices) {
+		if (format == null)
+			format = current;
 		glBindBuffer(GL_COPY_READ_BUFFER, buffers[bufferIndex]);
 		ByteBuffer b = glMapBufferRange(GL_COPY_READ_BUFFER, 0, bufferSizes[bufferIndex], GL_MAP_READ_BIT, null);
-		int i = 0;
+		int i = 0, j = 0;
 		while (b.remaining() >= format.numBytes()) {
 			DataField<?> field = format.field(i++);
 			System.out.print(field.read(b) + " ");
 			if (i >= format.numFields()) {
 				i = 0;
+				j++;
 				System.out.println();
 			}
+			if (maxVertices > 0 && j > maxVertices)
+				break;
 		}
 		glUnmapBuffer(GL_COPY_READ_BUFFER);
 
@@ -173,6 +187,8 @@ public class ArrayBuffer {
 
 	public void clear() {
 		done();
+		if (debug)
+			System.out.print("clear..." + buffers[bufferIndex]);
 		glBindBuffer(GL_COPY_READ_BUFFER, buffers[bufferIndex]);
 		if (isMapped[bufferIndex]) {
 			glUnmapBuffer(GL_COPY_READ_BUFFER);
@@ -183,6 +199,8 @@ public class ArrayBuffer {
 		pos = 0;
 		current = null;
 		bufferIndex = (bufferIndex + 1) % buffers.length;
+		if (debug)
+			System.out.println("done");
 	}
 
 	public String toString() {
@@ -206,15 +224,15 @@ public class ArrayBuffer {
 		sb.append(")");
 		return sb.toString();
 	}
-	
+
 	public int currentBufferIndex() {
 		return bufferIndex;
 	}
-	
+
 	public int bufferName(int index) {
 		return buffers[index];
 	}
-	
+
 	public int numBuffers() {
 		return buffers.length;
 	}

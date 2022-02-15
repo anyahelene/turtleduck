@@ -20,6 +20,14 @@ public class Point2 implements Point {
 	@Override
 	public Direction directionTo(PositionVector otherPoint) {
 		// TODO: will crash with ArithmeticException if points are too close
+		if (otherPoint.z() != 0)
+			return OrientImpl.absoluteVec(otherPoint.x() - x(), otherPoint.y() - y(), otherPoint.z());
+		else
+			return Direction.absolute(otherPoint.x() - x(), otherPoint.y() - y());
+	}
+
+	@Override
+	public Direction directionTo(PositionVector otherPoint, Direction dflt) {
 		return Direction.absolute(otherPoint.x() - x(), otherPoint.y() - y());
 	}
 

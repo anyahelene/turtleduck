@@ -109,24 +109,24 @@ public abstract class AbstractModel implements IModel {
 			uNormal.set(normalTransform);
 		}
 		if (uProjection != null) {
-			uProjection.set(glm.perspectiveProjectionMatrix);
+			uProjection.set(glm.camera3.projectionMatrix);
 		}
 		if (uView != null) {
-			uView.set(glm.perspectiveViewMatrix);
+			uView.set(glm.camera3.viewMatrix);
 		}
 		if (uProjView != null) {
-			uProjView.set(new Matrix4f(glm.perspectiveProjectionMatrix).mul(glm.perspectiveViewMatrix));
+			uProjView.set(new Matrix4f(glm.camera3.projectionMatrix).mul(glm.camera3.viewMatrix));
 		}
 		if (uProjViewModel != null) {
-			uProjViewModel.set(new Matrix4f(glm.perspectiveProjectionMatrix).mul(glm.perspectiveViewMatrix).mul(transform));
+			uProjViewModel.set(new Matrix4f(glm.camera3.projectionMatrix).mul(glm.camera3.viewMatrix).mul(transform));
 		}
 		if (uLightPos != null) {
 			glm.lightPosition.w = 1;
 			uLightPos.set(glm.lightPosition);
 		}
 		if (uViewPos != null) {
-			glm.cameraPosition.w = 1;
-			uViewPos.set(glm.cameraPosition);
+			glm.camera3.position.w = 1;
+			uViewPos.set(glm.camera3.position);
 		}
 	}
 

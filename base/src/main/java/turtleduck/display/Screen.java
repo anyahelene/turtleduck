@@ -266,10 +266,7 @@ public interface Screen extends IdentifiedObject {
 	ScreenControls controls();
 
 	interface ScreenControls {
-		/**
-		 * Switch to the next available zoom level
-		 */
-		void zoomCycle();
+
 
 		/**
 		 * Zoom so that the whole virtual screen is visible

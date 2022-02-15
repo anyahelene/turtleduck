@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Random;
 
-import org.joml.Vector3f;
+import org.joml.Vector3d;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -15,57 +15,84 @@ import turtleduck.geometry.impl.AngleImpl;
 import turtleduck.testutil.generators.DirectionGenerator;
 
 public class AngleTest extends AbstractEqualsTest<Direction> {
-	static final Vector3f UP = new Vector3f(0, 0, 1);
+	static final Vector3d UP = new Vector3d(0, 0, 1);
 	Random random = new Random();
 
 	public AngleTest() {
 		super(new DirectionGenerator(), ToStringEqualsProperty.STRONG);
 	}
 
-	@CsvSource(value = { "0", "45", "90", "127", "179.9", "180", "180.1", "225", "270", "321", "359.9" })
+	@CsvSource(value = { "0", "45", "90", "-45", "-90", "127", "179.9", "180", "180.1", "225", "270", "321", "359.9" })
 	@ParameterizedTest(name = "absoluteAz({0}).degrees() == {0}")
-	public void basicAngle(double a) {
-		Orientation dir = Orientation.absoluteAz(a);
-		System.out.println(dir + ".degrees() == " + dir.degrees());
+	public void basicAngle2(double a) {
+		Direction dir = Direction.absolute(a);
+		if (a < 0)
+			a += 360;
 		assertEquals(a, dir.degrees(), 10e-6);
 	}
 
-	@CsvSource(value = { "0", "45", "90", "127", "179.9", "180.1" })
-	@ParameterizedTest(name = "absoluteAz({0}).dirX() == cos({0})")
-	public void basicX(double a) {
+	@CsvSource(value = { "0", "45", "90", "-45", "-90", "127", "179.9", "180", "180.1", "225", "270", "321", "359.9" })
+	@ParameterizedTest(name = "absoluteAz({0}).degrees() == {0}")
+	public void basicAngle3(double a) {
 		Orientation dir = Orientation.absoluteAz(a);
-		Vector3f vec = dir.directionVector(new Vector3f());
+		if (a < 0)
+			a += 360;
+		assertEquals(a, dir.degrees(), 10e-6);
+	}
+	@CsvSource(value = { "0,→", "45,↗", "90,↑", "-45,↘", "-90,↓", "127,↖", "179.9,←", "180,←", "180.1,←", "225,↙", "270,↓", "321,↘", "359.9,→" })
+	@ParameterizedTest(name = "absolute({0}).toArrow() == {1}")
+	public void angleArrow(double a, String s) {
+		Direction dir = Direction.absolute(a);
+		assertEquals(s, dir.toArrow());
+	}
+	@CsvSource(value = { "0,E", "45,N45.0°E", "90,N", "-45,S45.0°E", "-90,S", "127,N37.0°W", "179.9,N89.9°W", "180,W", "180.1,S89.9°W", "225,S45.0°W", "270,S", "321,S51.0°E", "359.9,S89.9°E" })
+	@ParameterizedTest(name = "absolute({0}).toNavString() == {1}")
+	public void angleNav(double a, String s) {
+		Direction dir = Direction.absolute(a);
+		assertEquals(s, dir.toNavString());
+	}
+	// @CsvSource(value = { "0", "45", "90", "127", "179.9", "180.1" })
+	@CsvSource(value = { "0", "45", "90", "-45", "-90", "127", "179.9", "180", "180.1", "225", "270", "321", "359.9" })
+	@ParameterizedTest(name = "absolute({0}).dirX_or_Y() == cos_or_sin({0})")
+	public void basicVecXY(double a) {
+		Direction dir = Direction.absolute(a);
+		Vector3d vec = dir.directionVector(new Vector3d());
 		double expected = Math.cos(Math.toRadians(a));
-		assertEquals(dir.dirX(), vec.x, 10e-6);
-		System.out.println("a=" + a + ", expect " + expected + " == " + vec);
 		assertEquals(expected, vec.x, 10e-6);
-	}
-
-	@CsvSource(value = { "0", "45", "90", "127", "179.9", "180.1" })
-	@ParameterizedTest(name = "absoluteAz({0}).dirX() == sin({0})")
-	public void basicY(double a) {
-		Orientation dir = Orientation.absoluteAz(a);
-		Vector3f vec = dir.directionVector(new Vector3f());
-		double expected = Math.sin(Math.toRadians(a));
-		assertEquals(dir.dirY(), vec.y, 10e-6);
-//		System.out.println("a=" +a + ", expect "+ expected + " == " + vec);
+		assertEquals(expected, dir.dirX(), 10e-6);
+		expected = Math.sin(Math.toRadians(a));
 		assertEquals(expected, vec.y, 10e-6);
+		assertEquals(expected, dir.dirY(), 10e-6);
 	}
 
-	@CsvSource(value = { "0", "45", "90", "127", "179.9", "180.1" })
+	@CsvSource(value = { "0", "45", "90", "-45", "-90", "127", "179.9", "180", "180.1", "225", "270", "321", "359.9" })
+	@ParameterizedTest(name = "absoluteAz({0}).dirX() == cos({0})")
+	public void basicVecXYZ(double a) {
+		Orientation dir = Orientation.absoluteAz(a);
+		Vector3d vec = dir.directionVector(new Vector3d());
+		double expected = Math.cos(Math.toRadians(a));
+		assertEquals(expected, dir.dirX(), 10e-6);
+		assertEquals(expected, vec.x, 10e-6);
+		expected = Math.sin(Math.toRadians(a));
+		assertEquals(expected, dir.dirY(), 10e-6);
+		assertEquals(expected, vec.y, 10e-6);
+		assertEquals(0, dir.dirZ(), 10e-6);
+		assertEquals(0, vec.z, 10e-6);
+	}
+
+	@CsvSource(value = { "0", "45", "90", "-45", "-90", "127", "179.9", "180", "180.1", "225", "270", "321", "359.9" })
 	@ParameterizedTest(name = "absoluteAz({0}).normal() == [0,0,1]")
 	public void basicUp(double a) {
 		Orientation dir = Orientation.absoluteAz(a);
-		Vector3f vec = dir.normalVector(new Vector3f());
+		Vector3d vec = dir.normalVector(new Vector3d());
 		assertEquals(UP, vec);
 	}
 
-	@CsvSource(value = { "0", "45", "-45", "90", "-90", "127", "179.9", "180.1" })
+	@CsvSource(value = { "0", "45", "90", "-45", "-90", "127", "179.9", "180", "180.1", "225", "270", "321", "359.9" })
 	@ParameterizedTest(name = "absoluteAz({0}).normal() == [x,y,1]")
 	public void basicRoll(double a) {
 		Orientation dir = Orientation.absoluteAz(0).roll(a).yaw(90);
-		Vector3f vec = dir.normalVector(new Vector3f());
-		System.out.println("" + a + ", " + vec);
+		Vector3d vec = dir.normalVector(new Vector3d());
 		assertEquals(0, vec.x);
 		assertEquals(Math.sin(Math.toRadians(-a)), vec.y, 1e-6);
 		assertEquals(Math.cos(Math.toRadians(-a)), vec.z, 1e-6);
@@ -80,7 +107,7 @@ public class AngleTest extends AbstractEqualsTest<Direction> {
 
 		for (int i = 0; i < 360; i++) {
 			for (int j = -5; j < 6; j++) {
-				assertEquals(Direction.absolute(i), Direction.absolute(i + j * 360));
+				assertLike(Direction.absolute(i), Direction.absolute(i + j * 360));
 			}
 		}
 	}
@@ -134,18 +161,18 @@ public class AngleTest extends AbstractEqualsTest<Direction> {
 		assertEquals(1, Direction.DUE_NORTH.dirY(), 1e-10);
 		assertEquals(0, Direction.DUE_SOUTH.dirX(), 1e-10);
 		assertEquals(-1, Direction.DUE_SOUTH.dirY(), 1e-10);
-		assertEquals(-1, Direction.DUE_EAST.dirX(), 1e-10);
+		assertEquals(1, Direction.DUE_EAST.dirX(), 1e-10);
 		assertEquals(0, Direction.DUE_EAST.dirY(), 1e-10);
-		assertEquals(1, Direction.DUE_WEST.dirX(), 1e-10);
+		assertEquals(-1, Direction.DUE_WEST.dirX(), 1e-10);
 		assertEquals(0, Direction.DUE_WEST.dirY(), 1e-10);
 
 		assertEquals(0, Orientation.DUE_NORTH.dirX(), 1e-10);
 		assertEquals(1, Orientation.DUE_NORTH.dirY(), 1e-10);
 		assertEquals(0, Orientation.DUE_SOUTH.dirX(), 1e-10);
 		assertEquals(-1, Orientation.DUE_SOUTH.dirY(), 1e-10);
-		assertEquals(-1, Orientation.DUE_EAST.dirX(), 1e-10);
+		assertEquals(1, Orientation.DUE_EAST.dirX(), 1e-10);
 		assertEquals(0, Orientation.DUE_EAST.dirY(), 1e-10);
-		assertEquals(1, Orientation.DUE_WEST.dirX(), 1e-10);
+		assertEquals(-1, Orientation.DUE_WEST.dirX(), 1e-10);
 		assertEquals(0, Orientation.DUE_WEST.dirY(), 1e-10);
 
 		assertEquals(-1, Direction.DUE_NORTH.yaw(90).dirX(), 1e-10);
@@ -159,11 +186,12 @@ public class AngleTest extends AbstractEqualsTest<Direction> {
 	}
 
 	@ParameterizedTest
-	@CsvSource(value = { "0,90,.5,45", "45,35,.5,40", "90,-89,.5,.5", "90,-91,.5,179.5", "127,128,.5,127.5", "179.9,180.1,.5,180"
+	@CsvSource(value = { "0,90,.5,45", "45,35,.5,40", "90,-89,.5,.5", "90,-91,.5,179.5", "127,128,.5,127.5",
+			"179.9,180.1,.5,180"
 	// , "180,360", "180.1,360", "225,230", "270,300", "321,331", "359.9,0.1"
 	})
 	public void interpolateTest(double a, double b, double f, double r) {
-		assertEquals(r, Direction.absolute(a).interpolate(Direction.absolute(b), f).degrees(), 1e-6);
+		assertEquals(r, Direction.absolute(a).interpolate(Direction.absolute(b), f).degrees(), 1e-3);
 	}
 
 	public void sinCosProperty(double a) {

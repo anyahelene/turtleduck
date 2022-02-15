@@ -1,10 +1,17 @@
-package turtleduck.turtle.impl;
+package turtleduck.paths.impl;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+
 import turtleduck.geometry.Direction;
+import turtleduck.geometry.Orientation;
 import turtleduck.geometry.Point;
+import turtleduck.geometry.impl.AngleImpl;
 import turtleduck.paths.PathPoint;
 import turtleduck.paths.Pen;
 import turtleduck.paths.Path.PointType;
@@ -12,12 +19,10 @@ import turtleduck.turtle.Annotation;
 
 public class PathPointImpl implements PathPoint, Cloneable {
 	public Point point;
-	public Direction bearing;
 	public Pen pen;
 	public PointType type;
-	public Direction incoming;
-	public String rotation = "";
 	public Map<Annotation<?>, Object> annos;
+	public Orientation orient;
 
 //	public String toString() {
 //		return point.toString();
@@ -33,14 +38,11 @@ public class PathPointImpl implements PathPoint, Cloneable {
 	public PathPointImpl(Point point, Pen pen, Direction bearing, Direction incoming) {
 		this.point = point;
 		this.pen = pen;
-		this.bearing = bearing;
-		this.incoming = incoming;
 	}
 
 	public PathPointImpl copy() {
 		try {
 			PathPointImpl copy = (PathPointImpl) super.clone();
-			copy.rotation = "";
 			copy.annos = null;
 			return copy;
 		} catch (CloneNotSupportedException e) {
@@ -60,14 +62,6 @@ public class PathPointImpl implements PathPoint, Cloneable {
 		return type;
 	}
 
-	public Direction bearing() {
-		return bearing;
-	}
-
-	public Direction incoming() {
-		return incoming;
-	}
-
 	@Override
 	public double x() {
 		return point.x();
@@ -84,7 +78,7 @@ public class PathPointImpl implements PathPoint, Cloneable {
 	}
 
 	public String toString() {
-		return rotation;
+		return point.toString();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -95,12 +89,35 @@ public class PathPointImpl implements PathPoint, Cloneable {
 		}
 		return (T) annos.get(anno);
 	}
-	
+
 	public <T> void annotation(Annotation<T> anno, T val) {
-		if(annos == null) {
+		if (annos == null) {
 			annos = new IdentityHashMap<>();
 		}
 		annos.put(anno, val);
+	}
+
+	@Override
+	public Vector3fc position() {
+		return point.toVector(new Vector3f());
+	}
+
+	@Override
+	public Orientation orientation() {
+		return orient;
+	}
+
+	@Override
+	public void position(Vector3f dest) {
+		point.toVector(dest);
+	}
+
+	@Override
+	public void normal(Vector3f dest) {
+		if (orient != null)
+			dest.set(orient.normalVector());
+		else
+			dest.set(0, 0, 1);
 	}
 
 }

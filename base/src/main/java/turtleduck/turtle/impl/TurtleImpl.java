@@ -17,6 +17,7 @@ import turtleduck.paths.PathStroke;
 import turtleduck.paths.PathWriter;
 import turtleduck.paths.Pen;
 import turtleduck.paths.PenBuilder;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.sprites.Sprite;
 import turtleduck.sprites.SpriteImpl;
 import turtleduck.turtle.Annotation;
@@ -190,7 +191,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 		boolean penStatus = penDown;
 		penDown = true;
 		current.pen = pen();
-		super.goTo(to);
+		super.go(to, RelativeTo.WORLD);
 		penDown = penStatus;
 		triggerActions();
 		return (THIS) this;
@@ -203,7 +204,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 		boolean penStatus = penDown;
 		penDown = true;
 		current.pen = pen();
-		forward(dist);
+		go(dist);
 		penDown = penStatus;
 		triggerActions();
 		return (THIS) this;
@@ -215,7 +216,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 		drawing = false;
 		boolean penStatus = penDown;
 		penDown = false;
-		forward(dist);
+		go(dist);
 		penDown = penStatus;
 		triggerActions();
 		return (THIS) this;
@@ -224,7 +225,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS goTo(Point newPos) {
-		super.goTo(newPos);
+		super.go(newPos, RelativeTo.WORLD);
 		triggerActions();
 		return (THIS) this;
 	}
@@ -236,6 +237,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 		boolean penStatus = penDown;
 		penDown = false;
 		goTo(newPos);
+		endPath();
 		penDown = penStatus;
 		return (THIS) this;
 	}
@@ -244,7 +246,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	@Override
 	public THIS turn(double angle) {
 //		System.out.printf("%s + %g = ", current.bearing, angle);
-		current.bearing = current.bearing.yaw(angle);
+		direction = direction.yaw(angle);
 //		System.out.println(current.bearing);
 //		current.rotation += String.format("[yaw%+.1f°]", angle);
 		return (THIS) this;
@@ -253,7 +255,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS turn(Direction dir) {
-		current.bearing = current.bearing.add(dir);
+		direction = direction.add(dir);
 //		current.rotation += String.format("[+%s]", dir);
 		return (THIS) this;
 	}
@@ -261,20 +263,15 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS turnTo(Direction dir) {
-		current.bearing = dir;
-//		current.rotation += String.format("[=%s]", dir);
+		direction = direction.rotateTo(dir);
 		return (THIS) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS turnTo(double angle) {
-		if (this instanceof TurtleImpl3)
-			current.bearing = Orientation.absoluteAz(angle);
-		else
-			current.bearing = Direction.absolute(angle);
+		direction = direction.rotateTo(angle);
 
-		//current.rotation += String.format("[yaw=%+.1f°]", angle);
 		return (THIS) this;
 	}
 
@@ -284,7 +281,6 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 		penBuilder = pen.penChange();
 		return new PenBuilderDelegate<THIS>(penBuilder, (THIS) this);
 	}
-
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -352,7 +348,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	@Override
 	public SpriteBuilder sprite() {
 		Point here = current.point;
-		Direction b = current.bearing;
+		Direction b = direction;
 		SpriteBuilder spawn = new SpriteTurtle(this, t -> {
 			return new SpriteImpl(here, b, t.objId, canvas);
 		}).goTo(0, 0).turnTo(0);
@@ -374,25 +370,18 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 
 	private void triggerActions() {
 		if (last != null && last.point.equals(current.point)) {
-			System.out.println("" + last + " == " + current);
+			System.out.println("" + last.point + " == " + current.point);
 		}
-		if (writer != null) {
+		if (writer != null && last != null) {
 			if (drawing) {
 				if (currentStroke == null) {
 					currentStroke = writer.addStroke();
 					currentStroke.group(objId);
 				}
-				if (stepSize > 0) {
-					double len = last.point().distanceTo(current.point());
-					currentStroke.addLine(last);
-					for (double d = stepSize; d < len; d++) {
-						Point p = last.point().interpolate(current.point(), d / len);
-						PathPointImpl tmp = current.copy();
-						tmp.point = p;
-						currentStroke.updateLine(last, current);
-					}
+				if (direction instanceof Orientation) {
+					last.orient = (Orientation) direction;
+					current.orient = (Orientation) direction;
 				}
-
 				currentStroke.addLine(last, current);
 			} else if (currentStroke != null) {
 				currentStroke.endPath();
@@ -402,11 +391,12 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	}
 
 	@Override
-	public THIS jump(Direction bearing, double dist) {
+	public THIS jump(Direction dir, double dist) {
 		drawing = false;
 		boolean penStatus = penDown;
 		penDown = false;
-		super.go(bearing, dist);
+		direction(dir);
+		go(dist);
 		penDown = penStatus;
 		triggerActions();
 		return (THIS) this;
@@ -414,12 +404,13 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public THIS draw(Direction bearing, double dist) {
+	public THIS draw(Direction dir, double dist) {
 		drawing = true;
 		boolean penStatus = penDown;
 		penDown = true;
 		current.pen = pen;
-		super.go(bearing, dist);
+		direction(dir);
+		go(dist);
 		penDown = penStatus;
 		triggerActions();
 		return (THIS) this;
@@ -533,5 +524,19 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 		f.accept((THIS) this, arg);
 		return (THIS) this;
 
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS pitch(double angle) {
+		direction = direction.pitch(angle);
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS roll(double angle) {
+		direction = direction.roll(angle);
+		return (THIS) this;
 	}
 }

@@ -39,6 +39,8 @@ public interface Canvas extends PenSettingsContext<Canvas>, TransformContext2<Ca
 	 */
 	Canvas done();
 
+	Canvas clear();
+	
 	Path.PathBuilder path();
 
 	Rectangle.RectangleBuilder rectangle();
@@ -67,7 +69,7 @@ public interface Canvas extends PenSettingsContext<Canvas>, TransformContext2<Ca
 
 	Turtle turtle();
 
-	Turtle3 turtle3();
+	Turtle turtle3();
 
 	/**
 	 * Draw a dot

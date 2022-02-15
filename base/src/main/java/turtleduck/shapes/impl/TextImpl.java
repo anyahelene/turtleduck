@@ -7,13 +7,13 @@ import turtleduck.geometry.Point;
 import turtleduck.paths.PathStroke;
 import turtleduck.paths.PathWriter;
 import turtleduck.paths.Pen;
+import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.shapes.Path;
 import turtleduck.shapes.Text;
 import turtleduck.shapes.Text.TextBuilder;
 import turtleduck.text.Attributes;
 import turtleduck.text.AttributesImpl;
 import turtleduck.text.Attributes.AttributeBuilder;
-import turtleduck.turtle.impl.PathPointImpl;
 
 public class TextImpl extends BaseShapeImpl<Text.TextBuilder> implements Text.TextBuilder {
 	protected String text = "";

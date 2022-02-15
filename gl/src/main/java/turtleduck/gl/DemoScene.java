@@ -60,7 +60,7 @@ public class DemoScene implements TurtleDuckApp {
 			if (this == sprites.get(0)) {
 //				System.out.println("bearing: " + bearing() + ", rotation: " + rotation + ", azimuth: " + bearing().azimuth());
 			}
-			forward(speed);
+			go(speed);
 
 		}
 
@@ -206,8 +206,8 @@ public class DemoScene implements TurtleDuckApp {
 		this.screen = (GLScreen) screen;
 		SceneWorld world = screen.createScene3();
 		Camera camera = world.createCamera().perspective().moveTo(0, 0, 25).orientTo(Orientation.FORWARD);
-		System.out.println("GLScreen.cameraPosition" + this.screen.cameraPosition);
-		System.out.println("GLScreen.cameraOrientation: " + this.screen.cameraOrientation);
+		System.out.println("GLScreen.cameraPosition" + this.screen.camera3.position);
+		System.out.println("GLScreen.cameraOrientation: " + this.screen.camera3.orientation);
 		System.out.println("scene.cameraPosition: " + camera.position());
 		System.out.println("scene.cameraOrientation: " + camera.orientation());
 		

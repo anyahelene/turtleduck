@@ -36,7 +36,7 @@ import turtleduck.turtle.impl.PenBuilderDelegate;
 import turtleduck.turtle.impl.TurtleImpl;
 import turtleduck.turtle.impl.TurtleImpl3;
 
-public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas {
+public class CanvasImpl<S extends Screen> implements Canvas {
 	protected Canvas parent = null;
 	protected boolean matrixShared = false;
 	protected Matrix3x2d matrix;
@@ -46,22 +46,35 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	protected Function<Boolean, PathWriter> pathWriterFactory;
 	protected int nChildren = 0;
 	protected CanvasService canvasService;
+	protected final String id;
+	protected final S screen;
+	protected final double width;
+	protected final double height;
+	protected Runnable clear;
 
-	public CanvasImpl(String layerId, S screen, double width, double height, Function<Boolean, PathWriter> pwFactory,
+	public CanvasImpl(String layerId, S screen, double width, double height, Function<Boolean, PathWriter> pwFactory, Runnable clear,
 			CanvasService service) {
-		super(layerId, screen, width, height);
+		this.id = layerId;
+		this.screen = screen;
+		this.width = width;
+		this.height = height;
 		this.pen = new BasePen();
 		this.matrix = new Matrix3x2d();
+		this.clear = clear;
 		this.pathWriterFactory = pwFactory;
 		this.pathWriter = pwFactory.apply(false);
 		this.canvasService = service;
 	}
 
 	public CanvasImpl(CanvasImpl<S> parent) {
-		super(parent.id + "." + parent.nChildren++, parent.screen, parent.width, parent.height);
+		this.id = parent.id;
+		this.screen = parent.screen;
+		this.width = parent.width;
+		this.height = parent.height;
 		this.parent = parent;
 		this.pen = parent.pen();
 		this.matrix = new Matrix3x2d(parent.matrix);
+		this.clear = parent.clear;
 		this.pathWriterFactory = parent.pathWriterFactory;
 		this.pathWriter = pathWriterFactory.apply(false);
 	}
@@ -316,8 +329,8 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	}
 
 	@Override
-	public Turtle3 turtle3() {
-		Turtle3 t = new TurtleImpl3.SpecificTurtle3(Point3.ZERO, Orientation.DUE_NORTH, new BasePen(), this);
+	public Turtle turtle3() {
+		Turtle t = new TurtleImpl.SpecificTurtle(Point3.ZERO, Orientation.DUE_NORTH, new BasePen(), this);
 		t.writePathsTo(pathWriterFactory.apply(true));
 		return t;
 	}
@@ -329,23 +342,10 @@ public class CanvasImpl<S extends Screen> extends BaseLayer<S> implements Canvas
 	}
 
 	@Override
-	public Layer clear() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Layer show() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Layer hide() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Layer flush() {
-		throw new UnsupportedOperationException();
+	public Canvas clear() {
+		if(clear != null)
+			clear.run();
+		return this;
 	}
 
 	@Override
