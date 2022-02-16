@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.nuthatchery</groupId>
@@ -54,8 +52,14 @@
 	<build>
 		<plugins>
 			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>3.0.0-M1</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
 				<configuration>
 					<compilerArgs>
 						<!-- arg>-verbose</arg -->
@@ -173,8 +177,7 @@
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.2.0</version>
-				<configuration>
-				</configuration>
+				<configuration></configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
@@ -211,8 +214,7 @@
 								</goals>
 								<configuration>
 									<executable>webpack</executable>
-									<arguments>
-									</arguments>
+									<arguments></arguments>
 									<systemProperties></systemProperties>
 									<skip>false</skip>
 								</configuration>
