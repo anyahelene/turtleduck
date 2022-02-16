@@ -8,12 +8,25 @@
 
 	<name>TurtleDuck POM Parent</name>
 	<url>http://maven.apache.org</url>
-
+	<repositories>
+		<repository>
+			<id>turtleduck-maven</id>
+			<url>https://retting.ii.uib.no/api/v4/projects/17116/packages/maven</url>
+		</repository>
+	</repositories>
 	<distributionManagement>
-		<site>
-			<id>website</id>
-			<url>file://tmp/m2/</url>
-		</site>
+		<repository>
+			<id>turtleduck-maven</id>
+			<url>https://retting.ii.uib.no/api/v4/projects/17116/packages/maven</url>
+		</repository>
+		<snapshotRepository>
+			<id>turtleduck-maven</id>
+			<url>https://retting.ii.uib.no/api/v4/projects/17116/packages/maven</url>
+		</snapshotRepository>
+		<!-- repository>
+			<id>internal</id>
+			<url>file://${project.build.directory}/repository</url>
+		</!repository -->
 	</distributionManagement>
 
 	<properties>

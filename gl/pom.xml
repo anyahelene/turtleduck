@@ -109,7 +109,7 @@
 	</profiles>
 
 	<properties>
-		<lwjgl.version>3.2.3</lwjgl.version>
+		<lwjgl.version>3.3.0</lwjgl.version>
 		<joml.version>1.9.25</joml.version>
 	</properties>
 
