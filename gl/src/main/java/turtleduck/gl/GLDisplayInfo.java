@@ -1,8 +1,6 @@
 package turtleduck.gl;
 
-import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.glfwInit;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 import turtleduck.display.DisplayInfo;

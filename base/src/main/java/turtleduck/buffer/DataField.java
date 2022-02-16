@@ -229,7 +229,34 @@ public abstract class DataField<T> {
 		}
 
 	}
+	public static class DataField4cf extends DataField<Color> {
+		public DataField4cf(String name, int location, int offset) {
+			super(name, location, offset, 4, Type.FLOAT);
+		}
 
+		public Color read(ByteBuffer source) {
+			int r = source.getShort() & 0xffff;
+			int g = source.getShort() & 0xffff;
+			int b = source.getShort() & 0xffff;
+			int a = source.getShort() & 0xffff;
+			return Color.color(r / 65535.0, g / 65535.0, b / 65535.0, a / 65535.0);
+		}
+
+		public void write(ByteBuffer dest, Color color) {
+			dest.putFloat(color.red());
+			dest.putFloat(color.green());
+			dest.putFloat(color.blue());
+			dest.putFloat(color.opacity());
+		}
+
+		public void write(ByteBuffer dest, float x, float y, float z, float w) {
+			dest.putFloat(x);
+			dest.putFloat(y);
+			dest.putFloat(z);
+			dest.putFloat(w);
+		}
+
+	}
 	public static class DataField4c extends DataField<Color> {
 		public DataField4c(String name, int location, int offset) {
 			super(name, location, offset, 4, Type.NORM_SHORT);

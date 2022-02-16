@@ -1,12 +1,6 @@
 package turtleduck.gl;
 
-import static org.lwjgl.opengl.GL11C.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11C.GL_STENCIL_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11C.glClear;
-import static org.lwjgl.opengl.GL20C.GL_FRAGMENT_SHADER;
-import static org.lwjgl.opengl.GL20C.GL_VERTEX_SHADER;
-import static org.lwjgl.opengl.GL33C.*;
+import static org.lwjgl.opengl.GL32C.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -381,7 +375,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 //				System.exit(0);
 				ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
 				ShaderObject fs = ShaderObject.createFromString(code, GL_FRAGMENT_SHADER);
-				program = ShaderProgram.createProgram("plot_" + function, vs, fs);
+				program = ShaderProgram.createProgram("plot_" + function, format, vs, fs);
 //				program.uniform("uProjection", Matrix4f.class).set(screen.projectionMatrix);
 //				program.uniform("uView", Matrix4f.class).set(screen.viewMatrix);
 				program.uniform("uProjView", Matrix4f.class)

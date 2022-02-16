@@ -1,5 +1,6 @@
 
-#version 430 core
+#version 150
+#extension GL_ARB_explicit_attrib_location : enable
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec3 aNormal;

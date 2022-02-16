@@ -11,8 +11,9 @@ import java.util.Map;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
+import org.lwjgl.opengl.GL40C;
 
-import static org.lwjgl.opengl.GL40.*;
+import static org.lwjgl.opengl.GL32C.*;
 
 public class ShaderObject extends DataHandle<ShaderObject, DataObject> {
 	public static final Map<String, Integer> SHADER_TYPES;
@@ -22,8 +23,8 @@ public class ShaderObject extends DataHandle<ShaderObject, DataObject> {
 		map.put("vertex", GL_VERTEX_SHADER);
 		map.put("fragment", GL_FRAGMENT_SHADER);
 		map.put("geometry", GL_GEOMETRY_SHADER);
-		map.put("tess control", GL_TESS_CONTROL_SHADER);
-		map.put("tess evaluation", GL_TESS_EVALUATION_SHADER);
+		map.put("tess control", GL40C.GL_TESS_CONTROL_SHADER);
+		map.put("tess evaluation", GL40C.GL_TESS_EVALUATION_SHADER);
 		SHADER_TYPES = Collections.unmodifiableMap(map);
 	}
 
@@ -92,7 +93,7 @@ public class ShaderObject extends DataHandle<ShaderObject, DataObject> {
 				System.err.println(shaderLog);
 			}
 			if (compiled == 0) {
-				throw new AssertionError("Could not compile shader");
+				throw new AssertionError("Could not compile shader: " + pathName);
 			}
 
 			data = new DataObject(shader, type, pathName);

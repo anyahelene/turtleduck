@@ -1,7 +1,7 @@
 package turtleduck.gl.objects;
 
 import static turtleduck.gl.objects.Util.ioResourceToByteBuffer;
-import static org.lwjgl.opengl.GL40.*;
+import static org.lwjgl.opengl.GL32C.*;
 
 import static org.lwjgl.stb.STBImage.stbi_failure_reason;
 import static org.lwjgl.stb.STBImage.stbi_image_free;
@@ -16,8 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL11;
+
 
 public class Texture extends DataHandle<Texture, Texture.TextureData> {
 	private static final Map<String, TextureData> textures = new HashMap<>();

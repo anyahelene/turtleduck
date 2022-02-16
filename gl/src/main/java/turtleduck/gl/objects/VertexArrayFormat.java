@@ -1,6 +1,6 @@
 package turtleduck.gl.objects;
 
-import static org.lwjgl.opengl.GL33C.*;
+import static org.lwjgl.opengl.GL32C.*;
 
 import org.joml.Vector3f;
 

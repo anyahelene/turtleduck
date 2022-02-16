@@ -3,11 +3,7 @@ package turtleduck.gl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lwjgl.glfw.GLFW;
-
 import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Color;
@@ -16,14 +12,11 @@ import turtleduck.display.Layer;
 import turtleduck.display.Screen;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
-import turtleduck.gl.objects.Util;
 import turtleduck.grid.Grid;
 import turtleduck.grid.MyGrid;
 import turtleduck.image.Image;
 import turtleduck.image.ImageFactory;
 import turtleduck.image.Tiles;
-import turtleduck.image.impl.AwtPixelData;
-import turtleduck.messaging.CanvasService;
 import turtleduck.paths.Pen;
 import turtleduck.sprites.AbstractSprite;
 import turtleduck.sprites.Sprite;
@@ -109,7 +102,7 @@ public class Demo implements TurtleDuckApp {
 		fern(turtle.spawn().color(Colors.GREEN).goTo(200, 200).turnTo(135), 10, 5);
 		fern2(turtle.spawn().goTo(900, 200).turnTo(90), 5, 10);
 		tree(turtle.spawn().goTo(850, 200).color(Color.color(.5, .3, .0)).strokeWidth(2).turnTo(90), 10, 10);
-		wheel1(turtle.spawn().goTo(0, 0).turnTo(-2 * rotation).color(Color.color(0.5, 0, 0, 1)));
+		wheel1(turtle.spawn().goTo(0, 0).turnTo(-2 * rotation).pitch(2*rotation).color(Color.color(0.5, 0, 0, 1)));
 		rotation += 8 * deltaTime;
 //		canvas.drawImage(Point.point(100, 0), image2);
 //		canvas.drawImage(Point.point(200, 0), image2);
@@ -205,7 +198,7 @@ public class Demo implements TurtleDuckApp {
 		System.out.println(ImageFactory.get("turtleduck.gl"));
 		this.screen = (GLScreen) screen;
 		canvas = screen.createCanvas();
-		turtle = canvas.turtle();
+		turtle = canvas.turtle3();
 		pen = turtle.pen();
 		System.out.println(turtle);
 

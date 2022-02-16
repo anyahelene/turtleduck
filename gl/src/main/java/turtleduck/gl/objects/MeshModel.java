@@ -1,7 +1,7 @@
 package turtleduck.gl.objects;
 
 import static turtleduck.gl.objects.Util.ioResourceToByteBuffer;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL32C.*;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

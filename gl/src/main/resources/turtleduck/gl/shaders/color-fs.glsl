@@ -1,4 +1,4 @@
-#version 430 core
+#version 150
 
 in vec4 fColor;
 in vec4 fPos;

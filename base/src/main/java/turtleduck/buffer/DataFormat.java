@@ -56,7 +56,8 @@ public class DataFormat {
 		} else if (Vector4fc.class.isAssignableFrom(type)) {
 			return (DataField<T>) new DataField.DataField4f(name, loc, off);
 		} else if (Color.class.isAssignableFrom(type)) {
-			return (DataField<T>) new DataField.DataField4c(name, loc, off);
+//			return (DataField<T>) new DataField.DataField4cf(name, loc, off);
+ 		return (DataField<T>) new DataField.DataField4c(name, loc, off);
 		} else {
 			throw new IllegalArgumentException(type.getName());
 		}

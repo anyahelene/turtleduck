@@ -1,13 +1,15 @@
 package turtleduck.gl.objects;
 
-import static org.lwjgl.opengl.GL43C.*;
+import static org.lwjgl.opengl.GL32C.*;
 
 import java.nio.ByteBuffer;
 
-import org.lwjgl.opengl.GL33C;
+import org.lwjgl.opengl.GL32C;
+import org.lwjgl.opengl.GL43C;
 
 import turtleduck.buffer.DataField;
 import turtleduck.buffer.DataFormat;
+import turtleduck.gl.GLScreen;
 import turtleduck.util.TextUtil;
 
 public class ArrayBuffer {
@@ -25,13 +27,13 @@ public class ArrayBuffer {
 	boolean debug = false;
 
 	public ArrayBuffer(int usage, int capacity) {
-		GL33C.glGenBuffers(buffers);
+		GL32C.glGenBuffers(buffers);
 		this.usage = usage == 0 ? GL_STATIC_DRAW : usage;
 		this.initCapacity = capacity == 0 ? 1024 : capacity;
 	}
 
 	public void dispose() {
-		GL33C.glDeleteBuffers(buffers);
+		GL32C.glDeleteBuffers(buffers);
 		buffers[0] = 0;
 		buffers[1] = 0;
 	}
@@ -80,7 +82,8 @@ public class ArrayBuffer {
 				glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ARRAY_BUFFER, 0, 0, pos);
 				glBufferData(GL_COPY_READ_BUFFER, newCap, usage);
 				bufferSizes[oldIndex] = newCap;
-				glInvalidateBufferData(buffers[oldIndex]);
+				if (GLScreen.glMajor >= 4 && GLScreen.glMinor >= 3)
+					GL43C.glInvalidateBufferData(buffers[oldIndex]);
 				glBindBuffer(GL_COPY_READ_BUFFER, 0);
 //				dump(current);
 				System.out.printf(", %sB copied", TextUtil.humanFriendlyBinary(pos));
@@ -194,7 +197,8 @@ public class ArrayBuffer {
 			glUnmapBuffer(GL_COPY_READ_BUFFER);
 			isMapped[bufferIndex] = false;
 		}
-		glInvalidateBufferData(buffers[bufferIndex]);
+		if (GLScreen.glMajor >= 4 && GLScreen.glMinor >= 3)
+			GL43C.glInvalidateBufferData(buffers[bufferIndex]);
 		glBindBuffer(GL_COPY_READ_BUFFER, 0);
 		pos = 0;
 		current = null;

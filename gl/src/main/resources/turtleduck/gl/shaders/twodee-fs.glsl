@@ -1,7 +1,7 @@
-#version 430 core
+#version 150
 
 in vec4 fColor;
-in vec4 fPos;
+//in vec4 fPos;
 in vec4 fNormal;
 in vec2 fTexCoord;
 flat in int fTexNum;

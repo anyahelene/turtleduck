@@ -1,5 +1,6 @@
 package turtleduck.gl.objects;
-import static org.lwjgl.opengl.GL40.*;
+import  org.lwjgl.opengl.GL32C;
+import  org.lwjgl.opengl.GL40C;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -8,7 +9,6 @@ import java.util.Map;
 import org.joml.*;
 import org.lwjgl.BufferUtils;
 
-import turtleduck.gl.objects.Variables.TypeDesc;
 
 public class Variables {
 	static abstract class AbstractUniform<T> implements Uniform<T> {
@@ -57,123 +57,123 @@ public class Variables {
 	static {
 		TypeDesc type;
 
-		type = new TypeDesc(GL_INT, "int", "int", Integer.class, 1, 1);
-		GL_TYPES.put(GL_INT, type);
+		type = new TypeDesc(GL32C.GL_INT, "int", "int", Integer.class, 1, 1);
+		GL_TYPES.put(GL32C.GL_INT, type);
 		GLSL_TYPES.put("int", type);
 		JOML_TYPES.put(Integer.class, type);
 
-		type = new TypeDesc(GL_INT_VEC2, "ivec2", "int", Vector2i.class, 2, 1);
-		GL_TYPES.put(GL_INT_VEC2, type);
+		type = new TypeDesc(GL32C.GL_INT_VEC2, "ivec2", "int", Vector2i.class, 2, 1);
+		GL_TYPES.put(GL32C.GL_INT_VEC2, type);
 		GLSL_TYPES.put("ivec2", type);
 		JOML_TYPES.put(Vector2i.class, type);
 
-		type = new TypeDesc(GL_INT_VEC3, "ivec3", "int", Vector3i.class, 3, 1);
-		GL_TYPES.put(GL_INT_VEC3, type);
+		type = new TypeDesc(GL32C.GL_INT_VEC3, "ivec3", "int", Vector3i.class, 3, 1);
+		GL_TYPES.put(GL32C.GL_INT_VEC3, type);
 		GLSL_TYPES.put("ivec3", type);
 		JOML_TYPES.put(Vector3i.class, type);
 
-		type = new TypeDesc(GL_INT_VEC4, "ivec4", "int", Vector4i.class, 4, 1);
-		GL_TYPES.put(GL_INT_VEC4, type);
+		type = new TypeDesc(GL32C.GL_INT_VEC4, "ivec4", "int", Vector4i.class, 4, 1);
+		GL_TYPES.put(GL32C.GL_INT_VEC4, type);
 		GLSL_TYPES.put("ivec4", type);
 		JOML_TYPES.put(Vector4i.class, type);
 
-		type = new TypeDesc(GL_UNSIGNED_INT, "uint", "uint", Integer.class, 1, 1);
-		GL_TYPES.put(GL_UNSIGNED_INT, type);
+		type = new TypeDesc(GL32C.GL_UNSIGNED_INT, "uint", "uint", Integer.class, 1, 1);
+		GL_TYPES.put(GL32C.GL_UNSIGNED_INT, type);
 		GLSL_TYPES.put("uint", type);
 		JOML_TYPES.put(Integer.class, type);
 
-		type = new TypeDesc(GL_UNSIGNED_INT_VEC2, "uvec2", "uint", Vector2i.class, 2, 1);
-		GL_TYPES.put(GL_UNSIGNED_INT_VEC2, type);
+		type = new TypeDesc(GL32C.GL_UNSIGNED_INT_VEC2, "uvec2", "uint", Vector2i.class, 2, 1);
+		GL_TYPES.put(GL32C.GL_UNSIGNED_INT_VEC2, type);
 		GLSL_TYPES.put("uvec2", type);
 		JOML_TYPES.put(Vector2i.class, type);
 
-		type = new TypeDesc(GL_UNSIGNED_INT_VEC3, "uvec3", "uint", Vector3i.class, 3, 1);
-		GL_TYPES.put(GL_UNSIGNED_INT_VEC3, type);
+		type = new TypeDesc(GL32C.GL_UNSIGNED_INT_VEC3, "uvec3", "uint", Vector3i.class, 3, 1);
+		GL_TYPES.put(GL32C.GL_UNSIGNED_INT_VEC3, type);
 		GLSL_TYPES.put("uvec3", type);
 		JOML_TYPES.put(Vector3i.class, type);
 
-		type = new TypeDesc(GL_UNSIGNED_INT_VEC4, "uvec4", "uint", Vector4i.class, 4, 1);
-		GL_TYPES.put(GL_UNSIGNED_INT_VEC4, type);
+		type = new TypeDesc(GL32C.GL_UNSIGNED_INT_VEC4, "uvec4", "uint", Vector4i.class, 4, 1);
+		GL_TYPES.put(GL32C.GL_UNSIGNED_INT_VEC4, type);
 		GLSL_TYPES.put("uvec4", type);
 		JOML_TYPES.put(Vector4i.class, type);
 
-		type = new TypeDesc(GL_FLOAT, "float", "float", Float.class, 1, 1);
-		GL_TYPES.put(GL_FLOAT, type);
+		type = new TypeDesc(GL32C.GL_FLOAT, "float", "float", Float.class, 1, 1);
+		GL_TYPES.put(GL32C.GL_FLOAT, type);
 		GLSL_TYPES.put("float", type);
 		JOML_TYPES.put(Float.class, type);
 
-		type = new TypeDesc(GL_FLOAT_VEC2, "vec2", "float", Vector2f.class, 2, 1);
-		GL_TYPES.put(GL_FLOAT_VEC2, type);
+		type = new TypeDesc(GL32C.GL_FLOAT_VEC2, "vec2", "float", Vector2f.class, 2, 1);
+		GL_TYPES.put(GL32C.GL_FLOAT_VEC2, type);
 		GLSL_TYPES.put("vec2", type);
 		JOML_TYPES.put(Vector2f.class, type);
 
-		type = new TypeDesc(GL_FLOAT_VEC3, "vec3", "float", Vector3f.class, 3, 1);
-		GL_TYPES.put(GL_FLOAT_VEC3, type);
+		type = new TypeDesc(GL32C.GL_FLOAT_VEC3, "vec3", "float", Vector3f.class, 3, 1);
+		GL_TYPES.put(GL32C.GL_FLOAT_VEC3, type);
 		GLSL_TYPES.put("vec3", type);
 		JOML_TYPES.put(Vector3f.class, type);
 
-		type = new TypeDesc(GL_FLOAT_MAT3x2, "mat3x2", "float", Matrix3x2f.class, 3, 2);
-		GL_TYPES.put(GL_FLOAT_MAT3x2, type);
+		type = new TypeDesc(GL32C.GL_FLOAT_MAT3x2, "mat3x2", "float", Matrix3x2f.class, 3, 2);
+		GL_TYPES.put(GL32C.GL_FLOAT_MAT3x2, type);
 		GLSL_TYPES.put("mat3x2", type);
 		JOML_TYPES.put(Matrix3x2f.class, type);
 
-		type = new TypeDesc(GL_FLOAT_MAT3, "mat3", "float", Matrix3f.class, 3, 3);
-		GL_TYPES.put(GL_FLOAT_MAT3, type);
+		type = new TypeDesc(GL32C.GL_FLOAT_MAT3, "mat3", "float", Matrix3f.class, 3, 3);
+		GL_TYPES.put(GL32C.GL_FLOAT_MAT3, type);
 		GLSL_TYPES.put("mat3", type);
 		JOML_TYPES.put(Matrix3f.class, type);
 
-		type = new TypeDesc(GL_FLOAT_VEC4, "vec4", "float", Vector4f.class, 4, 1);
-		GL_TYPES.put(GL_FLOAT_VEC4, type);
+		type = new TypeDesc(GL32C.GL_FLOAT_VEC4, "vec4", "float", Vector4f.class, 4, 1);
+		GL_TYPES.put(GL32C.GL_FLOAT_VEC4, type);
 		GLSL_TYPES.put("vec4", type);
 		JOML_TYPES.put(Vector4f.class, type);
 
-		type = new TypeDesc(GL_FLOAT_MAT4x3, "mat4x3", "float", Matrix4x3f.class, 4, 3);
-		GL_TYPES.put(GL_FLOAT_MAT4x3, type);
+		type = new TypeDesc(GL32C.GL_FLOAT_MAT4x3, "mat4x3", "float", Matrix4x3f.class, 4, 3);
+		GL_TYPES.put(GL32C.GL_FLOAT_MAT4x3, type);
 		GLSL_TYPES.put("mat4x3", type);
 		JOML_TYPES.put(Matrix4x3f.class, type);
 
-		type = new TypeDesc(GL_FLOAT_MAT4, "mat4", "float", Matrix4f.class, 4, 4);
-		GL_TYPES.put(GL_FLOAT_MAT4, type);
+		type = new TypeDesc(GL32C.GL_FLOAT_MAT4, "mat4", "float", Matrix4f.class, 4, 4);
+		GL_TYPES.put(GL32C.GL_FLOAT_MAT4, type);
 		GLSL_TYPES.put("mat4", type);
 		JOML_TYPES.put(Matrix4f.class, type);
 
-		type = new TypeDesc(GL_DOUBLE, "double", "double", Double.class, 1, 1);
-		GL_TYPES.put(GL_DOUBLE, type);
+		type = new TypeDesc(GL40C.GL_DOUBLE, "double", "double", Double.class, 1, 1);
+		GL_TYPES.put(GL40C.GL_DOUBLE, type);
 		GLSL_TYPES.put("double", type);
 		JOML_TYPES.put(Double.class, type);
 
-		type = new TypeDesc(GL_DOUBLE_VEC2, "dvec2", "double", Vector2d.class, 2, 1);
-		GL_TYPES.put(GL_DOUBLE_VEC2, type);
+		type = new TypeDesc(GL40C.GL_DOUBLE_VEC2, "dvec2", "double", Vector2d.class, 2, 1);
+		GL_TYPES.put(GL40C.GL_DOUBLE_VEC2, type);
 		GLSL_TYPES.put("dvec2", type);
 		JOML_TYPES.put(Vector2d.class, type);
 
-		type = new TypeDesc(GL_DOUBLE_VEC3, "dvec3", "double", Vector3d.class, 3, 1);
-		GL_TYPES.put(GL_DOUBLE_VEC3, type);
+		type = new TypeDesc(GL40C.GL_DOUBLE_VEC3, "dvec3", "double", Vector3d.class, 3, 1);
+		GL_TYPES.put(GL40C.GL_DOUBLE_VEC3, type);
 		GLSL_TYPES.put("dvec3", type);
 		JOML_TYPES.put(Vector3d.class, type);
 
-		type = new TypeDesc(GL_DOUBLE_MAT3x2, "dmat3x2", "double", Matrix3x2d.class, 3, 2);
-		GL_TYPES.put(GL_DOUBLE_MAT3x2, type);
+		type = new TypeDesc(GL40C.GL_DOUBLE_MAT3x2, "dmat3x2", "double", Matrix3x2d.class, 3, 2);
+		GL_TYPES.put(GL40C.GL_DOUBLE_MAT3x2, type);
 		GLSL_TYPES.put("dmat3x2", type);
 		JOML_TYPES.put(Matrix3x2d.class, type);
 
-		type = new TypeDesc(GL_DOUBLE_MAT3, "dmat3", "double", Matrix3d.class, 3, 3);
-		GL_TYPES.put(GL_DOUBLE_MAT3, type);
+		type = new TypeDesc(GL40C.GL_DOUBLE_MAT3, "dmat3", "double", Matrix3d.class, 3, 3);
+		GL_TYPES.put(GL40C.GL_DOUBLE_MAT3, type);
 		GLSL_TYPES.put("dmat3", type);
 		JOML_TYPES.put(Matrix3d.class, type);
 
-		type = new TypeDesc(GL_DOUBLE_VEC4, "dvec4", "double", Vector4d.class, 4, 1);
-		GL_TYPES.put(GL_DOUBLE_VEC4, type);
+		type = new TypeDesc(GL40C.GL_DOUBLE_VEC4, "dvec4", "double", Vector4d.class, 4, 1);
+		GL_TYPES.put(GL40C.GL_DOUBLE_VEC4, type);
 		GLSL_TYPES.put("dvec4", type);
 		JOML_TYPES.put(Vector4d.class, type);
 
-		type = new TypeDesc(GL_DOUBLE_MAT4x3, "dmat4x3", "double", Matrix4x3d.class, 4, 3);
-		GL_TYPES.put(GL_DOUBLE_MAT4x3, type);
+		type = new TypeDesc(GL40C.GL_DOUBLE_MAT4x3, "dmat4x3", "double", Matrix4x3d.class, 4, 3);
+		GL_TYPES.put(GL40C.GL_DOUBLE_MAT4x3, type);
 		GLSL_TYPES.put("dmat4x3", type);
 		JOML_TYPES.put(Matrix4x3d.class, type);
 
-		type = new TypeDesc(GL_DOUBLE_MAT4, "dmat4", "double", Matrix4d.class, 4, 4);
-		GL_TYPES.put(GL_DOUBLE_MAT4, type);
+		type = new TypeDesc(GL40C.GL_DOUBLE_MAT4, "dmat4", "double", Matrix4d.class, 4, 4);
+		GL_TYPES.put(GL40C.GL_DOUBLE_MAT4, type);
 		GLSL_TYPES.put("dmat4", type);
 		JOML_TYPES.put(Matrix4d.class, type);
 	}
@@ -181,14 +181,14 @@ public class Variables {
 	static class Uniform1i extends AbstractUniform<Integer> {
 
 		public Integer get(Integer unused) {
-			return glGetUniformi(program.id(), loc);
+			return GL32C.glGetUniformi(program.id(), loc);
 		}
 		public Integer get() {
-			return glGetUniformi(program.id(), loc);
+			return GL32C.glGetUniformi(program.id(), loc);
 		}
 		public void set(Integer val) {
 			program.bind();
-			glUniform1i(loc, val);
+			GL32C.glUniform1i(loc, val);
 		}
 
 		public String typeName() {
@@ -196,7 +196,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_INT;
+			return GL32C.GL_INT;
 		}
 
 		public int size() {
@@ -209,19 +209,19 @@ public class Variables {
 
 		public Vector2i get(Vector2i dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
 		public Vector2i get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector2i(tmpBuf.asIntBuffer());
 		}
 
 		public void set(Vector2i val) {
 			program.bind();
-			glUniform2i(loc, val.x, val.y);
+			GL32C.glUniform2i(loc, val.x, val.y);
 		}
 
 		public String typeName() {
@@ -229,7 +229,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_INT_VEC2;
+			return GL32C.GL_INT_VEC2;
 		}
 
 		public int size() {
@@ -242,19 +242,19 @@ public class Variables {
 
 		public Vector3i get(Vector3i dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
 		public Vector3i get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector3i(tmpBuf.asIntBuffer());
 		}
 
 		public void set(Vector3i val) {
 			program.bind();
-			glUniform3i(loc, val.x, val.y, val.z);
+			GL32C.glUniform3i(loc, val.x, val.y, val.z);
 		}
 
 		public String typeName() {
@@ -262,7 +262,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_INT_VEC3;
+			return GL32C.GL_INT_VEC3;
 		}
 
 		public int size() {
@@ -275,19 +275,19 @@ public class Variables {
 
 		public Vector4i get(Vector4i dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
 		public Vector4i get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector4i(tmpBuf.asIntBuffer());
 		}
 
 		public void set(Vector4i val) {
 			program.bind();
-			glUniform4i(loc, val.x, val.y, val.z, val.w);
+			GL32C.glUniform4i(loc, val.x, val.y, val.z, val.w);
 		}
 
 		public String typeName() {
@@ -295,7 +295,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_INT_VEC4;
+			return GL32C.GL_INT_VEC4;
 		}
 
 		public int size() {
@@ -307,14 +307,14 @@ public class Variables {
 	static class Uniform1ui extends AbstractUniform<Integer> {
 
 		public Integer get(Integer unused) {
-			return glGetUniformui(program.id(), loc);
+			return GL32C.glGetUniformui(program.id(), loc);
 		}
 		public Integer get() {
-			return glGetUniformui(program.id(), loc);
+			return GL32C.glGetUniformui(program.id(), loc);
 		}
 		public void set(Integer val) {
 			program.bind();
-			glUniform1ui(loc, val);
+			GL32C.glUniform1ui(loc, val);
 		}
 
 		public String typeName() {
@@ -322,7 +322,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_UNSIGNED_INT;
+			return GL32C.GL_UNSIGNED_INT;
 		}
 
 		public int size() {
@@ -335,19 +335,19 @@ public class Variables {
 
 		public Vector2i get(Vector2i dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
 		public Vector2i get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector2i(tmpBuf.asIntBuffer());
 		}
 
 		public void set(Vector2i val) {
 			program.bind();
-			glUniform2ui(loc, val.x, val.y);
+			GL32C.glUniform2ui(loc, val.x, val.y);
 		}
 
 		public String typeName() {
@@ -355,7 +355,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_UNSIGNED_INT_VEC2;
+			return GL32C.GL_UNSIGNED_INT_VEC2;
 		}
 
 		public int size() {
@@ -368,19 +368,19 @@ public class Variables {
 
 		public Vector3i get(Vector3i dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
 		public Vector3i get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector3i(tmpBuf.asIntBuffer());
 		}
 
 		public void set(Vector3i val) {
 			program.bind();
-			glUniform3ui(loc, val.x, val.y, val.z);
+			GL32C.glUniform3ui(loc, val.x, val.y, val.z);
 		}
 
 		public String typeName() {
@@ -388,7 +388,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_UNSIGNED_INT_VEC3;
+			return GL32C.GL_UNSIGNED_INT_VEC3;
 		}
 
 		public int size() {
@@ -401,19 +401,19 @@ public class Variables {
 
 		public Vector4i get(Vector4i dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return dest.set(tmpBuf.asIntBuffer());
 		}
 
 		public Vector4i get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
+			GL32C.glGetUniformuiv(program.id(), loc, tmpBuf.asIntBuffer());
 			return new Vector4i(tmpBuf.asIntBuffer());
 		}
 
 		public void set(Vector4i val) {
 			program.bind();
-			glUniform4ui(loc, val.x, val.y, val.z, val.w);
+			GL32C.glUniform4ui(loc, val.x, val.y, val.z, val.w);
 		}
 
 		public String typeName() {
@@ -421,7 +421,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_UNSIGNED_INT_VEC4;
+			return GL32C.GL_UNSIGNED_INT_VEC4;
 		}
 
 		public int size() {
@@ -433,14 +433,14 @@ public class Variables {
 	static class Uniform1f extends AbstractUniform<Float> {
 
 		public Float get(Float unused) {
-			return glGetUniformf(program.id(), loc);
+			return GL32C.glGetUniformf(program.id(), loc);
 		}
 		public Float get() {
-			return glGetUniformf(program.id(), loc);
+			return GL32C.glGetUniformf(program.id(), loc);
 		}
 		public void set(Float val) {
 			program.bind();
-			glUniform1f(loc, val);
+			GL32C.glUniform1f(loc, val);
 		}
 
 		public String typeName() {
@@ -448,7 +448,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_FLOAT;
+			return GL32C.GL_FLOAT;
 		}
 
 		public int size() {
@@ -461,19 +461,19 @@ public class Variables {
 
 		public Vector2f get(Vector2f dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
 		public Vector2f get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Vector2f(tmpBuf.asFloatBuffer());
 		}
 
 		public void set(Vector2f val) {
 			program.bind();
-			glUniform2f(loc, val.x, val.y);
+			GL32C.glUniform2f(loc, val.x, val.y);
 		}
 
 		public String typeName() {
@@ -481,7 +481,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_FLOAT_VEC2;
+			return GL32C.GL_FLOAT_VEC2;
 		}
 
 		public int size() {
@@ -494,19 +494,19 @@ public class Variables {
 
 		public Vector3f get(Vector3f dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
 		public Vector3f get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Vector3f(tmpBuf.asFloatBuffer());
 		}
 
 		public void set(Vector3f val) {
 			program.bind();
-			glUniform3f(loc, val.x, val.y, val.z);
+			GL32C.glUniform3f(loc, val.x, val.y, val.z);
 		}
 
 		public String typeName() {
@@ -514,7 +514,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_FLOAT_VEC3;
+			return GL32C.GL_FLOAT_VEC3;
 		}
 
 		public int size() {
@@ -527,13 +527,13 @@ public class Variables {
 
 		public Matrix3x2f get(Matrix3x2f dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
 		public Matrix3x2f get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Matrix3x2f(tmpBuf.asFloatBuffer());
 		}
 
@@ -542,7 +542,7 @@ public class Variables {
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
-			glUniformMatrix3fv(loc, false, tmpBuf.asFloatBuffer());
+			GL32C.glUniformMatrix3fv(loc, false, tmpBuf.asFloatBuffer());
 		}
 
 		public String typeName() {
@@ -550,7 +550,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_FLOAT_MAT3x2;
+			return GL32C.GL_FLOAT_MAT3x2;
 		}
 
 		public int size() {
@@ -563,13 +563,13 @@ public class Variables {
 
 		public Matrix3f get(Matrix3f dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
 		public Matrix3f get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Matrix3f(tmpBuf.asFloatBuffer());
 		}
 
@@ -578,7 +578,7 @@ public class Variables {
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
-			glUniformMatrix3fv(loc, false, tmpBuf.asFloatBuffer());
+			GL32C.glUniformMatrix3fv(loc, false, tmpBuf.asFloatBuffer());
 		}
 
 		public String typeName() {
@@ -586,7 +586,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_FLOAT_MAT3;
+			return GL32C.GL_FLOAT_MAT3;
 		}
 
 		public int size() {
@@ -599,19 +599,19 @@ public class Variables {
 
 		public Vector4f get(Vector4f dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
 		public Vector4f get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Vector4f(tmpBuf.asFloatBuffer());
 		}
 
 		public void set(Vector4f val) {
 			program.bind();
-			glUniform4f(loc, val.x, val.y, val.z, val.w);
+			GL32C.glUniform4f(loc, val.x, val.y, val.z, val.w);
 		}
 
 		public String typeName() {
@@ -619,7 +619,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_FLOAT_VEC4;
+			return GL32C.GL_FLOAT_VEC4;
 		}
 
 		public int size() {
@@ -632,13 +632,13 @@ public class Variables {
 
 		public Matrix4x3f get(Matrix4x3f dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
 		public Matrix4x3f get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Matrix4x3f(tmpBuf.asFloatBuffer());
 		}
 
@@ -647,7 +647,7 @@ public class Variables {
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
-			glUniformMatrix4fv(loc, false, tmpBuf.asFloatBuffer());
+			GL32C.glUniformMatrix4fv(loc, false, tmpBuf.asFloatBuffer());
 		}
 
 		public String typeName() {
@@ -655,7 +655,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_FLOAT_MAT4x3;
+			return GL32C.GL_FLOAT_MAT4x3;
 		}
 
 		public int size() {
@@ -668,13 +668,13 @@ public class Variables {
 
 		public Matrix4f get(Matrix4f dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return dest.set(tmpBuf.asFloatBuffer());
 		}
 
 		public Matrix4f get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
+			GL32C.glGetUniformfv(program.id(), loc, tmpBuf.asFloatBuffer());
 			return new Matrix4f(tmpBuf.asFloatBuffer());
 		}
 
@@ -683,7 +683,7 @@ public class Variables {
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
-			glUniformMatrix4fv(loc, false, tmpBuf.asFloatBuffer());
+			GL32C.glUniformMatrix4fv(loc, false, tmpBuf.asFloatBuffer());
 		}
 
 		public String typeName() {
@@ -691,7 +691,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_FLOAT_MAT4;
+			return GL32C.GL_FLOAT_MAT4;
 		}
 
 		public int size() {
@@ -703,14 +703,14 @@ public class Variables {
 	static class Uniform1d extends AbstractUniform<Double> {
 
 		public Double get(Double unused) {
-			return glGetUniformd(program.id(), loc);
+			return GL40C.glGetUniformd(program.id(), loc);
 		}
 		public Double get() {
-			return glGetUniformd(program.id(), loc);
+			return GL40C.glGetUniformd(program.id(), loc);
 		}
 		public void set(Double val) {
 			program.bind();
-			glUniform1d(loc, val);
+			GL40C.glUniform1d(loc, val);
 		}
 
 		public String typeName() {
@@ -718,7 +718,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_DOUBLE;
+			return GL40C.GL_DOUBLE;
 		}
 
 		public int size() {
@@ -731,19 +731,19 @@ public class Variables {
 
 		public Vector2d get(Vector2d dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
 		public Vector2d get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Vector2d(tmpBuf.asDoubleBuffer());
 		}
 
 		public void set(Vector2d val) {
 			program.bind();
-			glUniform2d(loc, val.x, val.y);
+			GL40C.glUniform2d(loc, val.x, val.y);
 		}
 
 		public String typeName() {
@@ -751,7 +751,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_DOUBLE_VEC2;
+			return GL40C.GL_DOUBLE_VEC2;
 		}
 
 		public int size() {
@@ -764,19 +764,19 @@ public class Variables {
 
 		public Vector3d get(Vector3d dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
 		public Vector3d get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Vector3d(tmpBuf.asDoubleBuffer());
 		}
 
 		public void set(Vector3d val) {
 			program.bind();
-			glUniform3d(loc, val.x, val.y, val.z);
+			GL40C.glUniform3d(loc, val.x, val.y, val.z);
 		}
 
 		public String typeName() {
@@ -784,7 +784,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_DOUBLE_VEC3;
+			return GL40C.GL_DOUBLE_VEC3;
 		}
 
 		public int size() {
@@ -797,13 +797,13 @@ public class Variables {
 
 		public Matrix3x2d get(Matrix3x2d dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
 		public Matrix3x2d get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Matrix3x2d(tmpBuf.asDoubleBuffer());
 		}
 
@@ -812,7 +812,7 @@ public class Variables {
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
-			glUniformMatrix3dv(loc, false, tmpBuf.asDoubleBuffer());
+			GL40C.glUniformMatrix3dv(loc, false, tmpBuf.asDoubleBuffer());
 		}
 
 		public String typeName() {
@@ -820,7 +820,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_DOUBLE_MAT3x2;
+			return GL40C.GL_DOUBLE_MAT3x2;
 		}
 
 		public int size() {
@@ -833,13 +833,13 @@ public class Variables {
 
 		public Matrix3d get(Matrix3d dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
 		public Matrix3d get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Matrix3d(tmpBuf.asDoubleBuffer());
 		}
 
@@ -848,7 +848,7 @@ public class Variables {
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
-			glUniformMatrix3dv(loc, false, tmpBuf.asDoubleBuffer());
+			GL40C.glUniformMatrix3dv(loc, false, tmpBuf.asDoubleBuffer());
 		}
 
 		public String typeName() {
@@ -856,7 +856,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_DOUBLE_MAT3;
+			return GL40C.GL_DOUBLE_MAT3;
 		}
 
 		public int size() {
@@ -869,19 +869,19 @@ public class Variables {
 
 		public Vector4d get(Vector4d dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
 		public Vector4d get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Vector4d(tmpBuf.asDoubleBuffer());
 		}
 
 		public void set(Vector4d val) {
 			program.bind();
-			glUniform4d(loc, val.x, val.y, val.z, val.w);
+			GL40C.glUniform4d(loc, val.x, val.y, val.z, val.w);
 		}
 
 		public String typeName() {
@@ -889,7 +889,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_DOUBLE_VEC4;
+			return GL40C.GL_DOUBLE_VEC4;
 		}
 
 		public int size() {
@@ -902,13 +902,13 @@ public class Variables {
 
 		public Matrix4x3d get(Matrix4x3d dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
 		public Matrix4x3d get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Matrix4x3d(tmpBuf.asDoubleBuffer());
 		}
 
@@ -917,7 +917,7 @@ public class Variables {
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
-			glUniformMatrix4dv(loc, false, tmpBuf.asDoubleBuffer());
+			GL40C.glUniformMatrix4dv(loc, false, tmpBuf.asDoubleBuffer());
 		}
 
 		public String typeName() {
@@ -925,7 +925,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_DOUBLE_MAT4x3;
+			return GL40C.GL_DOUBLE_MAT4x3;
 		}
 
 		public int size() {
@@ -938,13 +938,13 @@ public class Variables {
 
 		public Matrix4d get(Matrix4d dest) {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return dest.set(tmpBuf.asDoubleBuffer());
 		}
 
 		public Matrix4d get() {
 			tmpBuf.rewind().limit(size());
-			glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
+			GL40C.glGetUniformdv(program.id(), loc, tmpBuf.asDoubleBuffer());
 			return new Matrix4d(tmpBuf.asDoubleBuffer());
 		}
 
@@ -953,7 +953,7 @@ public class Variables {
 			val.get(tmpBuf);
 			tmpBuf.limit(size());
 			program.bind();
-			glUniformMatrix4dv(loc, false, tmpBuf.asDoubleBuffer());
+			GL40C.glUniformMatrix4dv(loc, false, tmpBuf.asDoubleBuffer());
 		}
 
 		public String typeName() {
@@ -961,7 +961,7 @@ public class Variables {
 		}
 
 		public int typeId() {
-			return GL_DOUBLE_MAT4;
+			return GL40C.GL_DOUBLE_MAT4;
 		}
 
 		public int size() {
@@ -1029,54 +1029,54 @@ public class Variables {
 	@SuppressWarnings("unchecked")
 	protected static <T> AbstractUniform<T> createVariable(int type) {
 		switch(type) {
-		case GL_FLOAT:
-			return (AbstractUniform<T>) new Uniform1f();
-		case GL_DOUBLE:
-			return (AbstractUniform<T>) new Uniform1d();
-		case GL_FLOAT_MAT4x3:
-			return (AbstractUniform<T>) new UniformMat4x3f();
-		case GL_DOUBLE_VEC4:
-			return (AbstractUniform<T>) new UniformVec4d();
-		case GL_FLOAT_MAT3x2:
-			return (AbstractUniform<T>) new UniformMat3x2f();
-		case GL_DOUBLE_VEC3:
-			return (AbstractUniform<T>) new UniformVec3d();
-		case GL_UNSIGNED_INT_VEC4:
-			return (AbstractUniform<T>) new UniformVec4ui();
-		case GL_DOUBLE_VEC2:
-			return (AbstractUniform<T>) new UniformVec2d();
-		case GL_UNSIGNED_INT:
-			return (AbstractUniform<T>) new Uniform1ui();
-		case GL_FLOAT_MAT4:
-			return (AbstractUniform<T>) new UniformMat4f();
-		case GL_FLOAT_MAT3:
-			return (AbstractUniform<T>) new UniformMat3f();
-		case GL_UNSIGNED_INT_VEC3:
-			return (AbstractUniform<T>) new UniformVec3ui();
-		case GL_UNSIGNED_INT_VEC2:
-			return (AbstractUniform<T>) new UniformVec2ui();
-		case GL_DOUBLE_MAT4:
-			return (AbstractUniform<T>) new UniformMat4d();
-		case GL_DOUBLE_MAT4x3:
-			return (AbstractUniform<T>) new UniformMat4x3d();
-		case GL_INT:
-			return (AbstractUniform<T>) new Uniform1i();
-		case GL_DOUBLE_MAT3x2:
-			return (AbstractUniform<T>) new UniformMat3x2d();
-		case GL_FLOAT_VEC2:
-			return (AbstractUniform<T>) new UniformVec2f();
-		case GL_INT_VEC4:
-			return (AbstractUniform<T>) new UniformVec4i();
-		case GL_DOUBLE_MAT3:
-			return (AbstractUniform<T>) new UniformMat3d();
-		case GL_INT_VEC2:
-			return (AbstractUniform<T>) new UniformVec2i();
-		case GL_FLOAT_VEC4:
+		case GL32C.GL_FLOAT_VEC4:
 			return (AbstractUniform<T>) new UniformVec4f();
-		case GL_INT_VEC3:
-			return (AbstractUniform<T>) new UniformVec3i();
-		case GL_FLOAT_VEC3:
+		case GL32C.GL_FLOAT_VEC3:
 			return (AbstractUniform<T>) new UniformVec3f();
+		case GL32C.GL_FLOAT_MAT3x2:
+			return (AbstractUniform<T>) new UniformMat3x2f();
+		case GL32C.GL_FLOAT_VEC2:
+			return (AbstractUniform<T>) new UniformVec2f();
+		case GL32C.GL_INT_VEC3:
+			return (AbstractUniform<T>) new UniformVec3i();
+		case GL32C.GL_FLOAT_MAT4x3:
+			return (AbstractUniform<T>) new UniformMat4x3f();
+		case GL32C.GL_INT_VEC4:
+			return (AbstractUniform<T>) new UniformVec4i();
+		case GL40C.GL_DOUBLE:
+			return (AbstractUniform<T>) new Uniform1d();
+		case GL32C.GL_INT_VEC2:
+			return (AbstractUniform<T>) new UniformVec2i();
+		case GL32C.GL_UNSIGNED_INT_VEC2:
+			return (AbstractUniform<T>) new UniformVec2ui();
+		case GL32C.GL_FLOAT_MAT4:
+			return (AbstractUniform<T>) new UniformMat4f();
+		case GL32C.GL_UNSIGNED_INT_VEC4:
+			return (AbstractUniform<T>) new UniformVec4ui();
+		case GL32C.GL_FLOAT_MAT3:
+			return (AbstractUniform<T>) new UniformMat3f();
+		case GL32C.GL_UNSIGNED_INT_VEC3:
+			return (AbstractUniform<T>) new UniformVec3ui();
+		case GL40C.GL_DOUBLE_VEC4:
+			return (AbstractUniform<T>) new UniformVec4d();
+		case GL32C.GL_FLOAT:
+			return (AbstractUniform<T>) new Uniform1f();
+		case GL40C.GL_DOUBLE_VEC3:
+			return (AbstractUniform<T>) new UniformVec3d();
+		case GL40C.GL_DOUBLE_VEC2:
+			return (AbstractUniform<T>) new UniformVec2d();
+		case GL32C.GL_UNSIGNED_INT:
+			return (AbstractUniform<T>) new Uniform1ui();
+		case GL40C.GL_DOUBLE_MAT4x3:
+			return (AbstractUniform<T>) new UniformMat4x3d();
+		case GL40C.GL_DOUBLE_MAT3x2:
+			return (AbstractUniform<T>) new UniformMat3x2d();
+		case GL40C.GL_DOUBLE_MAT3:
+			return (AbstractUniform<T>) new UniformMat3d();
+		case GL40C.GL_DOUBLE_MAT4:
+			return (AbstractUniform<T>) new UniformMat4d();
+		case GL32C.GL_INT:
+			return (AbstractUniform<T>) new Uniform1i();
 		default:
 			throw new IllegalArgumentException(String.valueOf(type));
 		}

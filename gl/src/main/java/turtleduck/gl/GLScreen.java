@@ -1,32 +1,28 @@
 package turtleduck.gl;
 
-import static turtleduck.gl.Vectors.*;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11C.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11C.GL_STENCIL_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11C.glClear;
-import static org.lwjgl.opengl.GL11C.glEnable;
-import static org.lwjgl.opengl.GL43C.*;
 
-import org.lwjgl.BufferUtils;
+import static org.lwjgl.opengl.GL32C.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memAddress;
+import static turtleduck.gl.Vectors.vec4;
 
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector2fc;
-import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL43C;
 //import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.GLUtil;
@@ -35,14 +31,10 @@ import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Predicate;
-
+import turtleduck.canvas.Canvas;
 import turtleduck.canvas.CanvasImpl;
 import turtleduck.colors.Color;
-import turtleduck.canvas.Canvas;
+import turtleduck.display.Camera;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
@@ -51,13 +43,10 @@ import turtleduck.display.Viewport.ViewportBuilder;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
-import turtleduck.gl.objects.CubeModel;
 import turtleduck.gl.objects.FloatMath;
 import turtleduck.gl.objects.ShaderObject;
 import turtleduck.gl.objects.ShaderProgram;
-import turtleduck.gl.objects.Uniform;
 import turtleduck.gl.objects.VertexArrayFormat;
-import turtleduck.display.Camera;
 import turtleduck.scene.SceneNode;
 import turtleduck.scene.SceneObject2;
 import turtleduck.scene.SceneObject3;
@@ -95,6 +84,12 @@ public class GLScreen extends BaseScreen implements Screen {
 	public Camera camera2, camera3;
 
 	private int frameBuf;
+
+	public static boolean glHasProgramInterfaceQuery;
+
+	public static int glMajor;
+
+	public static int glMinor;
 
 	@Override
 	public void clearBackground() {
@@ -280,8 +275,10 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glMajor = 3;
+		glMinor = 2;
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
 //		glfwWindowHint(GLFW_SAMPLES, 1);
 		glfwWindowHint(GLFW_DOUBLEBUFFER, DOUBLE_BUFFER ? GLFW_TRUE : GLFW_FALSE);
 
@@ -293,21 +290,11 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwMakeContextCurrent(window);
 		GLDisplayInfo.INSTANCE.updateVideoMode(window);
 		caps = GL.createCapabilities();
-		if (!caps.GL_ARB_program_interface_query) {
-			glfwTerminate();
-			throw new AssertionError("Required OpenGL extension missing: ARB_program_interface_query");
+		if (caps.GL_ARB_program_interface_query) {
+			glHasProgramInterfaceQuery = true;
 		}
-		if (!caps.GL_ARB_shader_objects) {
-			glfwTerminate();
-			throw new AssertionError("Required OpenGL extension missing: ARB_shader_objects");
-		}
-		if (!caps.GL_ARB_vertex_shader) {
-			glfwTerminate();
-			throw new AssertionError("Required OpenGL extension missing: ARB_vertex_shader");
-		}
-		if (!caps.GL_ARB_separate_shader_objects) {
-			glfwTerminate();
-			throw new AssertionError("Required OpenGL extension missing: ARB_fragment_shader");
+		if (caps.GL_ARB_separate_shader_objects) {
+			// would be needed for glBindProgramPipeline
 		}
 		glfwSetFramebufferSizeCallback(window, this::callbackFramebufferSize);
 		glfwSetWindowSizeCallback(window, this::callbackWindowSize);
@@ -349,22 +336,17 @@ public class GLScreen extends BaseScreen implements Screen {
 			height = framebufferSize.get(1);
 		}
 
-		debugProc = GLUtil.setupDebugMessageCallback();
-		glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null,
-				false);
-		glEnable(GL_DEBUG_OUTPUT);
-
+		if (glMajor >= 4 && glMinor >= 3) {
+			debugProc = GLUtil.setupDebugMessageCallback();
+			GL43C.glDebugMessageControl(GL_DONT_CARE, GL43C.GL_DEBUG_TYPE_OTHER, GL43C.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null,
+					false);
+			glEnable(GL43C.GL_DEBUG_OUTPUT);
+		}
 //		glEnable(GL_MULTISAMPLE);
 
 		System.err.println("Creating buffers");
 
 		try {
-			ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/simple-vs.glsl", GL_VERTEX_SHADER);
-			ShaderObject fs = ShaderObject.create("/turtleduck/gl/shaders/color-fs.glsl", GL_FRAGMENT_SHADER);
-			shader3d = ShaderProgram.createProgram("shader3d", vs, fs);
-			ShaderObject vs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
-			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
-			shader2d = ShaderProgram.createProgram("shader2d", vs2, fs2);
 			VertexArrayFormat format = new VertexArrayFormat();
 			format.addField("aPos", Vector3f.class);
 			format.addField("aColor", Color.class);
@@ -375,7 +357,15 @@ public class GLScreen extends BaseScreen implements Screen {
 			format3.addField("aNormal", Vector3f.class);
 			format3.addField("aTexCoord", Vector2f.class);
 
+			ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/simple-vs.glsl", GL_VERTEX_SHADER);
+			ShaderObject fs = ShaderObject.create("/turtleduck/gl/shaders/color-fs.glsl", GL_FRAGMENT_SHADER);
+			shader3d = ShaderProgram.createProgram("shader3d", format3, vs, fs);
+			ShaderObject vs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
+			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
+			shader2d = ShaderProgram.createProgram("shader2d", format, vs2, fs2);
+System.out.println(shader2d.format());
 			shader2d.format(format);
+			System.out.println(shader3d.format());
 			shader3d.format(format3);
 //			shader3d.uniform("uLightPos", Vector4f.class).set(lightPosition);
 //			shader3d.uniform("uViewPos", Vector4f.class).set(defaultCameraPosition);
@@ -402,7 +392,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glfwPollEvents();
 		mouse.callbackMousePosition(0, width / 2, height / 2);
-System.out.println("new layer");
+		System.out.println("new layer");
 		layer = new GLLayer(newLayerId(), this, camera2, camera3, viewport.width(), viewport.height());
 		System.out.println(layer);
 		addLayer(layer);
@@ -554,7 +544,6 @@ System.out.println("new layer");
 		// TODO Auto-generated method stub
 
 	}
-
 
 	public void render() {
 //		updateProjection();
