@@ -1,6 +1,8 @@
 package turtleduck.auth.data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,6 +26,7 @@ public class AuthOptions {
 	public String revocation_endpoint = null;
 	public String userinfo_endpoint = null;
 	public Map<String,Object> mapping = new HashMap<>();
+	public List<String> valid_servers = new ArrayList<>();
 	public String jwks_uri = null;
 	public String scope = "openid email";
 	public boolean oauth_discover = true;

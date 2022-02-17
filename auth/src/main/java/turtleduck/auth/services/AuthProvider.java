@@ -46,6 +46,7 @@ public class AuthProvider {
 	private OAuth2AuthHandler authHandler;
 	private OAuth2API api;
 	public Authorizor authorizor;
+	private Handler<RoutingContext> userValidator;
 	public Future<AuthProvider> futureThis;
 	private final String loginSubPath, callbackSubPath;
 
@@ -60,7 +61,7 @@ public class AuthProvider {
 //		System.out.println("Set up auth provider from environment: " + options.toJson());
 //	}
 
-	public AuthProvider(AuthOptions opts, URI uri) {
+	public AuthProvider(AuthOptions opts, URI uri, Handler<RoutingContext> validator) {
 		this.options = opts;
 		this.externalUri = uri;
 		if (!opts.login_subpath.startsWith("/"))
@@ -70,9 +71,10 @@ public class AuthProvider {
 		loginSubPath = opts.login_subpath + "/" + opts.provider_id;
 		callbackSubPath = loginSubPath + "/callback";
 		if (opts.provider_id.equals("discord"))
-			authorizor = new DiscordValidator();
+			authorizor = new DiscordValidator(opts);
 		else
 			authorizor = new DefaultValidator();
+		userValidator = validator;
 	}
 
 	public AuthOptions options() {
@@ -166,7 +168,8 @@ public class AuthProvider {
 					}).failureHandler((ctx) -> {
 						if (ctx.statusCode() == 401) {
 							Session session = ctx.session();
-							logger.warn("request: " + ctx.request().uri() + " " + ctx.request().cookieMap());
+							logger.warn("Failing with 404: request: " + ctx.request().uri() + " "
+									+ ctx.request().cookieMap());
 							logger.warn("Session: " + session.value() + " " + session.data());
 							HttpServerResponse response = ctx.response()//
 									.putHeader(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")//
@@ -180,16 +183,24 @@ public class AuthProvider {
 					authHandler.setupCallback(callbackRoute).withScope(options.scope);
 
 					loginRoute.handler(ctx -> {
-						logger.warn("login attempt with " + options.provider_id + " uri " + ctx.request().uri() + " "
-								+ ctx.request().cookieMap());
+						logger.warn("/login 1: login attempt with " + options.provider_id + " uri "
+								+ ctx.request().uri() + " " + ctx.request().cookieMap());
+						logger.warn("Session: {}", ctx.session());
 						ctx.addCookie(Cookie.cookie("tdlogin", options.provider_id).setMaxAge(24 * 60 * 60 * 1000)
 								.setSecure(true));
 						ctx.next();
-					}).handler(authHandler) //
+					}).handler(ctx -> {
+						logger.info("/login 2");
+						authHandler.handle(ctx);
+					}) //
 							.handler(ctx -> {
-								logger.info("{} found user {} session {}", ctx.request().absoluteURI(), ctx.user(),
-										ctx.session().data());
-								if (ctx.user() != null) {
+								logger.info("/login 3");
+								userValidator.handle(ctx);
+							})//
+							.handler(ctx -> {
+								logger.info("/login 4 {} found user {} session {}", ctx.request().absoluteURI(),
+										ctx.user(), ctx.session().data());
+								if (ctx.user() != null && ctx.statusCode() < 300) {
 									String path = ctx.request().getParam("redirect");
 									if (path != null && path.startsWith("/")
 											&& !path.startsWith(pathPrefix + "/login")) {
@@ -203,6 +214,11 @@ public class AuthProvider {
 									logger.info("Redirecting to {}", pathPrefix + "/login");
 									ctx.redirect(pathPrefix + "/login");
 								}
+							})//
+							.failureHandler(ctx -> {
+								logger.info("/login FAIL: {} {}", ctx.statusCode(), ctx.failure());
+								JsonObject msg = new JsonObject().put("message", "Unauthorized");
+								ctx.redirect(pathPrefix + "/login?" + SimpleHttpClient.jsonToQuery(msg).toString());
 							});
 					logger.info("AuthProvider {} configured ", options.provider_id);
 				} else {

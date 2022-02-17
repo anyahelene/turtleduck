@@ -226,7 +226,7 @@ public class AuthServer extends AbstractVerticle {
 				logger.info("Read options file: " + opts);
 			}
 			if (opts == null) {
-				AuthProvider provider = new AuthProvider(new AuthOptions(), externalUri("/"));
+				AuthProvider provider = new AuthProvider(new AuthOptions(), externalUri("/"), this::handleAuth);
 				authProviders.put(provider.providerId(), provider);
 			} else {
 				JsonObject obj = new JsonObject(opts);
@@ -245,7 +245,7 @@ public class AuthServer extends AbstractVerticle {
 				}
 				for (int i = 0; i < providers.size(); i++) {
 					AuthProvider provider = new AuthProvider(AuthOptions.fromJson(providers.getJsonObject(i)),
-							externalUri("/"));
+							externalUri("/"), this::handleAuth);
 					authProviders.put(provider.providerId(), provider);
 				}
 			}
@@ -260,10 +260,17 @@ public class AuthServer extends AbstractVerticle {
 					provider.configure(route, pathPrefix);
 				}
 			};
+			Runnable startLocal = () -> {
+				sessionStore = LocalSessionStore.create(vertx);
+				logger.info("Using local in-memory session store");
+				startWebServer(startPromise, authSetup);
+			};
+
 			if (redisOpts != null) {
 				String redisUrl = redisOpts.getString("url");
 				String sessionDb = redisOpts.getString("sessionDb", "9");
 				String workerDb = redisOpts.getString("workerDb", "0");
+				boolean fallback = redisOpts.getBoolean("fallbackToLocal", false);
 				if (!redisUrl.endsWith("/"))
 					redisUrl += "/";
 				manager = new Manager(vertx, redisUrl + workerDb, "http://" + bindAddress + ":" + bindPort);
@@ -274,12 +281,17 @@ public class AuthServer extends AbstractVerticle {
 					logger.info("Connected to Redis session store");
 					startWebServer(startPromise, authSetup);
 
-				}).onFailure(ex -> startPromise.fail(ex));
+				}).onFailure(ex -> {
+					logger.warn("Failed to connect to Redis", ex);
+					if (fallback) {
+						startLocal.run();
+					} else {
+						startPromise.fail(ex);
+					}
+				});
 
 			} else {
-				sessionStore = LocalSessionStore.create(vertx);
-				logger.info("Using local in-memory session store");
-				startWebServer(startPromise, authSetup);
+				startLocal.run();
 			}
 
 		}
@@ -403,7 +415,7 @@ public class AuthServer extends AbstractVerticle {
 				ctx.end(result.toBuffer());
 			}).onFailure(ex -> {
 				logger.error("get worker info failed: ", ex);
-				ctx.fail(500);
+				ctx.fail(500, ex);
 			});
 		});
 		router.get(pathPrefix + "/logout").handler(loggerHandler).handler(sessionHandler).handler(ctx -> {
@@ -412,14 +424,17 @@ public class AuthServer extends AbstractVerticle {
 			if (user != null && session != null) {
 				AuthProvider provider = authProvider(session);
 				String endSessionURL = provider.provider().endSessionURL(user, new JsonObject());
+				System.out.println(user.authorizations());
 				logger.info("Logout: endSessionURL = {}", endSessionURL);
 				provider.provider().revoke(user)//
 						.onSuccess(res -> {
+							logger.warn("Destroying session: {}", session);
 							session.destroy();
 							ctx.redirect(
 									uriPath("/login", new JsonObject().put("message", "You have been logged out!")));
 						})//
 						.onFailure(ex -> {
+							logger.error("Failed to revoke user: ", ex);
 							session.destroy();
 							ctx.redirect(uriPath("/login",
 									new JsonObject().put("message", "You have maybe been logged out!?")));
@@ -495,13 +510,15 @@ public class AuthServer extends AbstractVerticle {
 		HttpServerResponse response = ctx.response();
 		if (ex instanceof NoStackTraceThrowable) {
 			NoStackTraceThrowable nstt = (NoStackTraceThrowable) ex;
+			logger.warn("bad session: {}", ex);
 			response.putHeader("X-Error", nstt.getMessage());
 		} else {
 			response.putHeader("X-Error", "Internal server error");
+			logger.warn("bad session: unknown");
 		}
 
 		session.destroy();
-		ctx.fail(401);
+		ctx.fail(401, ex);
 	}
 
 	private void checkUser(RoutingContext ctx, User user, Session session) {
