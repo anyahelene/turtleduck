@@ -25,7 +25,7 @@ public class GLPixelData extends AbstractImage implements Image {
 	}
 
 	public GLPixelData(String filename) throws IOException {
-		this(Texture.create().clamp().nearest().load(filename));
+		this(Texture.create().clamp().nearest().nonlinearColor().load(filename));
 	}
 
 	@Override

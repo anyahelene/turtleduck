@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL32C.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +49,7 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 		}
 		int program = glCreateProgram();
 		data = new ProgramData(program, name);
-		if (format != null)
-			data.inputFormat = format;
+
 		for (ShaderObject sh : shaders) {
 			glAttachShader(program, sh.id());
 			data.shaders.add(sh);
@@ -71,6 +71,8 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 		ShaderProgram prog = new ShaderProgram(data);
 		if (GLScreen.glHasProgramInterfaceQuery)
 			prog.processVars();
+		else if (format != null)
+			data.inputFormat = format;
 		for (int i = 0; i < 10; i++) {
 			int loc = prog.getUniformLocation("texture" + i);
 			if (loc >= 0) {
@@ -123,6 +125,8 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 			}
 		}
 
+		Map<Integer, String> fieldNames = new HashMap<>();
+		Map<Integer, TypeDesc> fieldTypes = new HashMap<>();
 		int nInputs = ARBProgramInterfaceQuery.glGetProgramInterfacei(program,
 				ARBProgramInterfaceQuery.GL_PROGRAM_INPUT, ARBProgramInterfaceQuery.GL_ACTIVE_RESOURCES);
 		for (int i = 0; i < nInputs; i++) {
@@ -134,8 +138,14 @@ public class ShaderProgram extends DataHandle<ShaderProgram, ShaderProgram.Progr
 					props, null, values);
 			TypeDesc typeDesc = Variables.GL_TYPES.get(values[0]);
 			if (typeDesc != null) {
-				data.inputFormat.addField(s, values[1], typeDesc);
+				fieldNames.put(values[1], s);
+				fieldTypes.put(values[1], typeDesc);
 			}
+		}
+		List<Integer> locations = new ArrayList<>(fieldNames.keySet());
+		Collections.sort(locations);
+		for (int i : locations) {
+			data.inputFormat.addField(fieldNames.get(i), i, fieldTypes.get(i));
 		}
 		if (debug)
 			System.out.println("Input format: " + data.inputFormat);

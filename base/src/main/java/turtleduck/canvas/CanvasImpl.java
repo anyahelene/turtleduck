@@ -18,6 +18,7 @@ import turtleduck.paths.Pen;
 import turtleduck.paths.PenBuilder;
 import turtleduck.shapes.Ellipse.EllipseBuilder;
 import turtleduck.shapes.Image.ImageBuilder;
+import turtleduck.shapes.Particles;
 import turtleduck.shapes.Path.PathBuilder;
 import turtleduck.shapes.Poly.LineBuilder;
 import turtleduck.shapes.Rectangle.RectangleBuilder;
@@ -52,8 +53,8 @@ public class CanvasImpl<S extends Screen> implements Canvas {
 	protected final double height;
 	protected Runnable clear;
 
-	public CanvasImpl(String layerId, S screen, double width, double height, Function<Boolean, PathWriter> pwFactory, Runnable clear,
-			CanvasService service) {
+	public CanvasImpl(String layerId, S screen, double width, double height, Function<Boolean, PathWriter> pwFactory,
+			Runnable clear, CanvasService service) {
 		this.id = layerId;
 		this.screen = screen;
 		this.width = width;
@@ -343,7 +344,7 @@ public class CanvasImpl<S extends Screen> implements Canvas {
 
 	@Override
 	public Canvas clear() {
-		if(clear != null)
+		if (clear != null)
 			clear.run();
 		return this;
 	}
@@ -388,5 +389,11 @@ public class CanvasImpl<S extends Screen> implements Canvas {
 		if (canvasService != null)
 			canvasService.background(color.toString());
 		return this;
+	}
+
+	@Override
+	public Particles particles() {
+		Particles particles = pathWriterFactory.apply(false).addParticles();
+		return particles;
 	}
 }

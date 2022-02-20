@@ -6,6 +6,8 @@ import java.util.Arrays;
 
 import org.joml.Vector2f;
 import org.joml.Vector2fc;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import turtleduck.buffer.DataField;
 
@@ -87,6 +89,21 @@ public class VertexArray {
 		return this;
 	}
 
+	public VertexArray put(DataField<Vector4f> field, Vector3f data) {
+		buffer.put(field, data.x, data.y, data.z, 0);
+		return this;
+	}
+
+	public VertexArray put(DataField<Vector4f> field, Vector3f data, float w) {
+		buffer.put(field, data.x, data.y, data.z, w);
+		return this;
+	}
+
+	public VertexArray put(DataField<Vector4f> field, Vector2f data, float z, float w) {
+		buffer.put(field, data.x, data.y, z, w);
+		return this;
+	}
+
 	public void end() {
 		buffer.end();
 		nVertices++;
@@ -126,6 +143,7 @@ public class VertexArray {
 	}
 
 	public String toString() {
-		return "VertexArray(vao=" + Arrays.toString(vaos) + ", buffer=" + buffer.toString() + ", offset=" + offset + ")";
+		return "VertexArray(vao=" + Arrays.toString(vaos) + ", buffer=" + buffer.toString() + ", offset=" + offset
+				+ ")";
 	}
 }

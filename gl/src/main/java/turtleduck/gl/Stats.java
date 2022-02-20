@@ -18,6 +18,8 @@ public class Stats {
 		lastFrameTime = currentFrameTime;
 		currentFrameTime = currentRenderTime = glfwGetTime();
 		deltaTime = (float) (currentFrameTime - lastFrameTime);
+		if(lastFrameTime == 0)
+			deltaTime = 0;
 		frames.addSample(deltaTime);
 		// System.err.println(deltaTime);
 		return (float) deltaTime;

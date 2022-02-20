@@ -240,7 +240,8 @@ public interface BaseTurtle<T extends BaseTurtle<T, C>, C>
 	void beginPath();
 
 	Path endPath();
-
+	Path closePath();
+	T pathOptions(int newOptions);
 	T turn(Direction dir);
 
 	T turnTo(Direction dir);

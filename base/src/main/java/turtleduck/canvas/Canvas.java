@@ -7,6 +7,7 @@ import turtleduck.messaging.CanvasService;
 import turtleduck.paths.impl.PenSettingsContext;
 import turtleduck.shapes.Ellipse;
 import turtleduck.shapes.Image;
+import turtleduck.shapes.Particles;
 import turtleduck.shapes.Path;
 import turtleduck.shapes.Poly;
 import turtleduck.shapes.Rectangle;
@@ -127,4 +128,6 @@ public interface Canvas extends PenSettingsContext<Canvas>, TransformContext2<Ca
 	void evalScript(String javaScript);
 
 	Canvas background(Color color);
+	
+	Particles particles();
 }

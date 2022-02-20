@@ -224,4 +224,6 @@ public interface Color {
 
 	int toARGB();
 
+	Color writeTo(short[] data, int offset);
+
 }

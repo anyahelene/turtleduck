@@ -29,7 +29,7 @@ public abstract class DataField<T> {
 	public String toString() {
 		String s = String.format("%d: %s %s", location, type, name);
 		if (size > 1)
-			s = s + "[" + size + "]";
+			s = s + "[" + size + "]+" + offset;
 		return s;
 	}
 

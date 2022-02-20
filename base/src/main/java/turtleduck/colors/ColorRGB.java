@@ -1,6 +1,7 @@
 package turtleduck.colors;
 
 import turtleduck.colors.Colors.Gamma;
+import turtleduck.util.MathUtil;
 
 public class ColorRGB implements Color {
 //	private final short r, g, b, a;
@@ -325,9 +326,9 @@ public class ColorRGB implements Color {
 //		 g = (int) (green * 255);
 //		 b = (int) (blue * 255);
 		 if (alpha == 1.0)
-			return String.format("#%02X%02X%02X", r, g, b);
+			return String.format("rgb(#%02X%02X%02X,%.3f,%.3f,%.3f)", r, g, b, red, green, blue);
 		else
-			return String.format("#%02X%02X%02X%02X", r, g, b, Math.round(alpha * 255));
+			return String.format("rgb(#%02X%02X%02X%02X,%.3f,%.3f,%.3f,%.3f)", r, g, b, Math.round(alpha * 255), red, green, blue, alpha);
 	}
 
 	@Override
@@ -390,9 +391,18 @@ public class ColorRGB implements Color {
 		int g = (int) (Gamma.gammaCompress(green) * 255);
 		int b = (int) (Gamma.gammaCompress(blue) * 255);
 		int a = (int) (alpha * 255);
-		 r = (int) (red * 255);
-		 g = (int) (green * 255);
-		 b = (int) (blue * 255);
+//		 r = (int) (red * 255);
+//		 g = (int) (green * 255);
+//		 b = (int) (blue * 255);
 		return ((r & 0xff) << 16) | ((g & 0xff) << 8) | ((b & 0xff) << 0) | ((a & 0xff) << 24);
+	}
+
+	@Override
+	public Color writeTo(short[] data, int offset) {
+		data[offset++] = MathUtil.toShortUNorm(red);
+		data[offset++] = MathUtil.toShortUNorm(green);
+		data[offset++] = MathUtil.toShortUNorm(blue);
+		data[offset++] = MathUtil.toShortUNorm(alpha);
+		return this;
 	}
 }

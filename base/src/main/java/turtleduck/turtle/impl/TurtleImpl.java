@@ -133,13 +133,37 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	@Override
 	public void beginPath() {
 		last = null;
-//		points = new ArrayList<>();
-//		points.add(current);
-//		throw new UnsupportedOperationException();
+		if (currentStroke != null) {
+			endPath(false);
+		}
+		currentStroke = writer.addStroke();
+		currentStroke.group(objId);
+	}
+
+
+	@Override
+	public Path closePath() {
+		return endPath(true);
 	}
 
 	@Override
 	public Path endPath() {
+		return endPath(false);
+	}
+
+	protected Path endPath(boolean close) {
+		if (currentStroke != null) {
+			if (close)
+				currentStroke.closePath();
+			else
+				currentStroke.endPath();
+			currentStroke = null;
+		}
+		if (current != null) {
+			current.pen = pen();
+			PathPointImpl pp = current.copy();
+			current = pp;
+		}
 		last = null;
 //		Path path = Path.fromList(points);
 		return null;
@@ -184,13 +208,22 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 		return drawTo(to);
 	}
 
+	protected boolean setPen(boolean down) {
+		boolean penStatus = penDown;
+		penDown = down;
+		if (down) {
+			current.pen = pen;
+			if (last != null && last.pen == null)
+				last.pen = pen;
+		}
+		return penStatus;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public THIS drawTo(Point to) {
 		drawing = true;
-		boolean penStatus = penDown;
-		penDown = true;
-		current.pen = pen();
+		boolean penStatus = setPen(true);
 		super.go(to, RelativeTo.WORLD);
 		penDown = penStatus;
 		triggerActions();
@@ -201,9 +234,7 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	@Override
 	public THIS draw(double dist) {
 		drawing = true;
-		boolean penStatus = penDown;
-		penDown = true;
-		current.pen = pen();
+		boolean penStatus = setPen(true);
 		go(dist);
 		penDown = penStatus;
 		triggerActions();
@@ -285,6 +316,9 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	@SuppressWarnings("unchecked")
 	@Override
 	public RESULT done() {
+		if (current != null) {
+			current.pen = pen();
+		}
 		if (currentStroke != null) {
 			currentStroke.endPath();
 			currentStroke = null;
@@ -365,6 +399,14 @@ public class TurtleImpl<THIS extends BaseTurtle<THIS, RESULT>, RESULT> extends B
 	public THIS go(Direction bearing, double dist) {
 		super.go(bearing, dist);
 		triggerActions();
+		return (THIS) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public THIS pathOptions(int newOptions) {
+		if (currentStroke != null)
+			currentStroke.options(newOptions);
 		return (THIS) this;
 	}
 

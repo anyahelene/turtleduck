@@ -102,9 +102,9 @@ public abstract class Camera {
 
 		public void updateProjection() {
 			float w = (float) viewport.width(), h = (float) viewport.height();
-			projectionMatrix.setOrtho(-w / 2, w / 2, -h / 2, h / 2, -1, 1);
+			projectionMatrix.setOrtho(-w / 2, w / 2, -h / 2, h / 2, 0, -1);
 //			projectionMatrix.scale(1, 1, 1);
-			projectionMatrix.scale((float) zoom);
+			projectionMatrix.scale((float) zoom, (float) zoom, 1);
 			projectionMatrix.scale(((float) viewport.viewWidth()) / viewport.screenWidth(),
 					((float) viewport.viewHeight()) / viewport.screenHeight(), 1);
 			projectionMatrix.invertOrtho(projectionMatrixInv);

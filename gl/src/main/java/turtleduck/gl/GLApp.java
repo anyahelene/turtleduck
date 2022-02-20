@@ -52,8 +52,11 @@ public class GLApp {
 			} else if (autoClear) {
 				screen.getGLLayer().clear();
 			}
-			if (!screen.paused)
-				app.bigStep(0.1);
+			
+			if (!screen.paused) {
+				screen.startFrame(stats.deltaTime());
+				app.bigStep(stats.deltaTime());
+			}
 			stats.startRender();
 			screen.render();
 			stats.endFrame(true);

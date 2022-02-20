@@ -1,6 +1,7 @@
 package turtleduck.buffer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.joml.Vector2fc;
@@ -27,6 +28,10 @@ public class DataFormat {
 			this.glType = glType;
 			this.norm = norm;
 		}
+		
+		public String toString() {
+			return this.name() + "_" + this.glType;
+		}
 	};
 
 	protected List<DataField<?>> fields = new ArrayList<>();
@@ -41,7 +46,7 @@ public class DataFormat {
 		fields.add(field);
 		location += field.numLocations();
 		vertexSize += field.numBytes();
-
+//		Collections.sort(fields, (f1,f2) -> Integer.compare(f1.location, f2.location));
 	}
 
 	protected <T> DataField<T> makeField(String name, Class<T> type, int loc, int off) {

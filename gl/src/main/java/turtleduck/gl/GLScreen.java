@@ -8,9 +8,11 @@ import static org.lwjgl.system.MemoryUtil.memAddress;
 import static turtleduck.gl.Vectors.vec4;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.List;
 
 import org.joml.Matrix4f;
@@ -22,6 +24,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL43C;
 //import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
@@ -64,7 +67,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	private boolean sgiVideoSync;
 	private GLCapabilities caps;
 	private Callback debugProc;
-	public ShaderProgram shader2d, shader3d;
+	public ShaderProgram shader2d, shader3d, shaderPart;
 	private final int[] oldWindowGeometry = new int[4];
 
 	public final Vector4f lightPosition = vec4(0f, -2.5f, -2.5f, 1f);// .rotateX(pi(1f/8));
@@ -90,6 +93,8 @@ public class GLScreen extends BaseScreen implements Screen {
 	public static int glMajor;
 
 	public static int glMinor;
+
+	double time;
 
 	@Override
 	public void clearBackground() {
@@ -273,15 +278,20 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-		// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-		glMajor = 3;
-		glMinor = 2;
+//		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+		glMajor = 4;
+		glMinor = 6;
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
 //		glfwWindowHint(GLFW_SAMPLES, 1);
 		glfwWindowHint(GLFW_DOUBLEBUFFER, DOUBLE_BUFFER ? GLFW_TRUE : GLFW_FALSE);
-
+		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+//		glfwWindowHint(GLFW_RED_BITS, 10);
+//		glfwWindowHint(GLFW_GREEN_BITS, 10);
+//		glfwWindowHint(GLFW_BLUE_BITS, 10);
+		// full resolution on Mac
+		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
 		window = glfwCreateWindow(width, height, getClass().getName(), NULL, NULL);
 		if (window == NULL) {
 			glfwTerminate();
@@ -327,8 +337,11 @@ public class GLScreen extends BaseScreen implements Screen {
 				glfwSwapInterval(1);
 			}
 		}
-		glDrawBuffer(GL_FRONT);
+		describeFramebuffer(GL_DRAW_FRAMEBUFFER, GL_FRONT_LEFT);
+		glDrawBuffer(GL_BACK);
+//		glEnable(GL_FRAMEBUFFER_SRGB);
 
+		describeFramebuffer(GL_DRAW_FRAMEBUFFER, GL_BACK_LEFT);
 		try (MemoryStack frame = MemoryStack.stackPush()) {
 			IntBuffer framebufferSize = frame.mallocInt(2);
 			nglfwGetFramebufferSize(window, memAddress(framebufferSize), memAddress(framebufferSize) + 4);
@@ -338,36 +351,55 @@ public class GLScreen extends BaseScreen implements Screen {
 
 		if (glMajor >= 4 && glMinor >= 3) {
 			debugProc = GLUtil.setupDebugMessageCallback();
-			GL43C.glDebugMessageControl(GL_DONT_CARE, GL43C.GL_DEBUG_TYPE_OTHER, GL43C.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null,
-					false);
+			GL43C.glDebugMessageControl(GL_DONT_CARE, GL43C.GL_DEBUG_TYPE_OTHER, GL43C.GL_DEBUG_SEVERITY_NOTIFICATION,
+					(IntBuffer) null, false);
 			glEnable(GL43C.GL_DEBUG_OUTPUT);
 		}
 //		glEnable(GL_MULTISAMPLE);
 
-		System.err.println("Creating buffers");
+//		createBuffers();
 
 		try {
 			VertexArrayFormat format = new VertexArrayFormat();
-			format.addField("aPos", Vector3f.class);
+			format.addField("aPos", Vector4f.class);
 			format.addField("aColor", Color.class);
 			format.addField("aTexCoord", Vector2f.class);
 			VertexArrayFormat format3 = new VertexArrayFormat();
-			format3.addField("aPos", Vector3f.class);
+			format3.addField("aPos", Vector4f.class);
 			format3.addField("aColor", Color.class);
 			format3.addField("aNormal", Vector3f.class);
 			format3.addField("aTexCoord", Vector2f.class);
+			VertexArrayFormat formatPart = new VertexArrayFormat();
+			formatPart.addField("startPos", Vector4f.class);
+			formatPart.addField("startColor", Vector4f.class);
+			formatPart.addField("lifetime", Vector2f.class);
+			formatPart.addField("endPos", Vector4f.class);
+			formatPart.addField("endColor", Vector4f.class);
+			formatPart.addField("size", Vector2f.class);
+			formatPart.addField("len", Vector2f.class);
 
 			ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/simple-vs.glsl", GL_VERTEX_SHADER);
 			ShaderObject fs = ShaderObject.create("/turtleduck/gl/shaders/color-fs.glsl", GL_FRAGMENT_SHADER);
-			shader3d = ShaderProgram.createProgram("shader3d", format3, vs, fs);
-			ShaderObject vs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
-			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
-			shader2d = ShaderProgram.createProgram("shader2d", format, vs2, fs2);
-System.out.println(shader2d.format());
-			shader2d.format(format);
+			shader3d = ShaderProgram.createProgram("shader3d", null, vs, fs);
 			System.out.println(shader3d.format());
 			shader3d.format(format3);
-//			shader3d.uniform("uLightPos", Vector4f.class).set(lightPosition);
+			System.out.println(shader3d.format());
+
+			ShaderObject vs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
+			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
+			shader2d = ShaderProgram.createProgram("shader2d", null, vs2, fs2);
+			System.out.println(shader2d.format());
+			shader2d.format(format);
+			System.out.println(shader2d.format());
+
+			ShaderObject vs3 = ShaderObject.create("/turtleduck/gl/shaders/particles-vs.glsl", GL_VERTEX_SHADER);
+			ShaderObject fs3 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
+			shaderPart = ShaderProgram.createProgram("shaderPart", null, vs3, fs3);
+			System.out.println(formatPart);
+			System.out.println(shaderPart.format());
+//			shaderPart.format(formatPart);
+//			System.out.println(shaderPart.format());
+			// shader3d.uniform("uLightPos", Vector4f.class).set(lightPosition);
 //			shader3d.uniform("uViewPos", Vector4f.class).set(defaultCameraPosition);
 //			uModel = shader2d.uniform("uModel", Matrix4f.class);
 //			uProjection = shader2d.uniform("uProjection", Matrix4f.class);
@@ -398,6 +430,71 @@ System.out.println(shader2d.format());
 		addLayer(layer);
 	}
 
+	private void describeFramebuffer(int buffer, int attachment) {
+
+		int drawBuffer = glGetInteger(GL_DRAW_BUFFER);
+		switch (drawBuffer) {
+		case GL_FRONT:
+			System.out.println("Drawing to FRONT ");
+			break;
+		case GL_BACK:
+			System.out.println("Drawing to BACK");
+			break;
+		case GL_DEPTH_ATTACHMENT:
+			System.out.println("Drawing to DEPTH_ATTACHMENT");
+			break;
+		case GL_STENCIL_ATTACHMENT:
+			System.out.println("Drawing to STENCIL_ATTACHMENT");
+			break;
+		case GL_DEPTH_STENCIL_ATTACHMENT:
+			System.out.println("Drawing to DEPTH_STENCIL_ATTACHMENT");
+			break;
+		default:
+			if (drawBuffer >= GL_COLOR_ATTACHMENT0 && drawBuffer <= GL_COLOR_ATTACHMENT31) {
+				System.out.printf("Drawing to COLOR_ATTACHMENT%d\n", drawBuffer - GL_COLOR_ATTACHMENT0);
+				break;
+			}
+			System.out.printf("Drawing to UNKNOWN: %x\n", glGetInteger(drawBuffer));
+		}
+		int i = glGetFramebufferAttachmentParameteri(buffer, attachment, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
+		String colorEncoding;
+		switch (i) {
+		case GL_LINEAR:
+			colorEncoding = "linear";
+			break;
+		case GL_SRGB:
+			colorEncoding = "srgb";
+			break;
+		default:
+			colorEncoding = "UNKNOWN";
+		}
+		int redSize = glGetFramebufferAttachmentParameteri(buffer, attachment, GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE);
+		i = glGetFramebufferAttachmentParameteri(buffer, attachment, GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE);
+		String componentType = "UNKNOWN";
+		switch (i) {
+		case GL_FLOAT:
+			componentType = "float";
+			break;
+		case GL_INT:
+			componentType = "int";
+			break;
+		case GL_UNSIGNED_INT:
+			componentType = "uint";
+			break;
+		case GL_SIGNED_NORMALIZED:
+			componentType = "snorm";
+			break;
+		case GL_UNSIGNED_NORMALIZED:
+			componentType = "unorm";
+			break;
+		case GL_NONE:
+			componentType = "none";
+			break;
+		}
+
+		System.out.printf("Framebuffer: %d bits, %s type, %s encoding\n", redSize, componentType, colorEncoding);
+	}
+
 	public void callbackGlfwError(int error, long description) {
 		String desc = MemoryUtil.memUTF8(description);
 		exception = new RuntimeException("GLFW error " + error + ": " + desc);
@@ -415,7 +512,8 @@ System.out.println(shader2d.format());
 		if (width > 0 && height > 0 && (viewport.screenWidth() != width || viewport.screenHeight() != height)) {
 			recomputeDimensions(0, 0, width, height);
 			glViewport(viewport.screenX(), viewport.screenY(), viewport.screenWidth(), viewport.screenHeight());
-			createBuffers();
+			if (frameBuf != 0)
+				createBuffers();
 			camera2.updateProjection();
 			camera3.updateProjection();
 			System.err.println("Framebuffer size: " + width + ", " + height);
@@ -423,9 +521,46 @@ System.out.println(shader2d.format());
 	}
 
 	private void createBuffers() {
+		System.err.println("Creating buffers");
+		int width = viewport.screenWidth();
+		int height = viewport.screenHeight();
+		if (frameBuf != 0)
+			glDeleteFramebuffers(frameBuf);
 		frameBuf = glGenFramebuffers();
-//		glBindFramebuffer(GL_FRAMEBUFFER, frameBuf);
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBuf);
+		int renderBuf = glGenRenderbuffers();
+		glBindRenderbuffer(GL_RENDERBUFFER, renderBuf);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+		System.err.println("Renderbuffer size: " + width + ", " + height);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuf);
+		renderBuf = glGenRenderbuffers();
+		glBindRenderbuffer(GL_RENDERBUFFER, renderBuf);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderBuf);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
+		if (true) {
+			int brightBuf = glGenTextures();
+			glBindTexture(GL_TEXTURE_2D, brightBuf);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, (ByteBuffer) null);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, brightBuf, 0);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			glDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 });
+		}
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			System.err.println("Framebuffer incomplete!");
+			glDeleteFramebuffers(frameBuf);
+			frameBuf = 0;
+		} else {
+			describeFramebuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0);
+			describeFramebuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1);
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	public void callbackWindowClosed(long window) {
@@ -549,7 +684,6 @@ System.out.println(shader2d.format());
 //		updateProjection();
 //		updateView();
 
-//		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuf);
 		glfwPollEvents();
 		joysticks.processInput();
 		if (wireframe) {
@@ -609,7 +743,7 @@ System.out.println(shader2d.format());
 
 //		glEnable(GL_DEPTH_TEST);
 		// update();
-		glEnable(GL_FRAMEBUFFER_SRGB);
+//		glEnable(GL_FRAMEBUFFER_SRGB);
 		glEnable(GL_CULL_FACE);
 		glFrontFace(GL_CCW);
 		glCullFace(GL_BACK);
@@ -619,6 +753,8 @@ System.out.println(shader2d.format());
 //		modelMatrix.identity();
 //		uModel.set(modelMatrix);
 
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuf);
+//		glViewport(0, 0, viewport.screenWidth(), viewport.screenHeight());
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(true);
 		glDisable(GL_BLEND);
@@ -635,9 +771,22 @@ System.out.println(shader2d.format());
 		glBindVertexArray(0);
 
 		if (DOUBLE_BUFFER) {
-			glDrawBuffer(GL_BACK);
-//			 glBlitFramebuffer(0, 0, width, height, 0, 0, fbWidth, fbHeight, GL_COLOR_BUFFER_BIT/*|GL_DEPTH_BUFFER_BIT*/, GL_LINEAR);
+			if (frameBuf != 0) {
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, frameBuf);
+				glReadBuffer(GL_COLOR_ATTACHMENT1);
+//			glDrawBuffer(GL_BACK);
+//			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+				int x = viewport.screenX(), y = viewport.screenY();
+				int w = viewport.screenWidth();
+				int h = viewport.screenHeight();
+//			System.err.printf("blitting (%d,%d)+%dx%d to (%d,%d)+%dx%d\n", 0, 0, w, h, x, y, w, h);
+//			glViewport(x, y, w, h);
+				glBlitFramebuffer(0, 0, w, h, x, y, w, h, GL_COLOR_BUFFER_BIT/* |GL_DEPTH_BUFFER_BIT */, GL_LINEAR);
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+			}
 			glfwSwapBuffers(window);
+
 //			glFinish();
 		} else {
 			glFlush();
@@ -685,5 +834,9 @@ System.out.println(shader2d.format());
 	@Override
 	protected String getClipboardString() {
 		return GLFW.glfwGetClipboardString(window);
+	}
+
+	public void startFrame(double deltaTime) {
+		time += deltaTime;
 	}
 }

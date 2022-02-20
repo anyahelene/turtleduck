@@ -6,6 +6,8 @@ import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 
 public interface PathStroke {
+	int CLOSED = 1;
+	int TRIANGLE_STRIP = 2;
 
 	/**
 	 * Add a line
@@ -16,7 +18,6 @@ public interface PathStroke {
 	 * @param to   End point of line
 	 */
 	void addLine(PathPoint from, PathPoint to);
-
 
 	/**
 	 * Finish the current path
@@ -59,7 +60,15 @@ public interface PathStroke {
 	void addText(PathPoint at, String text);
 
 	void group(String group);
-	
+
 	String group();
+
+	int depth();
+
+	void closePath();
+
+	int options();
+
+	void options(int newOptions);
 
 }
