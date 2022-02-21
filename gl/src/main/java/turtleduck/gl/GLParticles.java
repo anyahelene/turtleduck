@@ -147,7 +147,7 @@ public class GLParticles implements Particles {
 			}
 			lastDrawn = index;
 			glDrawArrays(GL_POINTS, 0, nParticles);
-			GL43C.glInvalidateBufferData(vbo);
+		//	GL43C.glInvalidateBufferData(vbo);
 //			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);
 		};

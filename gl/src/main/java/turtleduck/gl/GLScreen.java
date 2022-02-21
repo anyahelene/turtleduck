@@ -61,7 +61,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	private static final int STD_WIDTH = 1280, STD_HEIGHT = 720;
 
 	private static final boolean DOUBLE_BUFFER = true;
-	private static final boolean WAIT_FOR_SYNC = true;
+	private static final boolean WAIT_FOR_SYNC = false;
 	long window;
 	private boolean sgiVideoSync;
 	private GLCapabilities caps;
@@ -279,8 +279,8 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 //		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 //		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-		glMajor = 4;
-		glMinor = 6;
+		glMajor = 3;
+		glMinor = 2;
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
 //		glfwWindowHint(GLFW_SAMPLES, 1);
@@ -379,21 +379,21 @@ public class GLScreen extends BaseScreen implements Screen {
 
 			ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/simple-vs.glsl", GL_VERTEX_SHADER);
 			ShaderObject fs = ShaderObject.create("/turtleduck/gl/shaders/color-fs.glsl", GL_FRAGMENT_SHADER);
-			shader3d = ShaderProgram.createProgram("shader3d", null, vs, fs);
+			shader3d = ShaderProgram.createProgram("shader3d", format3, vs, fs);
 			System.out.println(shader3d.format());
 			shader3d.format(format3);
 			System.out.println(shader3d.format());
 
 			ShaderObject vs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
 			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
-			shader2d = ShaderProgram.createProgram("shader2d", null, vs2, fs2);
+			shader2d = ShaderProgram.createProgram("shader2d", format, vs2, fs2);
 			System.out.println(shader2d.format());
 			shader2d.format(format);
 			System.out.println(shader2d.format());
 
 			ShaderObject vs3 = ShaderObject.create("/turtleduck/gl/shaders/particles-vs.glsl", GL_VERTEX_SHADER);
 			ShaderObject fs3 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
-			shaderPart = ShaderProgram.createProgram("shaderPart", null, vs3, fs3);
+			shaderPart = ShaderProgram.createProgram("shaderPart", formatPart, vs3, fs3);
 			System.out.println(formatPart);
 			System.out.println(shaderPart.format());
 //			shaderPart.format(formatPart);
