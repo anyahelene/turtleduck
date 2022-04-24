@@ -94,7 +94,7 @@ public class App implements JSObject {
 		}
 		t2.turn(a / 2);
 		a = 90;
-		t2.fill(BLACK.brighter().brighter().perturb().opacity(.3)).stroke(TRANSPARENT);
+		t2.fill(BLACK.brighter().brighter().perturb().alpha(.3)).stroke(TRANSPARENT);
 		for (int i = a; i < 360 - a; i++) {
 			t2.draw(.5).turn(1);
 			if (i == 180)

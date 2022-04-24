@@ -344,12 +344,16 @@ public class AuthServer extends AbstractVerticle {
 		router.get(pathPrefix + "/favicon.ico").handler(loggerHandler).handler((ctx) -> ctx.fail(404));
 
 		router.get(pathPrefix + "/login").handler(loggerHandler).handler(sessionHandler).handler(ctx -> {
+			HttpServerRequest request = ctx.request();
+			String redirect = request.getParam("redirect");
+			logger.info("login redirect param: {}", redirect);
 			String last = AuthProvider.lastProvider(ctx, true);
 			if (last != null)
 				ctx.redirect(pathPrefix + "/login/" + last);
 			else {
 				if (ctx.session().isEmpty())
 					ctx.session().destroy();
+				ctx.session().put("redirect", redirect);
 				loadFile("terms-no.html", res2 -> {
 					if (res2.succeeded()) {
 						loadFile("login.html", res -> {
@@ -418,6 +422,31 @@ public class AuthServer extends AbstractVerticle {
 				ctx.fail(500, ex);
 			});
 		});
+		router.route(pathPrefix + "/login/whoami").handler(loggerHandler).handler(sessionHandler)
+				.handler(this::handleAuth).handler(ctx -> {
+					logger.info("whoami ctx: {} {}", ctx, ctx.statusCode());
+					User user = ctx.user();
+					Session session = ctx.session();
+					JsonObject userInfo = session.get("userInfo");
+					if (userInfo != null) {
+						userInfo = sanitizeUserInfo(userInfo.copy());
+						HttpServerResponse response = ctx.response();
+						response.putHeader("Content-Type", "application/json; charset=UTF-8");
+						userInfo.put("status", "ok");
+						ctx.end(userInfo.encode());
+					} else {
+						ctx.fail(401); // should probably never happen
+					}
+				}).failureHandler(ctx -> {
+					logger.info("whoami ctx: {} {}", ctx, ctx.statusCode());
+					HttpServerResponse response = ctx.response();
+					response.putHeader("Content-Type", "application/json; charset=UTF-8");
+					JsonObject result = new JsonObject();
+					result.put("status", "unauthorized");
+					result.put("redirect", pathPrefix + "/login");
+					ctx.end(result.encode());
+				});
+
 		router.get(pathPrefix + "/logout").handler(loggerHandler).handler(sessionHandler).handler(ctx -> {
 			User user = ctx.user();
 			Session session = ctx.session();
@@ -521,6 +550,14 @@ public class AuthServer extends AbstractVerticle {
 		ctx.fail(401, ex);
 	}
 
+	private JsonObject sanitizeUserInfo(JsonObject info) {
+		info.remove("sub");
+		info.remove("provider");
+		info.remove("email");
+		info.remove("email_verified");
+		return info;
+	}
+
 	private void checkUser(RoutingContext ctx, User user, Session session) {
 		userInfo(user, session) //
 				.onSuccess(userinfo -> {
@@ -532,11 +569,7 @@ public class AuthServer extends AbstractVerticle {
 					if (obj instanceof String) {
 						encoded = (String) obj;
 					} else {
-						JsonObject j = userinfo.copy();
-						j.remove("sub");
-						j.remove("provider");
-						j.remove("email");
-						j.remove("email_verified");
+						JsonObject j = sanitizeUserInfo(userinfo.copy());
 
 						encoded = j.encode();
 						session.put("x_user_info", encoded);

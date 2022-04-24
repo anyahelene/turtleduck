@@ -7,6 +7,8 @@ import turtleduck.canvas.Canvas;
 import turtleduck.canvas.CanvasImpl;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
+import turtleduck.display.Viewport;
+import turtleduck.display.Viewport.ViewportBuilder;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
@@ -16,18 +18,20 @@ public class ServerScreen extends BaseScreen {
 	String currentGroup = null;
 
 	public static ServerScreen create(TurtleDuckSession session, int config) {
-		Dimensions dim = computeDimensions(ServerDisplayInfo.INSTANCE, config);
+		ViewportBuilder vpb = Viewport.create(ServerDisplayInfo.INSTANCE);
+		Viewport vp = vpb.screenArea(0, 0, 0, 0).width(1280).height(720).fit().done();
 
-		return new ServerScreen(session, dim);
+
+		return new ServerScreen(session, vp);
 	}
 
 	private TurtleDuckSession session;
 	private int channel;
 
-	public ServerScreen(TurtleDuckSession session, Dimensions dim) {
-		this.dim = dim;
+	public ServerScreen(TurtleDuckSession session, Viewport vp) {
+		super(vp);
 		this.session = session;
-		setupAspects(dim);
+		setupAspects(vp.aspect());
 	}
 
 	public void group(String group) {
@@ -51,8 +55,8 @@ public class ServerScreen extends BaseScreen {
 	@Override
 	public Canvas createCanvas() {
 		String layerId = newLayerId();
-		ServerLayer layer = addLayer(new ServerLayer(layerId, this, dim.fbWidth, dim.fbHeight, session));
-		return new CanvasImpl<>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d), layer.canvas);
+		ServerLayer layer = addLayer(new ServerLayer(layerId, this, viewport.width(), viewport.height(), session));
+		return new CanvasImpl<>(layerId, this,viewport.width(), viewport.height(), use3d -> layer.pathWriter(use3d), () -> layer.clear(), layer.canvas);
 	}
 
 	@Override

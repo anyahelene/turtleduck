@@ -1,5 +1,7 @@
 package turtleduck.colors;
 
+import java.util.function.Function;
+
 import turtleduck.annotations.Icon;
 
 @Icon("🎨")
@@ -85,10 +87,6 @@ public interface Color {
 		return format.decode(bytes, offset);
 	}
 
-	static Color color(double r, double g, double b) {
-		return color(r, g, b, 1);
-	}
-
 	/**
 	 * Create a new grey color
 	 * 
@@ -129,8 +127,11 @@ public interface Color {
 	/**
 	 * Create a new color, from linear floating-point components.
 	 * 
-	 * Use {@link #sRGB(double, double, double, double)} if your color components is
-	 * in sRGB (compressed) color space.
+	 * Use {@link #sRGB(double, double, double, double)} if your color components
+	 * are in sRGB (compressed / non-linear) color space.
+	 * <p>
+	 * The colour components are assumed to be pre-multiplied – if they are not, do
+	 * <code>Color.color(r,g,b).mul(a)</code> instead.
 	 * 
 	 * @param r Red component, 0.0–1.0
 	 * @param g Green component, 0.0–1.0
@@ -145,10 +146,43 @@ public interface Color {
 	}
 
 	/**
+	 * Create a new opaque color, from linear floating-point components.
+	 * 
+	 * Use {@link #sRGB(double, double, double)} if your color components are in
+	 * sRGB (compressed / non-linear) color space.
+	 * 
+	 * @param r Red component, 0.0–1.0
+	 * @param g Green component, 0.0–1.0
+	 * @param b Blue component, 0.0–1.0
+	 * @return A color
+	 */
+	static Color color(double r, double g, double b) {
+		return color(r, g, b, 1);
+	}
+
+	/**
+	 * Create a new opaque color, from sRGB floating-point components.
+	 * 
+	 * Use {@link #color(double, double, double)} if your color components is in
+	 * linear color space.
+	 * 
+	 * @param r Red component, 0.0–1.0
+	 * @param g Green component, 0.0–1.0
+	 * @param b Blue component, 0.0–1.0
+	 * @return A color
+	 */
+	static Color sRGB(double r, double g, double b) {
+		return sRGB(r, g, b, 1);
+	}
+
+	/**
 	 * Create a new color, from sRGB floating-point components.
 	 * 
 	 * Use {@link #color(double, double, double, double)} if your color components
 	 * is in linear color space.
+	 * <p>
+	 * The colour components are assumed to be pre-multiplied – if they are not, do
+	 * <code>Color.sRGB(r,g,b).mul(a)</code> instead.
 	 * 
 	 * @param r Red component, 0.0–1.0
 	 * @param g Green component, 0.0–1.0
@@ -168,15 +202,47 @@ public interface Color {
 
 	float blue();
 
-	float opacity();
+	float alpha();
 
+	/**
+	 * Set the value of the red component.
+	 *
+	 * @param r the desired red component
+	 * @return a new colour with <code>red() == r</code>, and the other components
+	 *         unchanged
+	 */
 	Color red(double r);
 
+	/**
+	 * Set the value of the green component.
+	 *
+	 * @param g the desired green component
+	 * @return a new colour with <code>green() == g</code>, and the other components
+	 *         unchanged
+	 */
 	Color green(double g);
 
+	/**
+	 * Set the value of the blue component.
+	 *
+	 * @param b the desired blue component
+	 * @return a new colour with <code>blue() == b</code>, and the other components
+	 *         unchanged
+	 */
 	Color blue(double b);
 
-	Color opacity(double a);
+	/**
+	 * Set the value of the alpha (transparency) component.
+	 * <p>
+	 * To make a colour transparent, use {@link #mul(double)} instead, this will
+	 * pre-multiply the alpha component making it possible to blend colours
+	 * smoothly.
+	 * 
+	 * @param a the desired alpha component
+	 * @return a new colour with <code>alpha() == a</code>, and the other components
+	 *         unchanged
+	 */
+	Color alpha(double a);
 
 	Color mix(Color other, double proportion);
 
@@ -194,6 +260,45 @@ public interface Color {
 
 	Color perturb(double factor);
 
+	/**
+	 * Multiply each (red,green,blue,alpha) component by the given coefficient.
+	 * <p>
+	 * This is the preferred way to make a colour (partially) transparent, as it
+	 * keeps the colour in pre-multiplied form, allowing it to be mixed correctly
+	 * with other colours.
+	 * <p>
+	 * To set the alpha component directly, use {@link #alpha(double)}. To multiply
+	 * only the alpha component, use <code>mul(1,1,1,a)</code>.
+	 * 
+	 * @param a coefficient
+	 * @return The colour <code>color(red()*a,green()*a,blue()*a,alpha()*a)</code>
+	 */
+	Color mul(double a);
+
+	/**
+	 * Multiply each (red,green,blue,alpha) component by the given coefficients.
+	 * <p>
+	 * This is the preferred way to make a colour (partially) transparent, as it
+	 * keeps the colour in pre-multiplied form, allowing it to be mixed correctly
+	 * with other colours.
+	 * <p>
+	 * To set components directly, use {@link #red(double)}, {@link #green(double)},
+	 * {@link #blue(double)}, {@link #alpha(double)} or
+	 * {@link #color(double, double, double, double)}. To multiply all components by
+	 * the same value, use {@link #mul(double)}.
+	 * 
+	 * @param r coefficient for the red component
+	 * @param g coefficient for the green component
+	 * @param b coefficient for the blue component
+	 * @param a coefficient for the alpha component
+	 * @return The colour <code>color(red()*r,green()*g,blue()*b,alpha()*a)</code>
+	 */
+	Color mul(double r, double g, double b, double a);
+
+	Color mul(Color top);
+	Color screen(Color top);
+	Color overlay(Color top);
+	
 	boolean isAdditive();
 
 	boolean isSubtractive();
@@ -226,4 +331,41 @@ public interface Color {
 
 	Color writeTo(short[] data, int offset);
 
+	/**
+	 * Convert to hexadecimal string.
+	 * 
+	 * Each colour component is clamped to 0.0–1.0, converted an 8-bit integer
+	 * (0–255), and written as two hexadecimal characters, in R,G,B(,A) order. The
+	 * alpha component is included only if different from 1.0. The result is the
+	 * typical hex representation of colours, using non-linear sRGB components.
+	 * <p>
+	 * For example, <code>Colors.RED.toHex()</code> is <code>"FF0000"</code>,
+	 * <code>Color.fromRGB(0x010203).toHex()</code> is <code>"010203"</code>, and
+	 * <code>Color.color(0.25,0.50,0.75,0.5)</code> is <code>"89BCE180"</code>.
+	 * <p>
+	 * More generally,
+	 * 
+	 * <pre>
+	 * Color.fromRGB(Integer.valueOf(c.toHex(), 16)).equals(c)
+	 * </pre>
+	 * 
+	 * @return The colour as a hexadecimal string.
+	 */
+	String toHex();
+
+	<T> T map(RGBFunction<T> fun);
+
+	<T> T map(RGBAFunction<T> fun);
+
+	Color map(Function<Double, Double> fun);
+
+	interface RGBFunction<T> {
+		T apply(double r, double g, double b);
+	}
+
+	interface RGBAFunction<T> {
+		T apply(double r, double g, double b, double ao);
+	}
+
+	String toCssFunctional();
 }

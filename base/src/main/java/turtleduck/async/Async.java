@@ -7,6 +7,7 @@ import turtleduck.util.Dict;
 
 public interface Async<T> {
 	Async<T> onSuccess(Consumer<T> successHandler);
+	<U> Async<U> then(Function<T, Async<U>> thenHandler);
 
 	Async<T> onFailure(Consumer<Dict> failHandler);
 

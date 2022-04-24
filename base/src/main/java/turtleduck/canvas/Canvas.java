@@ -2,6 +2,7 @@ package turtleduck.canvas;
 
 import turtleduck.annotations.Icon;
 import turtleduck.colors.Color;
+import turtleduck.colors.Colors;
 import turtleduck.geometry.Point;
 import turtleduck.messaging.CanvasService;
 import turtleduck.paths.impl.PenSettingsContext;
@@ -130,4 +131,5 @@ public interface Canvas extends PenSettingsContext<Canvas>, TransformContext2<Ca
 	Canvas background(Color color);
 	
 	Particles particles();
+	
 }

@@ -18,6 +18,7 @@ public class ServerDisplayInfo implements DisplayInfo {
 	private int colorDepth;
 
 	private ServerDisplayInfo() {
+		updateInfo();
 	}
 
 	private void updateInfo() {

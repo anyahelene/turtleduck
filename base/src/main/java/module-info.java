@@ -36,6 +36,7 @@ module turtleduck.base {
 	uses turtleduck.Launcher;
 	uses turtleduck.image.ImageFactory;
 
+	requires com.google.protobuf;
 	requires turtleduck.anno;
 	requires java.logging;
 	requires java.xml;
@@ -43,7 +44,7 @@ module turtleduck.base {
 	requires java.desktop;
 	requires java.base;
 	requires transitive org.slf4j;
-	//requires transitive com.github.spotbugs.annotations;
+	// requires transitive com.github.spotbugs.annotations;
 	requires java.compiler;
-	
+	requires java.annotation;
 }

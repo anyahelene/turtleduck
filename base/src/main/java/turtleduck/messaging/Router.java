@@ -327,6 +327,21 @@ public class Router {
 		}
 
 		@Override
+		public <U> Async<U> then(Function<Dict, Async<U>> successHandler) {
+			if (reply != null && !reply.msgType().equals("error_reply")) {
+				return successHandler.apply(reply.content());
+			} else {
+				Sink<U> tmp = Async.create();
+				this.successHandler = v -> {
+					 // TODO: figure out what to do here
+					successHandler.apply(v).onComplete(v2 -> tmp.success(v2), d -> tmp.fail(d));
+				};
+				register();
+				return tmp.async();
+			}
+		}
+
+		@Override
 		public Async<Dict> onSuccess(Consumer<Dict> successHandler) {
 			if (reply != null && !reply.msgType().equals("error_reply")) {
 				successHandler.accept(reply.content());

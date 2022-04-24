@@ -68,8 +68,8 @@ public class Demo implements TurtleDuckApp {
 		double w = 5;
 		Color grey = Color.color(.5, .5, .5);
 		Color green = Color.color(.5, 1, .5);
-		Color stem = grey.brighter().opacity(.7);
-		Color leaf = grey.opacity(.9);
+		Color stem = grey.brighter().alpha(.7);
+		Color leaf = grey.alpha(.9);
 		turtle.penChange().strokeWidth(w).stroke(stem).done();
 		turtle.turn(-10);
 		turtle.draw(35);
@@ -100,7 +100,7 @@ public class Demo implements TurtleDuckApp {
 //			if (i > 150)
 //				a = a - i / 100.0;
 			turtle.penChange().stroke(stem).strokeWidth(w).done();
-			stem = stem.darker().opacity((19 * stem.opacity() + 1) / 20.0);
+			stem = stem.darker().alpha((19 * stem.alpha() + 1) / 20.0);
 			turtle.turn(.1).draw(1);
 
 		}
@@ -109,7 +109,7 @@ public class Demo implements TurtleDuckApp {
 
 	public static void footprint(Turtle turtle, double size) {
 		size /= 10;
-		turtle.penChange().stroke(Colors.BLACK).fill(Colors.BLACK.opacity(0.5)).done();
+		turtle.penChange().stroke(Colors.BLACK).fill(Colors.BLACK.alpha(0.5)).done();
 		turtle.turn(60).draw(size * 15).turn(-45).draw(size * 100).turn(-150).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15);
@@ -123,8 +123,8 @@ public class Demo implements TurtleDuckApp {
 	public static void stem(Turtle turtle, double len) {
 		double w = 5;
 		Color grey = Color.color(.5, .5, .5);
-		Color stem = grey.brighter().opacity(.7);
-		Color leaf = grey.opacity(.9);
+		Color stem = grey.brighter().alpha(.7);
+		Color leaf = grey.alpha(.9);
 		turtle.penChange().strokeWidth(w).stroke(stem).done();
 		turtle.turn(-10);
 		turtle.draw(35);

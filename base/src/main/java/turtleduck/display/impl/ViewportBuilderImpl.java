@@ -1,16 +1,10 @@
 package turtleduck.display.impl;
 
-import java.util.Objects;
-
 import org.slf4j.Logger;
 
 import turtleduck.display.Camera;
 import turtleduck.display.DisplayInfo;
 import turtleduck.display.Viewport;
-import turtleduck.display.Viewport.ViewportBuilder;
-import turtleduck.geometry.Box;
-import turtleduck.geometry.Point;
-import turtleduck.geometry.impl.BoxImpl;
 import turtleduck.util.Logging;
 
 public class ViewportBuilderImpl implements Viewport, Viewport.ViewportBuilder {

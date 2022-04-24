@@ -44,6 +44,8 @@ public interface Dict extends Iterable<Key<?>> {
 		return get(key, Array.class);
 	}
 
+	Object getObject(String key);
+
 	<T> Dict put(Key<T> key, T value);
 
 	<T> Dict put(String key, T value);
@@ -55,7 +57,9 @@ public interface Dict extends Iterable<Key<?>> {
 	<T> boolean has(String key);
 
 	<T> boolean has(String key, Class<T> type);
-	Iterable<Entry<String,Object>> entries();
+
+	Iterable<Entry<String, Object>> entries();
+
 	String toJson();
 
 	static class DictImpl implements Dict {
@@ -94,10 +98,10 @@ public interface Dict extends Iterable<Key<?>> {
 			};
 		}
 
-		public Iterable<Entry<String,Object>> entries() {
+		public Iterable<Entry<String, Object>> entries() {
 			return dict.entrySet();
 		}
-		
+
 		@Override
 		public <T> T get(Key<T> key) {
 			Object obj = dict.get(key.key());
@@ -108,23 +112,23 @@ public interface Dict extends Iterable<Key<?>> {
 
 		@SuppressWarnings("unchecked")
 		private <T> T check(Object obj, Class<T> type) {
-			if (type != null && obj != null) {
+			if (type != null && obj != null && type != Object.class && type != Void.class) {
 				if (type.isInstance(obj))
 					return (T) obj;
 				else if (Number.class.isAssignableFrom(type) && Number.class.isInstance(obj)) {
 					Number n = (Number) obj;
 					if (type == Byte.TYPE)
-						return (T)(Byte)n.byteValue();
+						return (T) (Byte) n.byteValue();
 					else if (type == Short.TYPE)
-						return (T)(Short)n.shortValue();
+						return (T) (Short) n.shortValue();
 					else if (type == Integer.TYPE)
-						return (T)(Integer)n.intValue();
+						return (T) (Integer) n.intValue();
 					else if (type == Long.TYPE)
-						return (T)(Long)n.longValue();
+						return (T) (Long) n.longValue();
 					else if (type == Float.TYPE)
-						return (T)(Float)n.floatValue();
+						return (T) (Float) n.floatValue();
 					else if (type == Double.TYPE)
-						return (T)(Double)n.doubleValue();
+						return (T) (Double) n.doubleValue();
 					else
 						return (T) obj;
 				} else
@@ -258,6 +262,11 @@ public interface Dict extends Iterable<Key<?>> {
 		@Override
 		public String toString() {
 			return JsonUtil.encode(this);
+		}
+
+		@Override
+		public Object getObject(String key) {
+			return dict.get(key);
 		}
 	}
 

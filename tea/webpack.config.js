@@ -6,11 +6,12 @@ const renderer = new marked.Renderer();
 
 module.exports = {
   mode: 'development',
+  devtool: 'source-map',
   context: path.resolve(__dirname, 'src', 'main'),
   //plugins: [ new CleanWebpackPlugin() ],
   stats: 'normal',
   entry: { 
-      bundle: { import: ['./webroot/index.js', './webroot/css/style.scss', './webroot/terms-no.md'], filename: 'js/bundle.js' },
+      bundle: { import: ['./webroot/index.js', './webroot/css/style.scss', './webroot/css/buttons.scss', './webroot/terms-no.md'], filename: 'js/bundle.js' },
 	  // path.join(__dirname, 'src', 'main', 'webroot','css', 'style.scss'),
 	 //html: ['./webroot/terms-no.md'],
   },
@@ -26,6 +27,7 @@ module.exports = {
   //  }
   //},
   optimization: {
+      usedExports:true
       //runtimeChunk: 'single',
       //splitChunks: {
       //    cacheGroups: {
@@ -37,6 +39,10 @@ module.exports = {
       //    },
       //},
  },
+  cache: {
+    type: 'filesystem',
+    buildDependencies: { config: [__filename] },
+  },
   module: {
     rules: [
       {

@@ -246,7 +246,7 @@ public abstract class DataField<T> {
 			dest.putFloat(color.red());
 			dest.putFloat(color.green());
 			dest.putFloat(color.blue());
-			dest.putFloat(color.opacity());
+			dest.putFloat(color.alpha());
 		}
 
 		public void write(ByteBuffer dest, float x, float y, float z, float w) {
@@ -274,7 +274,7 @@ public abstract class DataField<T> {
 			dest.putShort((short) Math.round(color.red() * 65535));
 			dest.putShort((short) Math.round(color.green() * 65535));
 			dest.putShort((short) Math.round(color.blue() * 65535));
-			dest.putShort((short) Math.round(color.opacity() * 65535));
+			dest.putShort((short) Math.round(color.alpha() * 65535));
 		}
 
 		public void write(ByteBuffer dest, float x, float y, float z, float w) {

@@ -19,3 +19,6 @@ tea/src/main/webroot/examples
 py/src/main/python/turtleduck.egg-info
 py/build
 py/pyodide-*
+.vscode
+*.spv
+*.jar

@@ -1,5 +1,8 @@
 package turtleduck.colors;
 
+import java.math.BigDecimal;
+import java.util.function.Function;
+
 import turtleduck.colors.Colors.Gamma;
 import turtleduck.util.MathUtil;
 
@@ -91,7 +94,7 @@ public class ColorRGB implements Color {
 	}
 
 	@Override
-	public float opacity() {
+	public float alpha() {
 		return alpha;
 	}
 
@@ -117,11 +120,11 @@ public class ColorRGB implements Color {
 	}
 
 	@Override
-	public Color opacity(double a) {
+	public Color alpha(double a) {
 		if (a < 0 || a > 1)
 			throw new IllegalArgumentException("Must be from 0.0 to 1.0: (" + a + ")");
 		float f = (float) a;
-		return new ColorRGB(red*f, green*f, blue*f, f, true);
+		return new ColorRGB(red * f, green * f, blue * f, f, true);
 	}
 
 	@Override
@@ -141,7 +144,7 @@ public class ColorRGB implements Color {
 			return new ColorRGB((float) (red + (other.red() - red) * proportion), //
 					(float) (green + (other.green() - green) * proportion), //
 					(float) (blue + (other.blue() - blue) * proportion), //
-					(float) (alpha + (other.opacity() - alpha) * proportion), true);
+					(float) (alpha + (other.alpha() - alpha) * proportion), true);
 		}
 	}
 
@@ -325,21 +328,57 @@ public class ColorRGB implements Color {
 //		 r = (int) (red * 255);
 //		 g = (int) (green * 255);
 //		 b = (int) (blue * 255);
-		 if (alpha == 1.0)
+		if (alpha == 1.0)
 			return String.format("rgb(#%02X%02X%02X,%.3f,%.3f,%.3f)", r, g, b, red, green, blue);
 		else
-			return String.format("rgb(#%02X%02X%02X%02X,%.3f,%.3f,%.3f,%.3f)", r, g, b, Math.round(alpha * 255), red, green, blue, alpha);
+			return String.format("rgba(#%02X%02X%02X%02X,%.3f,%.3f,%.3f,%.3f)", r, g, b, Math.round(alpha * 255), red,
+					green, blue, alpha);
 	}
+
+	@Override
+	public String toHex() {
+		int r = (int) Math.round(Gamma.gammaCompress(red) * 255);
+		int g = (int) Math.round(Gamma.gammaCompress(green) * 255);
+		int b = (int) Math.round(Gamma.gammaCompress(blue) * 255);
+		int a = (int) Math.round(alpha * 255);
+
+		if (a == 255)
+			return String.format("%02X%02X%02X", r, g, b);
+		else
+			return String.format("%02X%02X%02X%02X", r, g, b, a);
+	}
+	
 
 	@Override
 	public String toCss() {
 		int r = (int) Math.round(Gamma.gammaCompress(red) * 255);
 		int g = (int) Math.round(Gamma.gammaCompress(green) * 255);
 		int b = (int) Math.round(Gamma.gammaCompress(blue) * 255);
+		int a = (int) Math.round(alpha * 255);
+		if (r / 16 == r % 16 && g / 16 == g % 16 && b / 16 == b % 16 && a / 16 == a % 16) {
+			if (a == 255)
+				return String.format("#%X%X%X", r >> 4, g >> 4, b >> 4);
+			else
+				return String.format("#%X%X%X%X", r >> 4, g >> 4, b >> 4, a >> 4);
+
+		} else {
+			if (a == 255)
+				return String.format("#%02X%02X%02X", r, g, b);
+			else
+				return String.format("#%02X%02X%02X%02X", r, g, b, a);
+		}
+
+	}
+
+	@Override
+	public String toCssFunctional() {
+		int r = (int) Math.round(Gamma.gammaCompress(red) * 255);
+		int g = (int) Math.round(Gamma.gammaCompress(green) * 255);
+		int b = (int) Math.round(Gamma.gammaCompress(blue) * 255);
 		if (alpha == 1.0)
 			return String.format("rgb(%d,%d,%d)", r, g, b);
 		else
-			return String.format("rgba(%d,%d,%d,%d)", r, g, b, Math.round(alpha * 255));
+			return String.format("rgba(%d,%d,%d,%d%%)", r, g, b, (int) Math.round(alpha * 100));
 	}
 
 	@Override
@@ -405,4 +444,57 @@ public class ColorRGB implements Color {
 		data[offset++] = MathUtil.toShortUNorm(alpha);
 		return this;
 	}
+
+	@Override
+	public Color mul(double a) {
+		return new ColorRGB((float) (a * red), (float) (a * green), (float) (a * blue), (float) (a * alpha), true);
+	}
+
+	@Override
+	public Color mul(double r, double g, double b, double a) {
+		return new ColorRGB((float) (r * red), (float) (g * green), (float) (b * blue), (float) (a * alpha), true);
+	}
+
+	@Override
+	public Color mul(Color top) {
+		return new ColorRGB(top.red() * red, top.green() * green, top.blue() * blue, top.alpha() * alpha, true);
+	}
+
+	@Override
+	public <T> T map(RGBFunction<T> fun) {
+		return fun.apply(red, green, blue);
+	}
+
+	@Override
+	public <T> T map(RGBAFunction<T> fun) {
+		return fun.apply(red, green, blue, alpha);
+	}
+
+	@Override
+	public Color map(Function<Double, Double> fun) {
+		return Color.color(fun.apply((double) red), fun.apply((double) green), fun.apply((double) blue),
+				fun.apply((double) alpha));
+	}
+
+	@Override
+	public Color screen(Color top) {
+		return new ColorRGB(1 - (1 - top.red()) * (1 - red), //
+				1 - (1 - top.green()) * (1 - green), //
+				1 - (1 - top.blue()) * (1 - blue), //
+				1 - (1 - top.alpha()) * (1 - alpha), true);
+	}
+
+	static float overlay(float base, float top) {
+		if (base < 0.5f)
+			return 2 * base * top;
+		else
+			return 1 - 2 * (1 - base) * (1 - top);
+	}
+
+	@Override
+	public Color overlay(Color top) {
+		return new ColorRGB(overlay(red, top.red()), overlay(green, top.green()), overlay(blue, top.blue()),
+				overlay(alpha, top.alpha()), true);
+	}
+
 }

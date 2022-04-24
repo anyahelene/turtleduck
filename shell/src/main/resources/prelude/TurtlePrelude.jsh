@@ -1,11 +1,11 @@
 /namespace meta
 import java.util.Random;
 import turtleduck.display.Screen;
-import turtleduck.geometry.Point
+import turtleduck.geometry.Point;
 import turtleduck.geometry.Direction;
 import turtleduck.canvas.Canvas;
 import turtleduck.turtle.Turtle;
-import turtleduck.turtle.Pen;
+import turtleduck.paths.Pen;
 import turtleduck.text.TextCursor;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
@@ -17,7 +17,6 @@ import static turtleduck.geometry.Direction.*;
 import turtleduck.turtle.SpriteBuilder;
 import turtleduck.sprites.Sprite;
 
-
 Class<?>[] $CLASSES = {Screen.class, Canvas.class, Turtle.class, TextCursor.class, Color.class, Colors.class};
 Meta $META = Meta.create();
 Random $RANDOM = new Random();
@@ -26,13 +25,14 @@ String help = "Type /help for help :)";
 
 /namespace startup
 
-Screen screen = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, $SCREEN_ID)
-Canvas canvas = screen.createCanvas().strokePaint(Colors.WHITE).strokeWidth(1).fillPaint(Colors.TRANSPARENT).background(Colors.BLACK);
+Screen screen = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, $SCREEN_ID);
+Canvas canvas = screen.createCanvas().stroke(Colors.WHITE, 1).fill(Colors.TRANSPARENT).background(Colors.BLACK);
 TextCursor cursor = turtleduck.objects.IdentifiedObject.Registry.findObject(TextCursor.class, $CURSOR_ID);
 
-Turtle turtle = canvas.turtle().penColor(Colors.WHITE).jumpTo(0, 0);
+Turtle turtle = canvas.turtle().color(Colors.WHITE).jumpTo(0, 0);
+static {
 turtleduck.shell.TShell.testValue = 5;
-
+}
 
 double sin(double deg) {
     return Math.sin(Math.toRadians(deg));
@@ -98,8 +98,8 @@ void clear() {
 }
 
 void reset() {
-	canvas.strokePaint(Colors.WHITE).strokeWidth(1).fillPaint(Colors.TRANSPARENT).background(Colors.BLACK);
-	turtle.penColor(Colors.WHITE).penWidth(1).fillColor(Colors.TRANSPARENT).jumpTo(0, 0).turnTo(0);
+	canvas = screen.createCanvas().stroke(Colors.WHITE, 1).fill(Colors.TRANSPARENT).background(Colors.BLACK);
+	turtle = canvas.turtle().color(Colors.WHITE).jumpTo(0, 0).turnTo(0);
 	screen.clear();
 }
 

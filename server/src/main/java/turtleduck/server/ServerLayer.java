@@ -109,7 +109,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 					path.put(CanvasService.FONT_SIZE, from.annotation(Text.TEXT_FONT_SIZE));
 					Color c = pen.strokeColor();
 					if (c != null && c != Colors.TRANSPARENT) {
-						path.put("STROKE", c.toString());
+						path.put("STROKE", c.toCss());
 						path.put(CanvasService.WIDTH, pen.strokeWidth());
 					} else {
 						path.put("STROKE", null);
@@ -117,7 +117,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 					}
 					c = pen.fillColor();
 					if (c != null && c != Colors.TRANSPARENT)
-						path.put("FILL", c.toString());
+						path.put("FILL", c.toCss());
 					else
 						path.put("FILL", null);
 
@@ -126,7 +126,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 
 					path = Dict.create();
 					if (c != null && c != Colors.TRANSPARENT) {
-						path.put("STROKE", c.toString());
+						path.put("STROKE", c.toCss());
 						path.put(CanvasService.WIDTH, pen.strokeWidth());
 					} else {
 						path.put("STROKE", null);
@@ -134,7 +134,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 					}
 					c = pen.fillColor();
 					if (c != null && c != Colors.TRANSPARENT)
-						path.put("FILL", c.toString());
+						path.put("FILL", c.toCss());
 					else
 						path.put("FILL", null);
 					path.put("GROUP", screen.currentGroup);
@@ -164,7 +164,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 						lastPen = pen;
 						Color c = pen.strokeColor();
 						if (c != null && c != Colors.TRANSPARENT) {
-							path.put("STROKE", c.toString());
+							path.put("STROKE", c.toCss());
 							path.put(CanvasService.WIDTH, pen.strokeWidth());
 						} else {
 							path.put("STROKE", null);
@@ -172,7 +172,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 						}
 						c = pen.fillColor();
 						if (c != null && c != Colors.TRANSPARENT)
-							path.put("FILL", c.toString());
+							path.put("FILL", c.toCss());
 						else
 							path.put("FILL", null);
 					}
@@ -190,7 +190,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 					path = Dict.create();
 					Color c = pen.strokeColor();
 					if (c != null && c != Colors.TRANSPARENT) {
-						path.put("STROKE", c.toString());
+						path.put("STROKE", c.toCss());
 						path.put(CanvasService.WIDTH, pen.strokeWidth());
 					} else {
 						path.put("STROKE", null);
@@ -198,7 +198,7 @@ public class ServerLayer extends BaseLayer<ServerScreen> {
 					}
 					c = pen.fillColor();
 					if (c != null && c != Colors.TRANSPARENT)
-						path.put("FILL", c.toString());
+						path.put("FILL", c.toCss());
 					else
 						path.put("FILL", null);
 					path.put("GROUP", screen.currentGroup);

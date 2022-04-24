@@ -128,7 +128,7 @@ public abstract class Camera {
 
 		public void updateProjection() {
 			float w = (float) viewport.width(), h = (float) viewport.height();
-			projectionMatrix.setPerspective((float) Math.toRadians(fov), (float) viewport.aspect(), 1f, 1000.0f);
+			projectionMatrix.setPerspective((float) Math.toRadians(fov), (float) viewport.aspect(), .1f, 100.0f);
 			projectionMatrix.invertPerspective(projectionMatrixInv);
 			revision++;
 		}
