@@ -1,7 +1,7 @@
 package turtleduck.gl;
 
 import static org.lwjgl.glfw.GLFW.*;
-
+//import static org.lwjgl.opengles.GLES32.*;
 import static org.lwjgl.opengl.GL32C.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memAddress;
@@ -61,7 +61,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	private static final int STD_WIDTH = 1280, STD_HEIGHT = 720;
 
 	private static final boolean DOUBLE_BUFFER = true;
-	private static final boolean WAIT_FOR_SYNC = false;
+	private static final boolean WAIT_FOR_SYNC = true;
 	long window;
 	private boolean sgiVideoSync;
 	private GLCapabilities caps;
@@ -279,7 +279,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 //		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 //		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-		glMajor = 3;
+		glMajor = 4;
 		glMinor = 2;
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
@@ -289,6 +289,7 @@ public class GLScreen extends BaseScreen implements Screen {
 //		glfwWindowHint(GLFW_RED_BITS, 10);
 //		glfwWindowHint(GLFW_GREEN_BITS, 10);
 //		glfwWindowHint(GLFW_BLUE_BITS, 10);
+		System.out.println("running on " + decodePlatform(glfwGetPlatform()));
 		// full resolution on Mac
 		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
 		window = glfwCreateWindow(width, height, getClass().getName(), NULL, NULL);
@@ -318,6 +319,7 @@ public class GLScreen extends BaseScreen implements Screen {
 		GLFWVidMode vidmode = glfwGetVideoMode(monitor);
 		glfwSetWindowPos(window, (vidmode.width() - width) / 2, (vidmode.height() - height) / 2);
 		glfwMakeContextCurrent(window);
+		System.out.println("OpenGL version " + glGetString(GL_VERSION) + ", GLSL version " + glGetString(GL_SHADING_LANGUAGE_VERSION));
 		glfwSwapInterval(0);
 		glfwShowWindow(window);
 		glfwPollEvents();
@@ -377,22 +379,22 @@ public class GLScreen extends BaseScreen implements Screen {
 			formatPart.addField("size", Vector2f.class);
 			formatPart.addField("len", Vector2f.class);
 
-			ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/simple-vs.glsl", GL_VERTEX_SHADER);
-			ShaderObject fs = ShaderObject.create("/turtleduck/gl/shaders/color-fs.glsl", GL_FRAGMENT_SHADER);
+			ShaderObject vs = ShaderObject.create("/turtleduck/gl/shaders/simple.vert.glsl", GL_VERTEX_SHADER);
+			ShaderObject fs = ShaderObject.create("/turtleduck/gl/shaders/color.frag.glsl", GL_FRAGMENT_SHADER);
 			shader3d = ShaderProgram.createProgram("shader3d", format3, vs, fs);
 			System.out.println(shader3d.format());
 			shader3d.format(format3);
 			System.out.println(shader3d.format());
 
-			ShaderObject vs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-vs.glsl", GL_VERTEX_SHADER);
-			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
+			ShaderObject vs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee.vert.glsl", GL_VERTEX_SHADER);
+			ShaderObject fs2 = ShaderObject.create("/turtleduck/gl/shaders/twodee.frag.glsl", GL_FRAGMENT_SHADER);
 			shader2d = ShaderProgram.createProgram("shader2d", format, vs2, fs2);
 			System.out.println(shader2d.format());
 			shader2d.format(format);
 			System.out.println(shader2d.format());
 
-			ShaderObject vs3 = ShaderObject.create("/turtleduck/gl/shaders/particles-vs.glsl", GL_VERTEX_SHADER);
-			ShaderObject fs3 = ShaderObject.create("/turtleduck/gl/shaders/twodee-fs.glsl", GL_FRAGMENT_SHADER);
+			ShaderObject vs3 = ShaderObject.create("/turtleduck/gl/shaders/particles.vert.glsl", GL_VERTEX_SHADER);
+			ShaderObject fs3 = ShaderObject.create("/turtleduck/gl/shaders/twodee.frag.glsl", GL_FRAGMENT_SHADER);
 			shaderPart = ShaderProgram.createProgram("shaderPart", formatPart, vs3, fs3);
 			System.out.println(formatPart);
 			System.out.println(shaderPart.format());
@@ -427,6 +429,18 @@ public class GLScreen extends BaseScreen implements Screen {
 		layer = new GLLayer(newLayerId(), this, camera2, camera3, viewport.width(), viewport.height());
 		System.out.println(layer);
 		addLayer(layer);
+		System.out.println("OpenGL " + glGetString(GL_VERSION) + ", GLSL " + glGetString(GL_SHADING_LANGUAGE_VERSION));
+	}
+
+	private String decodePlatform(int platform) {
+		switch(platform) {
+		case GLFW_PLATFORM_X11: return "X11";
+		case GLFW_PLATFORM_COCOA: return "Cocoa";
+		case GLFW_PLATFORM_WAYLAND: return "Wayland";
+		case GLFW_PLATFORM_WIN32: return "Windows";
+		case GLFW_PLATFORM_ERROR: return "ERROR";
+		default: return "unknown";
+		}
 	}
 
 	private void describeFramebuffer(int buffer, int attachment) {
@@ -608,7 +622,7 @@ public class GLScreen extends BaseScreen implements Screen {
 	}
 
 	private void processInput(long window, int key, int scancode, int action, int mods) {
-		if (action != GLFW_PRESS) {
+		if (action != GLFW_PRESS && action != GLFW_REPEAT) {
 			return;
 		}
 
@@ -619,15 +633,23 @@ public class GLScreen extends BaseScreen implements Screen {
 			if (key == GLFW_KEY_A) {
 				camera2.position.add(-8f, 0, 0, 0);
 				camera2.updateView();
+				camera3.position.add(-.8f, 0, 0, 0);
+				camera3.updateView();
 			} else if (key == GLFW_KEY_S) {
 				camera2.position.add(0, 8f, 0, 0);
 				camera2.updateView();
+				camera3.position.add(0, .8f, 0, 0);
+				camera3.updateView();
 			} else if (key == GLFW_KEY_D) {
 				camera2.position.add(8f, 0, 0, 0);
 				camera2.updateView();
+				camera3.position.add(.8f, 0, 0, 0);
+				camera3.updateView();
 			} else if (key == GLFW_KEY_W) {
 				camera2.position.add(0, -8f, 0, 0);
 				camera2.updateView();
+				camera3.position.add(0, -.8f, 0, 0);
+				camera3.updateView();
 			} else if (key == GLFW_KEY_Q) {
 				camera2.orientation.rotateLocalZ(-FloatMath.PI / 8f);
 				camera2.updateView();

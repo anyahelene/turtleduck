@@ -1,7 +1,6 @@
 
-#version 150
-#extension GL_ARB_explicit_attrib_location : enable
-layout (location = 0) in vec3 aPos;
+#version 410
+layout (location = 0) in vec4 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec3 aNormal;
 layout (location = 3) in vec2 aTexCoord;
@@ -21,9 +20,9 @@ void main()
 	float g = (aPos.y + .5)/1.5;
 	float r = -aPos.x/0.866;
 	float b = 1.0 - r;
-    fPos = uModel * vec4(aPos.xyz, 1.0);
+    fPos = uModel * aPos; // vec4(aPos.xyz, 1.0);
     //fPos = uModel * vec4(aPos.x,aPos.y,.5, 1.0);
-    gl_Position = uProjView * fPos; // uModel * vec4(aPos.xyz, 1.0);
+    gl_Position = uProjView * aPos; // uModel * vec4(aPos.xyz, 1.0);
     fColor = vec4(aColor); // vec4(aPos.xyz, 1.0);
     fTexCoord = aTexCoord;
     //fNormal = vec4(mat3(transpose(inverse(uProjView))) * mat3(transpose(inverse(uModel))) * (aNormal),0);

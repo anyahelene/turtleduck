@@ -1,6 +1,5 @@
 
-#version 150
-#extension GL_ARB_explicit_attrib_location : enable
+#version 410
 layout (location = 0) in vec4 startPos;
 layout (location = 1) in vec4 startColor;
 layout (location = 2) in vec2 lifetime;
@@ -15,12 +14,13 @@ uniform mat4 uProjView;
 uniform float uTime;
 uniform float uZ;
 
-//out vec4 fPos;
-out vec4 fColor;
-out vec2 fTexCoord;
-out vec4 fNormal;
-flat out float fPointSize;
-flat out int fTexNum;
+out TwoDeeFrag {
+	vec4 fColor;
+	vec2 fTexCoord;
+	vec4 fNormal;
+	flat float fPointSize;
+	flat int fTexNum;
+};
 
 vec2 interpolateBezier(vec2 src, vec2 ctrl1, vec2 ctrl2, vec2 dest, float f) {
 	vec2 p1 = mix(src, ctrl2, f);

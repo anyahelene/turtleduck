@@ -5,6 +5,7 @@ module turtleduck.gl {
 	requires org.lwjgl;
 	requires org.lwjgl.glfw;
 	requires org.lwjgl.opengl;
+	requires org.lwjgl.opengles;
 	requires org.joml;
 	requires org.lwjgl.stb;
 	requires org.lwjgl.assimp;

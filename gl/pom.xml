@@ -126,6 +126,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-opengles</artifactId>
+			<version>${lwjgl.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-assimp</artifactId>
 			<version>${lwjgl.version}</version>
 		</dependency>
@@ -148,6 +153,16 @@
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opengl</artifactId>
 			<version>${lwjgl.version}</version>
+		</dependency>		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-opencl</artifactId>
+			<version>${lwjgl.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-opengles</artifactId>
+			<version>${lwjgl.version}</version>
+			<classifier>${lwjgl.natives}</classifier>
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>

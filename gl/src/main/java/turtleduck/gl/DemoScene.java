@@ -312,7 +312,7 @@ public class DemoScene implements TurtleDuckApp {
 
 	private static void footprint(Turtle turtle, double size) {
 		size /= 10;
-		turtle.penChange().stroke(Colors.WHITE).fill(Colors.WHITE.opacity(0.5)).done();
+		turtle.penChange().stroke(Colors.WHITE).fill(Colors.WHITE.alpha(0.5)).done();
 		turtle.turn(60).draw(size * 15).turn(-45).draw(size * 100).turn(-150).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-90).draw(size * 30);
 		turtle.turn(90).draw(size * 30).turn(-150).draw(size * 100).turn(-45).draw(size * 15);

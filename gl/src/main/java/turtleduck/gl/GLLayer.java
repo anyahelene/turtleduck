@@ -553,7 +553,8 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 		if (paths instanceof GLPathWriter3) {
 			PathRenderer3 ren = new PathRenderer3(obj.shader);
 			ren.drawPaths(paths, obj);
-			obj.cull = GL_BACK;
+			obj.cull = 0;//GL_BACK;
+			obj.projection = paths.projection();
 
 		} else {
 			obj.cull = GL_BACK;
@@ -635,7 +636,7 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 										.end();
 
 							}
-							obj.blend |= color.opacity() < 1;
+							obj.blend |= color.alpha() < 1;
 
 							streamArray.begin().put(aPosVec3, tmp.set(fromVec).add(negOffset))//
 									.put(aColorVec4, color)//
@@ -770,9 +771,10 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
 						uProjView.set(projection == null ? camera2.projectionMatrix : projection);
 					}
 				}
-				if (uModel != null) {
-//					modelTransform.set(obj.transform).translate(0, 0,);
-//					uModel.set(new Matrix4f().translation(0,0, ((float) obj.zOrder) / depth));
+				if (uModel != null && obj.transform != null) {
+					//modelTransform.set(obj.transform).translate(0, 0,);
+					//uModel.set(new Matrix4f().translation(0,0, ((float) obj.zOrder) / depth));
+					uModel.set(obj.transform);
 				}
 				if (uLightPos != null) {
 //				Vector4f light = projection.transform(screen.lightPosition, new Vector4f());

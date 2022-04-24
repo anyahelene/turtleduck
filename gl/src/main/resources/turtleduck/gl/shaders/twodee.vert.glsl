@@ -1,20 +1,24 @@
 
-#version 150
-#extension GL_ARB_explicit_attrib_location : enable
+#version 410
 layout (location = 0) in vec4 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTexCoord;
 
-uniform mat4 uModel;
-uniform mat4 uNormal;
-uniform mat4 uProjView;
+uniform Matrices {
+	mat4 uModel;
+	mat4 uNormal;
+	mat4 uProjView;
+};
 
 //out vec4 fPos;
-out vec4 fColor;
-out vec2 fTexCoord;
-out vec4 fNormal;
-flat out float fPointSize;
-flat out int fTexNum;
+
+out TwoDeeFrag {
+	vec4 fColor;
+	vec2 fTexCoord;
+	vec4 fNormal;
+	flat float fPointSize;
+	flat int fTexNum;
+};
 
 void main()
 {

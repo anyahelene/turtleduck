@@ -220,11 +220,11 @@ public class GLParticles implements Particles {
 			vertex[R1] = start.red();
 			vertex[G1] = start.green();
 			vertex[B1] = start.blue();
-			vertex[A1] = start.opacity();
+			vertex[A1] = start.alpha();
 			vertex[R2] = start.red();
 			vertex[G2] = start.green();
 			vertex[B2] = start.blue();
-			vertex[A2] = start.opacity();
+			vertex[A2] = start.alpha();
 //			start.writeTo(vertex, R1);
 //			end.writeTo(vertex, R2);
 			return this;

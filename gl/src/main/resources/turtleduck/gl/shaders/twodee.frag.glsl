@@ -1,11 +1,12 @@
-#version 330
+#version 410
 
-in vec4 fColor;
-//in vec4 fPos;
-in vec4 fNormal;
-in vec2 fTexCoord;
-flat in float fPointSize;
-flat in int fTexNum;
+in TwoDeeFrag {
+	vec4 fColor;
+	vec2 fTexCoord;
+	vec4 fNormal;
+	flat float fPointSize;
+	flat int fTexNum;
+};
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;

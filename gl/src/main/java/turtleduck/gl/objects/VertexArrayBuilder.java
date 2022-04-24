@@ -133,7 +133,7 @@ public class VertexArrayBuilder {
 		writeFloat(color.red());
 		writeFloat(color.green());
 		writeFloat(color.blue());
-		writeFloat(color.opacity());
+		writeFloat(color.alpha());
 		next();
 		return this;
 	}

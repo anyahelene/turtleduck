@@ -6,6 +6,7 @@ import java.util.List;
 import org.joml.Vector2f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import turtleduck.buffer.DataField;
 import turtleduck.colors.Color;
@@ -33,7 +34,7 @@ public class PathRenderer3 {
 	private Vector3d normal = new Vector3d();
 	private Vector2f texCoord = new Vector2f();
 	private Vector3f tmp = new Vector3f();
-	private DataField<Vector3f> aPos;
+	private DataField<Vector4f> aPos;
 	private DataField<Color> aColor;
 	private DataField<Vector3f> aNormal;
 	private DataField<Vector2f> aTexCoord;
@@ -44,7 +45,7 @@ public class PathRenderer3 {
 	public PathRenderer3(ShaderProgram program) {
 		this.shader = program;
 		VertexArrayFormat format = shader.format();
-		aPos = format.setField("aPos", Vector3f.class);
+		aPos = format.setField("aPos", Vector4f.class);
 		aColor = format.setField("aColor", Color.class);
 		aNormal = format.setField("aNormal", Vector3f.class);
 		aTexCoord = format.setField("aTexCoord", Vector2f.class);
@@ -68,7 +69,7 @@ public class PathRenderer3 {
 					to = points.get(i);
 
 					drawLine(from, to, pen, i == 1, i == points.size() - 1);
-					obj.blend |= pen.strokeColor().opacity() < 1;
+					obj.blend |= pen.strokeColor().alpha() < 1;
 
 					pen = to.pen();
 
@@ -141,14 +142,14 @@ public class PathRenderer3 {
 				tmp2.rotateAxis((i / n) * TWO_PI, x, y, z);
 			}
 			array.begin()//
-					.put(aPos, tmp.set(fromVec).fma(w, tmp2))//
+					.put(aPos, tmp.set(fromVec).fma(w, tmp2), 1f)//
 					.put(aColor, color)//
 					.put(aNormal, tmp2) //
 					.put(aTexCoord, texCoord.set(i / n, 0))//
 					.end();
 
 			array.begin()//
-					.put(aPos, tmp.set(toVec).fma(w, tmp2))//
+					.put(aPos, tmp.set(toVec).fma(w, tmp2), 1f)//
 					.put(aColor, color)//
 					.put(aNormal, tmp2) //
 					.put(aTexCoord, texCoord.set(i / n, 1))//
