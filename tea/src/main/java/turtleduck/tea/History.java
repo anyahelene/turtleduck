@@ -1,11 +1,14 @@
 package turtleduck.tea;
 
 import org.teavm.jso.JSObject;
+import org.teavm.jso.core.JSArray;
+import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.core.JSNumber;
 import org.teavm.jso.core.JSString;
 
 import turtleduck.async.Async;
 import turtleduck.async.Async.Sink;
+import turtleduck.util.Array;
 
 public class History {
 	private JSHistory histObj;
@@ -72,18 +75,37 @@ public class History {
 				});
 		return sink.async();
 	}
-
-	Async<Integer> nextId(String session) {
-		Sink<Integer> sink = Async.create();
-		histObj.nextId(JSString.valueOf(session)) //
-				.onRejected(err -> sink.fail("not found")) //
+	Async<Array> list(String session) {
+		Sink<Array> sink = Async.create();
+		histObj.list(JSString.valueOf(session)) //
+//				.onRejected(err -> sink.fail("not found")) //
 				.then(res -> {
-					sink.success(((JSNumber) res).intValue());
+					Array array = JSUtil.decodeArray(res);
+					Client.logger.info("list -> {}", array);
+					sink.success(array);
 					return Promise.Util.resolve(res);
 				});
 		return sink.async();
 	}
-
+	Async<Array> sessions() {
+		Sink<Array> sink = Async.create();
+		histObj.sessions() //
+//				.onRejected(err -> sink.fail("not found")) //
+				.then(res -> {
+					Array array = JSUtil.decodeArray(res);
+					Client.logger.info("sessions -> {}", array);
+					sink.success(array);
+					return Promise.Util.resolve(res);
+				});
+		return sink.async();
+	}
+	/*
+	 * Async<Integer> nextId(String session) { Sink<Integer> sink = Async.create();
+	 * histObj.nextId(JSString.valueOf(session)) // .onRejected(err ->
+	 * sink.fail("not found")) // .then(res -> { sink.success(((JSNumber)
+	 * res).intValue()); return Promise.Util.resolve(res); }); return sink.async();
+	 * }
+	 */
 	String getPathName(String session, int id) {
 		return histObj.getPathName(JSString.valueOf(session), JSNumber.valueOf(id)).stringValue();
 	}
@@ -101,6 +123,10 @@ public class History {
 
 		Promise<JSNumber> currentId(JSString session);
 
-		Promise<JSNumber> nextId(JSString session);
+		Promise<JSArray<?>> list(JSString session);
+
+		Promise<JSArray<?>> sessions();
+
+//		Promise<JSNumber> nextId(JSString session);
 	}
 }

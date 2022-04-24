@@ -11,6 +11,7 @@ import turtleduck.messaging.generated.ShellServiceProxy;
 import turtleduck.text.TextCursor;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
+import turtleduck.util.JsonUtil;
 import turtleduck.util.Logging;
 import turtleduck.text.Location;
 
@@ -19,12 +20,15 @@ import static turtleduck.tea.Diagnostics.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
+import org.teavm.jso.core.JSObjects;
 import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.typedarrays.Uint8Array;
 
@@ -162,12 +166,8 @@ public class Shell {
 		String cmd = split[0];
 		String args = split.length == 2 ? split[1].trim() : "";
 		if (cmd.equals("/ls")) {
-			List<String> files = Client.client.oldFileSystem.list();
-
 			console.promptBusy();
-			Client.client.fileSystem.list(args).onComplete(tdfiles -> {
-				List<String> newFiles = tdfiles.stream().map(file -> file.name()).collect(Collectors.toList());
-				files.addAll(newFiles);
+			Client.client.fileSystem.readdir(args).onComplete(files -> {
 				int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
 				int width = 80; // TODO terminal.getCols();
 				int cols = 1;
@@ -178,6 +178,7 @@ public class Shell {
 				}
 				logger.info("1: max={}, width={}, cols={}", max, width, cols);
 				int c = 0;
+				Collections.sort(files);
 				for (String str : files) {
 					console.print(String.format("%-" + max + "s", str));
 					if (++c >= cols) {
@@ -189,6 +190,29 @@ public class Shell {
 					console.println();
 				console.promptNormal();
 			}, err -> {
+				logger.error("error: {}", JsonUtil.encode(err));
+				printError("", err, console);
+			});
+
+			return true;
+		} else if (cmd.equals("/mkdir")) {
+			console.promptBusy();
+			Client.client.fileSystem.mkdir(args).onComplete(res -> {
+				console.promptNormal();
+			}, err -> {
+				logger.error("error: {}", JsonUtil.encode(err));
+				printError("", err, console);
+			});
+
+			return true;
+		} else if (cmd.equals("/cd")) {
+			console.promptBusy();
+			Client.client.fileSystem.chdir(args).onComplete(res -> {
+				console.println("cd " + res);
+				console.promptNormal();
+			}, err -> {
+				logger.error("error: {}", JsonUtil.encode(err));
+				printError("", err, console);
 			});
 
 			return true;
@@ -339,19 +363,23 @@ public class Shell {
 				.onFailure(msg -> {
 					Client.client.userlog("Eval: internal error");
 					logger.info("exec error: " + msg);
-					String ename = msg.get(Reply.ENAME);
-					String evalue = msg.get(Reply.EVALUE, null);
-					Array trace = msg.get(Reply.TRACEBACK);
-					console.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""), Colors.RED);
-					for (String frame : trace.toListOf(String.class)) {
-						console.println(frame, Colors.MAROON);
-					}
-					console.promptNormal();
+					printError("INTERNAL ERROR: ", msg, console);
 
 				});
 //}
 	}
 
+	public void printError(String prefix, Dict msg, LanguageConsole console) {
+		String ename = msg.get(Reply.ENAME);
+		String evalue = msg.get(Reply.EVALUE, null);
+		Array trace = msg.get(Reply.TRACEBACK);
+		console.println(prefix + ename + (evalue != null ? (" : " + evalue) : ""), Colors.RED);
+		for (String frame : trace.toListOf(String.class)) {
+			console.println(frame, Colors.MAROON);
+		}
+		console.promptNormal();
+		
+	}
 	public ShellService service() {
 		return service;
 	}

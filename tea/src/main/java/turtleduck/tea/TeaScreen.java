@@ -5,8 +5,11 @@ import java.util.function.Predicate;
 import turtleduck.colors.Color;
 import turtleduck.canvas.Canvas;
 import turtleduck.canvas.CanvasImpl;
+import turtleduck.display.Camera;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
+import turtleduck.display.Viewport;
+import turtleduck.display.Viewport.ViewportBuilder;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
@@ -17,18 +20,22 @@ public class TeaScreen extends BaseScreen {
 	String currentGroup = null;
 
 	public static TeaScreen create(CanvasService session, int config) {
-		Dimensions dim = computeDimensions(TeaDisplayInfo.INSTANCE, config);
-
-		return new TeaScreen(session, dim);
+		ViewportBuilder vpb = Viewport.create(TeaDisplayInfo.INSTANCE);
+		Viewport vp = vpb.screenArea(0, 0, 0, 0).width(1280).height(720).fit().done();
+		return new TeaScreen(session, vp);
 	}
 
 	private CanvasService session;
 	private int channel;
+	private Camera camera3;
+	private Camera camera2;
 
-	public TeaScreen(CanvasService session, Dimensions dim) {
-		this.dim = dim;
+	public TeaScreen(CanvasService session, Viewport vp) {
+		super(vp);
 		this.session = session;
-		setupAspects(dim);
+		camera3 = viewport.create3dCamera();
+		camera2 = viewport.create2dCamera();
+		setupAspects(vp.aspect());
 	}
 
 	public void group(String group) {
@@ -51,11 +58,12 @@ public class TeaScreen extends BaseScreen {
 
 	@Override
 	public Canvas createCanvas() {
-		String layerId = newLayerId();
-		TeaLayer layer = addLayer(new TeaLayer(layerId, this, dim.fbWidth, dim.fbHeight, session));
-		return new CanvasImpl<>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d), layer.canvas);
+		TeaLayer teaLayer = new TeaLayer(newLayerId(), this, viewport.width(), viewport.height(), session);
+		Canvas canvas = new CanvasImpl<>(newLayerId(), this, viewport.width(), viewport.height(),
+				use3d -> teaLayer.pathWriter(use3d), () -> teaLayer.clear(), session);
+		return canvas;
 	}
-
+	
 	@Override
 	public TextWindow createTextWindow() {
 		// TODO Auto-generated method stub
@@ -162,7 +170,7 @@ public class TeaScreen extends BaseScreen {
 	@Override
 	protected void exit() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override

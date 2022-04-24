@@ -1,5 +1,6 @@
 package turtleduck.tea;
 
+import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -7,6 +8,7 @@ import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.core.JSArray;
 import org.teavm.jso.core.JSBoolean;
+import org.teavm.jso.core.JSDate;
 import org.teavm.jso.core.JSFunction;
 import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.core.JSNumber;
@@ -51,11 +53,15 @@ public class JSUtil {
 
 	@JSBody(params = { "obj" }, script = "return obj instanceof Int32Array")
 	native static boolean isInt32Array(JSObject obj);
+
 	@JSBody(params = { "obj" }, script = "return ArrayBuffer.isView(obj)")
 	native static boolean isArrayView(JSObject obj);
 
 	@JSBody(params = { "obj" }, script = "return obj instanceof Map")
 	native static boolean isMap(JSObject obj);
+
+	@JSBody(params = { "obj" }, script = "return obj instanceof Date")
+	native static boolean isDate(JSObject obj);
 
 	@JSBody(params = { "obj", "fun" }, script = "obj.forEach(function(v,k) { fun(k,v); })")
 	native static void forEachInMap(JSObject obj, JSBiConsumer<JSObject, JSObject> fun);
@@ -78,10 +84,9 @@ public class JSUtil {
 	@JSBody(params = { "keyName" }, script = "turtleduck.handleKey(keyName)")
 	native static void handleKey(String keyName);
 
-	
 	@JSBody(params = { "view", "type" }, script = "return URL.createObjectURL(new Blob([view], {type: type}));")
 	native static String createObjectURL(ArrayBufferView view, String type);
-	
+
 	@JSBody(params = { "url" }, script = "URL.revokeObjectURL(url);")
 	native static void revokeObjectURL(String url);
 
@@ -138,6 +143,9 @@ public class JSUtil {
 			"onsuccess", }, script = "turtleduck.pyController.run(code, context, onsuccess, e => { return console.error(e); })")
 	native static JSFunction runPython(String code, JSMapLike<JSObject> context,
 			JSConsumer<JSMapLike<JSObject>> onsuccess);
+
+	@JSBody(params = { "onsuccess", "onerror" }, script = "turtleduck.checkLogin(onsuccess, onerror)")
+	native static void checkLogin(JSConsumer<JSMapLike<JSObject>> onsuccess, JSConsumer<JSMapLike<JSObject>> onerror);
 
 	@JSBody(params = { "elt", "code" }, script = "return turtleduck.md.render_unsafe(elt, code)")
 	native static void renderSafeMarkdown(HTMLElement elt, String code);
@@ -251,12 +259,11 @@ public class JSUtil {
 	}
 
 	public static Dict decodeDict(JSMapLike<?> jsobj) {
-		if (jsobj == null)
+		if (jsobj == null || JSObjects.isUndefined(jsobj))
 			return null;
 		else if (isMap(jsobj))
 			return decodeMap(jsobj);
-		else if (JSObjects.isUndefined(jsobj))
-			return null;
+
 
 		Dict d = Dict.create();
 		for (String prop : JSObjects.getOwnPropertyNames(jsobj)) {
@@ -266,9 +273,7 @@ public class JSUtil {
 	}
 
 	public static Dict decodeMap(JSObject jsobj) {
-		if (jsobj == null)
-			return null;
-		else if (JSObjects.isUndefined(jsobj))
+		if (jsobj == null || JSObjects.isUndefined(jsobj))
 			return null;
 
 		Dict d = Dict.create();
@@ -296,6 +301,12 @@ public class JSUtil {
 
 	}
 
+	public static Date decodeDate(JSDate jsobj) {
+		if (jsobj == null || JSObjects.isUndefined(jsobj))
+			return null;
+		return new Date((long) jsobj.getTime());
+	}
+
 	public static Object decode(JSObject jsobj) {
 		if (JSObjects.isUndefined(jsobj) || jsobj == null)
 			return null;
@@ -319,12 +330,14 @@ public class JSUtil {
 			if (isArray(jsobj)) {
 //				System.out.println("it's an array!");
 				return decodeArray((JSArray<?>) jsobj);
-			} else if(isArrayView(jsobj)) {
-				return new ArrayView<ArrayBufferView>((ArrayBufferView)jsobj);
-				//ArrayBuffer buf = ((ArrayBufferView)jsobj).getBuffer();
-				//if(isUint8Array(jsobj)) {
-				//}
-			}else {
+			} else if (isArrayView(jsobj)) {
+				return new ArrayView<ArrayBufferView>((ArrayBufferView) jsobj);
+				// ArrayBuffer buf = ((ArrayBufferView)jsobj).getBuffer();
+				// if(isUint8Array(jsobj)) {
+				// }
+			} else if (isDate(jsobj)) {
+				return decodeDate((JSDate) jsobj);
+			} else {
 				return decodeDict((JSMapLike<?>) jsobj);
 			}
 		}
@@ -366,6 +379,7 @@ public class JSUtil {
 		}
 		return arr;
 	}
+
 	static <T extends ArrayBufferView> T encode(ArrayView<T> a) {
 		return a.get();
 	}
@@ -385,7 +399,7 @@ public class JSUtil {
 			return encode((Dict) val);
 		else if (val instanceof Array)
 			return encode((Array) val);
-		else if(val instanceof ArrayView) 
+		else if (val instanceof ArrayView)
 			return encode((ArrayView<?>) val);
 		else
 			return encode(val.toString());

@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
+import org.teavm.jso.JSFunctor;
+import org.teavm.jso.JSObject;
 import org.teavm.jso.core.JSString;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
@@ -35,12 +37,13 @@ import turtleduck.terminal.TerminalPrintStream;
 import turtleduck.text.Location;
 import turtleduck.text.TextCursor;
 import turtleduck.text.impl.HtmlCursorImpl;
+import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Logging;
 import turtleduck.util.Strings;
 
 @MessageDispatch("turtleduck.tea.generated.CMDispatch")
-public class CMTerminalServer implements TerminalService, ExplorerService, HtmlCursorImpl.HTMLWriter {
+public class CMTerminalServer implements TerminalService, ExplorerService, HtmlCursorImpl.HTMLWriter, JSTerminal {
 	public final Logger logger = Logging.getLogger(CMTerminalServer.class);
 //	private Client client;
 	private HTMLElement outputElt;
@@ -67,7 +70,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	CMTerminalServer(Component parent, Shell shell) {
 		this.parent = parent;
 		this.shell = shell;
-		this.console = new LanguageConsole.ConsoleImpl();
+		this.console = new LanguageConsole.ConsoleImpl(this);
 	}
 
 	public void initialize(String name) {
@@ -94,7 +97,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		editor.set("anchorElt", anchorElt);
 		editor.set("outerElt", outerElt);
 		editor.set("outputElt", outputElt);
-		editor.set("print", (JSConsumer<JSString>) (s -> cursor.print(s.stringValue())));
+		editor.set("terminal", this);
 		editor.register();
 
 		cursor = new HtmlCursorImpl(this, (s) -> {
@@ -187,6 +190,23 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		editor.switchState(newState);
 	}
 
+	public void appendElement(HTMLElement element) {
+		outputElt.appendChild(element);
+	}
+
+	public HTMLElement appendBlock() {
+		return appendBlock(null);
+	}
+
+	public HTMLElement appendBlock(String style) {
+		HTMLElement element = Browser.document.createElement("div");
+		if (style != null) {
+			element.setClassName(style);
+		}
+		outputElt.appendChild(element);
+		return element;
+	}
+
 	private void keydown(KeyboardEvent e) {
 		if (e.isCtrlKey() && e.getKey().equals("c")) { // Ctrl-C
 			return;
@@ -201,7 +221,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		editor.focus();
 	}
 
-	private void scrollIntoView() {
+	public void scrollIntoView() {
 		outputContainer.setScrollTop(0);
 		JSUtil.scrollToBottom(wrapperElt);
 		// JSUtil.scrollIntoView(anchorElt);
@@ -229,8 +249,8 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 				scrollIntoView();
 			}).onFailure(err -> {
 				logger.error("history.get: {}", err);
-				if(next > 0) {
-					goHistory(next-1, state);
+				if (next > 0) {
+					goHistory(next - 1, state);
 				}
 			});
 		}
@@ -241,7 +261,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 			shell.service().refresh();
 			promptReady();
 			return;
-		} else if (s.startsWith("/") && shell.specialCommand(s, console.withOutputElement(output))) {
+		} else if (s.startsWith("/") && specialCommand(s, console.withOutputElement(output))) {
 			return;
 		} else {
 			Dict opts = Dict.create();
@@ -251,6 +271,42 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 			shell.evalLine(s, id, opts, console.withOutputElement(output));
 		}
 
+	}
+
+	Async<Array> history() {
+		return Client.client.history.list(historyId);
+	}
+
+	boolean specialCommand(String cmd, LanguageConsole console) {
+		if (cmd.equals("/history")) {
+			console.promptBusy();
+			history().onComplete(res -> {
+				res.toListOf(Dict.class).forEach(entry -> {
+					console.print(String.format("%4d %s\n", entry.get("id", 0), entry.get("data", "")));
+				});
+				console.promptNormal();
+			}, ex -> {
+				logger.error("/history failed: {}", ex);
+				console.promptNormal();
+			});
+			return true;
+		} else if (cmd.equals("/sessions")) {
+			console.promptBusy();
+			Client.client.history.sessions().onComplete(res -> {
+				res.toListOf(Dict.class).forEach(entry -> {
+					console.print(entry.toJson());
+				});
+				console.promptNormal();
+			}, ex -> {
+				logger.error("/sessions failed: {}", ex);
+				console.promptNormal();
+			});
+			return true;
+		} else if (cmd.startsWith("/session=")) {
+			return true;
+		} else {
+			return shell.specialCommand(cmd, console);
+		}
 	}
 
 	private void promptWaiting() {
@@ -398,6 +454,10 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		return cursor;
 	}
 
+	public LanguageConsole printer() {
+		return console.withOutputElement(appendBlock());
+	}
+
 	@Override
 	public void writeGlyph(String glyph, String attrs) {
 		HTMLElement elt = Browser.document.createElement("span");
@@ -447,5 +507,25 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		}
 
 	}
+
+}
+
+@JSFunctor
+interface JSTerminal extends JSObject {
+	public void disableHistory();
+
+	public LanguageConsole console();
+
+	public boolean eventHandler(String eventName, State state);
+
+	public HTMLElement appendBlock(String style	);
+
+	public void appendElement(HTMLElement element);
+
+	public void scrollIntoView();
+
+	public void focus();
+
+	public LanguageConsole printer();
 
 }

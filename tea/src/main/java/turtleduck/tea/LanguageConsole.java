@@ -3,9 +3,12 @@ package turtleduck.tea;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.teavm.jso.JSFunctor;
+import org.teavm.jso.JSObject;
 import org.teavm.jso.dom.html.HTMLElement;
 
 import turtleduck.colors.Color;
+import turtleduck.messaging.TerminalService;
 import turtleduck.tea.LanguageConsole.ConsoleImpl;
 import turtleduck.text.Location;
 import turtleduck.text.TextCursor;
@@ -15,6 +18,8 @@ public interface LanguageConsole {
 
 	LanguageConsole create();
 
+	LanguageConsole appendElement(HTMLElement element);
+
 	void promptBusy();
 
 	LanguageConsole cursor(TextCursor cursor);
@@ -23,12 +28,10 @@ public interface LanguageConsole {
 
 	LanguageConsole promptHandler(BiConsumer<Integer, String> promptHandler);
 
-	static LanguageConsole create(LanguageConsole delegate) {
-		ConsoleImpl impl = new ConsoleImpl();
-		impl.delegate = delegate;
-		return impl;
-	}
-
+	/*
+	 * static LanguageConsole create(LanguageConsole delegate) { ConsoleImpl impl =
+	 * new ConsoleImpl(); impl.delegate = delegate; return impl; }
+	 */
 	HTMLElement outputElement();
 
 	LanguageConsole withOutputElement(HTMLElement output);
@@ -42,13 +45,9 @@ public interface LanguageConsole {
 		print(text + "\n", color);
 	}
 
-	default void println(String text) {
-		print(text + "\n", null);
-	}
+	void println(String text);
 
-	default void print(String text) {
-		print(text, null);
-	}
+	void print(String text);
 
 	void print(String text, Color color);
 
@@ -62,12 +61,17 @@ public interface LanguageConsole {
 
 	boolean hasDiagnostics();
 
-	class ConsoleImpl implements LanguageConsole {
+	class ConsoleImpl implements LanguageConsole, JSLanguageConsole {
 		protected LanguageConsole delegate;
 		private HTMLElement outputElement;
 		private BiConsumer<Dict, Location> diagHandler;
 		private TextCursor cursor;
 		private BiConsumer<Integer, String> prompt;
+		private CMTerminalServer terminal;
+
+		public ConsoleImpl(CMTerminalServer terminal) {
+			this.terminal = terminal;
+		}
 
 		@Override
 		public HTMLElement outputElement() {
@@ -76,18 +80,33 @@ public interface LanguageConsole {
 
 		@Override
 		public LanguageConsole create() {
-			ConsoleImpl impl = new ConsoleImpl();
+			ConsoleImpl impl = new ConsoleImpl(terminal);
 			impl.delegate = this;
 			return impl;
 		}
 
 		@Override
 		public LanguageConsole withOutputElement(HTMLElement output) {
-			ConsoleImpl impl = new ConsoleImpl();
+			ConsoleImpl impl = new ConsoleImpl(terminal);
 			impl.delegate = this;
 			impl.outputElement = output;
 			return impl;
 		}
+
+		@Override
+		public LanguageConsole appendElement(HTMLElement element) {
+			if (outputElement != null) {
+				outputElement.appendChild(element);
+			} else if (terminal != null) {
+				terminal.appendElement(element);
+			} else if (delegate != null) {
+				delegate.appendElement(element);
+			} else {
+				Shell.logger.error("LanguageConsole::appendElement() failed");
+			}
+			return this;
+		}
+
 		@Override
 		public void promptBusy() {
 			if (prompt != null) {
@@ -119,6 +138,16 @@ public interface LanguageConsole {
 			} else if (delegate != null) {
 				delegate.print(text, color);
 			}
+		}
+
+		@Override
+		public void println(String text) {
+			print(text + "\n", null);
+		}
+
+		@Override
+		public void print(String text) {
+			print(text, null);
 		}
 
 		@Override
@@ -161,4 +190,21 @@ public interface LanguageConsole {
 			return this;
 		}
 	}
+}
+
+@JSFunctor
+interface JSLanguageConsole extends JSObject {
+	void print(String text);
+
+	void println(String text);
+
+	HTMLElement outputElement();
+
+	LanguageConsole withOutputElement(HTMLElement output);
+
+	void promptBusy();
+
+	void promptNormal();
+
+	void promptMore(String incompleteCode);
 }

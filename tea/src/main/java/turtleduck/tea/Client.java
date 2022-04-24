@@ -128,6 +128,7 @@ public class Client implements JSObject, ClientObject {
 				shellComponent.addWindowTools();
 				shellComponent.setParent(wm);
 				shellComponent.register();
+				map.set("shellComponent", shellComponent);
 
 			}
 
@@ -162,9 +163,9 @@ public class Client implements JSObject, ClientObject {
 			WINDOW_MAP.set("turtleduck", map);
 			// DocDisplay docDisplay = new DocDisplay(screenComponent);
 			// docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
-			if (false) {
+			if (true) {
 				DocDisplay docDisplay2 = new DocDisplay(screenComponent);
-				docDisplay2.initFromUrl("examples/dcc/koronasertifikat.md", null, true);
+				docDisplay2.initFromUrl("examples/ua-py/ch1.md", null, true);
 			}
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
@@ -330,6 +331,7 @@ public class Client implements JSObject, ClientObject {
 			chatTerminal.disableHistory();
 			chatTerminal.initialize("chat");
 			map.set("chat", chatTerminal.editor);
+			map.set("chatterminal", chatTerminal);
 			router.route(new CMDispatch(chatTerminal));
 			Dict welcome = Dict.create();
 			welcome.put(HelloService.USERNAME, "T.Duck");
@@ -372,6 +374,7 @@ public class Client implements JSObject, ClientObject {
 			jterminal = new CMTerminalServer(shellComponent, jshell);
 			jterminal.initialize("jshell");
 			map.set("jshell", jterminal.editor);
+			map.set("jterminal", jterminal);
 			router.route(new CMDispatch(jterminal));
 
 			HTMLElement exElt = Browser.document.getElementById("explorer");
@@ -426,6 +429,7 @@ public class Client implements JSObject, ClientObject {
 			pyterminal = new CMTerminalServer(shellComponent, pyshell);
 			pyterminal.initialize("pyshell");
 			map.set("pyshell", pyterminal.editor);
+			map.set("pyterminal", pyterminal);
 			router.route(new CMDispatch(pyterminal));
 
 			HTMLElement exElt = Browser.document.getElementById("explorer");
@@ -715,7 +719,7 @@ public class Client implements JSObject, ClientObject {
 				}
 				return res;
 			}).onRejected(err -> {
-				sink.fail(JSUtil.decodeDict(err));
+				sink.fail(JSUtil.decodeDict((JSMapLike<?>)err.cast()));
 			});
 			return sink.async();
 		};

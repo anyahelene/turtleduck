@@ -2,7 +2,6 @@ package turtleduck.tea;
 
 import java.util.function.Predicate;
 
-
 import org.teavm.jso.canvas.CanvasRenderingContext2D;
 import org.teavm.jso.dom.css.CSSStyleDeclaration;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
@@ -14,6 +13,8 @@ import turtleduck.canvas.CanvasImpl;
 import turtleduck.display.Layer;
 import turtleduck.display.MouseCursor;
 import turtleduck.display.Screen;
+import turtleduck.display.Viewport;
+import turtleduck.display.Viewport.ViewportBuilder;
 import turtleduck.display.impl.BaseScreen;
 import turtleduck.events.InputControl;
 import turtleduck.events.KeyEvent;
@@ -22,32 +23,31 @@ import turtleduck.text.TextWindow;
 public class NativeTScreen extends BaseScreen {
 	private HTMLElement mainElement;
 
-
 	public static NativeTScreen create(int config) {
-		Dimensions dim = computeDimensions(NativeTDisplayInfo.INSTANCE, config);
+		ViewportBuilder vpb = Viewport.create(TeaDisplayInfo.INSTANCE);
+		Viewport vp = vpb.screenArea(0, 0, 0, 0).width(1280).height(720).fit().done();
 
-		return new NativeTScreen(dim);
+		return new NativeTScreen(vp);
 	}
 
+	public NativeTScreen(Viewport vp) {
+		super(vp);
 
-    public NativeTScreen(Dimensions dim) {
-		this.dim = dim;
+		setupAspects(vp.aspect());
 
 		mainElement = Browser.document.getElementById("screen0");
-		this.dim = dim;
-		setupAspects(dim);
-	
 	}
+
 	@Override
 	protected void recomputeLayout(boolean b) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void clearBackground() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -64,9 +64,10 @@ public class NativeTScreen extends BaseScreen {
 		CanvasRenderingContext2D context = (CanvasRenderingContext2D) canvas.getContext("2d");
 		context.strokeText("Hello, world!", 10, 10);
 		mainElement.appendChild(canvas);
-		NativeTLayer layer = addLayer(new NativeTLayer(layerId, this, dim.fbWidth, dim.fbHeight, canvas));
-		return new CanvasImpl<Screen>(layerId, this, dim.fbWidth, dim.fbHeight, use3d -> layer.pathWriter(use3d), 
-				Client.client.canvas);
+		NativeTLayer layer = addLayer(new NativeTLayer(layerId, this, viewport.width(), viewport.height(), canvas));
+		return new CanvasImpl<>(layerId, this, viewport.width(), viewport.height(), use3d -> layer.pathWriter(use3d),
+				() -> layer.clear(), Client.client.canvas);
+
 	}
 
 	@Override
@@ -84,7 +85,7 @@ public class NativeTScreen extends BaseScreen {
 	@Override
 	public void hideMouseCursor() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -102,55 +103,55 @@ public class NativeTScreen extends BaseScreen {
 	@Override
 	public void moveToBack(Layer layer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void moveToFront(Layer layer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setBackground(Color bgColor) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setFullScreen(boolean fullScreen) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setHideFullScreenMouseCursor(boolean hideIt) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setMouseCursor(MouseCursor cursor) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void showMouseCursor() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void flush() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void clipboardPut(String copied) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -159,26 +160,22 @@ public class NativeTScreen extends BaseScreen {
 		return null;
 	}
 
-
 	@Override
 	public ScreenControls controls() {
 		// TODO Auto-generated method stub
 		return this;
 	}
 
-
 	@Override
 	protected void exit() {
 		// TODO Auto-generated method stub
-		
-	}
 
+	}
 
 	@Override
 	protected String getClipboardString() {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 
 }

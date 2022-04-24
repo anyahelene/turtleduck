@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.teavm.jso.JSObject;
+import org.teavm.jso.ajax.XMLHttpRequest;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.core.JSBoolean;
 import org.teavm.jso.core.JSMapLike;
@@ -45,7 +46,7 @@ class SockJSConnection extends BaseConnection {
 	private SockJS socket;
 	private final List<String> queue = new ArrayList<>();
 	private final JSMapLike<JSObject> map;
-	protected boolean socketConnected = false;
+	protected boolean socketConnected = false, socketReady = false;
 	private int reconnectIntervalId;
 	private int reconnectInterval = 2000;
 	private String preferredSession;
@@ -99,33 +100,40 @@ class SockJSConnection extends BaseConnection {
 	public void shutdown() {
 		if (socket != null)
 			socket.close();
+		Window.clearInterval(reconnectIntervalId);
 	}
 
 	protected void do_connect() {
-		if (preferredSession != null)
-			socket = SockJS.create("socket?session=" + JSUtil.encodeURIComponent(preferredSession));
-		else
-			socket = SockJS.create("socket");
-		map.set("socket", socket);
-		socket.onClose(tryListener(this::disconnect));
-		socket.onOpen(tryListener(this::connect));
-		socket.onMessage(tryListener(this::receive));
-
-		while (!queue.isEmpty()) {
-			socket.send(queue.remove(0));
-		}
+		JSUtil.checkLogin(res -> {
+			if (preferredSession != null)
+				socket = SockJS.create("socket?session=" + JSUtil.encodeURIComponent(preferredSession));
+			else
+				socket = SockJS.create("socket");
+			map.set("socket", socket);
+			socket.onClose(tryListener(this::disconnect));
+			socket.onOpen(tryListener(this::connect));
+			socket.onMessage(tryListener(this::receive));
+		}, res -> {
+			Client.client.userlog("Not logged in.");
+		});
 
 	}
 
 	protected void connect(Event ev) {
 		logger.info("Connect: " + ev.getType() + ", " + this);
+		logger.info("OpenEvent: {}", ev);
 		socketConnected = true;
-		reconnectInterval = 2000;
 
 		Client.client.userlog("Connected. Sending hello...");
 		welcomeService.hello(Client.client.sessionName, Dict.create()).onSuccess(msg -> {
 			logger.info("Received welcome: {}", msg);
 			Client.client.userlog("Received welcome.");
+			reconnectInterval = 2000;
+			socketReady = true;
+
+			while (!queue.isEmpty()) {
+				socket.send(queue.remove(0));
+			}
 
 			for (BiConsumer<Connection, Dict> h : onConnectHandlers.values()) {
 				if (h != null)
@@ -136,41 +144,54 @@ class SockJSConnection extends BaseConnection {
 	}
 
 	protected void disconnect(CloseEvent ev) {
-		if (socketConnected) {
-			logger.info("Disconnect: " + this + ", retry " + reconnectInterval);
+		String closed = socketReady ? "closed" : "failed";
+		StatusCode sc = StatusCode.valueOf(ev.getCode());
+		sc.log("Connection {}: {}: {} {}, {}", closed, socket.url(), ev.getCode(), sc.desc, ev.getReason());
+		logger.info("CloseEvent: {}", ev);
+		socketConnected = false;
+		if (socketReady) {
 			for (Consumer<Connection> h : onDisconnectHandlers.values()) {
 				if (h != null)
 					h.accept(this);
 			}
-			socketConnected = false;
+			socketReady = false;
+			Client.client.userlog("Connection closed.");
 		} else {
 			Client.client.userlog("Connection failed.");
-			logger.error("Connection failed: " + this + ", retry " + reconnectInterval);
 		}
 		socket = null;
 		map.set("socket", null);
 
-		reconnectIntervalId = Window.setInterval(() -> {
-			logger.info("Retrying SockJS connection...");
-			Client.client.userlog("Trying to reconnect...");
+		if (sc.retry) {
+			reconnectIntervalId = Window.setTimeout(() -> {
+				logger.info("Retrying SockJS connection...");
+				Client.client.userlog("Trying to reconnect...");
 
-			Window.clearInterval(reconnectIntervalId);
-			reconnectInterval *= 1.5;
-			do_connect();
-		}, reconnectInterval);
-
+				Window.clearInterval(reconnectIntervalId);
+				reconnectInterval *= 1.5;
+				do_connect();
+			}, reconnectInterval);
+		} else {
+			reconnectInterval = 2000;
+		}
 	}
 
 	public void socketSend(Message msg) {
 		String data = msg.toJson();
-		if (socket != null) {
-			while (!queue.isEmpty()) {
-				String string = queue.remove(0);
-				log("SEND: " + string);
-				socket.send(string);
+		if (socketConnected && socket != null) {
+			if (socketReady) {
+				while (!queue.isEmpty()) {
+					String string = queue.remove(0);
+					log("SEND: " + string);
+					socket.send(string);
+				}
+				log("SEND: " + data);
+				socket.send(data);
+			} else if (msg.msgType().equals("hello")) {
+				socket.send(data);
+			} else {
+				queue.add(data);
 			}
-			log("SEND: " + data);
-			socket.send(data);
 		} else {
 			queue.add(data);
 		}
@@ -258,4 +279,52 @@ class SockJSConnection extends BaseConnection {
 		welcomeService = new HelloServiceProxy(id, router);
 	}
 
+	enum StatusCode {
+		NORMAL(1000, false, false, "normal termination"), //
+		GOING_AWAY(1001, false, false, "going away"), //
+		PROTOCOL_ERROR(1002, true, false, "protocol error"), //
+		WRONG_DATA_TYPE(1003, true, true, "data type not supported"), //
+		RESERVED(1004, false, false, "reserved 1004"), //
+		NO_STATUS(1005, false, true, "no status code set"), //
+		ABNORMAL(1006, true, true, "abnormal termination"), //
+		BAD_DATA(1007, true, true, "inconsistent data"), //
+		POLICY_VIOLATION(1008, true, false, "policy violation"), //
+		TOO_BIG(1009, true, true, "message too big"), //
+		NEGOTIATION_FAILED(1010, true, false, "WebSocket negotiation failed"), //
+		UNEXPECTED(1011, true, true, "unexpected server error"), //
+		RESERVED_12(1012, false, false, "reserved 1012"), //
+		RESERVED_13(1013, false, false, "reserved 1013"), //
+		RESERVED_14(1014, false, false, "reserved 1014"), //
+		TLS_HANDSHAKE_FAILED(1015, true, false, "TLS handshake failed"),
+		UNKNOWN(3000, true, false, "unknown status code");
+
+		int code;
+		boolean error;
+		boolean retry;
+		String desc;
+
+		StatusCode(int code, boolean error, boolean retry, String desc) {
+			this.code = code;
+			this.error = error;
+			this.retry = retry;
+			this.desc = desc;
+		}
+
+		static StatusCode valueOf(int code) {
+			if (code >= 1000 && code <= 1015) {
+				for (StatusCode c : StatusCode.values()) {
+					if (c.code == code)
+						return c;
+				}
+			}
+			return UNKNOWN;
+		}
+
+		void log(String format, Object... objects) {
+			if (error)
+				logger.error(format, objects);
+			else
+				logger.info(format, objects);
+		}
+	}
 }

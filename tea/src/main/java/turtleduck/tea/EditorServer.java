@@ -163,9 +163,9 @@ public class EditorServer implements EditorService {
 	}
 
 	public EditLanguage getLanguage(Language lang) {
-		if(lang == null) {
+		if (lang == null) {
 			lang = Languages.LANGUAGES.get("plain");
-			if(lang == null) {
+			if (lang == null) {
 				// TODO: replicates stuff from Client::setupLanguages
 				lang = new Language("plain", Dict.create());
 				Languages.LANGUAGES.put("plain", lang);
@@ -240,53 +240,79 @@ public class EditorServer implements EditorService {
 		if (currentSession != null) {
 			EditSession current = currentSession;
 			String contents = content();
+			Async<Integer> tmp = null;
 			if (!current.filename.startsWith("*")) {
 				Client.client.userlog("Saving " + current.filename);
-				Client.client.storage().setItem("file://" + current.filename, contents);
+				tmp = Client.client.fileSystem.writefile("/home/" + current.filename, contents);
 				current.lastSave = contents;
 			}
+			Async<Integer> writePromise = tmp != null ? tmp : Async.succeeded(0);
 			EditLanguage lang = current.lang;
-			if (lang.shell != null) {
-				Client.client.userlog("'" + current.filename + "' saved, evaluating " + lang.name);
-				Dict opts = Dict.create();
-				Location loc = new Location("file", "editor", current.filename, 0, contents.length(), -1);
-				opts.put(ShellService.LOC, loc.toString());
-				opts.put(ShellService.COMPLETE, true);
-				if (lang.console != null) {
-					lang.console.println();
+			writePromise.then(res -> {
+				logger.info("write complete: {}", res);
+				if (lang.shell != null) {
+					return doEval(current, contents, writePromise, lang);
+				} else {
+					Client.client.userlog("'" + current.filename + "' saved (no evaluator available)");
+					return null;
 				}
-				return current.lang.shell.service().eval(contents, current.id, opts).map(msg -> {
-					cmDiags = JSArray.create();
-					if (lang.console != null) {
-						lang.shell.processResult(msg, true, current.lang.console);
-						current.lang.console.promptNormal();
-					}
-					current.state = setDiagnostics(editor.state(), cmDiags);
-					editor.switchState(current.state);
-					return Dict.create();
-				}).mapFailure(msg -> {
+				
+			}).onFailure(msg -> {
+				logger.info("save error: " + msg);
+				String ename = msg.get(Reply.ENAME);
+				String evalue = msg.get(Reply.EVALUE, "");
+				if (lang != null && lang.shell != null) {
+					lang.shell.printError("", msg, lang.console);
+				}
+				Client.client.userlog("Saving '"+current.filename +"' failed: " + ename + ":" + evalue);
 
-					logger.info("exec error: " + msg);
-					String ename = msg.get(Reply.ENAME);
-					String evalue = msg.get(Reply.EVALUE, null);
-					Array trace = msg.get(Reply.TRACEBACK);
-					if (lang.console != null) {
-						lang.console.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""),
-								Colors.RED);
-						for (String frame : trace.toListOf(String.class)) {
-							lang.console.println(frame, Colors.MAROON);
-						}
-					}
-					return msg;
-				});
-			} else {
-				Client.client.userlog("'" + current.filename + "' saved (no evaluator available)");
-
-				return null;
-			}
+			});
 		} else
 			Client.client.userlog("Save: nothing to do");
 		return null;
+	}
+
+	private Async<Dict> doEval(EditSession current, String contents, Async<Integer> writePromise, EditLanguage lang) {
+		Client.client.userlog("'" + current.filename + "' saved, evaluating " + lang.name);
+		Dict opts = Dict.create();
+		Location loc = new Location("file", "editor", current.filename, 0, contents.length(), -1);
+		opts.put(ShellService.LOC, loc.toString());
+		opts.put(ShellService.COMPLETE, true);
+		if (lang.console != null) {
+			lang.console.println();
+		}
+		return current.lang.shell.service().eval(contents, current.id, opts).then(msg -> {
+			cmDiags = JSArray.create();
+			if (lang.console != null) {
+				lang.shell.processResult(msg, true, current.lang.console);
+				current.lang.console.promptNormal();
+			}
+			current.state = setDiagnostics(editor.state(), cmDiags);
+			editor.switchState(current.state);
+			if (writePromise != null) {
+				return writePromise.map(i -> {
+					logger.info("write complete: {}", i);
+					return Dict.create();
+				});
+			} else {
+				return Async.succeeded(Dict.create());
+			}
+		}).mapFailure(msg -> {
+			lang.shell.printError("INTERNAL ERROR: ", msg, lang.console);
+
+	/*		logger.info("exec error: " + msg);
+			String ename = msg.get(Reply.ENAME);
+			String evalue = msg.get(Reply.EVALUE, null);
+			Array trace = msg.get(Reply.TRACEBACK);
+			if (lang.console != null) {
+				lang.console.println("INTERNAL ERROR: " + ename + (evalue != null ? (" : " + evalue) : ""), Colors.RED);
+				for (String frame : trace.toListOf(String.class)) {
+					lang.console.println(frame, Colors.MAROON);
+				}
+			}*/
+			return msg;
+		});
+
 	}
 
 	protected void close(EditSession sess) {
@@ -391,6 +417,7 @@ public class EditorServer implements EditorService {
 		Language language = Languages.LANGUAGES.get(langName);
 		return open(filename, text, language);
 	}
+
 	public Async<Dict> open(String filename, String text, Language language) {
 		logger.info("Open: file " + filename + " language" + language + " text:\n" + (text != null ? text : "null"));
 		EditLanguage lang = getLanguage(language);
@@ -489,8 +516,8 @@ public class EditorServer implements EditorService {
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
-			builder.append("EditLanguage [shell=").append(shell).append(", lang=").append(lang).append(", console=").append(console).append(", name=")
-					.append(name).append("]");
+			builder.append("EditLanguage [shell=").append(shell).append(", lang=").append(lang).append(", console=")
+					.append(console).append(", name=").append(name).append("]");
 			return builder.toString();
 		}
 
