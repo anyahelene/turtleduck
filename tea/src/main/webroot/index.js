@@ -1,9 +1,11 @@
+
 import SockJS from 'sockjs-client';
 import Mousetrap from 'mousetrap';
 import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 import jquery from 'jquery';
 import animals from './animals.txt';
 import hints from './hints.txt';
+import { turtleduck } from './js/TurtleDuck';
 import { fileSystem, FileSystem } from './js/FileSystem';
 import { History } from './js/History';
 import { Component } from './js/Component';
@@ -14,15 +16,23 @@ import { MDRender } from './js/MDRender';
 import { Camera } from './js/Media';
 import { GridDisplayServer } from './js/GridDisplay';
 import { html, render } from 'uhtml';
-
+import { Storage } from './js/Storage';
+import i18next from 'i18next';
+import * as goose from './js/goose';
 //import { XTermJS } from './XTermJS';
 //import ace from "ace-builds";
 //import "ace-builds/webpack-resolver";
 //var ace = require('ace-builds/src-noconflict/ace')
 import defaultConfig from './config.json';
 
-var turtleduck = window['turtleduck'] || {};
-window.turtleduck = turtleduck;
+var imports = { SockJS, Mousetrap, jquery, animals, hints, fileSystem, FileSystem,
+	History, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
+	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose
+};
+console.log(turtleduck);
+globalThis.imports = imports;
+globalThis.turtleduck = turtleduck;
+globalThis.goose = goose;
 turtleduck.MDRender = MDRender;
 turtleduck.Camera = Camera;
 turtleduck.Camera.addSubscription('copy','builtin', 'qr','Copy','📋', 'Copy to clipboard');
@@ -33,6 +43,40 @@ turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.history = new History(fileSystem);
 turtleduck.defaultConfig = defaultConfig;
 turtleduck.configs = [/*override */{}, /*session*/{}, /*user*/{}, /*remote*/{}, defaultConfig];
+turtleduck.storage = new Storage();
+turtleduck.storage.init().then(ctx => {
+	turtleduck.cwd = ctx;
+});
+turtleduck.i18next = i18next;
+turtleduck.appendToConsole = function(style) {
+	if(turtleduck.shellComponent) {
+		const shell = turtleduck.shellComponent.current();
+		if(shell) {
+			return shell.terminal.appendBlock(style);
+		}
+	}
+}
+
+turtleduck.consolePrinter = function(style) {
+	if(turtleduck.shellComponent) {
+		const shell = turtleduck.shellComponent.current();
+		if(shell) {
+			const element = shell.terminal.appendBlock(style);
+			var cr = false;
+			return {
+				print: text => {
+					let old = element.textContent;
+					if(cr) {
+	        			old = old.trim().replace(/.+$/, "");	
+					}
+					cr = text.endsWith("\r");
+					element.textContent = old + text + "\n";
+					shell.terminal.scrollIntoView();
+				}
+			}
+		}
+	}
+}
 //turtleduck.config = jquery.extend(true, {}, defaultConfig);
 //turtleduck.configSource = {};
 
@@ -97,19 +141,110 @@ turtleduck.closeCamera = function(now = false) {
 	}
 }
 
+turtleduck.openFiles = function(ctx) {
+	if(!ctx)
+		ctx = turtleduck.cwd;
+		
+	var elt; 
+	return ctx.readdir().then(res => {
+		console.log("readdir():", res);
+		const data = {
+			'files': "Files",
+			'fileList':	res.map(file => html`<a href="#">${file}</a>`)
+		}
+		elt = turtleduck.displayDialog("file-dialog", data);
+	});
+}
+
+turtleduck.unique = 0;
+turtleduck.instantiateTemplate = function(templateType, data = {}) {
+	const tmpls = document.getElementById("templates");
+	console.log("looking for ", templateType, "in", tmpls);
+	if(tmpls) {
+		const tmpl = tmpls.querySelector(`[data-template=${templateType}]`);
+		if(tmpl) {
+			console.log("found template", tmpl);
+			const tmp = document.createElement("div");
+			const instance = tmpl.cloneNode(true);
+			const id = turtleduck.unique++;
+			tmp.appendChild(instance);
+			tmp.querySelectorAll('[id]').forEach(elt => {
+				elt.id = `${elt.id}_${id}`;
+			});
+			tmp.querySelectorAll('[data-text]').forEach(elt => {
+				elt.innerText = elt.dataset.text;
+			});
+			tmp.querySelectorAll('[data-from]').forEach(elt => {
+				const arg = data[elt.dataset.from] || '';
+				render(elt, arg);
+				/*
+				console.log(elt, arg);
+				if(typeof arg === 'string') {
+					elt.innerText = arg;
+				} else if(Array.isArray(arg)) {
+					elt.replaceChildren(...arg);
+				} else {
+					elt.replaceChildren(arg);
+				}*/
+			});
+			tmp.querySelectorAll('[data-from-list]').forEach(elt => {
+				const args = data[elt.dataset.fromList] || [];
+				console.log(elt, args);
+				render(elt, html`${args.map(c => html`<li>${c}</li>`)}`);
+			});
+			if(instance.classList.contains("dismissable")) {
+				instance.classList.add("show");
+			}
+			console.log("instantiated: ", instance);
+			return instance;
+		}
+	} else {
+		throw `Template not found: ${templateType}`;
+	}
+}
+turtleduck.displayDialog = function(dialogType, data = {}) {
+	const tmpl = turtleduck.instantiateTemplate(dialogType, data);
+	if(tmpl) {
+		const elt = document.getElementById("mid");
+		const insertHere = elt.querySelector(':scope > [data-insert-here]');
+		if(insertHere) {
+			insertHere.insertBefore(tmpl);
+		} else {
+			elt.appendChild(tmpl);
+		}
+		return elt;
+	}
+}
 turtleduck.displayPopup = function(title, text, caption, style) {
 	const elt = document.getElementById("popup");
 	if(elt) {
-		elt.className = "popup active " + style;
+		elt.className = "popup dismissable show " + style;
 		elt.querySelector("h1").innerText = title;
 		elt.querySelector("blockquote").innerText = text;
 		elt.querySelector("figcaption").innerText = caption;
-
-		document.getElementById("page").addEventListener("click",
-			(e) => {console.log("f17", e); elt.className = "popup";},
-			{once: true});
 	}
+	return elt;
 }
+
+turtleduck.checkLogin = function(resolve, reject) {
+	fetch("login/whoami").then(res => res.json()).then(res => {
+		console.log("whoami:", res);
+		if(res["status"] === "ok") {
+			resolve(res);
+		} else if(res["redirect"]){
+			var win;
+			turtleduck.checkLogin_callback = () => {
+				if(win)
+					win.close();
+				delete turtleduck.checkLogin_callback;	
+				resolve({});
+			};
+			win = window.open(res["redirect"] + "?redirect=login/whoami", "turtleduck-login", "popup");
+			console.log("Opened login window: ", win);
+		}
+	});
+}
+
 /*
 function setConfig(path, dstDict, srcDict, source) {
 	console.log("setConfig", path, dstDict, srcDict, source);
@@ -342,6 +477,7 @@ turtleduck.updateInfo = function() {
 	});
 }
 
+
 function ctrl(key) {
 	return ['ctrl+' + key, 'command+' + key];
 }
@@ -378,6 +514,8 @@ async function handleKey(key, button, event) {
 	console.log("handleKey", key, button, event);
 	
 	switch (key) {
+		case "f5":
+			return turtleduck.openFiles();
 		case "f6":
 			if(turtleduck.pyshell)
 				turtleduck.pyshell.focus();
@@ -398,6 +536,10 @@ async function handleKey(key, button, event) {
 				page.toggleClass('show-splash-help', false);
 			}
 			break;
+		case "f15":
+
+  			break;
+
 		case "f17": {
 			const qs = turtleduck.hints.random();
 
@@ -464,6 +606,26 @@ async function handleKey(key, button, event) {
 				return Promise.Util.resolve(list);
 			}).mapFailure(err -> Promise.Util.resolve(list));
 			*/
+		}
+		case "tooltip:storageInfo": {
+			return turtleduck.storage.info().then(info => {
+				var askButton = '';
+				if(!info.persisted) {
+					askButton = html.node`<button id="requestPersistence" type="button">Allow persistent storage</button>`;
+					askButton.addEventListener("click", async function(e) {
+						return handleKey(askButton.id, askButton, e).then(r => {console.log("handleKey", r); return r;});
+					});
+				}
+				render(button, html.node`<dl><dt>Storage</dt><dd>${info.persisted ? "persistent" : "not persistent"}</dd>
+					${info.usage ? html`<dt>Usage</dt><dd>${info.usage}</dd>` : ""}</dl>
+					${askButton}`);
+				return button;
+			});
+		}
+		case "requestPersistence": {
+			return turtleduck.storage.requestPersistence().then(res => {
+				button.textContent = res ? "OK!" : "Rejected";
+			});
 		}
 		default:
 			if(button.dataset.showMenu) {
@@ -568,8 +730,25 @@ turtleduck.trackMouse = function(element, coordElement) {
 	});
 }
 
+turtleduck.dismissElements = e => {
+	const elts = document.querySelectorAll(".dismissable.show");
+	elts.forEach(elt => {
+		console.log("Dismiss", elt, "?", e);
+		var container = elt;
+		if(elt.classList.contains("tooltip")) {
+			container = elt.parentElement;
+		}
+		if(!container.contains(e.target)) {
+			console.log("Yes!", elt);
+			elt.classList.remove("show");
+		} else {
+			console.log("No, clicked inside");
+		}
+	});
+};
+
 jquery(function() {
-	jquery('[data-shortcut]').each(function(index) {
+	jquery('button[data-shortcut]').each(function(index) {
 		const button = this;
 		const handler = async function(e) {
 			return handleKey(button.id, button, e).then(r => {console.log("handleKey", r); return r;});
@@ -609,6 +788,8 @@ jquery(function() {
 	
 	Mousetrap.bindGlobal('esc', e => handleKey('esc', null, e));
 
+	document.documentElement.addEventListener("click", turtleduck.dismissElements);
+	
 	jquery('[data-tab-define]').each((idx,elt) => {
 		const key = jquery(elt).attr('data-tab-key');
 		const tabs = jquery(elt).attr('data-tab');
@@ -690,13 +871,34 @@ jquery(function() {
 	jquery('[data-tooltip]').each(function(index) {
 		const id = this.dataset.tooltip;
 		const tipElt = document.createElement("div");
-		tipElt.className = "tooltip";
+		tipElt.className = "tooltip dismissable";
 		this.appendChild(tipElt);
 		this.style.position = 'relative';
+		var timer;
+		var clicked = false;
+		const unremove = () => {
+			window.clearTimeout(timer);
+			timer = undefined;			
+		};
+		const remove = () => {
+			if(!clicked) {
+				tipElt.classList.add("fade3");
+				timer = window.setTimeout(() => {
+					tipElt.classList.remove("show");	
+					timer = undefined;		
+				}, 3000);
+			}	
+		}
 		this.addEventListener("mouseenter", async e => {
-			const r = await handleKey('tooltip:'+id, tipElt, event);
-			console.log("tooltip: ", r);
-				tipElt.classList.add("show");				
+			tipElt.classList.remove("fade3");
+			if(timer !== undefined) {
+				unremove();
+			} else if(!tipElt.classList.contains("show")) {
+				const r = await handleKey('tooltip:'+id, tipElt, event);
+				console.log("tooltip: ", r);
+				tipElt.classList.add("show");
+				clicked = false;
+			}				
 /*			if(r) {
 				tipElt.replaceChildren(r);
 			} else {
@@ -705,8 +907,14 @@ jquery(function() {
 			}*/
 
 		});
+		this.addEventListener("click", async e => {
+			if(timer !== undefined) {
+				unremove();
+			}
+			clicked = true;
+		});
 		this.addEventListener("mouseleave", e => {
-			tipElt.classList.remove("show");
+			remove();
 		});
 	});
 	jquery('[data-below]').each(function(index) {

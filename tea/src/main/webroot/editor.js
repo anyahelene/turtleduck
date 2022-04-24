@@ -418,7 +418,7 @@ window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 			let text = state.sliceDoc(range.from)
 			console.log("text: ", JSON.stringify(text));
 			// check if we're in the middle of the text
-			if(text.length > 0 && !text.match(/^\r?\n/)) { // TODO: line-break setting?
+			if(text.length > 0 && (!text.match(/^\r?\n/) || text.startsWith('/'))) { // TODO: line-break setting?
 				isComplete = true;
 				return { range };
 			}

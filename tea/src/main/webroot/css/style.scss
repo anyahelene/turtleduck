@@ -1,47 +1,13 @@
 @use "sass:color";
+@import 'mixins.scss';
 @import 'normalize/normalize.scss';
 @import 'breakpoints.scss';
 @import 'colors.scss';
 @import 'normal.scss';
 @import 'fonts.scss';
 @import 'scrollbar.scss';
+@import 'button.scss';
 
-
-@mixin fill-container {
-	width: 100%;
-	@include for-tablet-landscape-up {
-		height: 100%;
-	}
-}
-@mixin fill-container-height {
-	@include for-tablet-landscape-up {
-		height: 100%;
-	}
-}
-@mixin lores-font {
-	//font-family: "Fantasque Sans Mono", "Monoid", monospace;
-	
-	//font-size-adjust: .71428;
-}
-
-@mixin pixel-font {
-	font-family: "PressStart2P Narrow", "Fantasque Sans Mono","Monoid", monospace;
-	font-size-adjust: .71428;
-}
-@mixin hires-font {
-	//font-family: "Glasstown-NBP", sans-serif;
-	//font-family: "Fantasque Sans Mono", "Monoid", monospace;
-//	font-size-adjust: 0.66;	
-	letter-spacing: -0.06em;
-}
-
-@mixin normal-font{
-	font-family: "Fantasque Sans Mono", "Monoid", monospace;
-}
-
-@mixin tiny-font {
-	font-family: "TeenyTinyPixls", sans-serif;
-}
 
 @mixin dark-background {
 	background-color: #000;
@@ -1061,20 +1027,8 @@ details.summary-only summary {
 	width: max-content;
 }
 
-button {
-	background-color: $button-bg-normal;
-	color: $pen;
-	border:  0px solid $water;
-	text-align: end;
-	@include lores-font;
-	line-height: 100%;
-	padding: 0 .2rem;
-	position: relative;
-	transition: all 0.8s;
 
-}
-
-#top-menu button {
+#top-menu button, #top-menu honk-button {
 	//background-image:radial-gradient(ellipse at bottom right, #aab 0%, #667 100%);
 	//display: inline-block;
 	//align-self:stretch;
@@ -1087,15 +1041,23 @@ button {
 	}
 }
 
-#top-menu button, #top-right button {
+button, honk-button {
+	@include lores-font;
+}
+#top button span.shortcut {
+	font-size:.7rem;
+	@include normal-font;
+	@include hires-font;
+}
+#top honk-button {
 	background-color: $button-bg-header;
 }
 
-button:hover, #top button:hover {
+#top honk-button:hover {
 	background-color: $button-bg-hover;
 	color: $pen-sharp;
 }
-button:active, #top button.active {
+ #top honk-button.active {
 	transition: 0s;
 	background-color: $button-bg-active; 
 }
@@ -1125,105 +1087,31 @@ button:active, #top button.active {
 	background-color: $button-bg-active	
 }
 
-#top button span.the-text {
-	vertical-align: middle;
-	font-size:.7rem;
-	position:relative;
-	margin-left:auto;
-	transition: font-size .3s;
-	@include for-portrait-only {
-		display: none;
-	}
-	@include for-tablet-portrait-up {
-		display: inline-block;
-	}
-}
-#top button span.the-text.text-icon {
-	@include for-portrait-only {
-		display: inline-block;
-	}
-}
-#top button span.shortcut {
-	font-size:.7rem;
-	@include normal-font;
-	@include hires-font;
-	transition: font-size .3s;
-}
-#top button:hover span.the-text {
-	z-index: 13;
-	top:.4rem;
-}
-#top button span:empty::after {
-	content: "\00a0";
-}
-#top button .long {
-	//font-size:0.6rem;
-}
-#top button span.icon {
-	position:absolute;
-	width:max-content;
-	right: calc(100% - 1.2rem);
-	font-size:1rem;
-	z-index:2;
-	text-shadow: 0 0 .2rem;
-	transition: font-size .3s;
-	top: 50%;
-	transform: translate(0,-50%);
-}
-#top button span.bg {
-	position:absolute;
-	top:0;
-	left:0;
-	width:100%;
-	height:100%;
-	z-index:0;
-	//transition: width .3s,height .3s,top .3s,left .3s;
-}
-#top button:hover span.icon {
-	z-index: 12;
-	font-size: 1.5rem;
-}
-	
-#top button:hover span.bg {
-	background-color: $button-bg-hover;
-	left:-.5rem;
-	top:-.2rem;
-	width:calc(100% + .5rem);
-	height:calc(100% + .6rem);
-	z-index:9;
-	box-shadow: 0 0 .2rem black;
-}
-#top button  .shortcut {
-	display:none;
-	opacity:0%;
-	position:absolute;
-	width:max-content;
-	top:-.2rem;
-	right: 0.2rem;
-	font-size:.8rem;
-	z-index:2;
-	transition: opacity .3s;
-}
-#top button:hover .shortcut {
-	display:block;
-	opacity:100%;
-	z-index: 12;
-}
-
-#top button .notification {
+.notification {
 	@include tiny-font;
 	background: #f008;
 	color: white;
 	font-size: .6em;
-	display: inline-block;
+	display: none;
+	opacity: 0%;
 	//padding: .2rem;
 	border-radius: 10rem;
 	border: .2rem solid #f008;
 	line-height: .9em;
-	vertical-align: top;
+	vertical-align: top !important;
+	margin-left: -.1rem;
 	//position: relative;
 	//right: 0;
 	//top: -.5rem;
+	transition: opacity 1s;
+}
+.notification.warning {
+	background: #f608;
+	border: .2rem solid #f608;
+}
+.notification.show {
+	opacity: 100%;
+	display: inline-block;
 }
 #top button.not-implemented {
 	display:none;
@@ -1299,7 +1187,7 @@ button:active, #top button.active {
 	}
 }
 
-#top button.rows {
+#top .rows {
 	min-height:1rem;
 	min-width:1.5em;
 	@include for-desktop-up {
@@ -1805,35 +1693,40 @@ method h6 {
 	transform: translate(-50%, -50%);
 	z-index:99;
 }
-.popup.active {
+.popup.show {
 	display:block;
 }
-.popup.hints, .popup.warning {
+.popup.hints, .popup.warning, .popup.dialog {
 	max-width: 60%;
 	background: #111;
 	border: 1px solid;
 	box-shadow: 0 0 5px, 2px 2px 15px #000;
 	padding:.5rem;
 }
-.hints h1, .warning h1 {
+.hints h1, .warning h1, .dialog h1 {
 	@include pixel-font;
 	color:#000;
 	margin: -.5rem -.5rem .5rem -.5rem;
 	text-align: center;
 }
-.hints h1 {
+.hints h1, .dialog h1 {
 	background:$terminal;
 }
 .warning h1 {
 	background:$terminal-alt;
 }
-.popup.hints {
+.popup.hints, .popup.dialog {
 	color:$terminal;
 }
 .popup.warning {
 	color:$terminal-alt;
 }
-
+.file-dialog {
+	min-width: 30%;
+}
+.file-dialog figure {
+	text-align:left;
+}
 @keyframes shaking-full {
 	0% { transform: rotate(0deg) }
 	10% { transform: rotate(5deg) }
@@ -2282,4 +2175,9 @@ main.grid span {
 	position:absolute;
 	width:100%;
 	height:100%;
+}
+
+.fade3 {
+	opacity: 0%;
+	transition: opacity 3s;
 }

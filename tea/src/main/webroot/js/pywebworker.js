@@ -1,5 +1,7 @@
 importScripts('../py/pyodide.js')
 
+console.warn("PyWebWorker init", self);
+
 const routes = {
 	init_python: '',
 	eval_request: 'ShellService'
@@ -164,14 +166,14 @@ function connect(port) {
 }
 
 
-console.log("Starting worker", self);
+console.warn("Starting worker", self);
 if(self.constructor.name === 'SharedWorkerGlobalScope') {
-	console.log("Starting shared worker!");
+	console.warn("Starting shared worker!");
 	self.onconnect = function(e) {
 		connect(e.ports[0]);
 	}
 } else {
-	console.log("Starting dedicated worker!");
+	console.warn("Starting dedicated worker!");
 	connect(self);
 }
 

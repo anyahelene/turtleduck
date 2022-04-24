@@ -31,3 +31,12 @@ $debug: $LIGHT_BLUE;
 $info: $BLUE;
 $warning: #ff0;
 $error: #f00;
+
+:root {
+	--normalBg: $button-bg-normal;
+	--hoverBg: $button-bg-hover;
+	--activeBg: $button-bg-active;
+	--headerBg: $button-bg-header;
+	--normalFg: $pen;
+	--hoverFg: $pen-sharp;
+}

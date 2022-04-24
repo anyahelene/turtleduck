@@ -1,0 +1,95 @@
+button {
+	background-color: $button-bg-normal;
+	color: $pen;
+	border:  0px solid $water;
+	text-align: end;
+
+	line-height: 100%;
+	padding: 0 .2rem;
+	position: relative;
+	transition: all 0.8s;
+}
+
+
+#top button span.the-text {
+	vertical-align: middle;
+	font-size:.7rem;
+	position:relative;
+	margin-left:auto;
+	transition: font-size .3s;
+	@include for-portrait-only {
+		display: none;
+	}
+	@include for-tablet-portrait-up {
+		display: inline-block;
+	}
+}
+#top button span.the-text.text-icon {
+	@include for-portrait-only {
+		display: inline-block;
+	}
+}
+#top button span.shortcut {
+	font-size:.7rem;
+	transition: font-size .3s;
+}
+#top button:hover span.the-text {
+	z-index: 13;
+	top:.4rem;
+}
+#top button span:empty::after {
+	content: "\00a0";
+}
+#top button .long {
+	//font-size:0.6rem;
+}
+#top button span.icon {
+	position:absolute;
+	width:max-content;
+	right: calc(100% - 1.2rem);
+	font-size:1rem;
+	z-index:2;
+	text-shadow: 0 0 .2rem;
+	transition: font-size .3s;
+	top: 50%;
+	transform: translate(0,-50%);
+}
+#top button span.bg {
+	position:absolute;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	z-index:0;
+	//transition: width .3s,height .3s,top .3s,left .3s;
+}
+#top button:hover span.icon {
+	z-index: 12;
+	font-size: 1.5rem;
+}
+	
+#top button:hover span.bg {
+	background-color: $button-bg-hover;
+	left:-.5rem;
+	top:-.2rem;
+	width:calc(100% + .5rem);
+	height:calc(100% + .6rem);
+	z-index:9;
+	box-shadow: 0 0 .2rem black;
+}
+#top button  .shortcut {
+	display:none;
+	opacity:0%;
+	position:absolute;
+	width:max-content;
+	top:-.2rem;
+	right: 0.2rem;
+	font-size:.8rem;
+	z-index:2;
+	transition: opacity .3s;
+}
+#top button:hover .shortcut {
+	display:block;
+	opacity:100%;
+	z-index: 12;
+}
