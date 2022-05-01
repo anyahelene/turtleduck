@@ -1,0 +1,34 @@
+{
+	"folders": [
+		{
+			"path": "base"
+		},
+		{
+			"path": "anno"
+		},
+		{
+			"path": "auth"
+		},
+		{
+			"path": "demo"
+		},
+		{
+			"path": "gl"
+		},
+		{
+			"path": "server"
+		},
+		{
+			"path": "shell"
+		},
+		{
+			"path": "tea"
+		},
+		{
+			"path": "parent"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "interactive"
+	}
+}
