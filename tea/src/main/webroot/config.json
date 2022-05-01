@@ -113,9 +113,7 @@
 			"icon": "🦜",
 			"editable": false,
 			"extensions": [],
-			"services": {
-				
-			}
+			"services": {}
 		},
 		"java": {
 			"title": "Java",
@@ -153,9 +151,7 @@
 				"cc",
 				"hpp"
 			],
-			"services": {
-				
-			}
+			"services": {}
 		},
 		"markdown": {
 			"title": "Markdown",
@@ -182,9 +178,7 @@
 			"extensions": [
 				"z80"
 			],
-			"services": {
-				
-			}
+			"services": {}
 		},
 		"python": {
 			"title": "Python",
@@ -216,9 +210,7 @@
 			"editMode": "plain",
 			"icon": "",
 			"extensions": [],
-			"services": {
-				
-			}
+			"services": {}
 		}
 	}
 }

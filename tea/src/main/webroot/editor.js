@@ -3,7 +3,7 @@
 //import {defaultKeymap} from "@codemirror/commands"
 import { EditorView, Decoration, keymap, WidgetType } from "@codemirror/view"
 import { EditorState, EditorSelection, StateField, StateEffect } from "@codemirror/state"
-import { indentWithTab,indentMore,indentLess,insertNewlineAndIndent } from "@codemirror/commands"
+import { indentWithTab, indentMore, indentLess, insertNewlineAndIndent } from "@codemirror/commands"
 import { syntaxTree, getIndentation, indentUnit, IndentContext, LanguageSupport } from '@codemirror/language';
 import { highlightTree, classHighlightStyle } from '@codemirror/highlight';
 import { StreamLanguage } from "@codemirror/stream-parser";
@@ -26,15 +26,15 @@ import { NodeProp } from '@lezer/common';
 import { Component } from './js/Component';
 
 function isBetweenBrackets(state, pos) {
-    if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
-        return { from: pos, to: pos };
-    let context = syntaxTree(state).resolve(pos);
-    let before = context.childBefore(pos), after = context.childAfter(pos), closedBy;
-    if (before && after && before.to <= pos && after.from >= pos &&
-        (closedBy = before.type.prop(NodeProp.closedBy)) && closedBy.indexOf(after.name) > -1 &&
-        state.doc.lineAt(before.to).from == state.doc.lineAt(after.from).from)
-        return { from: before.to, to: after.from };
-    return null;
+	if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
+		return { from: pos, to: pos };
+	let context = syntaxTree(state).resolve(pos);
+	let before = context.childBefore(pos), after = context.childAfter(pos), closedBy;
+	if (before && after && before.to <= pos && after.from >= pos &&
+		(closedBy = before.type.prop(NodeProp.closedBy)) && closedBy.indexOf(after.name) > -1 &&
+		state.doc.lineAt(before.to).from == state.doc.lineAt(after.from).from)
+		return { from: before.to, to: after.from };
+	return null;
 }
 
 class PromptWidget extends WidgetType {
@@ -43,51 +43,51 @@ class PromptWidget extends WidgetType {
 	eq(other) { return other.prompt == this.prompt }
 
 	toDOM() {
-	    let wrap = document.createElement("span")
-	    wrap.setAttribute("aria-hidden", "true")
-	    wrap.className = "cm-boolean-toggle"
-	    let box = wrap.appendChild(document.createElement("input"))
-	    box.type = "checkbox"
-	    box.checked = this.checked
-	    return wrap
+		let wrap = document.createElement("span")
+		wrap.setAttribute("aria-hidden", "true")
+		wrap.className = "cm-boolean-toggle"
+		let box = wrap.appendChild(document.createElement("input"))
+		box.type = "checkbox"
+		box.checked = this.checked
+		return wrap
 	}
-	
+
 	ignoreEvent() { return false }
 
 }
 
 function stdConfig() {
-	return [basicSetup, EditorState.tabSize.of(4), markKeymap, keymap.of({key: 'Tab', run: indentMore, shift: indentLess}), darkDuck];
+	return [basicSetup, EditorState.tabSize.of(4), markKeymap, keymap.of({ key: 'Tab', run: indentMore, shift: indentLess }), darkDuck];
 }
-const configs = {'' : []};
+const configs = { '': [] };
 function langConfig(lang) {
-	if(configs[lang]) {
+	if (configs[lang]) {
 		return configs[lang];
 	} else {
 		var langext = undefined;
 
-		if(lang == "java" || lang == "jsh") {
+		if (lang == "java" || lang == "jsh") {
 			langext = java();
-		} else if(lang == "python") {
+		} else if (lang == "python") {
 			langext = python();
-		} else if(lang == "html") {
+		} else if (lang == "html") {
 			langext = html();
-		} else if(lang == "markdown") {
+		} else if (lang == "markdown") {
 			langext = markdown();
-		} else if(lang == "chat") {
-			langext = markdown({addKeymap:false});
-		} else if(lang == "css") {
+		} else if (lang == "chat") {
+			langext = markdown({ addKeymap: false });
+		} else if (lang == "css") {
 			langext = css();
-		} else if(lang == "cpp") {
+		} else if (lang == "cpp") {
 			langext = [cpp(), indentUnit.of("    ")];
-		} else if(lang == "z80") {
+		} else if (lang == "z80") {
 			console.log("z80");
 			langext = new LanguageSupport(StreamLanguage.define(z80));
 			console.log(langext);
-		} else if(lang == "plain") {
+		} else if (lang == "plain") {
 			langext = [];
 		}
-		if(langext) {
+		if (langext) {
 			configs[lang] = langext;
 			return langext;
 		} else {
@@ -97,14 +97,14 @@ function langConfig(lang) {
 }
 function fontConfig(elt) {
 	var fontFamily = window.getComputedStyle(elt).fontFamily;
-	if(!fontFamily)
+	if (!fontFamily)
 		fontFamily = window.getComputedStyle(document.body).fontFamily;
 	const myFontTheme = EditorView.theme({
-		  '.cm-scroller':{
-		  //  fontSize: "18px"
-			fontFamily:fontFamily
+		'.cm-scroller': {
+			//  fontSize: "18px"
+			fontFamily: fontFamily
 			//,textShadow: "0 0 .1rem currentColor"
-		  }/*,
+		}/*,
 		  '.cm-scroller .cm-line':{
 			opacity: ".9"
 		  },
@@ -119,88 +119,88 @@ const addMark = StateEffect.define();
 
 const markField = StateField.define({
 	create() {
-    	return Decoration.none;
-  	},
-  	update(marks, tr) {
-    	marks = marks.map(tr.changes);
-    	for (let e of tr.effects) if (e.is(addMark)) {
-      	marks = marks.update({
-       	 add: [markDecoration.range(e.value.from, e.value.to)]
-      	})
-   	 }
-    return marks
-  },
-  provide: f => EditorView.decorations.from(f)
+		return Decoration.none;
+	},
+	update(marks, tr) {
+		marks = marks.map(tr.changes);
+		for (let e of tr.effects) if (e.is(addMark)) {
+			marks = marks.update({
+				add: [markDecoration.range(e.value.from, e.value.to)]
+			})
+		}
+		return marks
+	},
+	provide: f => EditorView.decorations.from(f)
 });
 
-const markDecoration = Decoration.mark({class: "cm-underline"});
+const markDecoration = Decoration.mark({ class: "cm-underline" });
 
 const markTheme = EditorView.baseTheme({
-  ".cm-underline": { textDecoration: "underline wavy 1px red" }
+	".cm-underline": { textDecoration: "underline wavy 1px red" }
 })
 export function markSelection(view) {
-  let effects = view.state.selection.ranges
-    .filter(r => !r.empty)
-    .map(({from, to}) => addMark.of({from, to}))
-  if (!effects.length) return false
+	let effects = view.state.selection.ranges
+		.filter(r => !r.empty)
+		.map(({ from, to }) => addMark.of({ from, to }))
+	if (!effects.length) return false
 
-  if (!view.state.field(markField, false))
-    effects.push(StateEffect.appendConfig.of([markField,
-                                              markTheme]))
-  view.dispatch({effects})
-  return true
+	if (!view.state.field(markField, false))
+		effects.push(StateEffect.appendConfig.of([markField,
+			markTheme]))
+	view.dispatch({ effects })
+	return true
 }
 
 export function markRange(view, from, to) {
-  let effects = [addMark.of({from, to})];
-  if (!effects.length) return false
+	let effects = [addMark.of({ from, to })];
+	if (!effects.length) return false
 
-  if (!view.state.field(markField, false))
-    effects.push(StateEffect.appendConfig.of([markField,
-                                              markTheme]))
-  view.dispatch({effects})
-  return true
+	if (!view.state.field(markField, false))
+		effects.push(StateEffect.appendConfig.of([markField,
+			markTheme]))
+	view.dispatch({ effects })
+	return true
 }
 
 export const markKeymap = keymap.of([{
-  key: "Mod-h",
-  preventDefault: true,
-  run: markSelection
+	key: "Mod-h",
+	preventDefault: true,
+	run: markSelection
 }])
 
 export const wordHover = hoverTooltip((view, pos, side) => {
-  let {from, to, text} = view.state.doc.lineAt(pos)
-  let start = pos, end = pos
-  while (start > from && /\w/.test(text[start - from - 1])) start--
-  while (end < to && /\w/.test(text[end - from])) end++
-  if ((start == pos && side < 0) || (end == pos && side > 0))
-    return null
-  return {
-    pos: start,
-    end,
-    above: true,
-    create(view) {
-      let dom = document.createElement("div")
-      dom.textContent = text.slice(start - from, end - from)
-      return {dom}
-    }
-  };
+	let { from, to, text } = view.state.doc.lineAt(pos)
+	let start = pos, end = pos
+	while (start > from && /\w/.test(text[start - from - 1])) start--
+	while (end < to && /\w/.test(text[end - from])) end++
+	if ((start == pos && side < 0) || (end == pos && side > 0))
+		return null
+	return {
+		pos: start,
+		end,
+		above: true,
+		create(view) {
+			let dom = document.createElement("div")
+			dom.textContent = text.slice(start - from, end - from)
+			return { dom }
+		}
+	};
 })
 
 
 
 
 class TDEditor extends Component {
-	constructor(name, outer, elt, text, lang, exts,tdstate, preExts = []) {
+	constructor(name, outer, elt, text, lang, exts, tdstate, preExts = []) {
 		super(name, outer, tdstate);
 
-		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, text, exts, tdstate,preExts)
+		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, text, exts, tdstate, preExts)
 		this.elt = elt;
 		this.exts = exts;
 		this.preExts = preExts;
 
 		elt.addEventListener("dragenter", e => {
-			if(e.dataTransfer.types.includes("text/plain"))
+			if (e.dataTransfer.types.includes("text/plain"))
 				e.preventDefault();
 		}, true);
 		elt.addEventListener("drop", e => {
@@ -209,17 +209,17 @@ class TDEditor extends Component {
 		}, true);
 		const state = this.createState(lang, text);
 		this.EditorView = EditorView;
-		this.view = new EditorView({state: state, parent: elt});
+		this.view = new EditorView({ state: state, parent: elt });
 		this.$markField = markField;
 		this.$addMark = addMark;
 		this._debugState = false;
 
 	}
-	
+
 	scrollDOM() {
 		return this.view.scrollDOM;
 	}
-	
+
 	highlightTree(prompt) {
 		const state = this.view.state;
 		const doc = state.doc;
@@ -231,61 +231,61 @@ class TDEditor extends Component {
 
 
 		function newline() {
-			if(line != null)
+			if (line != null)
 				result.appendChild(line);
 			line = document.createElement('div');
 			line.setAttribute('class', 'cm-line');
 		}
 		newline();
-		if(prompt)
+		if (prompt)
 			line.appendChild(prompt);
-		
+
 		function nolight(to) {
-			if(to > pos) {
-				const text = doc.sliceString(pos,to,"\n");
+			if (to > pos) {
+				const text = doc.sliceString(pos, to, "\n");
 				const lines = text.split("\n");
-				while(lines.length > 0) {
+				while (lines.length > 0) {
 					const lineText = lines.shift();
-					if(lineText.length > 0) {
+					if (lineText.length > 0) {
 						line.appendChild(document.createTextNode(lineText));
 					}
-					if(lines.length > 0) {
+					if (lines.length > 0) {
 						newline();
 					}
 				}
 				pos = to;
 			}
 		}
-		function highlight(from,to,classes) {
-			if(from > pos) {
+		function highlight(from, to, classes) {
+			if (from > pos) {
 				nolight(from);
 			}
 			pos = to;
 			const elt = document.createElement('span');
 			elt.setAttribute('class', classes);
-			elt.textContent = doc.sliceString(from,to,"\n");
+			elt.textContent = doc.sliceString(from, to, "\n");
 			line.appendChild(elt);
 		}
 		function join(cls1, cls2) {
-			if(cls1 == null)
+			if (cls1 == null)
 				return cls2;
-			else if(cls2 == null)
+			else if (cls2 == null)
 				return cls1;
 			else
 				return cls1 + ' ' + cls2;
 		}
-		highlightTree(tree, (tag,scope) => 
-			join(darkDuckHighlightStyle.match(tag,scope), classHighlightStyle.match(tag,scope)), highlight);
+		highlightTree(tree, (tag, scope) =>
+			join(darkDuckHighlightStyle.match(tag, scope), classHighlightStyle.match(tag, scope)), highlight);
 		nolight(doc.length);
-		if(line.childElementCount > 0)
+		if (line.childElementCount > 0)
 			result.appendChild(line);
 		return result;
 	}
-	
+
 	wrapper() {
 		return this.elt;
 	}
-	
+
 	syntaxTree() {
 		return syntaxTree(this.view.state);
 	}
@@ -299,9 +299,9 @@ class TDEditor extends Component {
 	}
 	paste(text, cursorAdj = 0) {
 		const tr = this.view.state.replaceSelection(text);
-		if(cursorAdj != 0) {
+		if (cursorAdj != 0) {
 			const move = EditorSelection.create(tr.selection.ranges.map(r => {
-				if(r.empty) {
+				if (r.empty) {
 					r.from--;
 					r.to--;
 				} else {
@@ -312,7 +312,7 @@ class TDEditor extends Component {
 		}
 		tr.scrollIntoView = true;
 		this.view.dispatch(tr);
-		if(this._after_paste) {
+		if (this._after_paste) {
 			this._after_paste();
 		}
 	}
@@ -320,37 +320,37 @@ class TDEditor extends Component {
 		this._paste_to_file.accept(filename, text, language);
 	}
 	switchState(newState) {
-		if(this._debugState)
+		if (this._debugState)
 			console.log("switchState");
 		const oldState = this.view.state;
 		this.view.setState(newState);
-		if(this._debugState)
+		if (this._debugState)
 			console.log(newState);
 		return oldState;
 	}
-	
+
 	addMark(from, to) {
 		markRange(this.view, from, to);
 	}
 	createState(lang, text, pos) {
 		let selection;
-		if(this._debugState)
+		if (this._debugState)
 			console.log("createState: ", lang, text, text.length, pos);
-		if(pos) {
-			if(pos < 0) {
-				selection = { anchor: text.length + 1 + pos};
+		if (pos) {
+			if (pos < 0) {
+				selection = { anchor: text.length + 1 + pos };
 			} else {
 				selection = { anchor: pos };
 			}
 		}
-		if(this._debugState)
+		if (this._debugState)
 			console.log("createState: ", text, selection);
 		const state = EditorState.create({
 			doc: text,
-     		extensions: [this.preExts, langConfig(lang), this.exts],
+			extensions: [this.preExts, langConfig(lang), this.exts],
 			selection: selection
-  		});
-		if(this._debugState)
+		});
+		if (this._debugState)
 			console.log("createState: ", state);
 		return state;
 	}
@@ -358,23 +358,23 @@ class TDEditor extends Component {
 	mark(spec) {
 		return Decoration.mark(spec);
 	}
-	
+
 	widgetDecor(spec) {
 		return Decoration.widget(spec);
 	}
-	
+
 	replaceDecor(spec) {
 		return Decoration.replace(spec);
 	}
-	
+
 	lineDecor(spec) {
 		return Decoration.line(spec);
 	}
-	
+
 	diagnostic(from, to, severity, message, actions = []) {
-		return {from: from, to: to, severity: severity, message: message, actions: actions};
+		return { from: from, to: to, severity: severity, message: message, actions: actions };
 	}
-	
+
 	setDiagnostics(state, diags) {
 		return setDiagnostics(state, diags);
 	}
@@ -382,13 +382,13 @@ class TDEditor extends Component {
 
 window.TDEditor = TDEditor;
 
-window.turtleduck.createEditor = function(elt,text,lang="java") {
+window.turtleduck.createEditor = function (elt, text, lang = "java") {
 	const outer = elt;
 	const elts = elt.getElementsByClassName('wrapper');
-	if(elts[0])
+	if (elts[0])
 		elt = elts[0];
-		
-	let editor = new TDEditor(outer.id,outer,elt,lang,text,[fontConfig(elt), stdConfig()],window.turtleduck);
+
+	let editor = new TDEditor(outer.id, outer, elt, lang, text, [fontConfig(elt), stdConfig()], window.turtleduck);
 
 	return editor;
 }
@@ -398,9 +398,9 @@ darkDuck[1].module.rules.forEach(rule => {
 	window.turtleduck.darkDuckStyle[rule.replace(/\s*{.*$/, "")] = rule.replace(/^[^{]*{/, "{");
 });
 window.turtleduck.classStyle = {};
-for(let x in classHighlightStyle.map) {
-	let name = classHighlightStyle.map[x].replace(/cmt/g,'.cmt'), defClass = '.' + darkDuck[1].map[x];
-	window.turtleduck.classStyle[name] = window.turtleduck.darkDuckStyle[defClass] || '{}';	
+for (let x in classHighlightStyle.map) {
+	let name = classHighlightStyle.map[x].replace(/cmt/g, '.cmt'), defClass = '.' + darkDuck[1].map[x];
+	window.turtleduck.classStyle[name] = window.turtleduck.darkDuckStyle[defClass] || '{}';
 }
 
 darkDuck[1].module.rules[0]
@@ -409,32 +409,32 @@ darkDuck[1].module.rules[0]
 window.turtleduck.classHighlightStyle = classHighlightStyle;
 window.turtleduck.darkDuck = darkDuck;
 
-window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
+window.turtleduck.createLineEditor = function (elt, text, lang, handler) {
 	function enter({ state, dispatch }) {
 		let isComplete = true;
-	    let changes = state.changeByRange(range => {
+		let changes = state.changeByRange(range => {
 			console.log("enter key pressed at ", range);
 
 			let text = state.sliceDoc(range.from)
 			console.log("text: ", JSON.stringify(text));
 			// check if we're in the middle of the text
-			if(text.length > 0 && (!text.match(/^\r?\n/) || text.startsWith('/'))) { // TODO: line-break setting?
+			if (text.length > 0 && (!text.match(/^\r?\n/) || text.startsWith('/'))) { // TODO: line-break setting?
 				isComplete = true;
 				return { range };
 			}
-	        let explode = range.from == range.to && isBetweenBrackets(state, range.from);
-	        let cx = new IndentContext(state, { simulateBreak: range.from, simulateDoubleBreak: !!explode });
-	        let indent = getIndentation(cx, range.from);
+			let explode = range.from == range.to && isBetweenBrackets(state, range.from);
+			let cx = new IndentContext(state, { simulateBreak: range.from, simulateDoubleBreak: !!explode });
+			let indent = getIndentation(cx, range.from);
 			console.log("indent0: ", indent);
-		    if (indent == null)
-		        indent = /^\s*/.exec(state.doc.lineAt(range.from).text)[0].length;
+			if (indent == null)
+				indent = /^\s*/.exec(state.doc.lineAt(range.from).text)[0].length;
 			console.log("indent1: ", indent, "explode: ", explode);
 			if (indent || explode)
 				isComplete = false;
 
 			const tree = syntaxTree(state);
 			console.log("tree", tree);
-		    let context = tree.resolve(range.anchor);
+			let context = tree.resolve(range.anchor);
 			console.log("context", context);
 			console.log("enter key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o", range.from, range.to, range.anchor, range.head, state);
 			return { range };
@@ -443,44 +443,44 @@ window.turtleduck.createLineEditor = function(elt,text,lang,handler) {
 		if (isComplete) {
 			return handler("enter", state);
 		} else {
-			return insertNewlineAndIndent({state, dispatch});
+			return insertNewlineAndIndent({ state, dispatch });
 		}
 	}
 	function tab({ state, dispatch }) {
 		let changes = state.changeByRange(range => {
 			console.log("enter key pressed at ", range);
 			console.log("tab key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o", range.from, range.to, range.anchor, range.head, state);
-		    let context = syntaxTree(state).resolve(range.from);
+			let context = syntaxTree(state).resolve(range.from);
 			console.log("context", context);
 			return { range };
 		});
 		console.log("changes: ", changes);
-		return indentMore({state, dispatch});
+		return indentMore({ state, dispatch });
 	}
 	const shiftEnter = (lang === 'markdown' || lang === 'chat') ? insertNewlineContinueMarkup : insertNewlineAndIndent
 	function arrowUp({ state, dispatch }) {
 		return handler("arrowUp", state);
 	}
-	
+
 	function arrowDown({ state, dispatch }) {
 		return handler("arrowDown", state);
 	}
 
 	const outer = elt;
 	const elts = elt.getElementsByClassName('wrapper');
-	if(elts[0])
+	if (elts[0])
 		elt = elts[0];
-		
+
 	let editor = new TDEditor(outer.id, outer, elt, text, lang, [
 		fontConfig(elt), stdConfig(),
 		EditorView.theme({
-		  '.cm-lineNumbers .cm-gutterElement':{
-			display: "none"
-		  }
+			'.cm-lineNumbers .cm-gutterElement': {
+				display: "none"
+			}
 		}),
 		keymap.of([{ key: "ArrowUp", run: arrowUp }, { key: "ArrowDown", run: arrowDown }])
 	], window.turtleduck,
-	[keymap.of([{ key: "Enter", run: enter, shift: shiftEnter }, { key: "Tab", run: tab, shift: indentLess }])]);
+		[keymap.of([{ key: "Enter", run: enter, shift: shiftEnter }, { key: "Tab", run: tab, shift: indentLess }])]);
 
 	editor._after_paste = () => {
 		outer.scrollTop = outer.scrollTopMax;

@@ -1,42 +1,92 @@
 {
-	"user" : {
+	"user": {
 		"id": "__anon__",
 		"name": "Anas Chelonia",
 		"username": "tduck",
 		"nickname": "",
-		"website" : "",
+		"website": "",
 		"picture": "images/turtleduck-icon.png",
 		"profile": "",
 		"email": "tduck@example.com"
 	},
-	"prefs":{
-		"layout":{
-			"explorer": {"height": 16},
-			"editor": {"width":15, "iconified":true},
-			"screen": {"width":29},
-			"shell": {"height":7}
+	"prefs": {
+		"layout": {
+			"explorer": {
+				"height": 16
+			},
+			"editor": {
+				"width": 15,
+				"iconified": true
+			},
+			"screen": {
+				"width": 29
+			},
+			"shell": {
+				"height": 7
+			}
 		},
-		"layout-portrait":{
-			"explorer": {"height": 16, "iconified":true},
-			"editor": {"width":15, "iconified":true},
-			"screen": {"width":29},
-			"shell": {"height":7}
+		"layout-portrait": {
+			"explorer": {
+				"height": 16,
+				"iconified": true
+			},
+			"editor": {
+				"width": 15,
+				"iconified": true
+			},
+			"screen": {
+				"width": 29
+			},
+			"shell": {
+				"height": 7
+			}
 		}
 	},
-	"session" : {
-		"name" : "CoronaPass",
+	"session": {
+		"name": "CoronaPass",
 		"private": true,
 		"offline": true
 	},
 	"layout": {
-		"dir":"H","items": [
-			{"size":3,"dir":"V","items": [
-				{"size":16,"item":"explorer"}]},
-			{"size":29,"dir":"V","max_container":true,"items": [
-				{"size":9,"dir":"H","items":[
-					{"size":15,"item":"editor"},
-					{"size":14,"item":"screen"}]},
-	 			{"size":7,"item":"shell"}]}]},
+		"dir": "H",
+		"items": [
+			{
+				"size": 3,
+				"dir": "V",
+				"items": [
+					{
+						"size": 16,
+						"item": "explorer"
+					}
+				]
+			},
+			{
+				"size": 29,
+				"dir": "V",
+				"max_container": true,
+				"items": [
+					{
+						"size": 9,
+						"dir": "H",
+						"items": [
+							{
+								"size": 15,
+								"item": "editor"
+							},
+							{
+								"size": 14,
+								"item": "screen"
+							}
+						]
+					},
+					{
+						"size": 7,
+						"item": "shell"
+					}
+				]
+			}
+		]
+	},
 	"connections": {
 		"remote-turtleduck": {
 			"kind": "SockJSConnection",
@@ -64,7 +114,7 @@
 			"editMode": "🦜",
 			"editable": false,
 			"icon": "",
-			"extensions":[],
+			"extensions": [],
 			"services": {}
 		},
 		"java": {
@@ -93,8 +143,7 @@
 			"extensions": [
 				"z80"
 			],
-			"services": {
-			}
+			"services": {}
 		},
 		"python": {
 			"title": "Python",
@@ -115,8 +164,11 @@
 			"install": [
 				"../py/base45-0.4.0-py3-none-any.whl",
 				"../py/cbor2-5.4.0.post3-py3-none-any.whl",
-				"ecdsa", "asn1crypto",
-				"Pillow", "qrcode", "lark"
+				"ecdsa",
+				"asn1crypto",
+				"Pillow",
+				"qrcode",
+				"lark"
 			],
 			"import": [
 				"builtin turtleduck.CoronaPass",
@@ -138,9 +190,7 @@
 			"editMode": "",
 			"icon": "",
 			"extensions": [],
-			"services": {
-				
-			}
+			"services": {}
 		}
 	}
 }

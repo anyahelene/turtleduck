@@ -1,59 +1,75 @@
 @font-face {
   font-family: 'Fantasque Sans Mono';
   src: url('../fonts/fantasque/FantasqueSansMono-Bold.woff2') format('woff2'),
-       url('../fonts/fantasque/FantasqueSansMono-Bold.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+    url('../fonts/fantasque/FantasqueSansMono-Bold.woff') format('woff');
+  /* Firefox >= 3.6, any other modern browser */
   font-weight: 700;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Fantasque Sans Mono';
   src: url('../fonts/fantasque/FantasqueSansMono-BoldItalic.woff2') format('woff2'),
-       url('../fonts/fantasque/FantasqueSansMono-BoldItalic.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+    url('../fonts/fantasque/FantasqueSansMono-BoldItalic.woff') format('woff');
+  /* Firefox >= 3.6, any other modern browser */
   font-weight: 700;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Fantasque Sans Mono';
   src: url('../fonts/fantasque/FantasqueSansMono-Italic.woff2') format('woff2'),
-       url('../fonts/fantasque/FantasqueSansMono-Italic.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+    url('../fonts/fantasque/FantasqueSansMono-Italic.woff') format('woff');
+  /* Firefox >= 3.6, any other modern browser */
   font-weight: 400;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Fantasque Sans Mono';
   src: url('../fonts/fantasque/FantasqueSansMono-Regular.woff2') format('woff2'),
-       url('../fonts/fantasque/FantasqueSansMono-Regular.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+    url('../fonts/fantasque/FantasqueSansMono-Regular.woff') format('woff');
+  /* Firefox >= 3.6, any other modern browser */
   font-weight: 400;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Andika';
   src: url('../fonts/andika/Andika-Regular.woff2') format('woff2'),
-       url('../fonts/andika/Andika-Regular.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+    url('../fonts/andika/Andika-Regular.woff') format('woff');
+  /* Firefox >= 3.6, any other modern browser */
   font-weight: 400;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Andika';
   src: url('../fonts/andika/Andika-Italic.woff2') format('woff2'),
-       url('../fonts/andika/Andika-Italic.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+    url('../fonts/andika/Andika-Italic.woff') format('woff');
+  /* Firefox >= 3.6, any other modern browser */
   font-weight: 400;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Andika';
   src: url('../fonts/andika/Andika-Bold.woff2') format('woff2'),
-       url('../fonts/andika/Andika-Bold.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+    url('../fonts/andika/Andika-Bold.woff') format('woff');
+  /* Firefox >= 3.6, any other modern browser */
   font-weight: 700;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Andika';
   src: url('../fonts/andika/Andika-BoldItalic.woff2') format('woff2'),
-       url('../fonts/andika/Andika-BoldItalic.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
+    url('../fonts/andika/Andika-BoldItalic.woff') format('woff');
+  /* Firefox >= 3.6, any other modern browser */
   font-weight: 700;
   font-style: italic;
 }
+
 //@font-face {
 //  font-family: 'SH Pinscher';
 //  src: url('../fonts/shpinscher/SHPinscher-Regular.woff') format('woff'); /* Firefox >= 3.6, any other modern browser */
@@ -96,12 +112,13 @@
 }
 */
 @font-face {
-    font-family: "PressStart2P Narrow";
-    src: url("../fonts/pressstart2p/PressStart2P-Narrow.woff2") format("woff2"),
-		 url("../fonts/pressstart2p/PressStart2P-Narrow.woff") format("woff");
-    font-weight: normal;
-    font-style: normal;
+  font-family: "PressStart2P Narrow";
+  src: url("../fonts/pressstart2p/PressStart2P-Narrow.woff2") format("woff2"),
+    url("../fonts/pressstart2p/PressStart2P-Narrow.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
 }
+
 /*
 @font-face {
     font-family: "PressStart2P Tall";
@@ -118,8 +135,8 @@
 //    font-style: normal;
 //}
 @font-face {
-    font-family: "TeenyTinyPixls";
-    src: url("../fonts/teenytinypixls/TeenyTinyPixls.woff") format("woff");
-    font-weight: normal;
-    font-style: normal;
+  font-family: "TeenyTinyPixls";
+  src: url("../fonts/teenytinypixls/TeenyTinyPixls.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
 }

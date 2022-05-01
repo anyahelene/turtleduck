@@ -89,6 +89,7 @@
 				<version>${teavm.version}</version>
 				<executions>
 					<execution>
+						<?m2e execute onConfiguration,onIncremental?>
 						<id>web-client</id>
 						<goals>
 							<goal>compile</goal>
@@ -213,6 +214,7 @@
 						<artifactId>exec-maven-plugin</artifactId>
 						<executions>
 							<execution>
+								<?m2e execute onConfiguration,onIncremental?>
 								<id>webpack</id>
 								<phase>generate-resources</phase>
 								<goals>
@@ -226,6 +228,7 @@
 								</configuration>
 							</execution>
 							<execution>
+								<?m2e execute onConfiguration,onIncremental?>
 								<id>rollup</id>
 								<phase>generate-resources</phase>
 								<goals>

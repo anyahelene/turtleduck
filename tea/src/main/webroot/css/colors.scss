@@ -1,4 +1,4 @@
-$PHOSPHOR_P1: #4aff00;  // ~525nm
+$PHOSPHOR_P1: #4aff00; // ~525nm
 $PHOSPHOR_P19: #ffdf00; // ~590nm
 
 $water: #66e;
@@ -15,7 +15,7 @@ $sun: color.adjust($page, $hue: 180);
 $button-bg-header: color.scale($page, $lightness: -20%);
 $button-bg-normal: color.scale($sun, $lightness: -20%);
 $button-bg-hover: color.scale($sun, $lightness: +10%);
-$button-bg-active:  color.scale($sun, $lightness: -40%);
+$button-bg-active: color.scale($sun, $lightness: -40%);
 $border-active: $pen-sharp;
 $border: $pen;
 $bgdark: #111;

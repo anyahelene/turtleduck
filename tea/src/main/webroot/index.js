@@ -9,7 +9,7 @@ import { turtleduck } from './js/TurtleDuck';
 import { fileSystem, FileSystem } from './js/FileSystem';
 import { History } from './js/History';
 import { Component } from './js/Component';
-import { TilingWM, TilingWindow} from './js/TilingWM';
+import { TilingWM, TilingWindow } from './js/TilingWM';
 import { PyController } from './js/pycontroller';
 import { ShellServiceProxy } from './js/ShellServiceProxy';
 import { MDRender } from './js/MDRender';
@@ -25,7 +25,8 @@ import * as goose from './js/goose';
 //var ace = require('ace-builds/src-noconflict/ace')
 import defaultConfig from './config.json';
 
-var imports = { SockJS, Mousetrap, jquery, animals, hints, fileSystem, FileSystem,
+var imports = {
+	SockJS, Mousetrap, jquery, animals, hints, fileSystem, FileSystem,
 	History, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
 	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose
 };
@@ -35,8 +36,8 @@ globalThis.turtleduck = turtleduck;
 globalThis.goose = goose;
 turtleduck.MDRender = MDRender;
 turtleduck.Camera = Camera;
-turtleduck.Camera.addSubscription('copy','builtin', 'qr','Copy','📋', 'Copy to clipboard');
-turtleduck.Camera.addSubscription('copy','builtin', 'camera','Copy','📋', 'Copy to clipboard');
+turtleduck.Camera.addSubscription('copy', 'builtin', 'qr', 'Copy', '📋', 'Copy to clipboard');
+turtleduck.Camera.addSubscription('copy', 'builtin', 'camera', 'Copy', '📋', 'Copy to clipboard');
 turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
 turtleduck.gridDisplay = new GridDisplayServer();
@@ -48,26 +49,26 @@ turtleduck.storage.init().then(ctx => {
 	turtleduck.cwd = ctx;
 });
 turtleduck.i18next = i18next;
-turtleduck.appendToConsole = function(style) {
-	if(turtleduck.shellComponent) {
+turtleduck.appendToConsole = function (style) {
+	if (turtleduck.shellComponent) {
 		const shell = turtleduck.shellComponent.current();
-		if(shell) {
+		if (shell) {
 			return shell.terminal.appendBlock(style);
 		}
 	}
 }
 
-turtleduck.consolePrinter = function(style) {
-	if(turtleduck.shellComponent) {
+turtleduck.consolePrinter = function (style) {
+	if (turtleduck.shellComponent) {
 		const shell = turtleduck.shellComponent.current();
-		if(shell) {
+		if (shell) {
 			const element = shell.terminal.appendBlock(style);
 			var cr = false;
 			return {
 				print: text => {
 					let old = element.textContent;
-					if(cr) {
-	        			old = old.trim().replace(/.+$/, "");	
+					if (cr) {
+						old = old.trim().replace(/.+$/, "");
 					}
 					cr = text.endsWith("\r");
 					element.textContent = old + text + "\n";
@@ -88,81 +89,81 @@ turtleduck.TilingWM = TilingWM;
 turtleduck.TilingWindow = TilingWindow;
 turtleduck.wm = new TilingWM('mid', 32, 16);
 
-turtleduck._getByPath = function(path, obj) {
+turtleduck._getByPath = function (path, obj) {
 	const ps = path.split(".");
 
 	ps.forEach(name => {
-		if(obj !== undefined) {
+		if (obj !== undefined) {
 			obj = obj[name];
 		}
 	});
-	
-	return obj;		
+
+	return obj;
 }
-turtleduck._getConfig = function(path, configs) {
-	for(var i in configs) {
+turtleduck._getConfig = function (path, configs) {
+	for (var i in configs) {
 		const result = turtleduck._getByPath(path, configs[i]);
-		if(result !== undefined) {
+		if (result !== undefined) {
 			return result;
 		}
 	}
 	return undefined;
 }
-turtleduck.getConfig = function(path) {
+turtleduck.getConfig = function (path) {
 	return turtleduck._getConfig(path, turtleduck.configs);
 }
-turtleduck.setConfig = function(config, source) {
-	const src = ['override','session','user','remote','default'].indexOf(source);
-	if(src >= 0) {
+turtleduck.setConfig = function (config, source) {
+	const src = ['override', 'session', 'user', 'remote', 'default'].indexOf(source);
+	if (src >= 0) {
 		turtleduck.configs[src] = jquery.extend(true, turtleduck.configs[src], config);
 		console.log("setConfig", config, source, "=>", turtleduck.configs[src]);
 	}
 }
-turtleduck.openCamera = function(config) {
+turtleduck.openCamera = function (config) {
 	const elt = document.getElementById('camera');
-	if(elt) {
-		if(!turtleduck.camera) {
+	if (elt) {
+		if (!turtleduck.camera) {
 			turtleduck.camera = new turtleduck.Camera();
-		} 
+		}
 		turtleduck.camera.attach(elt);
 		elt.classList.add('active');
 		return turtleduck.camera.initialize(config);
 	}
 }
 
-turtleduck.closeCamera = function(now = false) {
+turtleduck.closeCamera = function (now = false) {
 	const elt = document.getElementById('camera');
-	if(elt) {
-		elt.classList.remove('active');		
+	if (elt) {
+		elt.classList.remove('active');
 	}
-	if(turleduck.camera) {
+	if (turleduck.camera) {
 		turtleduck.camera.dispose();
-		
+
 	}
 }
 
-turtleduck.openFiles = function(ctx) {
-	if(!ctx)
+turtleduck.openFiles = function (ctx) {
+	if (!ctx)
 		ctx = turtleduck.cwd;
-		
-	var elt; 
+
+	var elt;
 	return ctx.readdir().then(res => {
 		console.log("readdir():", res);
 		const data = {
 			'files': "Files",
-			'fileList':	res.map(file => html`<a href="#">${file}</a>`)
+			'fileList': res.map(file => html`<a href="#">${file}</a>`)
 		}
 		elt = turtleduck.displayDialog("file-dialog", data);
 	});
 }
 
 turtleduck.unique = 0;
-turtleduck.instantiateTemplate = function(templateType, data = {}) {
+turtleduck.instantiateTemplate = function (templateType, data = {}) {
 	const tmpls = document.getElementById("templates");
 	console.log("looking for ", templateType, "in", tmpls);
-	if(tmpls) {
+	if (tmpls) {
 		const tmpl = tmpls.querySelector(`[data-template=${templateType}]`);
-		if(tmpl) {
+		if (tmpl) {
 			console.log("found template", tmpl);
 			const tmp = document.createElement("div");
 			const instance = tmpl.cloneNode(true);
@@ -192,7 +193,7 @@ turtleduck.instantiateTemplate = function(templateType, data = {}) {
 				console.log(elt, args);
 				render(elt, html`${args.map(c => html`<li>${c}</li>`)}`);
 			});
-			if(instance.classList.contains("dismissable")) {
+			if (instance.classList.contains("dismissable")) {
 				instance.classList.add("show");
 			}
 			console.log("instantiated: ", instance);
@@ -202,12 +203,12 @@ turtleduck.instantiateTemplate = function(templateType, data = {}) {
 		throw `Template not found: ${templateType}`;
 	}
 }
-turtleduck.displayDialog = function(dialogType, data = {}) {
+turtleduck.displayDialog = function (dialogType, data = {}) {
 	const tmpl = turtleduck.instantiateTemplate(dialogType, data);
-	if(tmpl) {
+	if (tmpl) {
 		const elt = document.getElementById("mid");
 		const insertHere = elt.querySelector(':scope > [data-insert-here]');
-		if(insertHere) {
+		if (insertHere) {
 			insertHere.insertBefore(tmpl);
 		} else {
 			elt.appendChild(tmpl);
@@ -215,9 +216,9 @@ turtleduck.displayDialog = function(dialogType, data = {}) {
 		return elt;
 	}
 }
-turtleduck.displayPopup = function(title, text, caption, style) {
+turtleduck.displayPopup = function (title, text, caption, style) {
 	const elt = document.getElementById("popup");
-	if(elt) {
+	if (elt) {
 		elt.className = "popup dismissable show " + style;
 		elt.querySelector("h1").innerText = title;
 		elt.querySelector("blockquote").innerText = text;
@@ -226,17 +227,17 @@ turtleduck.displayPopup = function(title, text, caption, style) {
 	return elt;
 }
 
-turtleduck.checkLogin = function(resolve, reject) {
+turtleduck.checkLogin = function (resolve, reject) {
 	fetch("login/whoami").then(res => res.json()).then(res => {
 		console.log("whoami:", res);
-		if(res["status"] === "ok") {
+		if (res["status"] === "ok") {
 			resolve(res);
-		} else if(res["redirect"]){
+		} else if (res["redirect"]) {
 			var win;
 			turtleduck.checkLogin_callback = () => {
-				if(win)
+				if (win)
 					win.close();
-				delete turtleduck.checkLogin_callback;	
+				delete turtleduck.checkLogin_callback;
 				resolve({});
 			};
 			win = window.open(res["redirect"] + "?redirect=login/whoami", "turtleduck-login", "popup");
@@ -291,54 +292,54 @@ function pruneConfig(config, defaultConfig) {
 	return same;
 }
 */
-turtleduck.saveConfig = function(source = 'all') {
+turtleduck.saveConfig = function (source = 'all') {
 	try {
-		if(source === 'all' || source === 'session') {
+		if (source === 'all' || source === 'session') {
 			turtleduck.sessionStorage.setItem('turtleduck.sessionConfig', JSON.stringify(turtleduck.configs[1]));
 		}
-	} catch(e) {
+	} catch (e) {
 		console.error(e);
 	}
 	try {
-		if(source === 'all' || source === 'user') {
+		if (source === 'all' || source === 'user') {
 			const dict = jquery.extend(true, {}, turtleduck.configs[2]);
 			delete dict.session;
 			turtleduck.localStorage.setItem('turtleduck.userConfig', JSON.stringify(dict));
 		}
-	} catch(e) {
+	} catch (e) {
 		console.error(e);
 	}
 	try {
-		if(source === 'all' || source === 'remote') {
+		if (source === 'all' || source === 'remote') {
 			const dict = jquery.extend(true, {}, turtleduck.configs[3]);
 			delete dict.session;
 			turtleduck.localStorage.setItem('turtleduck.remoteConfig', JSON.stringify(dict));
 		}
-	} catch(e) {
+	} catch (e) {
 		console.error(e);
 	}
 }
-turtleduck.loadConfig = function() {
+turtleduck.loadConfig = function () {
 	try {
 		turtleduck.configs[1] = JSON.parse(turtleduck.sessionStorage.getItem('turtleduck.sessionConfig')) || {};
-	} catch(e) {
+	} catch (e) {
 		console.error(e);
 	}
 	try {
 		turtleduck.configs[2] = JSON.parse(turtleduck.localStorage.getItem('turtleduck.userConfig')) || {};
-	} catch(e) {
+	} catch (e) {
 		console.error(e);
 	}
 	try {
 		turtleduck.configs[3] = JSON.parse(turtleduck.localStorage.getItem('turtleduck.remoteConfig')) || {};
-	} catch(e) {
+	} catch (e) {
 		console.error(e);
 	}
 }
 
 const saveConfigTimers = {};
 function autoSaveConfig(source) {
-	if(saveConfigTimers[source]) {
+	if (saveConfigTimers[source]) {
 		clearTimeout(saveConfigTimers[source]);
 	}
 	saveConfigTimers[source] = window.setTimeout(() => {
@@ -351,12 +352,12 @@ function autoSaveConfig(source) {
 //ace.config.loadModule("ace/ext/language_tools", function(m) { turtleduck.editor_language_tools = m; });
 //ace.config.loadModule('ace/ext/options', function(m) { turtleduck.editor_options = m; });
 
-const animalList = animals.split(/\s+/).filter(function(a) { return a.length > 0; })
+const animalList = animals.split(/\s+/).filter(function (a) { return a.length > 0; })
 turtleduck.animals = {
-	pranimals: animalList.filter(function(a) { return !a.startsWith("-"); }),
-	postimals: animalList.filter(function(a) { return !(a.endsWith("-") || a.endsWith(":")); }),
+	pranimals: animalList.filter(function (a) { return !a.startsWith("-"); }),
+	postimals: animalList.filter(function (a) { return !(a.endsWith("-") || a.endsWith(":")); }),
 
-	random: function() {
+	random: function () {
 		const a = this.pranimals[Math.floor(Math.random() * this.pranimals.length)];
 		const b = this.postimals[Math.floor(Math.random() * this.postimals.length)];
 		return (a + " " + b).replaceAll(/(:|- -?| -)/g, '');
@@ -364,7 +365,7 @@ turtleduck.animals = {
 }
 const hintList = hints.split(/\n/).filter(a => a.length > 0).map(q => {
 	const m = q.match(/^(“[^”]*”)\s*[-–—]\s*([^,]+)\s*,?\s*(.*)$/)
-	if(m) {
+	if (m) {
 		return [m[1], m[2], m[3]];
 	} else {
 		return null;
@@ -404,29 +405,29 @@ turtleduck.hasLocalStorage = storageAvailable('localStorage');
 turtleduck.hasSessionStorage = storageAvailable('sessionStorage');
 turtleduck.localStorage = storageAvailable('localStorage') ? window.localStorage : {
 	dict: {},
-	getItem: function(key) { return dict[key]; },
-	setItem: function(key, value) { dict[key] = value; },
-	removeItem: function(key) { dict[key] = undefined; },
+	getItem: function (key) { return dict[key]; },
+	setItem: function (key, value) { dict[key] = value; },
+	removeItem: function (key) { dict[key] = undefined; },
 };
 
 turtleduck.sessionStorage = storageAvailable('sessionStorage') ? window.sessionStorage : {
 	dict: {},
-	getItem: function(key) { return dict[key]; },
-	setItem: function(key, value) { dict[key] = value; },
-	removeItem: function(key) { dict[key] = undefined; },
+	getItem: function (key) { return dict[key]; },
+	setItem: function (key, value) { dict[key] = value; },
+	removeItem: function (key) { dict[key] = undefined; },
 };
 
 
-turtleduck.alwaysShowSplashHelp = function(enable = true) {
-	if(enable)
+turtleduck.alwaysShowSplashHelp = function (enable = true) {
+	if (enable)
 		turtleduck.localStorage.setItem('alwaysShowSplashHelp', true);
 	else
 		turtleduck.localStorage.removeItem('alwaysShowSplashHelp');
 };
 
 turtleduck.loadConfig();
-if(!turtleduck.getConfig('session.name')) {
-	const cfg = {session: {name: turtleduck.animals.random()}};
+if (!turtleduck.getConfig('session.name')) {
+	const cfg = { session: { name: turtleduck.animals.random() } };
 	turtleduck.setConfig(cfg, 'session');
 	turtleduck.saveConfig('session');
 }
@@ -435,39 +436,39 @@ turtleduck.pyController = new PyController(true, turtleduck.getConfig('session.n
 turtleduck.shellServiceProxy = new ShellServiceProxy(turtleduck.pyController);
 
 
-turtleduck.tabSelect = function(tabsId, key) {
+turtleduck.tabSelect = function (tabsId, key) {
 	let previous = undefined;
-	jquery('[data-tab="'+tabsId+'"]').each(function(index,elt) {
+	jquery('[data-tab="' + tabsId + '"]').each(function (index, elt) {
 		const thisKey = jquery(elt).attr('data-tab-key');
 		const isDef = jquery(elt).attr('data-tab-define') == 'true';
-		if(isDef) {
-			if(jquery(elt).hasClass('selected')) {
+		if (isDef) {
+			if (jquery(elt).hasClass('selected')) {
 				previous = thisKey;
 			}
-			if(thisKey == key) {
+			if (thisKey == key) {
 				jquery(elt).toggleClass('selected', true);
 			} else {
 				jquery(elt).toggleClass('selected', false);
 			}
 		} else {
-			if(thisKey == key) {
+			if (thisKey == key) {
 				elt.style.setProperty('display', 'block');
 			} else {
 				elt.style.setProperty('display', 'none');
-			}			
+			}
 		}
 	});
 	return previous;
 }
 
-turtleduck.updateInfo = function() {
-	jquery('[data-from]').each(function() {
+turtleduck.updateInfo = function () {
+	jquery('[data-from]').each(function () {
 		const froms = (jquery(this).attr('data-from') || "").split("||");
-		for(var i = 0; i < froms.length; i++) {
+		for (var i = 0; i < froms.length; i++) {
 			const from = froms[i].trim();
-			if(from) {
+			if (from) {
 				const val = turtleduck.getConfig(from);
-				if(val) {
+				if (val) {
 					jquery(this).text(val);
 					return;
 				}
@@ -489,42 +490,42 @@ async function handleKey(key, button, event) {
 	function unsetLayout() {
 		const layouts = page.attr('data-layouts').split(' ');
 		let next = '';
-		layouts.forEach((layout,idx) => {
-			if(page.hasClass(layout))
-				next = layouts[(idx+1)%layouts.length];
-			page.toggleClass(layout,false);
+		layouts.forEach((layout, idx) => {
+			if (page.hasClass(layout))
+				next = layouts[(idx + 1) % layouts.length];
+			page.toggleClass(layout, false);
 		});
 		return next;
 	}
 	var params = undefined;
-	if(event.header && event.header.msg_type === key) { // it's actually a message!
+	if (event.header && event.header.msg_type === key) { // it's actually a message!
 		params = event.content;
 		// nop these
-		event.stopPropagation = () => {};
-		event.preventDefault = () => {};
+		event.stopPropagation = () => { };
+		event.preventDefault = () => { };
 	}
 	var m = key.match(/^([a-z]*):\/\/(.*)$/);
-	if(m != null) {
+	if (m != null) {
 		const url = new URL(key);
-		params = {path: url.pathname.replace(/^\/\//, '')};
-		url.searchParams.forEach((v,k) => params[k] = v);
+		params = { path: url.pathname.replace(/^\/\//, '') };
+		url.searchParams.forEach((v, k) => params[k] = v);
 		console.log('handleKey decoded url', key, m[1], params);
 		key = m[1];
 	}
 	console.log("handleKey", key, button, event);
-	
+
 	switch (key) {
 		case "f5":
 			return turtleduck.openFiles();
 		case "f6":
-			if(turtleduck.pyshell)
+			if (turtleduck.pyshell)
 				turtleduck.pyshell.focus();
-			else if(turtleduck.jshell)
+			else if (turtleduck.jshell)
 				turtleduck.jshell.focus();
 			break;
 		case "f8":
 			const nextLayout = jquery(this).attr('data-target');
-			if(nextLayout)
+			if (nextLayout)
 				page.toggleClass(nextLayout, true);
 			turtleduck.terminal.fit();
 			break;
@@ -532,13 +533,13 @@ async function handleKey(key, button, event) {
 			jquery("#page").toggleClass('show-splash-help');
 			break;
 		case "esc":
-			if(page.hasClass('show-splash-help')) {
+			if (page.hasClass('show-splash-help')) {
 				page.toggleClass('show-splash-help', false);
 			}
 			break;
 		case "f15":
 
-  			break;
+			break;
 
 		case "f17": {
 			const qs = turtleduck.hints.random();
@@ -550,14 +551,14 @@ async function handleKey(key, button, event) {
 		case "focus": {
 			const win = turtleduck[params.path];
 			//console.log("focus:", param, win);
-			if(win) {
+			if (win) {
 				win.focus();
 			}
 			break;
 		}
 		case "snap": {
-			const config = {mode:'camera', once:true};
-			if(params) {
+			const config = { mode: 'camera', once: true };
+			if (params) {
 				config.params = params;
 				config.mirror = false;
 			}
@@ -567,27 +568,27 @@ async function handleKey(key, button, event) {
 			return r;
 		}
 		case "qrscan": {
-			const config = {mode:'qr', once:true};
-			if(params) {
+			const config = { mode: 'qr', once: true };
+			if (params) {
 				config.params = params;
 				config.mirror = false;
 			}
 			const r = turtleduck.openCamera(config);
 			event.stopPropagation();
 			event.preventDefault();
-			return r;			
+			return r;
 		}
 		case "open-camera": {
-				const r = turtleduck.openCamera({mode:'camera'});
-				event.stopPropagation();
-				event.preventDefault();
-				return r;
+			const r = turtleduck.openCamera({ mode: 'camera' });
+			event.stopPropagation();
+			event.preventDefault();
+			return r;
 		}
 		case "open-qr": {
-				const r = turtleduck.openCamera({mode:'qr'});
-				event.stopPropagation();
-				event.preventDefault();
-				return r;
+			const r = turtleduck.openCamera({ mode: 'qr' });
+			event.stopPropagation();
+			event.preventDefault();
+			return r;
 		}
 		case "tooltip:sessionInfo": {
 			const projectName = turtleduck.getConfig('session.project');
@@ -610,10 +611,10 @@ async function handleKey(key, button, event) {
 		case "tooltip:storageInfo": {
 			return turtleduck.storage.info().then(info => {
 				var askButton = '';
-				if(!info.persisted) {
+				if (!info.persisted) {
 					askButton = html.node`<button id="requestPersistence" type="button">Allow persistent storage</button>`;
-					askButton.addEventListener("click", async function(e) {
-						return handleKey(askButton.id, askButton, e).then(r => {console.log("handleKey", r); return r;});
+					askButton.addEventListener("click", async function (e) {
+						return handleKey(askButton.id, askButton, e).then(r => { console.log("handleKey", r); return r; });
 					});
 				}
 				render(button, html.node`<dl><dt>Storage</dt><dd>${info.persisted ? "persistent" : "not persistent"}</dd>
@@ -628,13 +629,13 @@ async function handleKey(key, button, event) {
 			});
 		}
 		default:
-			if(button.dataset.showMenu) {
+			if (button.dataset.showMenu) {
 				const elt = document.getElementById(button.dataset.showMenu);
 				console.log("show: ", elt);
 				elt.classList.add("show");
 			} else {
 				//console.log(key, button, event);
-				const r = turtleduck.actions.handle(key, {button:button}, event);
+				const r = turtleduck.actions.handle(key, { button: button }, event);
 				//console.log("r =>", r);
 				event.stopPropagation();
 				event.preventDefault();
@@ -648,9 +649,9 @@ async function handleKey(key, button, event) {
 
 turtleduck.handleKey = handleKey;
 
-turtleduck.activateToggle = function(element, toggleClass, target, ...targets) {
+turtleduck.activateToggle = function (element, toggleClass, target, ...targets) {
 	const jqtgt = jquery(target);
-	jquery(element).click(function(e) {
+	jquery(element).click(function (e) {
 		var active = jqtgt.hasClass(toggleClass);
 		//console.log(jqtgt, active);
 		jqtgt.toggleClass(toggleClass, !active);
@@ -660,7 +661,7 @@ turtleduck.activateToggle = function(element, toggleClass, target, ...targets) {
 	});
 }
 
-turtleduck.activateDrag = function(element, type, value) {
+turtleduck.activateDrag = function (element, type, value) {
 	element.addEventListener("dragstart", e => {
 		e.dataTransfer.setData(type, value);
 		e.preventDefault();
@@ -670,29 +671,29 @@ turtleduck.activateDrag = function(element, type, value) {
 
 turtleduck.createComponent = (name, element) => new Component(name, element, turtleduck);
 
-turtleduck.activatePaste = function(element, target, text, cursorAdj = 0, then = null) {
+turtleduck.activatePaste = function (element, target, text, cursorAdj = 0, then = null) {
 	element.addEventListener("click", e => {
 		try {
 			//console.log("clicked:");
 			//console.log("lastfocus:", turtleduck.lastFocus);
 			var comp = null;
-			if(target === "currentTarget") {
-				if(turtleduck.lastFocus)
+			if (target === "currentTarget") {
+				if (turtleduck.lastFocus)
 					comp = turtleduck.lastFocus;
 				else
 					comp = turtleduck.shell;
-			} else if(turtleduck[target]) {
+			} else if (turtleduck[target]) {
 				comp = turtleduck[target];
 			} else
 				console.error("paste: ", target, "does not exist");
 			//console.log("comp:", comp, comp.paste);
-			if(comp !== null && comp.paste)
+			if (comp !== null && comp.paste)
 				comp.paste(text, cursorAdj);
 			e.preventDefault();
-			if(then !== null) {
+			if (then !== null) {
 				then(element);
 			}
-		} catch(e) {
+		} catch (e) {
 			console.error(e);
 			throw e;
 		}
@@ -701,24 +702,24 @@ turtleduck.activatePaste = function(element, target, text, cursorAdj = 0, then =
 }
 turtleduck.currentFocus = null;
 turtleduck.lastFocus = null;
-turtleduck.changeButton = function(button, icon, text) {
-	if(typeof(button) === 'string')
+turtleduck.changeButton = function (button, icon, text) {
+	if (typeof (button) === 'string')
 		button = document.getElementById(button);
-	if(!button)
+	if (!button)
 		return;
 	const iconElt = button.querySelector('.icon span');
 	const textElt = button.querySelector('.the-text');
 	console.log("icon/title elts: ", iconElt, textElt);
-	if(iconElt) {
+	if (iconElt) {
 		iconElt.innerText = icon;
 	}
-	if(textElt) {
+	if (textElt) {
 		textElt.innerText = text;
 	}
 	console.log("icon/title elts after: ", iconElt, textElt);
 }
 
-turtleduck.trackMouse = function(element, coordElement) {
+turtleduck.trackMouse = function (element, coordElement) {
 	element.addEventListener("mousemove", e => {
 		e = e || window.event;
 		e.preventDefault();
@@ -726,7 +727,7 @@ turtleduck.trackMouse = function(element, coordElement) {
 		var m = element.getScreenCTM().inverse();
 		p = p.matrixTransform(m);
 		coordElement.textContent = "(" + Math.round(p.x) + ","
-				+ Math.round(p.y) + ")";
+			+ Math.round(p.y) + ")";
 	});
 }
 
@@ -735,10 +736,10 @@ turtleduck.dismissElements = e => {
 	elts.forEach(elt => {
 		console.log("Dismiss", elt, "?", e);
 		var container = elt;
-		if(elt.classList.contains("tooltip")) {
+		if (elt.classList.contains("tooltip")) {
 			container = elt.parentElement;
 		}
-		if(!container.contains(e.target)) {
+		if (!container.contains(e.target)) {
 			console.log("Yes!", elt);
 			elt.classList.remove("show");
 		} else {
@@ -747,20 +748,20 @@ turtleduck.dismissElements = e => {
 	});
 };
 
-jquery(function() {
-	jquery('button[data-shortcut]').each(function(index) {
+jquery(function () {
+	jquery('button[data-shortcut]').each(function (index) {
 		const button = this;
-		const handler = async function(e) {
-			return handleKey(button.id, button, e).then(r => {console.log("handleKey", r); return r;});
+		const handler = async function (e) {
+			return handleKey(button.id, button, e).then(r => { console.log("handleKey", r); return r; });
 		};
-		const keyHandler = function(e) {
+		const keyHandler = function (e) {
 			var active = jquery(button).hasClass('active');
 			jquery(button).toggleClass('active', true);
 
 			if (typeof button.timeoutID == "number") {
 				window.clearTimeout(button.timeoutID);
 			}
-			button.timeoutID = window.setTimeout(function() {
+			button.timeoutID = window.setTimeout(function () {
 				button.timeoutID = undefined;
 				jquery(button).toggleClass('active', false);
 			}, 300);
@@ -773,70 +774,70 @@ jquery(function() {
 		const shortcut = this.classList.contains('not-implemented') ? '(not implemented)' : this.dataset.shortcut;
 		const shortcutText = shortcut.replace('ctrl+', '⌘').replace('shift+', '↑');
 		const icon = this.dataset.icon;
-		if(icon) {
-			jquery(this).prepend(jquery('<span class="icon"><span>'+icon+'</span></span>'));
+		if (icon) {
+			jquery(this).prepend(jquery('<span class="icon"><span>' + icon + '</span></span>'));
 		}
-		if(shortcut) {
+		if (shortcut) {
 			jquery(this).prepend(jquery('<span></span>').addClass('bg'));
 			jquery(this).attr('data-shortcut-text', shortcutText);
-			jquery(this).append(jquery('<span class="shortcut"><span>'+shortcut+'</span></span>'))
+			jquery(this).append(jquery('<span class="shortcut"><span>' + shortcut + '</span></span>'))
 			Mousetrap.bindGlobal(shortcut, keyHandler);
 		}
 		//jquery(this).find(".icon").prepend(jquery('<span>'+shortcutText+'</span>'));//.attr('data-shortcut-text', shortcutText)
 		jquery(this).click(handler);
 	});
-	
+
 	Mousetrap.bindGlobal('esc', e => handleKey('esc', null, e));
 
 	document.documentElement.addEventListener("click", turtleduck.dismissElements);
-	
-	jquery('[data-tab-define]').each((idx,elt) => {
+
+	jquery('[data-tab-define]').each((idx, elt) => {
 		const key = jquery(elt).attr('data-tab-key');
 		const tabs = jquery(elt).attr('data-tab');
 		jquery(elt).click(e => { turtleduck.tabSelect(tabs, key); });
-		if(jquery(elt).hasClass('selected')) {
+		if (jquery(elt).hasClass('selected')) {
 			turtleduck.tabSelect(tabs, key);
 		}
 	});
-	
-	jquery('[data-toggle]').each(function(index) {
+
+	jquery('[data-toggle]').each(function (index) {
 		const button = this;
 		const toggleType = jquery(this).attr('data-toggle');
 		const ref = jquery(this).attr('href') || jquery(this).attr('data-target');
 		const target = jquery(ref);
 		turtleduck.activateToggle(this, toggleType, ref);
-	/*	if (toggleType == 'collapse') {
-			jquery(button).click(function(e) {
-				var active = jquery(button).hasClass('open');
-				jquery(button).toggleClass('open', !active);
-				target.toggleClass('open', !active);
-				return false;
-			});
-		} else if (toggleType == 'button') {
-			jquery(button).click(function(e) {
-				var active = jquery(button).hasClass('active');
-				jquery(button).toggleClass('active', !active);
-				target.toggleClass('active', !active);
-				return false;
-			});
-		}*/
+		/*	if (toggleType == 'collapse') {
+				jquery(button).click(function(e) {
+					var active = jquery(button).hasClass('open');
+					jquery(button).toggleClass('open', !active);
+					target.toggleClass('open', !active);
+					return false;
+				});
+			} else if (toggleType == 'button') {
+				jquery(button).click(function(e) {
+					var active = jquery(button).hasClass('active');
+					jquery(button).toggleClass('active', !active);
+					target.toggleClass('active', !active);
+					return false;
+				});
+			}*/
 	});
 
-	jquery('[data-reset-onclick]').each(function() {
+	jquery('[data-reset-onclick]').each(function () {
 		console.log("data-reset-onclick");
 		console.log(this);
 		const cls = jquery(this).attr('data-reset-onclick');
-		jquery(this).find('a').each(function() {
-			jquery(this).click(function(e) {
+		jquery(this).find('a').each(function () {
+			jquery(this).click(function (e) {
 				jquery('#page').removeClass(cls);
 			});
 		});
 	});
 
-	jquery('[data-paste]').each(function(index) {
+	jquery('[data-paste]').each(function (index) {
 		const link = this;
 		const ref = jquery(this).attr('href').replace('#', '') || jquery(this).attr('data-target');
-		jquery(link).click(function(e) {
+		jquery(link).click(function (e) {
 			const target = window.turtleduck[ref];;
 			const text = jquery(link).attr('data-paste');
 			target.paste(text);
@@ -846,7 +847,7 @@ jquery(function() {
 	});
 
 
-	jquery('[data-menu]').each(function(index) {
+	jquery('[data-menu]').each(function (index) {
 		const menu = this;
 		const id = this.dataset.menu;
 		const select = this.dataset.select;
@@ -855,20 +856,20 @@ jquery(function() {
 		this.addEventListener("focusout", e => { menu.classList.remove("show"); });
 		this.addEventListener("click", e => {
 			const target = e.target;
-			if(target.classList.contains("menu-entry")) {
-				const data = {select: select};
+			if (target.classList.contains("menu-entry")) {
+				const data = { select: select };
 				const dset = target.dataset;
-				for(var k in dset) {
+				for (var k in dset) {
 					data[k] = dset[k];
 				}
 				menu.classList.remove("show");
-				const r = turtleduck.actions.handle('menu:'+id, data, event);
+				const r = turtleduck.actions.handle('menu:' + id, data, event);
 			}
 			e.stopPropagation();
 		});
 	});
-	
-	jquery('[data-tooltip]').each(function(index) {
+
+	jquery('[data-tooltip]').each(function (index) {
 		const id = this.dataset.tooltip;
 		const tipElt = document.createElement("div");
 		tipElt.className = "tooltip dismissable";
@@ -878,37 +879,37 @@ jquery(function() {
 		var clicked = false;
 		const unremove = () => {
 			window.clearTimeout(timer);
-			timer = undefined;			
+			timer = undefined;
 		};
 		const remove = () => {
-			if(!clicked) {
+			if (!clicked) {
 				tipElt.classList.add("fade3");
 				timer = window.setTimeout(() => {
-					tipElt.classList.remove("show");	
-					timer = undefined;		
+					tipElt.classList.remove("show");
+					timer = undefined;
 				}, 3000);
-			}	
+			}
 		}
 		this.addEventListener("mouseenter", async e => {
 			tipElt.classList.remove("fade3");
-			if(timer !== undefined) {
+			if (timer !== undefined) {
 				unremove();
-			} else if(!tipElt.classList.contains("show")) {
-				const r = await handleKey('tooltip:'+id, tipElt, event);
+			} else if (!tipElt.classList.contains("show")) {
+				const r = await handleKey('tooltip:' + id, tipElt, event);
 				console.log("tooltip: ", r);
 				tipElt.classList.add("show");
 				clicked = false;
-			}				
-/*			if(r) {
-				tipElt.replaceChildren(r);
-			} else {
-				tipElt.replaceChildren([]);
-				tipElt.classList.remove("show");			
-			}*/
+			}
+			/*			if(r) {
+							tipElt.replaceChildren(r);
+						} else {
+							tipElt.replaceChildren([]);
+							tipElt.classList.remove("show");			
+						}*/
 
 		});
 		this.addEventListener("click", async e => {
-			if(timer !== undefined) {
+			if (timer !== undefined) {
 				unremove();
 			}
 			clicked = true;
@@ -917,14 +918,14 @@ jquery(function() {
 			remove();
 		});
 	});
-	jquery('[data-below]').each(function(index) {
+	jquery('[data-below]').each(function (index) {
 		console.log(index, this);
 		const belowElt = this;
 		var elt = document.createElement("div");
 		elt.className = "ns-resizer";
 		//belowElt.insertBefore(elt, this.firstElementChild);
 	});
-	jquery('[data-left-of]').each(function(index) {
+	jquery('[data-left-of]').each(function (index) {
 		console.log(index, this);
 		const leftElt = this;
 		var elt = document.createElement("div");
@@ -933,25 +934,25 @@ jquery(function() {
 		console.log("leftElt", leftElt, "rightElts", rightElts);
 		var column, minColumn, maxColumn;
 		const midElt = leftElt.parentElement;
-		const mouseMoveListener = function(e) {
+		const mouseMoveListener = function (e) {
 			e.stopPropagation();
 			e.preventDefault();
 			console.log(e.clientX, midElt.clientWidth, 32 * e.clientX / midElt.clientWidth);
 			const c = Math.min(maxColumn, Math.max(minColumn, 1 + Math.round(32 * e.clientX / midElt.clientWidth)));
-			if(c !== column) {
+			if (c !== column) {
 				column = c;
 				console.log("column: ", column)
 				leftElt.style.gridColumnEnd = column;
-				rightElts.forEach(re => {re.style.gridColumnStart = column;});
+				rightElts.forEach(re => { re.style.gridColumnStart = column; });
 			}
 		};
 		elt.addEventListener("mousedown", e => {
 			const style = window.getComputedStyle(leftElt);
-			minColumn = 1+Math.max(1, parseInt(style.gridColumnStart));
+			minColumn = 1 + Math.max(1, parseInt(style.gridColumnStart));
 			maxColumn = 32;
 			rightElts.forEach(re => {
 				var c = parseInt(window.getComputedStyle(re).gridColumnEnd);
-				if(c < 0)
+				if (c < 0)
 					c = c + 33;
 				maxColumn = Math.min(maxColumn, c);
 			});
@@ -971,32 +972,32 @@ jquery(function() {
 				controller.abort();
 			}, { capture: false, once: true, signal: signal });
 			e.stopPropagation();
-			e.preventDefault();			
+			e.preventDefault();
 		});
 		//this.insertBefore(elt, this.firstElementChild);
 	});
 });
 
 var mqlPortrait;
-turtleduck.initializeWM = function() {
-	if(!mqlPortrait) {
+turtleduck.initializeWM = function () {
+	if (!mqlPortrait) {
 		mqlPortrait = window.matchMedia('(max-width: 899px)');
 		mqlPortrait.onchange = turtleduck.initializeWM;
 	}
 	console.log('media size change: ', mqlPortrait)
-	if(mqlPortrait.matches) {
-		turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout-portrait');		
+	if (mqlPortrait.matches) {
+		turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout-portrait');
 	} else {
 		turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout');
 	}
-	if(turtleduck.layoutSpec && turtleduck.layoutPrefs)
+	if (turtleduck.layoutSpec && turtleduck.layoutPrefs)
 		turtleduck.wm.initialize(turtleduck.layoutSpec, turtleduck.layoutPrefs);
 }
 
 jquery(document).ready(() => {
 	const mqlDesktop = window.matchMedia('(hover: hover) and (pointer: fine)');
 	function handleDesktop(mql) {
-		if(turtleduck.isDesktop !== undefined) {
+		if (turtleduck.isDesktop !== undefined) {
 			console.warn("Desktop mode changed to ", mql.matches);
 		}
 		turtleduck.isDesktop = mql.matches;
@@ -1006,13 +1007,13 @@ jquery(document).ready(() => {
 	const mqlDark = window.matchMedia('(prefers-color-scheme: dark)')
 	const mqlLight = window.matchMedia('(prefers-color-scheme: light)')
 	function handleColorPreference(mql) {
-		if(mql.matches) {
+		if (mql.matches) {
 			const dark = mql.media.endsWith('dark)');
 			jquery('#page').toggleClass('light', !dark);
 			jquery('#page').toggleClass('dark', dark);
 			console.log(mql);
 			console.log(document.getElementById('page').classList);
-		}	
+		}
 	}
 	handleColorPreference(mqlDark);
 	//handleColorPreference(mqlLight);
@@ -1020,44 +1021,48 @@ jquery(document).ready(() => {
 	mqlLight.onchange = handleColorPreference;
 
 	turtleduck.runningOnSafari = window.safari !== undefined;
-	
-	if(false) {
-	if(turtleduck.localStorage.getItem('alwaysShowSplashHelp') || !turtleduck.localStorage.getItem('hasSeenSplashHelp')) {
-		jquery('#page').toggleClass('show-splash-help', true);
-		turtleduck.localStorage.setItem('hasSeenSplashHelp', true);
+
+	if (false) {
+		if (turtleduck.localStorage.getItem('alwaysShowSplashHelp') || !turtleduck.localStorage.getItem('hasSeenSplashHelp')) {
+			jquery('#page').toggleClass('show-splash-help', true);
+			turtleduck.localStorage.setItem('hasSeenSplashHelp', true);
+		}
 	}
-	}
-	
+
 	const resizeObserver = new ResizeObserver(entries => {
 		console.log('Console size changed');
 	})
 	resizeObserver.observe(document.getElementById('shell'));
-	
+
 
 })
 
-turtleduck._initializationComplete = function(err) {
-	if(err) {
+turtleduck._initializationComplete = function (err) {
+	if (err) {
 		console.error(err);
 	}
 	turtleduck.layoutSpec = turtleduck.getConfig('layout');
 	turtleduck.initializeWM();
-	turtleduck.wm.onchange((wm,sizes) => {
+	turtleduck.wm.onchange((wm, sizes) => {
 		//turtleduck.setConfig({"prefs":{"layout":sizes}}, "session");
 		//autoSaveConfig('session');
-	});	
+	});
 	turtleduck.client.route('qrscan', msg => {
 		console.log('routing qrscan', msg);
-			const config = {mode:'qr', once:true, params: msg, mirror: false};
-			return turtleduck.openCamera(config).then(qrcode => {
-				console.log('got qrcode', qrcode);
-				return Promise.resolve({header:{to: msg.header.from, msg_type: 'qrscan_reply', ref_id: msg.header.msg_id, msg_id: 'r' + msg.header.msg_id},
-			content: {text: qrcode, status: 'ok'}});
-			}).catch(err => {
-				console.warn('got error instead of qrcode', err);
-				return Promise.resolve({header:{to: msg.header.from, msg_type: 'qrscan_reply', ref_id: msg.header.msg_id, msg_id: 'r' + msg.header.msg_id},
-			content: {error: err, status: 'error'}});
+		const config = { mode: 'qr', once: true, params: msg, mirror: false };
+		return turtleduck.openCamera(config).then(qrcode => {
+			console.log('got qrcode', qrcode);
+			return Promise.resolve({
+				header: { to: msg.header.from, msg_type: 'qrscan_reply', ref_id: msg.header.msg_id, msg_id: 'r' + msg.header.msg_id },
+				content: { text: qrcode, status: 'ok' }
 			});
+		}).catch(err => {
+			console.warn('got error instead of qrcode', err);
+			return Promise.resolve({
+				header: { to: msg.header.from, msg_type: 'qrscan_reply', ref_id: msg.header.msg_id, msg_id: 'r' + msg.header.msg_id },
+				content: { error: err, status: 'error' }
+			});
+		});
 		return
 	});
 	turtleduck.client.route('grid-create', msg => turtleduck.gridDisplay.create(msg));

@@ -23,8 +23,7 @@
   "display": "standalone",
   "scope": "",
   "theme_color": "#3367D6",
-  "shortcuts": [
-  ],
+  "shortcuts": [],
   "description": "${og.description}",
   "screenshots": [
     {

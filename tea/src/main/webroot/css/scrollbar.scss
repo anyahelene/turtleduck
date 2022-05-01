@@ -5,34 +5,42 @@ $scrollbar-color-hi: color.scale(#fa0, $lightness: -25%);
   width: .75rem;
   height: .75rem;
 }
+
 ::-webkit-scrollbar-button {
   width: 0px;
   height: 0px;
 }
+
 ::-webkit-scrollbar-thumb {
   background: $scrollbar-color;
   //border-top: .25rem double $scrollbar-color;
- // border-bottom: .25rem double $scrollbar-color;
+  // border-bottom: .25rem double $scrollbar-color;
   border-radius: 0px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: $scrollbar-color-hi;
 }
+
 ::-webkit-scrollbar-thumb:active {
   background: #000;
 }
+
 ::-webkit-scrollbar-track {
   background: #333;
   border: 2px solid $scrollbar-color;
   border-radius: 0px;
 }
+
 ::-webkit-scrollbar-track:hover {
   background: #000;
   border: 2px solid $scrollbar-color-hi;
 }
+
 ::-webkit-scrollbar-track:active {
   background: $scrollbar-color-hi;
 }
+
 ::-webkit-scrollbar-corner {
   background: transparent;
 }

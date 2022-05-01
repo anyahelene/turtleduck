@@ -13,8 +13,8 @@ hljs.registerLanguage('python', python);
 
 
 /** Convert a flat document to one with a tree-like section structure; i.e.,
-    each heading and associated text will be placed in a DIV, with subsections
-    nested within. Nodes are removed from `rootElt` and added to `destElt` */
+	each heading and associated text will be placed in a DIV, with subsections
+	nested within. Nodes are removed from `rootElt` and added to `destElt` */
 function doc2tree(rootElt, destElt) {
 	destElt.innerHTML = '';
 	var current = destElt;
@@ -25,65 +25,65 @@ function doc2tree(rootElt, destElt) {
 
 	function newSection(elt, level) {
 		const newSection = document.createElement('div');
-		if(elt.id) {
+		if (elt.id) {
 			newSection.id = elt.id;
 			elt.id = undefined;
 		}
 		var parent = null;
-		for(var i = stack.length-1; parent == null && i >= 0; i--) {
+		for (var i = stack.length - 1; parent == null && i >= 0; i--) {
 			parent = stack[i];
 		}
 		parent.appendChild(newSection);
 		stack.push(newSection);
-		path.push(count+1);
+		path.push(count + 1);
 		newSection.dataset.level = path.length;
-		newSection.dataset.path =  path.join('.');
+		newSection.dataset.path = path.join('.');
 		return newSection;
 	}
 
 	Array.from(rootElt.childNodes).forEach(elt => {
 		//console.log('doc2tree:', 'current', current, 'stack', stack, 'looking at', elt.innerHTML || elt.textContent);
 		var m;
-		if((m = elt.nodeName.match(/^H([123456])$/)) != null) {
+		if ((m = elt.nodeName.match(/^H([123456])$/)) != null) {
 			const level = parseInt(m[1]);
-			if(!title && level === 1) {
+			if (!title && level === 1) {
 				title = elt.innerText;
 				elt.classList.add('title');
 			}
 			//console.log('looking at ', level, stack.length, stack, elt.innerHTML);
-			while(level < stack.length) { // unwind to level-1
+			while (level < stack.length) { // unwind to level-1
 				current = stack.pop();
 				count = path.pop();
 				//console.log('doc2tree <=  ', path.join('.'), 'current', current, 'stack', JSON.stringify(stack), 'popping at', elt.innerHTML || elt.textContent)
 			}
-			while(level > stack.length) {
+			while (level > stack.length) {
 				stack.push(null);
 				path.push(0);
 				count = 0;
 			}
 			current = newSection(elt);
 			//console.log('doc2tree ==  ', path.join('.'), 'current', current, 'stack', stack, 'pushing at', elt.innerHTML || elt.textContent)
-		} 
+		}
 		current.appendChild(elt);
 	});
 }
 function makeScrollToListener(elt, scroller) {
-	if(!scroller) {
+	if (!scroller) {
 		console.warn('no doc-display parent found', elt);
-		return function(e) {
+		return function (e) {
 			e.stopPropagation();
-			e.preventDefault();				
+			e.preventDefault();
 		};
 	} else {
-		return function(e) {
+		return function (e) {
 			e.stopPropagation();
 			e.preventDefault();
 			const target = e.currentTarget;
 			console.log("scrollTo", target, e);
-			if(target.href) {
+			if (target.href) {
 				const section = elt.querySelector(target.getAttribute('href'));
 				const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-				if(section) {
+				if (section) {
 					scroller.scrollTop = section.offsetTop - fontSize;
 				}
 			}
@@ -92,23 +92,23 @@ function makeScrollToListener(elt, scroller) {
 }
 
 function getIconFor(elt) {
-	if(elt.classList.contains('easy')) {
+	if (elt.classList.contains('easy')) {
 		return "😊";
-	} else if(elt.classList.contains('medium')) {
+	} else if (elt.classList.contains('medium')) {
 		return "🤔";
-	} else if(elt.classList.contains('tricky')) {
+	} else if (elt.classList.contains('tricky')) {
 		return "😬";
-	} else if(elt.classList.contains('experimental')) {
+	} else if (elt.classList.contains('experimental')) {
 		return "🧪";
-	} else if(elt.classList.contains('important')) {
+	} else if (elt.classList.contains('important')) {
 		return "";
 	} else {
 		return null;
 	}
 }
 function makeToc(doc, elt, scroller) {
-	if(!scroller)
-		return [null,null,null];
+	if (!scroller)
+		return [null, null, null];
 	const headers = [];
 	const sections = {};
 	var i = 1;
@@ -120,7 +120,7 @@ function makeToc(doc, elt, scroller) {
 		const a = head.querySelector('slug');
 		var title = head.textContent;
 		//console.log('title', title);
-		if(a) {
+		if (a) {
 			title = a.textContent;
 			a.remove();
 			//console.log("title", title);
@@ -130,7 +130,7 @@ function makeToc(doc, elt, scroller) {
 		head.id = slug;
 		const item = document.createElement('li');
 		const link = document.createElement('a');
-		sections[head.id] = {head: head, link: link};
+		sections[head.id] = { head: head, link: link };
 		link.id = `_link_${slug}`;
 		link.href = `#${slug}`;
 		link.textContent = title;
@@ -141,22 +141,22 @@ function makeToc(doc, elt, scroller) {
 	});
 
 
-	if(toc.childElementCount > 0) {
+	if (toc.childElementCount > 0) {
 		elt.appendChild(toc);
 		scroller.classList.add('has-contents-bar');
 	}
 	return [toc, headers, sections];
 }
 
-const thresholds = [0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1,0];
+const thresholds = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 0];
 class MDRender {
 	constructor(opts = {}) {
 		this.md = new Remarkable(jquery.extend({
 			typographer: true,
-	  		quotes: '“”‘’',
+			quotes: '“”‘’',
 			highlight: this._remarkableHighlight()
 		}, opts));
-		
+
 		this.Remarkable = Remarkable;
 		this.utils = utils;
 		this.hljs = hljs;
@@ -164,7 +164,7 @@ class MDRender {
 		this.json = json;
 		this.python = python;
 		this.java = java;
-		
+
 		const rules = this.md.renderer.rules;
 		rules.link_open = this._render_link_open(rules.link_open);
 		rules.image = this._render_image(rules.image);
@@ -172,7 +172,7 @@ class MDRender {
 		rules.paragraph_open = this._render_paragraph_open(rules.paragraph_open);
 		rules.paragraph_close = this._render_paragraph_close(rules.paragraph_close);
 	}
-	
+
 
 	render_unsafe(elt, code) {
 		this._snippets = [];
@@ -195,31 +195,31 @@ class MDRender {
 		var scroller = elt.closest('.doc-display');
 
 		const [toc, headers, sections] = makeToc(doc, elt, scroller);
-			
+
 		doc2tree(doc, elt);
-		
-		if(toc) {
+
+		if (toc) {
 			console.log('sections', sections);
 			const obs = new IntersectionObserver(entries => {
-				for(const entry of entries) {
+				for (const entry of entries) {
 					const section = elt.querySelector(`#${entry.target.id}`);
 					const link = elt.querySelector(`#_link_${entry.target.id}`);
 					//console.log(section, link);
-					if(section) {
-						if(entry.intersectionRatio > 0) {
+					if (section) {
+						if (entry.intersectionRatio > 0) {
 							link.classList.add('active');
 						} else {
 							link.classList.remove('active');
 						}
 					}
 				}
-			},  {root: scroller, rootMargin: "-25% 0px", threshold: thresholds});
+			}, { root: scroller, rootMargin: "-25% 0px", threshold: thresholds });
 			elt.querySelectorAll('div[data-level="2"], div[data-level="1"]').forEach(head => obs.observe(head));
 			elt.appendChild(toc);
 		}
 		function stylePre(elt) {
 			const pre = elt.closest('pre');
-			if(pre) {
+			if (pre) {
 				pre.classList.add('with-toolbar');
 			}
 		}
@@ -232,7 +232,7 @@ class MDRender {
 		elt.querySelectorAll('details').forEach(details => {
 			const summary = details.querySelector('summary')
 			const text = getIconFor(details);
-			if(summary && text !== null) {
+			if (summary && text !== null) {
 				const icon = document.createElement('span');
 				icon.className = 'icon';
 				icon.textContent = text;
@@ -241,7 +241,7 @@ class MDRender {
 		});
 		elt.querySelectorAll('aside').forEach(aside => {
 			const text = getIconFor(aside);
-			if(text !== null) {
+			if (text !== null) {
 				const icon = document.createElement('span');
 				icon.className = 'icon';
 				icon.textContent = text;
@@ -252,7 +252,7 @@ class MDRender {
 			btn.className = 'open-close';
 			btn.addEventListener('click', e => {
 				console.log('click', e.target, e.currentTarget, e);
-				if(aside.matches('.is-narrow aside, .is-very-narrow aside')) {
+				if (aside.matches('.is-narrow aside, .is-very-narrow aside')) {
 					aside.classList.toggle('open');
 					e.stopPropagation();
 					e.preventDefault();
@@ -263,47 +263,47 @@ class MDRender {
 		elt.querySelectorAll('button[data-snippet]').forEach(btn => {
 			const snip = this._snippets[parseInt(btn.dataset.snippet)];
 			var code = snip.code;
-			if(snip.language === 'python') {
-				if(snip.code.startsWith('>>> ')) {
+			if (snip.language === 'python') {
+				if (snip.code.startsWith('>>> ')) {
 					code = '';
 					var mode = '';
 					snip.code.split('\n').forEach(line => {
-						if(line.startsWith('>>> ') || (line.startsWith('... ') && mode === '.')) {
+						if (line.startsWith('>>> ') || (line.startsWith('... ') && mode === '.')) {
 							code = `${code}${line.substring(4)}\n`;
 							mode = '.';
-						} else  {
+						} else {
 							mode = '';
 						}
 					});
 				}
-				if(!snip.opts || snip.opts === 'pyshell') {
-					btn.innerHTML = '<span class="icon">📋</span><span>→ PyShell</span>';	
-					btn.title = 'Paste Code in Python Shell';	
+				if (!snip.opts || snip.opts === 'pyshell') {
+					btn.innerHTML = '<span class="icon">📋</span><span>→ PyShell</span>';
+					btn.title = 'Paste Code in Python Shell';
 					btn.addEventListener('click', e => {
 						e.preventDefault();
 						e.stopPropagation();
 						turtleduck.pyshell.paste(code);
-						if(turtleduck.pyshell.iconified(false)) {
+						if (turtleduck.pyshell.iconified(false)) {
 							turtleduck.wm.recomputeLayout();
 						}
 						turtleduck.pyshell.focus();
 						//window.setTimeout(() =>	turtleduck.pyshell.focus(), 1);
 					});
 					stylePre(btn);
-				} else if(snip.opts.startsWith('editor')) {
+				} else if (snip.opts.startsWith('editor')) {
 					const filename = snip.opts.substring(7) || 'pasted.py';
-					btn.innerHTML = '<span class="icon">📋</span><span>→ Editor</span>';	
-					btn.title = 'Paste Code in Python Editor';	
+					btn.innerHTML = '<span class="icon">📋</span><span>→ Editor</span>';
+					btn.title = 'Paste Code in Python Editor';
 					btn.addEventListener('click', e => {
 						e.preventDefault();
 						e.stopPropagation();
 						turtleduck.editor.paste_to_file(filename, code, 'python');
-						if(turtleduck.editor.iconified(false)) {
+						if (turtleduck.editor.iconified(false)) {
 							turtleduck.wm.recomputeLayout();
 						}
 						turtleduck.editor.focus();
 						//window.setTimeout(() =>	turtleduck.editor.focus(), 1);
-					});				
+					});
 					stylePre(btn);
 				} else {
 					btn.remove();
@@ -315,57 +315,57 @@ class MDRender {
 					e.preventDefault();
 					e.stopPropagation();
 					navigator.clipboard.writeText(code)
-							.then(() => {
-								turtleduck.userlog("Copied!");
-								},
-								err => {
-									turtleduck.userlog("Copy failed :(");
-									console.error("Copy failed:", err);
-								});
-				});				
+						.then(() => {
+							turtleduck.userlog("Copied!");
+						},
+							err => {
+								turtleduck.userlog("Copy failed :(");
+								console.error("Copy failed:", err);
+							});
+				});
 				stylePre(btn);
 			}
 		});
 	}
-	
+
 	_remarkableHighlight() {
 		const md = this;
-		return function(str, lang, opts) {
+		return function (str, lang, opts) {
 			console.log('Highlight: ', lang, opts);
-			if(lang && hljs.getLanguage(lang)) {
+			if (lang && hljs.getLanguage(lang)) {
 				try {
-					md._snippets.push({language: lang, code: str, opts: opts});
-					const r = hljs.highlight(str, {language:lang}).value;
+					md._snippets.push({ language: lang, code: str, opts: opts });
+					const r = hljs.highlight(str, { language: lang }).value;
 					//console.log("hljs.highlight:", r);
 					return r;
-				} catch(err) {
+				} catch (err) {
 					console.error(err);
 				}
 			}
 			try { // fallback to auto 
-		   		const r = hljs.highlightAuto(str).value;
-		 		//console.log("hljs.highlightAuto:", r);
+				const r = hljs.highlightAuto(str).value;
+				//console.log("hljs.highlightAuto:", r);
 				return r;
 			} catch (err) {
 				console.error(err);
 			}
-		 	return ''; // fallback to default
+			return ''; // fallback to default
 		};
 	}
 
 	_render_fence(old) {
 		const md = this;
-		return function(tokens, idx, options, env, instance) {
+		return function (tokens, idx, options, env, instance) {
 			const l = md._snippets.length;
 			var r = old(tokens, idx, options, env, instance);
 			//console.log('fence:', tokens[idx].params, r);
-			if(l != md._snippets.length) {
+			if (l != md._snippets.length) {
 				const btn = `<nav class="toolbar"><button class="insert" type="button" data-action="insert" data-snippet="${l}"></button></nav>`;
 				const m = r.match(/^([\s\S]*?)(<\/pre>|)(\s*)$/);
-				if(m != null) {
+				if (m != null) {
 					r = m[1] + btn + m[2] + m[3];
 				} else {
-					r = r + btn; 					
+					r = r + btn;
 				}
 			}
 			return r;
@@ -373,28 +373,28 @@ class MDRender {
 
 	}
 	_render_link_open(old) {
-		return function(tokens, idx, options /* env */) {
+		return function (tokens, idx, options /* env */) {
 			const link = tokens[idx];
-			const title = link.title ? (` title="${utils.escapeHtml(utils.replaceEntities(link.title))}"`): '';
+			const title = link.title ? (` title="${utils.escapeHtml(utils.replaceEntities(link.title))}"`) : '';
 			var target = options.linkTarget ? (` target="${options.linkTarget}"`) : '';
 			var href = link.href;
 			//console.log("link_open", link);
 			const m = href.match(/^(insert|focus|open|run|save|snap|qrscan):/);
-			if(m != null) {
-				target = ` data-action="${m[1]}"`; 
-			} else if(href.match(/^\w[\w\d+.-]*:/) != null) {
+			if (m != null) {
+				target = ` data-action="${m[1]}"`;
+			} else if (href.match(/^\w[\w\d+.-]*:/) != null) {
 				target = ' target="_blank"';
-			} else if(options.hrefPrefix) {
+			} else if (options.hrefPrefix) {
 				href = options.hrefPrefix + href;
 			}
 			return `<a href="${utils.escapeHtml(href)}" ${title}${target}>`;
 		};
 	}
-	
+
 	_render_image(old) {
-		return function(tokens, idx, options /*, env */) {
+		return function (tokens, idx, options /*, env */) {
 			var src = tokens[idx].src;
-			if(src.match(/^\w[\w\d+.-]*:/) == null) {
+			if (src.match(/^\w[\w\d+.-]*:/) == null) {
 				src = options.hrefPrefix + src;
 			}
 			//console.log("image", tokens[idx]);
@@ -402,43 +402,43 @@ class MDRender {
 			var alt = ` alt="${tokens[idx].alt ? utils.escapeHtml(utils.replaceEntities(utils.unescapeMd(tokens[idx].alt))) : ''}"`;
 			var style = tokens[idx].style ? ` class="${tokens[idx].style}"` : '';
 			var suffix = options.xhtmlOut ? ' /' : '';
-			if(tokens[idx].figure) {
-					var title = '';
-					if(tokens[idx].title === '<') {
-						return `<aside class="left small"><figure><img ${src}${alt}${suffix}></figure></aside>`;
-					} else if(tokens[idx].title) {
-						title = `<figcaption>${(options.html ? tokens[idx].title : utils.escapeHtml(utils.replaceEntities(tokens[idx].title)))}</figcaption>`;
-					}
-					return `<aside ${style}><figure><img${src}${alt}${suffix}>${title}</figure></aside>`;
+			if (tokens[idx].figure) {
+				var title = '';
+				if (tokens[idx].title === '<') {
+					return `<aside class="left small"><figure><img ${src}${alt}${suffix}></figure></aside>`;
+				} else if (tokens[idx].title) {
+					title = `<figcaption>${(options.html ? tokens[idx].title : utils.escapeHtml(utils.replaceEntities(tokens[idx].title)))}</figcaption>`;
+				}
+				return `<aside ${style}><figure><img${src}${alt}${suffix}>${title}</figure></aside>`;
 			} else {
 				var title = tokens[idx].title ? (` title="${utils.escapeHtml(utils.replaceEntities(tokens[idx].title))}"`) : '';
 				return `<img${src}${alt}${title}${style}${suffix}>`;
 			}
 		};
 	}
-	
+
 	_render_paragraph_open(old) {
-		return function(tokens, idx, options, env) {
+		return function (tokens, idx, options, env) {
 			try {
-				if(tokens[idx+2].type === 'paragraph_close') {
-					const next_token = tokens[idx+1];
-					if(next_token.children.length === 1 && next_token.children[0].type === 'image') {
-						tokens[idx+2].omit = true;
+				if (tokens[idx + 2].type === 'paragraph_close') {
+					const next_token = tokens[idx + 1];
+					if (next_token.children.length === 1 && next_token.children[0].type === 'image') {
+						tokens[idx + 2].omit = true;
 						next_token.children[0].figure = true;
 						next_token.children[0].style = 'right';
 						return '';
 					}
 				}
-			} catch(e) {
+			} catch (e) {
 				console.error(e);
 			}
 			return old(tokens, idx, options, env);
 		};
 	}
-	
+
 	_render_paragraph_close(old) {
-		return function(tokens, idx, options, env) {
-			if(tokens[idx].omit)
+		return function (tokens, idx, options, env) {
+			if (tokens[idx].omit)
 				return '';
 			else
 				return old(tokens, idx, options, env);

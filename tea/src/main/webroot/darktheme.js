@@ -3,9 +3,9 @@ import { HighlightStyle, tags } from '@codemirror/highlight';
 
 // Using https://github.com/one-dark/vscode-one-dark-theme/ as reference for the colors
 const type = "#cc0", name = "#3f3", op = "#56b6c2", invalid = "#ffffff", def = "#8f8", comment = "#880", // Brightened compared to original to increase contrast
-func = "#3f3", string = "#a8e389", bool = "#d19a66", keyword = "#f6f", //
-darkBackground = "#3330", highlightBackground = "#1114", background = "#3330", //
-selection = "#3E4451", cursor = "#f00";
+    func = "#3f3", string = "#a8e389", bool = "#d19a66", keyword = "#f6f", //
+    darkBackground = "#3330", highlightBackground = "#1114", background = "#3330", //
+    selection = "#3E4451", cursor = "#f00";
 /// The editor theme styles for One Dark.
 const darkDuckTheme = EditorView.theme({
     "&": {
@@ -13,10 +13,10 @@ const darkDuckTheme = EditorView.theme({
         backgroundColor: background,
         "& ::selection": { backgroundColor: selection },
         caretColor: cursor
-//		backgroundBlendMode: "normal"
+        //		backgroundBlendMode: "normal"
     },
     ".cm-cursor": { display: "block", borderLeftColor: "#800", borderLeftWidth: ".5em" },
-	".cm-cursorLayer": { mixBlendMode: "exclusion" },
+    ".cm-cursorLayer": { mixBlendMode: "exclusion" },
     "&.cm-focused .cm-cursor, .focused .cm-cursor": { borderLeftColor: cursor },
     "&.cm-focused .cm-cursor-secondary": { borderLeftColor: "#ff0" },
     ".cm-cursor-secondary": { borderLeftColor: "#880" },
@@ -32,18 +32,18 @@ const darkDuckTheme = EditorView.theme({
         backgroundColor: "#6199ff2f"
     },
     ".cm-activeLine": { backgroundColor: highlightBackground, textShadow: "none" },
- //   ".cm-activeLine": { backgroundColor: background, textShadow: "none" },
+    //   ".cm-activeLine": { backgroundColor: background, textShadow: "none" },
     ".cm-selectionMatch": { backgroundColor: "#aafe661a" },
     ".cm-matchingBracket, .cm-nonmatchingBracket": {
         backgroundColor: "#bad0f847",
         outline: "1px solid #515a6b"
     },
     ".cm-gutters": {
-//		background: "linear-gradient(90deg, #220f 0%, #2200 100%)",
+        //		background: "linear-gradient(90deg, #220f 0%, #2200 100%)",
         backgroundColor: background,
         color: comment,
         border: "none",
-		borderRight: "1px solid #8808"
+        borderRight: "1px solid #8808"
     },
     ".cm-lineNumbers .cm-gutterElement": { color: "inherit" },
     ".cm-foldPlaceholder": {
@@ -64,38 +64,68 @@ const darkDuckTheme = EditorView.theme({
 }, { dark: true });
 /// The highlighting style for code in the One Dark theme.
 const darkDuckHighlightStyle = HighlightStyle.define([
-    { tag: tags.keyword,
-        color: keyword },
-    { tag: [tags.name, tags.deleted, tags.number, tags.character, tags.propertyName, tags.macroName, tags.variableName, tags.separator],
-        color: name },
-    { tag: [tags.function(tags.variableName), tags.labelName],
-        color: func },
-    { tag: [tags.color, tags.constant(tags.name), tags.standard(tags.name)],
-        color: bool },
-    { tag: [tags.definition(tags.name)],
-        color: def },
-    { tag: [tags.typeName, tags.className,  tags.changed, tags.annotation, tags.modifier, tags.self, tags.namespace],
-        color: type },
-    { tag: [tags.operator, tags.operatorKeyword, tags.url, tags.escape, tags.regexp, tags.link, tags.special(tags.string)],
-        color: op },
-    { tag: [tags.meta, tags.comment],
-        color: comment },
-    { tag: tags.strong,
-        fontWeight: "bold" },
-    { tag: tags.emphasis,
-        fontStyle: "italic" },
-    { tag: tags.link,
+    {
+        tag: tags.keyword,
+        color: keyword
+    },
+    {
+        tag: [tags.name, tags.deleted, tags.number, tags.character, tags.propertyName, tags.macroName, tags.variableName, tags.separator],
+        color: name
+    },
+    {
+        tag: [tags.function(tags.variableName), tags.labelName],
+        color: func
+    },
+    {
+        tag: [tags.color, tags.constant(tags.name), tags.standard(tags.name)],
+        color: bool
+    },
+    {
+        tag: [tags.definition(tags.name)],
+        color: def
+    },
+    {
+        tag: [tags.typeName, tags.className, tags.changed, tags.annotation, tags.modifier, tags.self, tags.namespace],
+        color: type
+    },
+    {
+        tag: [tags.operator, tags.operatorKeyword, tags.url, tags.escape, tags.regexp, tags.link, tags.special(tags.string)],
+        color: op
+    },
+    {
+        tag: [tags.meta, tags.comment],
+        color: comment
+    },
+    {
+        tag: tags.strong,
+        fontWeight: "bold"
+    },
+    {
+        tag: tags.emphasis,
+        fontStyle: "italic"
+    },
+    {
+        tag: tags.link,
         color: comment,
-        textDecoration: "underline" },
-    { tag: tags.heading,
+        textDecoration: "underline"
+    },
+    {
+        tag: tags.heading,
         fontWeight: "bold",
-        color: name },
-    { tag: [tags.atom, tags.bool, tags.special(tags.variableName)],
-        color: bool },
-    { tag: [tags.processingInstruction, tags.string, tags.inserted],
-        color: string },
-    { tag: tags.invalid,
-        color: invalid },
+        color: name
+    },
+    {
+        tag: [tags.atom, tags.bool, tags.special(tags.variableName)],
+        color: bool
+    },
+    {
+        tag: [tags.processingInstruction, tags.string, tags.inserted],
+        color: string
+    },
+    {
+        tag: tags.invalid,
+        color: invalid
+    },
 ]);
 /// Extension to enable the One Dark theme (both the editor theme and
 /// the highlight style).

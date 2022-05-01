@@ -1,32 +1,36 @@
 @mixin fill-container {
 	width: 100%;
+
 	@include for-tablet-landscape-up {
 		height: 100%;
 	}
 }
+
 @mixin fill-container-height {
 	@include for-tablet-landscape-up {
 		height: 100%;
 	}
 }
+
 @mixin lores-font {
 	//font-family: "Fantasque Sans Mono", "Monoid", monospace;
-	
+
 	//font-size-adjust: .71428;
 }
 
 @mixin pixel-font {
-	font-family: "PressStart2P Narrow", "Fantasque Sans Mono","Monoid", monospace;
+	font-family: "PressStart2P Narrow", "Fantasque Sans Mono", "Monoid", monospace;
 	font-size-adjust: .71428;
 }
+
 @mixin hires-font {
 	//font-family: "Glasstown-NBP", sans-serif;
 	//font-family: "Fantasque Sans Mono", "Monoid", monospace;
-//	font-size-adjust: 0.66;	
+	//	font-size-adjust: 0.66;	
 	letter-spacing: -0.06em;
 }
 
-@mixin normal-font{
+@mixin normal-font {
 	font-family: "Fantasque Sans Mono", "Monoid", monospace;
 	font-size-adjust: .6;
 }
