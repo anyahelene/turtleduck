@@ -1,0 +1,9 @@
+#! /bin/bash
+
+set -e
+TMP=`mktemp -td sloc.XXXXXX`
+[ ! -d "$TMP" ] && exit 1
+trap "[ -d $TMP ] && rm -rf $TMP" EXIT
+
+rsync -r */src/ $TMP/
+sloccount $TMP
