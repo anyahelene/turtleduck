@@ -22,3 +22,6 @@ py/pyodide-*
 .vscode
 *.spv
 *.jar
+/bin/
+.project
+tmp
