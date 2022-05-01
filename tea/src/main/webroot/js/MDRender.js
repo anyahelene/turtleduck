@@ -123,16 +123,16 @@ function makeToc(doc, elt, scroller) {
 		if(a) {
 			title = a.textContent;
 			a.remove();
-			//console.log("title'", title);
+			//console.log("title", title);
 		}
-		const slug = `_${i}_` + slugify(title);
+		const slug = `_${i}_${slugify(title)}`;
 		//console.log('slug', slug);
 		head.id = slug;
 		const item = document.createElement('li');
 		const link = document.createElement('a');
 		sections[head.id] = {head: head, link: link};
-		link.id = '_link_' + slug;
-		link.href = '#' + slug;
+		link.id = `_link_${slug}`;
+		link.href = `#${slug}`;
 		link.textContent = title;
 		link.addEventListener('click', listener);
 		link.type = 'button';
@@ -202,8 +202,8 @@ class MDRender {
 			console.log('sections', sections);
 			const obs = new IntersectionObserver(entries => {
 				for(const entry of entries) {
-					const section = elt.querySelector('#'+entry.target.id);
-					const link = elt.querySelector('#_link_'+entry.target.id);
+					const section = elt.querySelector(`#${entry.target.id}`);
+					const link = elt.querySelector(`#_link_${entry.target.id}`);
 					//console.log(section, link);
 					if(section) {
 						if(entry.intersectionRatio > 0) {
@@ -269,7 +269,7 @@ class MDRender {
 					var mode = '';
 					snip.code.split('\n').forEach(line => {
 						if(line.startsWith('>>> ') || (line.startsWith('... ') && mode === '.')) {
-							code = code + line.substring(4) + '\n';
+							code = `${code}${line.substring(4)}\n`;
 							mode = '.';
 						} else  {
 							mode = '';
@@ -375,19 +375,19 @@ class MDRender {
 	_render_link_open(old) {
 		return function(tokens, idx, options /* env */) {
 			const link = tokens[idx];
-			const title = link.title ? (' title="' + utils.escapeHtml(utils.replaceEntities(link.title)) + '"') : '';
-			var target = options.linkTarget ? (' target="' + options.linkTarget + '"') : '';
+			const title = link.title ? (` title="${utils.escapeHtml(utils.replaceEntities(link.title))}"`): '';
+			var target = options.linkTarget ? (` target="${options.linkTarget}"`) : '';
 			var href = link.href;
 			//console.log("link_open", link);
 			const m = href.match(/^(insert|focus|open|run|save|snap|qrscan):/);
 			if(m != null) {
-				target = ' data-action="'+ m[1]+'"'; 
+				target = ` data-action="${m[1]}"`; 
 			} else if(href.match(/^\w[\w\d+.-]*:/) != null) {
 				target = ' target="_blank"';
 			} else if(options.hrefPrefix) {
 				href = options.hrefPrefix + href;
 			}
-			return '<a href="' + utils.escapeHtml(href) + '"' + title + target + '>';
+			return `<a href="${utils.escapeHtml(href)}" ${title}${target}>`;
 		};
 	}
 	
@@ -398,21 +398,21 @@ class MDRender {
 				src = options.hrefPrefix + src;
 			}
 			//console.log("image", tokens[idx]);
-			src = ' src="' + utils.escapeHtml(src) + '"';
-			var alt = ' alt="' + (tokens[idx].alt ? utils.escapeHtml(utils.replaceEntities(utils.unescapeMd(tokens[idx].alt))) : '') + '"';
-			var style = tokens[idx].style ? (' class="' + tokens[idx].style + '"') : '';
+			src = ` src="${utils.escapeHtml(src)}"`;
+			var alt = ` alt="${tokens[idx].alt ? utils.escapeHtml(utils.replaceEntities(utils.unescapeMd(tokens[idx].alt))) : ''}"`;
+			var style = tokens[idx].style ? ` class="${tokens[idx].style}"` : '';
 			var suffix = options.xhtmlOut ? ' /' : '';
 			if(tokens[idx].figure) {
 					var title = '';
 					if(tokens[idx].title === '<') {
-						return '<aside class="left small"><figure>' + '<img' + src + alt + suffix + '></figure></aside>';
+						return `<aside class="left small"><figure><img ${src}${alt}${suffix}></figure></aside>`;
 					} else if(tokens[idx].title) {
-						title = '<figcaption>' + (options.html ? tokens[idx].title : utils.escapeHtml(utils.replaceEntities(tokens[idx].title))) + '</figcaption>';						
+						title = `<figcaption>${(options.html ? tokens[idx].title : utils.escapeHtml(utils.replaceEntities(tokens[idx].title)))}</figcaption>`;
 					}
-					return '<aside' + style + '><figure>' + '<img' + src + alt + suffix + '>' + title + '</figure></aside>';
+					return `<aside ${style}><figure><img${src}${alt}${suffix}>${title}</figure></aside>`;
 			} else {
-				var title = tokens[idx].title ? (' title="' + utils.escapeHtml(utils.replaceEntities(tokens[idx].title)) + '"') : '';
-				return '<img' + src + alt + title + style + suffix + '>';
+				var title = tokens[idx].title ? (` title="${utils.escapeHtml(utils.replaceEntities(tokens[idx].title))}"`) : '';
+				return `<img${src}${alt}${title}${style}${suffix}>`;
 			}
 		};
 	}
