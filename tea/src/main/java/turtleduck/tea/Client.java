@@ -1,9 +1,7 @@
 package turtleduck.tea;
 
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -11,7 +9,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.teavm.jso.JSFunctor;
 import org.teavm.jso.JSObject;
-import org.teavm.jso.ajax.XMLHttpRequest;
 import org.teavm.jso.browser.Storage;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.core.JSArray;
@@ -32,7 +29,6 @@ import turtleduck.messaging.Reply;
 import turtleduck.messaging.Router;
 import turtleduck.messaging.ShellService;
 import turtleduck.messaging.generated.InputServiceProxy;
-import turtleduck.tea.FileSystem.TDFile;
 import turtleduck.tea.generated.CMDispatch;
 import turtleduck.tea.generated.CanvasDispatch;
 import turtleduck.tea.generated.EditorDispatch;
@@ -40,7 +36,6 @@ import turtleduck.tea.generated.ExplorerDispatch;
 import turtleduck.tea.generated.FileServiceDispatch;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
-import turtleduck.util.Key;
 import turtleduck.util.Logging;
 import static turtleduck.tea.HTMLUtil.*;
 
@@ -94,7 +89,7 @@ public class Client implements JSObject, ClientObject {
 			history = new History(map.get("history").cast());
 			router = new Router();
 
-			fileSystem = new FileSystem(map.get("fileSystem"));
+			fileSystem = new FileSystem();
 			fileServer = new FileServer(fileSystem);
 			router.route(new FileServiceDispatch(fileServer));
 
@@ -626,7 +621,7 @@ public class Client implements JSObject, ClientObject {
 
 	Promise<JSObject> action(String key, JSMapLike<JSObject> data, Event ev) {
 		logger.info("action: {}, {}", key, ev);
-		if (key.equals("f1")) {
+		if (key.equals("save-and-run")) {
 			Async<Dict> async = editorImpl.save(ev);
 			Promise<JSObject> p;
 			if (async != null) {
@@ -640,8 +635,8 @@ public class Client implements JSObject, ClientObject {
 			}
 			logger.info("promise {}", p);
 			return p;
-		} else if (key.equals("f2")) {
-		} else if (key.equals("f4")) {
+		} else if (key.equals("run")) {
+		} else if (key.equals("chat")) {
 			if (chatTerminal == null) {
 				loadLanguage("chat");
 				chatTerminal.promptReady();
@@ -654,17 +649,7 @@ public class Client implements JSObject, ClientObject {
 				return Promise.Util.resolve(JSString.valueOf("unknown language:" + lang));
 			}
 			JSUtil.changeButton("f9", d.getString("icon"), d.getString("title") + " ↓");
-		} else if (key.startsWith("f")) {
-			JSObject button = data.get("button");
-			if (button != null && Math.random() < .5) {
-				HTMLElement elt = (HTMLElement) button;
-				JSUtil.addClass(elt, "disappear");
-			} else {
-				JSUtil.displayHint("Warning", "Please do not press this button again.", "", "warning");
-			}
-			userlog("Sorry! Not implemented. 😕");
-			return Promise.Util.resolve(JSString.valueOf("unknown key:" + key));
-		}
+		} 
 		return Promise.Util.resolve(JSString.valueOf("unknown key:" + key));
 	}
 

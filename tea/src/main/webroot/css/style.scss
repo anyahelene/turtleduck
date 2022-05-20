@@ -1380,29 +1380,6 @@ honk-button {
 	display: inline-block;
 }
 
-#top button.not-implemented {
-	display: none;
-
-	@include for-desktop-up {
-		display: inline-block;
-	}
-}
-
-#top button.disappear {
-
-	span.the-text,
-	span.icon,
-	span.shortcut {
-		font-size: 0;
-		transition: font-size 2s;
-	}
-}
-
-#top button.disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
 #top-left {
 	display: flex;
 	justify-content: start;
@@ -2848,4 +2825,62 @@ main.grid span {
 .fade3 {
 	opacity: 0%;
 	transition: opacity 3s;
+}
+
+.shell-type-pyshell::before {
+	content: "🐍";
+}
+
+.shell-type-jshell::before {
+	content: "☕";
+}
+
+.shell-type-pyshell span, .shell-type-jshell span {
+	display: none;
+}
+
+.item-with-icon {
+	position: relative;
+}
+.session-entry {
+	color: $pen;
+	background: $button-bg-normal;
+	list-style: none;
+}
+
+.session-entry:hover {
+	color: $pen-sharp;
+	background: $button-bg-active;
+}
+.session-entry a:link, a:visited {
+	color: $pen;
+}
+.session-entry a:hover, a:active {
+	color: $pen-sharp;
+}
+.session-entry .time-ago {
+	display: block;
+	font-size: 80%;
+	margin-left: 1rem;
+}
+.session-list {
+	padding: 0;
+	max-height: 20vh;
+	overflow-y: auto;
+}
+.icon-list {
+	display:block;
+	position: absolute;
+	text-align: right;
+	right: .25rem;
+	top: 0;
+	padding: .25rem 0;
+}
+.icon-list .icon {
+	font-size:80%;
+	padding: 0 0.25rem;
+	z-index: 1;
+}
+.icon .icon-text {
+	display:none;
 }

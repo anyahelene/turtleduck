@@ -58,8 +58,7 @@
 				<honk-command name="quality" data-bind="f16" data-icon="🧐" data-text="Quality"></honk-command>
 				<honk-command name="hints" data-bind="f17" data-icon="✨" data-text="Hints"></honk-command>
 				<honk-command name="demos" data-bind="f18" data-icon="👩‍🏫" data-text="Demos"></honk-command>
-				<honk-command name="settings" data-bind="f19" data-icon="💅" data-alt-icon="⚙️" data-text="Settings">
-				</honk-command>
+				<honk-command name="settings" data-bind="f19" data-icon="💅" data-alt-icon="⚙️" data-text="Settings"></honk-command>
 				<honk-command name="open-camera" data-bind="misc1" data-icon="📷"></honk-command>
 				<honk-command name="open-qr" data-bind="misc2" data-icon-src="images/qr-code.png"></honk-command>
 				<honk-command name="controllers" data-bind="misc3" data-icon="🎮"></honk-command>
@@ -67,7 +66,7 @@
 
 				<honk-button id="f1" data-shortcut="ctrl+s" class="row2"></honk-button>
 				<honk-button id="f2" data-shortcut="ctrl+2" class="row2"></honk-button>
-				<honk-button id="f3" data-shortcut="ctrl+3" class="row2"></honk-button>
+				<honk-button id="f3" data-shortcut="ctrl+3" class="row2 not-implemented"></honk-button>
 				<honk-button id="f4" data-shortcut="ctrl+4" class="row2"><span id="chat-notification"
 						class="notification">2</span></honk-button>
 				<honk-button id="f5" data-shortcut="ctrl+5" class="row2"></honk-button>
@@ -76,8 +75,8 @@
 				<honk-button id="f8" data-shortcut="ctrl+8" class="row2"></honk-button>
 				<honk-button id="f9" data-shortcut="ctrl+9" class="row2"></honk-button>
 				<honk-button id="f11" data-shortcut="shift+ctrl+11" class="row1"></honk-button>
-				<honk-button id="f12" data-shortcut="shift+ctrl+12" class="row1"></honk-button>
-				<honk-button id="f13" data-shortcut="shift+ctrl+13" class="row1"></honk-button>
+				<honk-button id="f12" data-shortcut="shift+ctrl+12" class="row1 not-implemented"></honk-button>
+				<honk-button id="f13" data-shortcut="shift+ctrl+13" class="row1 not-implemented"></honk-button>
 				<honk-button id="f14" data-shortcut="shift+ctrl+14" class="row1"></honk-button>
 				<honk-button id="f15" data-shortcut="shift+ctrl+15" class="row1"></honk-button>
 				<honk-button id="f16" data-shortcut="shift+ctrl+16" class="row1"></honk-button>
@@ -238,6 +237,7 @@
 			<div id="foot-right">
 				<div data-tooltip="sessionInfo">
 					📔 <span id="sessionName" data-from="session.project||session.name"></span>
+					<ul id="session-pop" class="popup"></ul>
 				</div>
 				<div data-tooltip="storageInfo">
 					🗃️<span id="storage-notification" class="notification show">?</span>

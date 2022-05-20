@@ -33,11 +33,23 @@ class StorageContext {
 		console.log("r", r);
 		return r;
 	}
-	async writefile(filepath, data, opts) {
-		return this.fs.writeFile(this.realpath(filepath), data, opts);
+	async writetextfile(filepath, data, encoding = 'utf8', mode = 0o777) {
+		if(typeof data !== "string") {
+			data = `{data}`;
+		}
+		return this.fs.writeFile(this.realpath(filepath), data, {encoding: encoding, mode: mode});
 	}
-	async readfile(filepath, opts) {
-		return this.fs.readFile(this.realpath(filepath), opts);
+	async writebinfile(filepath, data, mode = 0o777) {
+		if(!(data instanceof Uint8Array)) {
+			data = Uint8Array.from(data);
+		}
+		return this.fs.writeFile(this.realpath(filepath), data, {encoding: undefined, mode: mode});
+	}
+	async readtextfile(filepath, encoding = 'utf8') {
+		return this.fs.readFile(this.realpath(filepath), {encoding: encoding});
+	}
+	async readbinfile(filepath) {
+		return this.fs.readFile(this.realpath(filepath), {encoding: undefined});
 	}
 	async unlink(filepath, opts) {
 		return this.fs.unlink(this.realpath(filepath), opts);

@@ -1,3 +1,4 @@
+import { resolve } from '@isomorphic-git/lightning-fs/src/path';
 import Dexie from 'dexie';
 
 function make_key(s, id) {
@@ -51,11 +52,32 @@ const Entry = _db.entries.defineClass({
 	id: Number,
 	data: String
 });
+const todo = [];
+
+function getdb() {
+	return new Promise((resolve, reject) => {
+		if(db) {
+			resolve(db);
+		} else {
+			todo.push({resolve,reject});
+		}
+	});
+}
 
 _db.open().then(dbobj => {
 	db = dbobj;
+	console.log("history db open", db);
+	while(todo.length > 0) {
+		var {resolve, reject} = todo.shift();
+		console.log("resolving promise", resolve);
+		resolve(db);
+	}
 }).catch(err => {
 	db = null;
+	while(todo.length > 0) {
+		var {resolve, reject} = todo.shift();
+		reject(err);
+	}
 	console.warn("HistoryDB open failed", err);
 });
 
@@ -161,8 +183,25 @@ class History {
 		const key = make_key(session);
 		return db.entries.where({ session: key[0], shell: key[1] }).toArray();
 	}
-	sessions() {
-		return db.sessions.toArray();
+	async sessions(sortBy = 'date') {
+		const db = await getdb();
+		const seen = {};
+		const result = [];
+		const ss = await db.sessions.reverse().sortBy(sortBy);
+		for(var i = 0; i < ss.length; i++) {
+			var session = ss[i];
+			const count = await db.entries.where({session: session.session, shell: session.shell}).count()
+			const s = seen[session.session];
+			if(s) {
+				if(session.shell && count)
+					s.shells.push([session.shell, count]);
+			} else {
+				session = {session: session.session, date: session.date, shells: [[session.shell, count]]};
+				seen[session.session] = session;
+				result.push(session);
+			}
+		}
+		return result;
 	}
 	currentId(session) {
 		const hist = this;

@@ -19,10 +19,10 @@ public class FileServer implements FileService {
 
 	@Override
 	public Async<Dict> list(String path) {
-		return fs.list(path).map(res -> {
+		return fs.readdir(path).map(res -> {
 			Array arr = Array.create();
 
-			res.forEach(file -> arr.add(Dict.create().put(PATH, file.name())));
+			res.forEach(file -> arr.add(Dict.create().put(PATH, file)));
 			Dict dict = Dict.create();
 			dict.put(FILES, arr);
 			return dict;
@@ -31,7 +31,7 @@ public class FileServer implements FileService {
 
 	@Override
 	public Async<Dict> read(String path) {
-		return fs.read(path).map(res -> {
+		return fs.readtextfile(path).map(res -> {
 			Dict dict = Dict.create();
 			dict.put(TEXT, res);
 			return dict;
@@ -53,15 +53,13 @@ public class FileServer implements FileService {
 
 	@Override
 	public Async<Dict> stat(String path) {
-		return fs.stat(path).map(res -> {
-			return Dict.create().put(PATH, res.name());
-		}).mapFailure(err -> err);
+		return fs.stat(path).mapFailure(err -> err);
 	}
 
 	@Override
 	public Async<Dict> write(String path, String text) {
-		return fs.write(path, text).map(res -> {
-			return Dict.create().put(PATH, res.name());
+		return fs.writetextfile(path, text).map(res -> {
+			return Dict.create().put(PATH, path);
 		}).mapFailure(err -> err);
 	}
 	

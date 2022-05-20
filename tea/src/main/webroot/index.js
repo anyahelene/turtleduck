@@ -17,6 +17,8 @@ import { Camera } from './js/Media';
 import { GridDisplayServer } from './js/GridDisplay';
 import { html, render } from 'uhtml';
 import { Storage } from './js/Storage';
+import { timeAgo } from './js/TimeAgo';
+
 import i18next from 'i18next';
 import * as goose from './js/goose';
 //import { XTermJS } from './XTermJS';
@@ -28,7 +30,7 @@ import defaultConfig from './config.json';
 var imports = {
 	SockJS, Mousetrap, jquery, animals, hints, fileSystem, FileSystem,
 	History, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
-	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose
+	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose, timeAgo
 };
 console.log(turtleduck);
 globalThis.imports = imports;
@@ -425,12 +427,16 @@ turtleduck.alwaysShowSplashHelp = function (enable = true) {
 		turtleduck.localStorage.removeItem('alwaysShowSplashHelp');
 };
 
+
 turtleduck.loadConfig();
-if (!turtleduck.getConfig('session.name')) {
-	const cfg = { session: { name: turtleduck.animals.random() } };
-	turtleduck.setConfig(cfg, 'session');
-	turtleduck.saveConfig('session');
-}
+turtleduck.history.sessions().then(ss => {
+	if (!turtleduck.getConfig('session.name')) {
+		const name = ss.length > 0 ? ss[0].session : turtleduck.animals.random();
+		const cfg = { session: { name: name } };
+		turtleduck.setConfig(cfg, 'session');
+		turtleduck.saveConfig('session');
+	}
+});
 
 turtleduck.pyController = new PyController(true, turtleduck.getConfig('session.name'));
 turtleduck.shellServiceProxy = new ShellServiceProxy(turtleduck.pyController);
@@ -485,6 +491,16 @@ function ctrl(key) {
 function meta(key) {
 	return ['alt+' + key, 'meta+' + key];
 }
+
+function linkClickHandler(e) {
+	e.preventDefault();
+	const link = e.target.closest("a");
+	if (link && link.href) {
+		handleKey(link.href, link, e);
+	} else {
+		console.error("linkClickHandler: no link found", e, link);
+	}
+}
 async function handleKey(key, button, event) {
 	const page = jquery('#page');
 	function unsetLayout() {
@@ -515,15 +531,15 @@ async function handleKey(key, button, event) {
 	console.log("handleKey", key, button, event);
 
 	switch (key) {
-		case "f5":
+		case "explorer":
 			return turtleduck.openFiles();
-		case "f6":
+		case "code":
 			if (turtleduck.pyshell)
 				turtleduck.pyshell.focus();
 			else if (turtleduck.jshell)
 				turtleduck.jshell.focus();
 			break;
-		case "f8":
+		case "code-gfx":
 			const nextLayout = jquery(this).attr('data-target');
 			if (nextLayout)
 				page.toggleClass(nextLayout, true);
@@ -537,11 +553,27 @@ async function handleKey(key, button, event) {
 				page.toggleClass('show-splash-help', false);
 			}
 			break;
-		case "f15":
+		case "projects":
 
 			break;
-
-		case "f17": {
+		case "quality":
+			let code = turtleduck.editor.current().state().sliceDoc(0);
+			fetch("https://master-thesis-web-backend-prod.herokuapp.com/analyse", {
+				method: "POST",
+				headers: {
+					'Content-Type': 'text/plain;charset=utf-8',
+					'cache-control': 'no-cache',
+					'pragma': 'no-cache'
+				  },
+				body: code}).then(res => {
+				if(res.ok) {
+					res.json().then(data => {
+						document.querySelector("#screen .text").innerText = JSON.stringify(data, null, "    ");
+					});
+				}
+			});
+			break;
+		case "hints": {
 			const qs = turtleduck.hints.random();
 
 			turtleduck.displayPopup("HINT", qs[0], qs[1], "hints");
@@ -593,10 +625,16 @@ async function handleKey(key, button, event) {
 		case "tooltip:sessionInfo": {
 			const projectName = turtleduck.getConfig('session.project');
 			const sessionName = turtleduck.getConfig('session.name');
-			render(button, html.node`<dl><dt>Session</dt><dd>${sessionName}</dd>
-				<dt>Project</dt><dd>${projectName ? projectName : html`<input type="text" name="projectName"></input>`}</dd></dl>`);
-			return button;
+			const renderShells = s => s.shells.map(sh => html`<span class="icon"><span class=${`shell-type-${sh[0]}`}></span><span class="icon-text">${sh[0]} (${sh[1]})</span></span>`);
+			const renderSession = s => { console.log(s); return html`<li class="item-with-icon session-entry"><a onclick=${linkClickHandler} href="${`session://${s.session}`}">${s.session} <span class="time-ago">(${timeAgo(s.date)})</span> <span class="icon-list">${renderShells(s)}</span></a></li>`; };
+			return turtleduck.history.sessions().then(ss => {
+				render(button, html`<ul class="session-list">${ss.map(renderSession)}</ul>
+					<dl>
+						<dt>Session</dt><dd>${sessionName}</dd>
+						<dt>Project</dt><dd>${projectName ? projectName : html`<input type="text" name="projectName"></input>`}</dd>
+					</dl>`);
 
+			});
 			/*return fileSystem.list("/home/projects/").map(files -> {
 				HTMLElement l = element("ul");
 				for(TDFile file : files) {
@@ -633,6 +671,13 @@ async function handleKey(key, button, event) {
 				const elt = document.getElementById(button.dataset.showMenu);
 				console.log("show: ", elt);
 				elt.classList.add("show");
+			} else if (button.classList.contains('not-implemented')) {
+				if (Math.random() < .5) {
+					button.classList.add('disappear');
+				} else {
+					turtleduck.displayPopup("Warning", "Please do not press this button again.", "", "warning");
+				}
+				turtleduck.userlog("Sorry! Not implemented. 😕");
 			} else {
 				//console.log(key, button, event);
 				const r = turtleduck.actions.handle(key, { button: button }, event);
@@ -755,19 +800,7 @@ jquery(function () {
 			return handleKey(button.id, button, e).then(r => { console.log("handleKey", r); return r; });
 		};
 		const keyHandler = function (e) {
-			var active = jquery(button).hasClass('active');
-			jquery(button).toggleClass('active', true);
 
-			if (typeof button.timeoutID == "number") {
-				window.clearTimeout(button.timeoutID);
-			}
-			button.timeoutID = window.setTimeout(function () {
-				button.timeoutID = undefined;
-				jquery(button).toggleClass('active', false);
-			}, 300);
-			if (!active) {
-				handler(e);
-			}
 			return false;
 
 		};

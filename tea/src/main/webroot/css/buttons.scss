@@ -1,14 +1,23 @@
 @import 'mixins.scss';
-
+@import 'breakpoints.scss';
 
 :host {
 	position: relative;
 	display: inline-block;
 }
 
-:host.rows button {
+:host(.rows) button {
 	background: #f00;
 }
+
+:host(.not-implemented) {
+	display: none;
+
+	@include for-desktop-up {
+		display: inline-block;
+	}
+}
+
 
 button {
 	background: inherit;
@@ -17,13 +26,26 @@ button {
 	border: none;
 	line-height: 100%;
 	padding: 0 .2rem;
-	transition: all 0.8s;
+	//transition: all 0.8s;
 	width: 100%;
 	height: 100%;
 	@include pixel-font;
 	font-size-adjust: none;
 }
 
+:host(.disappear) button .text, :host(.disappear) button .icon {
+	font-size: 0;
+	transition: font-size 2s;
+}
+
+:host(.disabled) button {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+button:active {
+	background-color: red;
+}
 button.has-text {
 	text-align: end;
 }

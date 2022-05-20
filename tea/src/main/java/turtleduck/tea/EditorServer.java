@@ -240,16 +240,16 @@ public class EditorServer implements EditorService {
 		if (currentSession != null) {
 			EditSession current = currentSession;
 			String contents = content();
-			Async<Integer> tmp = null;
+			Async<Void> tmp = null;
 			if (!current.filename.startsWith("*")) {
 				Client.client.userlog("Saving " + current.filename);
-				tmp = Client.client.fileSystem.writefile("/home/" + current.filename, contents);
+				tmp = Client.client.fileSystem.writetextfile("/home/" + current.filename, contents);
 				current.lastSave = contents;
 			}
-			Async<Integer> writePromise = tmp != null ? tmp : Async.succeeded(0);
+			Async<Void> writePromise = tmp != null ? tmp : Async.succeeded(null);
 			EditLanguage lang = current.lang;
 			writePromise.then(res -> {
-				logger.info("write complete: {}", res);
+				logger.info("write complete");
 				if (lang.shell != null) {
 					return doEval(current, contents, writePromise, lang);
 				} else {
@@ -272,7 +272,7 @@ public class EditorServer implements EditorService {
 		return null;
 	}
 
-	private Async<Dict> doEval(EditSession current, String contents, Async<Integer> writePromise, EditLanguage lang) {
+	private Async<Dict> doEval(EditSession current, String contents, Async<Void> writePromise, EditLanguage lang) {
 		Client.client.userlog("'" + current.filename + "' saved, evaluating " + lang.name);
 		Dict opts = Dict.create();
 		Location loc = new Location("file", "editor", current.filename, 0, contents.length(), -1);

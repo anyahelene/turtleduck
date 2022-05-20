@@ -1,5 +1,15 @@
 package turtleduck.tea;
 
+import static turtleduck.tea.Diagnostics.*;
+import static turtleduck.tea.HTMLUtil.*;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collections;
+
+import org.slf4j.Logger;
+import org.teavm.jso.dom.html.HTMLElement;
+
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
 import turtleduck.messaging.Connection;
@@ -8,31 +18,12 @@ import turtleduck.messaging.Reply;
 import turtleduck.messaging.Router;
 import turtleduck.messaging.ShellService;
 import turtleduck.messaging.generated.ShellServiceProxy;
-import turtleduck.text.TextCursor;
+import turtleduck.text.Location;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.JsonUtil;
 import turtleduck.util.Logging;
-import turtleduck.text.Location;
-
-import static turtleduck.tea.Diagnostics.*;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.teavm.jso.core.JSObjects;
-import org.teavm.jso.dom.html.HTMLElement;
-import org.teavm.jso.typedarrays.Uint8Array;
-
-import static turtleduck.tea.HTMLUtil.*;
+import turtleduck.util.Strings;
 
 public class Shell {
 	public static final Logger logger = Logging.getLogger(Shell.class);
@@ -209,6 +200,69 @@ public class Shell {
 			console.promptBusy();
 			Client.client.fileSystem.chdir(args).onComplete(res -> {
 				console.println("cd " + res);
+				console.promptNormal();
+			}, err -> {
+				logger.error("error: {}", JsonUtil.encode(err));
+				printError("", err, console);
+			});
+
+			return true;
+		} else if (cmd.equals("/readbin")) {
+			console.promptBusy();
+			Client.client.fileSystem.readbinfile(args).onComplete(res -> {
+				logger.info("readbinfile: {}", res);
+				String s = "";
+				for(int i = 0; i < res.length; i++) {
+					s = s + String.format("%02x ", res[i]);
+					if(i > 0 && i % 40 == 0) {
+						console.println(s);
+						s = "";
+					}
+				}
+				console.println(s);
+				console.promptNormal();
+			}, err -> {
+				logger.error("error: {}", JsonUtil.encode(err));
+				printError("", err, console);
+			});
+
+			return true;
+		} else if (cmd.equals("/readtext")) {
+			console.promptBusy();
+			Client.client.fileSystem.readtextfile(args).onComplete(res -> {
+				logger.info("readtextfile: {}", res);
+				console.println(res);
+				console.promptNormal();
+			}, err -> {
+				logger.error("error: {}", JsonUtil.encode(err));
+				printError("", err, console);
+			});
+
+			return true;
+		} else if (cmd.equals("/writebin")) {
+			console.promptBusy();
+			byte[] data = {(byte)0xde, (byte)0xad, (byte)0xbe, (byte)0xef };
+			Client.client.fileSystem.writebinfile(args, data).onComplete(res -> {
+				logger.info("writebinfile: {}", data);
+				String s = "";
+				for(int i = 0; i < data.length; i++) {
+					s = s + String.format("%02x ", data[i]);
+					if(i > 0 && i % 40 == 0) {
+						console.println(s);
+						s = "";
+					}
+				}
+				console.println(s);
+				console.promptNormal();
+			}, err -> {
+				logger.error("error: {}", JsonUtil.encode(err));
+				printError("", err, console);
+			});
+
+			return true;
+		} else if (cmd.equals("/writetext")) {
+			console.promptBusy();
+			Client.client.fileSystem.writetextfile(args, "deadbeef").onComplete(res -> {
 				console.promptNormal();
 			}, err -> {
 				logger.error("error: {}", JsonUtil.encode(err));

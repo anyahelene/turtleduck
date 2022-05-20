@@ -15,37 +15,28 @@ console.log("githttp:", GitHttp);
 const portal = new MagicPortal(self);
 self.addEventListener("message", ({ data }) => console.log("from main thread: ", data));
 console.warn("StorageWorker init", self, self.performance.timeOrigin, self.foo);
-try {
-  throw "foo";
-} catch (e) {
-  console.error(e);
-}
+
+
 (async () => {
-  console.warn("StorageWorker async", self.foo);
-  self.foo = 1;
-  console.warn("StorageWorker async 1");
   let ui = await portal.get("ui");
-  self.foo = 2;
-  console.warn("StorageWorker async 2");
   let config = await ui.config();
-  self.foo = 3;
-  console.warn("StorageWorker async 3");
   let fs = new LightningFS(config.fsName || 'fs', config);
   let pfs = fs.promises;
+
   portal.set("fsWorker", {
-    mkdir: async (filepath, opts) => pfs.mkdir(filepath, opts),
-    rmdir: async (filepath, opts) => pfs.rmdir(filepath, opts),
-    readdir: async (filepath, opts) => pfs.readdir(filepath, opts),
-    writeFile: async (filepath, data, opts) => pfs.writeFile(filepath, data, opts),
-    readFile: async (filepath, opts) => pfs.readFile(filepath, opts),
-    unlink: async (filepath, opts) => pfs.unlink(filepath, opts),
-    rename: async (oldFilepath, newFilepath, opts) => pfs.rename(oldFilepath, newFilepath, opts),
-    stat: async (filepath, opts) => pfs.stat(filepath, opts),
-    lstat: async (filepath, opts) => pfs.lstat(filepath, opts),
-    symlink: async (target, filepath, opts) => pfs.symlink(target, filepath, opts),
-    readlink: async (filepath, opts) => pfs.readlink(filepath, opts),
-    backFile: async (filepath, opts) => pfs.backFile(filepath, opts),
-    du: async (filepath) => pfs.du(filepath),
+    mkdir: async (filepath, opts) => pfs.mkdir(filepath, opts), // (mode) -> void
+    rmdir: async (filepath, opts) => pfs.rmdir(filepath, opts), // -> void
+    readdir: async (filepath, opts) => pfs.readdir(filepath, opts), // -> string[]
+    writeFile: async (filepath, data, opts) => pfs.writeFile(filepath, data, opts), // (mode, encoding) -> void
+    readFile: async (filepath, opts) => pfs.readFile(filepath, opts), // (url, urlauto, encoding) -> string | uint8array
+    unlink: async (filepath, opts) => pfs.unlink(filepath, opts), // -> void
+    rename: async (oldFilepath, newFilepath, opts) => pfs.rename(oldFilepath, newFilepath, opts), // -> void
+    stat: async (filepath, opts) => pfs.stat(filepath, opts), // -> Stats
+    lstat: async (filepath, opts) => pfs.lstat(filepath, opts), // -> Stats
+    symlink: async (target, filepath, opts) => pfs.symlink(target, filepath, opts), // -> void
+    readlink: async (filepath, opts) => pfs.readlink(filepath, opts), // -> string
+    backFile: async (filepath, opts) => pfs.backFile(filepath, opts), // (mode) -> void
+    du: async (filepath) => pfs.du(filepath), // -> number
   });
   let dir = '/git';
   portal.set("gitWorker", {
@@ -79,4 +70,3 @@ try {
   });
 })();
 
-console.warn("StorageWorker async 4");

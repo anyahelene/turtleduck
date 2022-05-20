@@ -2,7 +2,6 @@ package turtleduck.tea;
 
 import java.util.Date;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
@@ -27,7 +26,6 @@ import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Key;
 import turtleduck.util.Logging;
-import turtleduck.util.Strings;
 
 public class JSUtil {
 	@JSBody(params = { "elt" }, script = "return window.getComputedStyle(elt)")
@@ -77,6 +75,9 @@ public class JSUtil {
 
 	@JSBody(params = { "buf" }, script = "return new Int8Array(buf)")
 	native static byte[] toBytes(ArrayBuffer buf);
+	
+	@JSBody(params = { "buf" }, script = "return buf;")
+	native static byte[] toBytes(Uint8Array buf);
 
 	@JSBody(params = { "uri" }, script = "return encodeURIComponent(uri)")
 	native static String encodeURIComponent(String uri);

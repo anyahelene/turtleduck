@@ -1,5 +1,7 @@
 import { html, render } from "uhtml";
 import { turtleduck } from './TurtleDuck';
+import Mousetrap from 'mousetrap';
+
 let uniqueId = 0;
 /** maps name to command object */
 const commands = {};
@@ -9,21 +11,41 @@ const buttons = {};
 const defaultBindings = {};
 const ctrlSymbols = { mac: '⌘', caret: '⌃', iso: '⎈' }
 const keyboardSymbols = { ctrl: ctrlSymbols.mac, shift: "⇧", tab: "↹", option: "⌥" };
+
+/** The honk-command element represents a command that can be bound to a key or button.
+ * 
+ * @field name The unique id of the command
+ * @field data-bind Default key/button binding
+ * @field data-icon Default button/menu icon (emoji)
+ * @field data-icon-src Image source for icon
+ * @field data-alt-icon Alternative button/menu icon
+ * @field data-text Default button/menu text
+ * @field data-text-LL Localised text
+ */
 class HonkCommand extends HTMLElement {
 	constructor() {
 		super();
-		console.log("HonkCommand");
 	}
 	connectedCallback() {
 		console.log('element added to page.', this, this.isConnected);
 		this.style.display = 'none';
+		this.name = this.getAttribute('name');
+	}
+	/** Run this command
+	 * 
+	 * @param elt (optional) The element that triggered the command
+	 * @param event (optional)  The event that triggered the command
+	 */
+	async run(elt=this, event=null) {
+		console.log("command.run", this.name, elt, event);
+		await turtleduck.handleKey(this.name, elt, event);
 	}
 }
 const styleRef = 'css/buttons.css';
 
 function loadCommand(element) {
 	if (element) {
-		const cmd = { name: element.getAttribute('name'), ...element.dataset };
+		const cmd = { name: element.getAttribute('name'), element: element, ...element.dataset };
 		const binding = element.dataset.bind;
 		console.log(cmd, binding);
 		if (binding) {
@@ -43,6 +65,11 @@ function loadCommand(element) {
 	}
 }
 
+/** A button element that can be bound to a `honk-command`.
+ * 
+ * @field id The button's unique id
+ * @field data-shortcut Default key shortcut
+ */
 class HonkButton extends HTMLElement {
 	constructor(id = '', shortcut = '', command = undefined) {
 		super();
@@ -55,7 +82,10 @@ class HonkButton extends HTMLElement {
 			this._command = command;
 		this.attachShadow({ mode: "open" });
 
+		this.clickHandler = this.click.bind(this);
 	}
+
+	static get observedAttributes() { return ['class']; }
 
 	set command(cmd) {
 		this._command = cmd;
@@ -76,7 +106,43 @@ class HonkButton extends HTMLElement {
 	}
 
 	async click(e) {
-		await turtleduck.handleKey(this.id, this, e);
+		if(this.classList.contains('disabled')) {
+			console.log("click on disabled button: ", this);
+			return;
+		}
+		console.log("click", this);
+		/*
+		const active = this.classList.contains('active');
+		this.classList.add('active');
+
+		// visual effect
+		if (typeof this.timeoutId == "number") {
+			window.clearTimeout(this.timeoutId);
+		}
+		this.timeoutId = window.setTimeout(() =>  {
+			this.timeoutId = undefined;
+			this.classList.remove('active');
+		}, 300);
+
+		if (!active) { // debounce
+			*/
+			await this.run(e);
+		//}
+	}
+
+	async run(e) {
+		const cmd = this.command;
+		if(cmd) {
+			console.log("Run command", cmd, "button", this, "event", e);
+			if(cmd.element) {
+				await cmd.element.run(this, e);
+			} else {
+				await turtleduck.handleKey(cmd.name, this, e);
+			}
+		} else {
+			console.warn("No command bound to ", this, e);
+			await turtleduck.handleKey(this.id, this, e);
+		} 
 	}
 	connectedCallback() {
 		console.log('element added to page.', this, this.isConnected);
@@ -109,9 +175,14 @@ class HonkButton extends HTMLElement {
 		const keys = shortcut.split('+').map(s => html`<span>${keyboardSymbols[s] || s}</span>`)
 		const shortcutText = shortcut.replace('ctrl+', '⌘').replace('shift+', '↑');
 		const classList = `${icon ? "has-icon" : "no-icon"} ${text ? "has-text" : "no-text"}`;
+
+		this.dataset.currentBinding = command.name;
+		if(shortcut && shortcut !== '(not implemented)')
+			Mousetrap.bindGlobal(shortcut, this.clickHandler);
+
 		console.log(this.id, command, icon, shortcut, shortcutText, keys);
 		return html`<link rel="stylesheet" href="${styleRef}">
-      <button id="${this.id}" onclick=${this.click} class="${classList}" type="button">
+      <button id="${this.id}" onclick=${this.clickHandler} class="${classList}" type="button">
 		<span class="bg"></span><span class="icon">${icon}</span><span class="text">${command.text}</span><div class="shortcut">${keys}</div>
 	  </button>
     `;
@@ -130,4 +201,4 @@ turtleduck.deps.addListener(styleRef, e => {
 	});
 });
 
-export { HonkButton, commands, buttons, ctrlSymbols, keyboardSymbols };
+export { HonkButton, HonkCommand, commands, buttons, ctrlSymbols, keyboardSymbols };
