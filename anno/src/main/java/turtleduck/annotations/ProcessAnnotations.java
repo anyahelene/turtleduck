@@ -2,16 +2,8 @@ package turtleduck.annotations;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
-import java.lang.reflect.Proxy;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,14 +26,11 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
-import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SupportedAnnotationTypes({ "turtleduck.annotations.MessageProtocol", "turtleduck.annotations.MessageDispatch" })
 @SupportedSourceVersion(SourceVersion.RELEASE_13)
