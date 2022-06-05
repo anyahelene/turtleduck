@@ -18,19 +18,23 @@ import { GridDisplayServer } from './js/GridDisplay';
 import { html, render } from 'uhtml';
 import { Storage } from './js/Storage';
 import { timeAgo } from './js/TimeAgo';
-
+import { TShell } from './js/TShell';
+import * as lodash from 'lodash-es';
 import i18next from 'i18next';
 import * as goose from './js/goose';
+import getopts from 'getopts';
 //import { XTermJS } from './XTermJS';
 //import ace from "ace-builds";
 //import "ace-builds/webpack-resolver";
 //var ace = require('ace-builds/src-noconflict/ace')
 import defaultConfig from './config.json';
+import { after } from 'lodash-es';
 
 var imports = {
 	SockJS, Mousetrap, jquery, animals, hints, fileSystem, FileSystem,
 	History, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
-	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose, timeAgo
+	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose, timeAgo,
+	lodash, TShell, getopts
 };
 console.log(turtleduck);
 globalThis.imports = imports;
@@ -49,6 +53,7 @@ turtleduck.configs = [/*override */{}, /*session*/{}, /*user*/{}, /*remote*/{}, 
 turtleduck.storage = new Storage();
 turtleduck.storage.init().then(ctx => {
 	turtleduck.cwd = ctx;
+	turtleduck.tshell = new TShell(turtleduck);
 });
 turtleduck.i18next = i18next;
 turtleduck.appendToConsole = function (style) {
@@ -65,20 +70,38 @@ turtleduck.consolePrinter = function (style) {
 		const shell = turtleduck.shellComponent.current();
 		if (shell) {
 			const element = shell.terminal.appendBlock(style);
-			var cr = false;
-			return {
-				print: text => {
-					let old = element.textContent;
-					if (cr) {
-						old = old.trim().replace(/.+$/, "");
-					}
-					cr = text.endsWith("\r");
-					element.textContent = old + text + "\n";
-					shell.terminal.scrollIntoView();
-				}
-			}
+			return turtleduck.elementPrinter(element, null, () => shell.terminal.scrollIntoView());
 		}
 	}
+}
+
+turtleduck.elementPrinter = function(element, style, afterPrint) {
+	const wrapperElt = element.closest('main');
+	const outputContainer = element.closest('.terminal-out-container');
+	if(typeof style === 'string') {
+		element = element.appendChild(html.node`<div class=${style}></div>`);
+	}
+	if(!afterPrint && wrapperElt && outputContainer) {
+		afterPrint = () => {
+			outputContainer.scrollTop = 0;
+			wrapperElt.scrollTop = wrapperElt.scrollHeight-wrapperElt.offsetHeight;
+		};
+	}
+	console.log(element, style, afterPrint);
+	let cr = false;
+	return {
+		print: text => {
+			let old = element.textContent;
+			if (cr) {
+				old = old.trim().replace(/.+$/, "");
+			}
+			cr = text.endsWith("\r");
+			element.textContent = old + text;
+			if(afterPrint) {
+				afterPrint();
+			} 
+		}
+	}	
 }
 //turtleduck.config = jquery.extend(true, {}, defaultConfig);
 //turtleduck.configSource = {};

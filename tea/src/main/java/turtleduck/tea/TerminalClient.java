@@ -131,11 +131,6 @@ public class TerminalClient implements TerminalService, ExplorerService {
 			shell.service().refresh();
 			prompt(1);
 			return;
-		}
-		if (s.startsWith("!refresh")) {
-			shell.service().refresh();
-			prompt(1);
-			return;
 		} else if (s.startsWith("/") && shell.specialCommand(s, null)) {
 			return;
 		} else {

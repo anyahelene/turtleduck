@@ -35,7 +35,7 @@ public interface LanguageConsole {
 	HTMLElement outputElement();
 
 	LanguageConsole withOutputElement(HTMLElement output);
-//	LanguageConsole withCursor(Consumer<TextCursor> todo);
+	// LanguageConsole withCursor(Consumer<TextCursor> todo);
 
 	void promptNormal();
 
@@ -75,7 +75,14 @@ public interface LanguageConsole {
 
 		@Override
 		public HTMLElement outputElement() {
-			return outputElement;
+			if (outputElement != null)
+				return outputElement;
+			else if (terminal != null)
+				return terminal.outputElement();
+			else if (delegate != null)
+				return delegate.outputElement();
+			else
+				return null;
 		}
 
 		@Override

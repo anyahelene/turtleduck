@@ -160,7 +160,7 @@ public class Client implements JSObject, ClientObject {
 			// docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
 			if (true) {
 				DocDisplay docDisplay2 = new DocDisplay(screenComponent);
-				docDisplay2.initFromUrl("examples/ua-py/ch1.md", null, true);
+				docDisplay2.initFromUrl("examples/uncoil/uncoil.md", null, true);
 			}
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));

@@ -15,6 +15,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.teavm.jso.JSFunctor;
 import org.teavm.jso.JSObject;
+import org.teavm.jso.core.JSNumber;
 import org.teavm.jso.core.JSString;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
@@ -193,6 +194,9 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	public void appendElement(HTMLElement element) {
 		outputElt.appendChild(element);
 	}
+	public HTMLElement outputElement() {
+		return outputElt;
+	}
 
 	public HTMLElement appendBlock() {
 		return appendBlock(null);
@@ -304,8 +308,15 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 			return true;
 		} else if (cmd.startsWith("/session=")) {
 			return true;
+		} else if(shell.specialCommand(cmd, console)) {
+			return true;
 		} else {
-			return shell.specialCommand(cmd, console);
+			Promise<JSNumber> evalShell = JSUtil.evalShell(cmd.substring(1), console.outputElement());
+			console.promptBusy();
+			evalShell.onFinally(res -> {
+				console.promptNormal();
+			});
+			return true;
 		}
 	}
 

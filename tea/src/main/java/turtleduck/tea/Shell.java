@@ -156,7 +156,7 @@ public class Shell {
 		String[] split = line.split("\\s+", 2);
 		String cmd = split[0];
 		String args = split.length == 2 ? split[1].trim() : "";
-		if (cmd.equals("/ls")) {
+		if (cmd.equals("/:ls")) {
 			console.promptBusy();
 			Client.client.fileSystem.readdir(args).onComplete(files -> {
 				int max = files.stream().mapToInt(str -> str.length()).max().orElse(0);
@@ -186,7 +186,7 @@ public class Shell {
 			});
 
 			return true;
-		} else if (cmd.equals("/mkdir")) {
+		} else if (cmd.equals("/:mkdir")) {
 			console.promptBusy();
 			Client.client.fileSystem.mkdir(args).onComplete(res -> {
 				console.promptNormal();
@@ -196,7 +196,7 @@ public class Shell {
 			});
 
 			return true;
-		} else if (cmd.equals("/cd")) {
+		} else if (cmd.equals("/:cd")) {
 			console.promptBusy();
 			Client.client.fileSystem.chdir(args).onComplete(res -> {
 				console.println("cd " + res);
@@ -207,7 +207,7 @@ public class Shell {
 			});
 
 			return true;
-		} else if (cmd.equals("/readbin")) {
+		} else if (cmd.equals("/:readbin")) {
 			console.promptBusy();
 			Client.client.fileSystem.readbinfile(args).onComplete(res -> {
 				logger.info("readbinfile: {}", res);
@@ -227,7 +227,7 @@ public class Shell {
 			});
 
 			return true;
-		} else if (cmd.equals("/readtext")) {
+		} else if (cmd.equals("/:readtext")) {
 			console.promptBusy();
 			Client.client.fileSystem.readtextfile(args).onComplete(res -> {
 				logger.info("readtextfile: {}", res);
@@ -239,7 +239,7 @@ public class Shell {
 			});
 
 			return true;
-		} else if (cmd.equals("/writebin")) {
+		} else if (cmd.equals("/:writebin")) {
 			console.promptBusy();
 			byte[] data = {(byte)0xde, (byte)0xad, (byte)0xbe, (byte)0xef };
 			Client.client.fileSystem.writebinfile(args, data).onComplete(res -> {
@@ -260,7 +260,7 @@ public class Shell {
 			});
 
 			return true;
-		} else if (cmd.equals("/writetext")) {
+		} else if (cmd.equals("/:writetext")) {
 			console.promptBusy();
 			Client.client.fileSystem.writetextfile(args, "deadbeef").onComplete(res -> {
 				console.promptNormal();
@@ -286,7 +286,7 @@ public class Shell {
 			console.print(Client.client.router.command(args));
 			console.promptNormal();
 			return true;
-		} else if (cmd.equals("/echo")) {
+		} else if (cmd.equals("/:echo")) {
 			console.println(args);
 			console.promptNormal();
 			return true;

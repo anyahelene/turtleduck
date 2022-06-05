@@ -126,6 +126,9 @@ public class JSUtil {
 	@JSBody(params = { "arg", "code" }, script = "return new Function(arg, code)")
 	native static JSFunction function(String arg, String code);
 
+	@JSBody(params = { "line", "outputElement" }, script = "return turtleduck.tshell.eval(line, outputElement);")
+	native static Promise<JSNumber> evalShell(String line, HTMLElement outpuElement);
+
 	@JSBody(params = { "title", "text", "caption",
 			"style" }, script = "turtleduck.displayPopup(title, text, caption, style);")
 	native static void displayHint(String title, String text, String caption, String style);

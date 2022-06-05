@@ -36,6 +36,7 @@
     "buffer": "^6.0.3",
     "dexie": "^3.0.3",
     "file-saver": "^2.0.5",
+    "getopts": "^2.3.0",
     "highlight.js": "^10.7.2",
     "i18next": "^21.6.14",
     "isomorphic-git": "^1.15.0",
