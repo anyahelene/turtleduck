@@ -1,5 +1,6 @@
 import { EditorView } from '@codemirror/view';
-import { HighlightStyle, tags } from '@codemirror/highlight';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
 
 // Using https://github.com/one-dark/vscode-one-dark-theme/ as reference for the colors
 const type = "#cc0", name = "#3f3", op = "#56b6c2", invalid = "#ffffff", def = "#8f8", comment = "#880", // Brightened compared to original to increase contrast
@@ -63,7 +64,7 @@ const darkDuckTheme = EditorView.theme({
     }
 }, { dark: true });
 /// The highlighting style for code in the One Dark theme.
-const darkDuckHighlightStyle = HighlightStyle.define([
+const darkDuckHighlightSpec = [
     {
         tag: tags.keyword,
         color: keyword
@@ -126,9 +127,11 @@ const darkDuckHighlightStyle = HighlightStyle.define([
         tag: tags.invalid,
         color: invalid
     },
-]);
+];
+const darkDuckHighlighter = HighlightStyle.define(darkDuckHighlightSpec);
+
 /// Extension to enable the One Dark theme (both the editor theme and
 /// the highlight style).
-const darkDuck = [darkDuckTheme, darkDuckHighlightStyle];
+const darkDuck = [darkDuckTheme, syntaxHighlighting(darkDuckHighlighter)];
 
-export { darkDuck, darkDuckHighlightStyle, darkDuckTheme };
+export { darkDuck, darkDuckHighlighter, darkDuckTheme, darkDuckHighlightSpec };

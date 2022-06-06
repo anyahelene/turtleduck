@@ -1,12 +1,10 @@
 //import {EditorState} from "@codemirror/state"
 //import {EditorView, keymap} from "@codemirror/view"
 //import {defaultKeymap} from "@codemirror/commands"
-import { EditorView, Decoration, keymap, WidgetType } from "@codemirror/view"
+import { EditorView, Decoration, keymap, WidgetType, showPanel, hoverTooltip } from "@codemirror/view"
 import { EditorState, EditorSelection, StateField, StateEffect } from "@codemirror/state"
 import { indentWithTab, indentMore, indentLess, insertNewlineAndIndent } from "@codemirror/commands"
-import { syntaxTree, getIndentation, indentUnit, IndentContext, LanguageSupport } from '@codemirror/language';
-import { highlightTree, classHighlightStyle } from '@codemirror/highlight';
-import { StreamLanguage } from "@codemirror/stream-parser";
+import { syntaxTree, getIndentation, indentUnit, IndentContext, LanguageSupport, StreamLanguage } from '@codemirror/language';
 import { autocompletion, completionStatus, currentCompletions, } from "@codemirror/autocomplete";
 
 import { basicSetup } from "@codemirror/basic-setup"
@@ -18,12 +16,12 @@ import { markdown, insertNewlineContinueMarkup } from "@codemirror/lang-markdown
 import { css } from "@codemirror/lang-css"
 import { z80 } from "@codemirror/legacy-modes/mode/z80"
 import { oneDark } from "@codemirror/theme-one-dark"
-import { darkDuck, darkDuckHighlightStyle } from "./darktheme.js"
-import { hoverTooltip } from "@codemirror/tooltip"
-import { showPanel } from "@codemirror/panel"
+import { darkDuck, darkDuckHighlightSpec, darkDuckHighlighter } from "./darktheme.js"
 import { closeLintPanel, lintKeymap, linter, nextDiagnostic, openLintPanel, setDiagnostics } from "@codemirror/lint"
 import { NodeProp } from '@lezer/common';
+import { highlightTree, classHighlighter, tags } from '@lezer/highlight'; 
 import { Component } from './js/Component';
+//import { listTags } from "isomorphic-git";
 
 function isBetweenBrackets(state, pos) {
 	if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
@@ -274,8 +272,8 @@ class TDEditor extends Component {
 			else
 				return cls1 + ' ' + cls2;
 		}
-		highlightTree(tree, (tag, scope) =>
-			join(darkDuckHighlightStyle.match(tag, scope), classHighlightStyle.match(tag, scope)), highlight);
+		highlightTree(tree, [darkDuckHighlighter, classHighlighter], highlight);
+	//	join(darkDuckHighlightStyle.match(tag, scope), classHighlightStyle.match(tag, scope)), highlight);
 		nolight(doc.length);
 		if (line.childElementCount > 0)
 			result.appendChild(line);
@@ -393,21 +391,28 @@ window.turtleduck.createEditor = function (elt, text, lang = "java") {
 	return editor;
 }
 
-window.turtleduck.darkDuckStyle = {};
-darkDuck[1].module.rules.forEach(rule => {
-	window.turtleduck.darkDuckStyle[rule.replace(/\s*{.*$/, "")] = rule.replace(/^[^{]*{/, "{");
+const highlight = {};
+window.turtleduck.highlight = highlight;
+highlight.darkDuckStyle = {};
+// for each style rule, split, e.g., ".ͼu {color: #cc0;}" into ".ͼu": "{color: #cc0;}"
+darkDuckHighlighter.module.rules.forEach(rule => {
+	highlight.darkDuckStyle[rule.replace(/\s*{.*$/, "")] = rule.replace(/^[^{]*{/, "{");
 });
-window.turtleduck.classStyle = {};
-for (let x in classHighlightStyle.map) {
-	let name = classHighlightStyle.map[x].replace(/cmt/g, '.cmt'), defClass = '.' + darkDuck[1].map[x];
-	window.turtleduck.classStyle[name] = window.turtleduck.darkDuckStyle[defClass] || '{}';
+// build definitions for classHighlighter css classes based on defs from darkDuckHighlighter
+highlight.classStyle = {};
+for(let tag in tags) {
+	let t = tags[tag];
+	if(t.set) {
+		let ddStyleClass = '.' + darkDuckHighlighter.style([t]);
+		let clsStyleClass = '.'  + classHighlighter.style([t]);
+		console.log(ddStyleClass, clsStyleClass);
+		highlight.classStyle[clsStyleClass] = highlight.darkDuckStyle[ddStyleClass] || '{}'
+	}
 }
 
-darkDuck[1].module.rules[0]
-
-
-window.turtleduck.classHighlightStyle = classHighlightStyle;
-window.turtleduck.darkDuck = darkDuck;
+highlight.classHighlighter = classHighlighter;
+highlight.darkDuck = darkDuck;
+highlight.tags = tags;
 
 window.turtleduck.createLineEditor = function (elt, text, lang, handler) {
 	function enter({ state, dispatch }) {

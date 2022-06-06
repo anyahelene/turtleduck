@@ -30,6 +30,7 @@ import getopts from 'getopts';
 import defaultConfig from './config.json';
 import { after } from 'lodash-es';
 
+
 var imports = {
 	SockJS, Mousetrap, jquery, animals, hints, fileSystem, FileSystem,
 	History, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,

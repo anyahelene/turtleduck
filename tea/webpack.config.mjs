@@ -1,10 +1,12 @@
-const path = require('path');
+import path from 'path';
+const __dirname = path.dirname(new URL(import.meta.url).pathname)
+const __filename = new URL(import.meta.url).pathname
 //const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const marked = require("marked");
+import * as marked from 'marked';
 const renderer = new marked.Renderer();
 
 
-module.exports = {
+export default {
   mode: 'development',
   devtool: 'source-map',
   context: path.resolve(__dirname, 'src', 'main'),
@@ -86,8 +88,8 @@ module.exports = {
           {
             loader: "markdown-loader",
             options: {
-              pedantic: true,
-              renderer
+              pedantic: false,
+              renderer: renderer
             }
           }
         ]
@@ -136,4 +138,3 @@ module.exports = {
     ]
   },
 };
-
