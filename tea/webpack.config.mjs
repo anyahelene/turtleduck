@@ -22,12 +22,13 @@ export default {
     //    publicPath: 'static/',
     filename: 'js/[name].[contenthash].js'
   },
-  //resolve: {
+  resolve: {
+      extensions: [".ts", ".mts", ".tsx", ".js", ".mjs"]
   //  fallback: { 
   //      "querystring": require.resolve("querystring-es3/"),
   //      "buffer": require.resolve("buffer/")
   //  }
-  //},
+  },
   optimization: {
     usedExports: true
     //runtimeChunk: 'single',
@@ -47,6 +48,7 @@ export default {
   },
   module: {
     rules: [
+      { test: /\.m?tsx?$/, loader : "ts-loader" },
       {
         test: /\.html$/,
         //exclude: /node_modules/,

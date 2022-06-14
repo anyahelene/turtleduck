@@ -28,15 +28,16 @@ import getopts from 'getopts';
 //import "ace-builds/webpack-resolver";
 //var ace = require('ace-builds/src-noconflict/ace')
 import defaultConfig from './config.json';
-import { after } from 'lodash-es';
+import { Dependency } from './js/SubSystem';
 
 
 var imports = {
 	SockJS, Mousetrap, jquery, animals, hints, fileSystem, FileSystem,
 	History, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
 	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose, timeAgo,
-	lodash, TShell, getopts
+	lodash, TShell, getopts, Dependency
 };
+
 console.log(turtleduck);
 globalThis.imports = imports;
 globalThis.turtleduck = turtleduck;
@@ -51,10 +52,17 @@ turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.history = new History(fileSystem);
 turtleduck.defaultConfig = defaultConfig;
 turtleduck.configs = [/*override */{}, /*session*/{}, /*user*/{}, /*remote*/{}, defaultConfig];
-turtleduck.storage = new Storage();
-turtleduck.storage.init().then(ctx => {
-	turtleduck.cwd = ctx;
-	turtleduck.tshell = new TShell(turtleduck);
+Dependency.targetObject = turtleduck;
+Dependency.register({
+	name: "storage", depends: [], start: (sys) => {
+		return sys.api.init().then(ctx => {
+			turtleduck.cwd = ctx;
+		});
+
+	}, api: new Storage()
+});
+Dependency.register({
+	name: "tshell", depends: ["storage"], start: (sys) => Promise.resolve(), api: () => new TShell(turtleduck)
 });
 turtleduck.i18next = i18next;
 turtleduck.appendToConsole = function (style) {
@@ -76,16 +84,16 @@ turtleduck.consolePrinter = function (style) {
 	}
 }
 
-turtleduck.elementPrinter = function(element, style, afterPrint) {
+turtleduck.elementPrinter = function (element, style, afterPrint) {
 	const wrapperElt = element.closest('main');
 	const outputContainer = element.closest('.terminal-out-container');
-	if(typeof style === 'string') {
+	if (typeof style === 'string') {
 		element = element.appendChild(html.node`<div class=${style}></div>`);
 	}
-	if(!afterPrint && wrapperElt && outputContainer) {
+	if (!afterPrint && wrapperElt && outputContainer) {
 		afterPrint = () => {
 			outputContainer.scrollTop = 0;
-			wrapperElt.scrollTop = wrapperElt.scrollHeight-wrapperElt.offsetHeight;
+			wrapperElt.scrollTop = wrapperElt.scrollHeight - wrapperElt.offsetHeight;
 		};
 	}
 	console.log(element, style, afterPrint);
@@ -98,11 +106,11 @@ turtleduck.elementPrinter = function(element, style, afterPrint) {
 			}
 			cr = text.endsWith("\r");
 			element.textContent = old + text;
-			if(afterPrint) {
+			if (afterPrint) {
 				afterPrint();
-			} 
+			}
 		}
-	}	
+	}
 }
 //turtleduck.config = jquery.extend(true, {}, defaultConfig);
 //turtleduck.configSource = {};
@@ -588,9 +596,10 @@ async function handleKey(key, button, event) {
 					'Content-Type': 'text/plain;charset=utf-8',
 					'cache-control': 'no-cache',
 					'pragma': 'no-cache'
-				  },
-				body: code}).then(res => {
-				if(res.ok) {
+				},
+				body: code
+			}).then(res => {
+				if (res.ok) {
 					res.json().then(data => {
 						document.querySelector("#screen .text").innerText = JSON.stringify(data, null, "    ");
 					});
