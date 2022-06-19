@@ -1,8 +1,8 @@
 import path from '@isomorphic-git/lightning-fs/src/path'
 import MagicPortal from 'magic-portal'
 import { turtleduck } from './TurtleDuck';
-
-
+import SubSystem from './SubSystem';
+import Settings from './Settings';
 class StorageContext {
 	constructor(fs, cwd) {
 		this.fs = fs;
@@ -34,22 +34,22 @@ class StorageContext {
 		return r;
 	}
 	async writetextfile(filepath, data, encoding = 'utf8', mode = 0o777) {
-		if(typeof data !== "string") {
+		if (typeof data !== "string") {
 			data = `{data}`;
 		}
-		return this.fs.writeFile(this.realpath(filepath), data, {encoding: encoding, mode: mode});
+		return this.fs.writeFile(this.realpath(filepath), data, { encoding: encoding, mode: mode });
 	}
 	async writebinfile(filepath, data, mode = 0o777) {
-		if(!(data instanceof Uint8Array)) {
+		if (!(data instanceof Uint8Array)) {
 			data = Uint8Array.from(data);
 		}
-		return this.fs.writeFile(this.realpath(filepath), data, {encoding: undefined, mode: mode});
+		return this.fs.writeFile(this.realpath(filepath), data, { encoding: undefined, mode: mode });
 	}
 	async readtextfile(filepath, encoding = 'utf8') {
-		return this.fs.readFile(this.realpath(filepath), {encoding: encoding});
+		return this.fs.readFile(this.realpath(filepath), { encoding: encoding });
 	}
 	async readbinfile(filepath) {
-		return this.fs.readFile(this.realpath(filepath), {encoding: undefined});
+		return this.fs.readFile(this.realpath(filepath), { encoding: undefined });
 	}
 	async unlink(filepath, opts) {
 		return this.fs.unlink(this.realpath(filepath), opts);
@@ -131,7 +131,8 @@ class Storage {
 		this.git = await this.portal.get("gitWorker");
 		this._initialized = true;
 		console.log("File system ready:", fsConfig);
-		return this.context();
+		this.cwd = this.context();
+		return this;
 	}
 
 	async clone(url, dest, proxy) {
@@ -148,8 +149,8 @@ class Storage {
 	}
 
 	async info() {
-		const requested = turtleduck.getConfig("storage.persistenceRequested") || false;
-		const allowed = turtleduck.getConfig("storage.persistenceAllowed") || false;
+		const requested = Settings.getConfig("storage.persistenceRequested", false);
+		const allowed = Settings.getConfig("storage.persistenceAllowed", false);
 		if (navigator.storage) {
 			var persisted = false;
 			var estimate = {};
@@ -204,3 +205,13 @@ class Storage {
 
 export { Storage };
 
+
+const systemSpec = {
+	depends: ['settings'],
+	name: 'storage',
+	start: (sys) => sys.api.init(),
+	 api: new Storage()
+
+}
+
+SubSystem.register(systemSpec);

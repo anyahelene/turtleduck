@@ -1,51 +1,67 @@
 
-import getopts from 'getopts';
+import  getopts from 'getopts';
+import Settings from './Settings';
 
+import type { Options, ParsedOptions } from 'getopts/.';
+import SubSystem from './SubSystem';
+//import getopts = require('getopts');
 const homeDir = '/home';
 const options = {};
-function createEnvironment() {
-    let tmp = {
+type EnvValue = string | ((sh: TShell, val?: string) => string);
+type Printer = { print: (text: string) => void };
+declare const turtleduck : {elementPrinter(elt:HTMLElement, style:string):Printer};
+function createEnvironment(): Map<string, EnvValue> {
+    let tmp: { [propName: string]: EnvValue } = {
         SHELL: '/bin/tsh',
         HOME: homeDir,
-        LOGNAME: () => turtleduck.getConfig('user.username'),
-        USER: () => turtleduck.getConfig('user.username'),
-        PWD: (sh, dir) => {
+        LOGNAME: () => Settings.getConfig('user.username', ''),
+        USER: () => Settings.getConfig('user.username', ''),
+        PWD: (sh: TShell, dir?: string) => {
             if (dir)
                 sh.currentDirectory = dir;
-            else
-                return sh.currentDirectory;
+            return sh.currentDirectory;
         },
-        SHLVL: 1,
-        _: (sh) => sh.currentCommand,
-        '?': (sh) => sh.returnCode,
-        PATH: '/home/bin:/bin'
+        SHLVL: '1',
+        _: (sh: TShell) => sh.currentCommand,
+        '?': (sh: TShell) => String(sh.returnCode),
+        PATH: '/home/bin:/bin',
     }
     return new Map(Object.keys(tmp).map(k => [k, tmp[k]]));
 }
 const defaultEnvironment = createEnvironment();
-const programs = new Map();
+type Storage = any;
+type Program = {
+    params: Options,
+    fun?(args: ParsedOptions, sh: TShell, ctx: Storage): Promise<number> | number | string | void
+};
+const programs: Map<string, Program> = new Map();
 
 class TShell {
-    constructor(controller, parent) {
-        this._controller = controller ? controller : globalThis.turtleduck;
+    private env : Map<string,EnvValue>;
+    private _returnCode: number = 0;
+    private _programs = programs;
+    private _parent?: TShell;
+    private _currentCommand?: string;
+    private _outputElement?: HTMLElement;
+    private _printer?: Printer;
+    private _currentArguments?: Array<string>;
+    private _cwd : Storage;
+    constructor(cwd : Storage, parent?: TShell) {
         this._parent = parent;
-        this._returnCode = 0;
-        this._programs = programs;
-        if (!this._controller.env) {
-            this._controller.env = createEnvironment();
-        }
+        this.env = createEnvironment();
+        this._cwd = cwd;
         defaultEnvironment.forEach((v, k) => {
-            if (!this._controller.env.has(k)) {
-                this._controller.env.set(k, v);
+            if (!this.env.has(k)) {
+                this.env.set(k, v);
             }
         });
     }
 
-    get currentCommand() {
+    get currentCommand(): string {
         return this._currentCommand || '/bin/tsh';
     }
 
-    get returnCode() {
+    get returnCode(): number {
         return this._returnCode;
     }
 
@@ -53,18 +69,18 @@ class TShell {
         this._returnCode = Number(code);
     }
 
-    get currentDirectory() {
-        return this._controller.cwd.cwd;
+    get currentDirectory(): string {
+        return this._cwd.cwd;
     }
 
-    set currentDirectory(path) {
-        const ctx = this._controller.cwd;
+    set currentDirectory(path: string) {
+        const ctx = this._cwd;
         const newCwd = ctx.realpath(path);
         ctx.cwd = newCwd;
     }
 
-    getenv(varname) {
-        const value = this._controller.env.get(varname);
+    getenv(varname: string): string {
+        const value = this.env.get(varname);
         if (typeof value === 'function') {
             return value(this, undefined);
         } else if (value !== undefined) {
@@ -74,21 +90,21 @@ class TShell {
         }
     }
 
-    setenv(varname, value) {
-        const old = this._controller.env.get(varname);
+    setenv(varname: string, value: any): void {
+        const old = this.env.get(varname);
         if (typeof old === 'function') {
             old(this, value);
         } else {
-            this._controller.env.set(varname, value);
+            this.env.set(varname, value);
         }
     }
 
-    parseCommand(line) {
+    parseCommand(line: string): string[][] {
         const commands = line.trim().split(/(;|&&?|\|\|?)/);
         return commands.map((c) => c.trim().split(' '));
     }
 
-    async eval(line, outputElement) {
+    async eval(line: string, outputElement?: HTMLElement): Promise<number> {
         console.log("eval", line, outputElement);
         const commands = this.parseCommand(line);
 
@@ -100,9 +116,9 @@ class TShell {
             this._printer = turtleduck.elementPrinter(outputElement, 'shell');
             console.log(this._printer);
         }
-        const evalStep = i => {
+        const evalStep = async (i: number): Promise<number> => {
             if (i >= 0 && i < commands.length) {
-                if (commands[i + 1] === '|') {
+                if (commands[i + 1][0] === '|') {
                     // set up pipe
                 }
                 const cmd = commands[i];
@@ -115,7 +131,8 @@ class TShell {
                     return evalStep(i + 1);
                 } else {
                     const args = cmd.splice(1);
-                    return this.evalCommand(prog, args).then(() => evalStep(i + 1));
+                    await this.evalCommand(prog, args);
+                    return evalStep(i + 1);
                 }
             }
 
@@ -126,26 +143,9 @@ class TShell {
         }
 
         return evalStep(0);
-
-        commands.forEach(async cmd => {
-            if (cmd.length > 0) {
-                const prog = cmd[0];
-                const args = cmd.splice(1);
-                switch (prog) {
-                    case ';':
-                    case '||':
-                    case '|':
-                    case '&&':
-                    case '&':
-                        break;
-                    default:
-                        await this.evalCommand(prog, args);
-                }
-            }
-        });
     }
 
-    async evalCommand(prog, args) {
+    async evalCommand(prog: string, args: string[]): Promise<number> {
         args = args.map(arg => arg.startsWith('$') ? this.getenv(arg.substring(1)) : arg);
         const { params, fun } = this.findProgram(prog);
 
@@ -158,7 +158,7 @@ class TShell {
             this._currentCommand = prog;
             this._currentArguments = args;
             if (fun) {
-                const ret = await fun(pArgs, this, this._controller.cwd);
+                const ret = await fun(pArgs, this, this._cwd);
                 this._returnCode = Number(ret) || 0;
 
                 if (typeof ret === 'string')
@@ -173,18 +173,18 @@ class TShell {
             this._currentCommand = prevCommand;
             this._currentArguments = prevArguments;
         }
-
+        return Promise.resolve(this._returnCode);
     }
 
-    findProgram(prog) {
+    findProgram(prog: string): Program {
         return programs.get(prog) || { fun: undefined, params: {} };
     }
 
     get context() {
-        return this._controller.cwd;
+        return this._cwd;
     }
 
-    println(...args) {
+    println(...args: string[]): void {
         const text = args.map(a => String(a)).join(' ');
         if (this._printer) {
             this._printer.print(text + '\n');
@@ -193,7 +193,7 @@ class TShell {
         }
     }
 
-    print(...args) {
+    print(...args: string[]): void {
         const text = args.map(a => String(a)).join(' ');
         if (this._printer) {
             this._printer.print(text);
@@ -207,7 +207,7 @@ programs.set('ls', {
     params: {
         boolean: ['all', 'long', 'time'], alias: { all: ['a'], long: ['l'], time: '' }
     },
-    fun: (args, sh, ctx) => ctx.readdir(args['_'][0]).then(res => sh.println(res.join(' '))),
+    fun: (args, sh, ctx) => ctx.readdir(args['_'][0]).then((res: string[]) => sh.println(res.join(' '))),
 });
 programs.set('echo', {
     params: { boolean: ['n', 'e', 'E'] },
@@ -226,3 +226,15 @@ programs.set('false', {
     fun: () => 1
 })
 export { TShell };
+
+SubSystem.register({
+	api: undefined,
+	depends: ['storage'],
+	name: 'tshell',
+	start(dep) {
+       return new TShell(SubSystem.get('storage').api);
+	},
+});
+
+const obj = {};
+

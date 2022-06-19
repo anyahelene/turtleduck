@@ -2,7 +2,6 @@
 import SockJS from 'sockjs-client';
 import Mousetrap from 'mousetrap';
 import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
-import jquery from 'jquery';
 import animals from './animals.txt';
 import hints from './hints.txt';
 import { turtleduck } from './js/TurtleDuck';
@@ -28,14 +27,14 @@ import getopts from 'getopts';
 //import "ace-builds/webpack-resolver";
 //var ace = require('ace-builds/src-noconflict/ace')
 import defaultConfig from './config.json';
-import { Dependency } from './js/SubSystem';
-
+import SubSystem from './js/SubSystem';
+import Settings from './js/Settings';
 
 var imports = {
-	SockJS, Mousetrap, jquery, animals, hints, fileSystem, FileSystem,
+	SockJS, Mousetrap, animals, hints, fileSystem, FileSystem,
 	History, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
 	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose, timeAgo,
-	lodash, TShell, getopts, Dependency
+	lodash, TShell, getopts, SubSystem, Settings
 };
 
 console.log(turtleduck);
@@ -51,19 +50,17 @@ turtleduck.fileSystem = fileSystem;
 turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.history = new History(fileSystem);
 turtleduck.defaultConfig = defaultConfig;
-turtleduck.configs = [/*override */{}, /*session*/{}, /*user*/{}, /*remote*/{}, defaultConfig];
-Dependency.targetObject = turtleduck;
-Dependency.register({
-	name: "storage", depends: [], start: (sys) => {
-		return sys.api.init().then(ctx => {
-			turtleduck.cwd = ctx;
-		});
 
-	}, api: new Storage()
+Object.defineProperty(turtleduck, 'cwd', { get: () => turtleduck.storage.cwd });
+turtleduck.getConfig = (...args) => turtleduck.settings.getConfig(...args);
+turtleduck.setConfig = (...args) => turtleduck.settings.setConfig(...args);
+turtleduck.saveConfig = (...args) => turtleduck.settings.saveConfig(...args);
+SubSystem.setup(turtleduck);
+SubSystem.waitFor('settings').then((sys) => {
+	console.warn("CONFIGS:", sys.api.configs);
+	sys.api.configs[4] = defaultConfig;
 });
-Dependency.register({
-	name: "tshell", depends: ["storage"], start: (sys) => Promise.resolve(), api: () => new TShell(turtleduck)
-});
+
 turtleduck.i18next = i18next;
 turtleduck.appendToConsole = function (style) {
 	if (turtleduck.shellComponent) {
@@ -112,47 +109,12 @@ turtleduck.elementPrinter = function (element, style, afterPrint) {
 		}
 	}
 }
-//turtleduck.config = jquery.extend(true, {}, defaultConfig);
-//turtleduck.configSource = {};
+
 
 turtleduck.userlog = msg => turtleduck.client.userlog(msg);
-//turtleduck.mergeConfig = function(config = {}) {
-//	turtleduck.config = jquery.extend(true, turtleduck.config, config);
-//}
 turtleduck.TilingWM = TilingWM;
 turtleduck.TilingWindow = TilingWindow;
 turtleduck.wm = new TilingWM('mid', 32, 16);
-
-turtleduck._getByPath = function (path, obj) {
-	const ps = path.split(".");
-
-	ps.forEach(name => {
-		if (obj !== undefined) {
-			obj = obj[name];
-		}
-	});
-
-	return obj;
-}
-turtleduck._getConfig = function (path, configs) {
-	for (var i in configs) {
-		const result = turtleduck._getByPath(path, configs[i]);
-		if (result !== undefined) {
-			return result;
-		}
-	}
-	return undefined;
-}
-turtleduck.getConfig = function (path) {
-	return turtleduck._getConfig(path, turtleduck.configs);
-}
-turtleduck.setConfig = function (config, source) {
-	const src = ['override', 'session', 'user', 'remote', 'default'].indexOf(source);
-	if (src >= 0) {
-		turtleduck.configs[src] = jquery.extend(true, turtleduck.configs[src], config);
-		console.log("setConfig", config, source, "=>", turtleduck.configs[src]);
-	}
-}
 turtleduck.openCamera = function (config) {
 	const elt = document.getElementById('camera');
 	if (elt) {
@@ -280,112 +242,6 @@ turtleduck.checkLogin = function (resolve, reject) {
 	});
 }
 
-/*
-function setConfig(path, dstDict, srcDict, source) {
-	console.log("setConfig", path, dstDict, srcDict, source);
-	Object.getOwnPropertyNames(srcDict).forEach(prop => {
-		console.log("prop: ", prop);
-		const value = srcDict[prop];
-		const subpath = (path === '' ? '' : path + '.') + prop;
-		if(typeof(value) === 'object' && !Array.isArray(value)) {
-			console.log("set " + subpath + "…");
-			setConfig(subpath, dstDict[prop] || {}, value, source);
-		} else if(source === 'user' || turtleduck.configSource[subpath] !== 'user') {
-			console.log("set " + subpath, dstDict[prop], "→", value);
-			dstDict[prop] = value;
-			turtleduck.configSource[subpath] = source;
-		} else {
-			console.log("not overriding " + subpath + ": " + source + "<=" + turtleduck.configSource[subpath], dstDict[prop], "→", value);
-
-		}
-	});
-}
-turtleduck.setConfig = function(config, source = "user") {
-	setConfig('', turtleduck.config, config, source);
-}
-function pruneConfig(config, defaultConfig) {
-	if(defaultConfig === undefined)
-		return false;
-	var same = true;
-	Object.getOwnPropertyNames(config).forEach(prop => {
-		console.log("prop: ", prop);
-		console.log(JSON.stringify(config[prop]), "==", JSON.stringify(defaultConfig[prop]), "?")
-		if(JSON.stringify(config[prop]) === JSON.stringify(defaultConfig[prop])) {
-			console.log("yes!");
-			delete config[prop];
-		} else if(typeof(config[prop]) === 'object'  && !Array.isArray(config[prop])) {
-			if(pruneConfig(config[prop], defaultConfig[prop])) {
-				delete config[prop];
-			} else {
-				same = false;
-			}
-		} else {
-			same = false;
-		}
-	});
-	return same;
-}
-*/
-turtleduck.saveConfig = function (source = 'all') {
-	try {
-		if (source === 'all' || source === 'session') {
-			turtleduck.sessionStorage.setItem('turtleduck.sessionConfig', JSON.stringify(turtleduck.configs[1]));
-		}
-	} catch (e) {
-		console.error(e);
-	}
-	try {
-		if (source === 'all' || source === 'user') {
-			const dict = jquery.extend(true, {}, turtleduck.configs[2]);
-			delete dict.session;
-			turtleduck.localStorage.setItem('turtleduck.userConfig', JSON.stringify(dict));
-		}
-	} catch (e) {
-		console.error(e);
-	}
-	try {
-		if (source === 'all' || source === 'remote') {
-			const dict = jquery.extend(true, {}, turtleduck.configs[3]);
-			delete dict.session;
-			turtleduck.localStorage.setItem('turtleduck.remoteConfig', JSON.stringify(dict));
-		}
-	} catch (e) {
-		console.error(e);
-	}
-}
-turtleduck.loadConfig = function () {
-	try {
-		turtleduck.configs[1] = JSON.parse(turtleduck.sessionStorage.getItem('turtleduck.sessionConfig')) || {};
-	} catch (e) {
-		console.error(e);
-	}
-	try {
-		turtleduck.configs[2] = JSON.parse(turtleduck.localStorage.getItem('turtleduck.userConfig')) || {};
-	} catch (e) {
-		console.error(e);
-	}
-	try {
-		turtleduck.configs[3] = JSON.parse(turtleduck.localStorage.getItem('turtleduck.remoteConfig')) || {};
-	} catch (e) {
-		console.error(e);
-	}
-}
-
-const saveConfigTimers = {};
-function autoSaveConfig(source) {
-	if (saveConfigTimers[source]) {
-		clearTimeout(saveConfigTimers[source]);
-	}
-	saveConfigTimers[source] = window.setTimeout(() => {
-		console.log("autosaved config ", source);
-		turtleduck.saveConfig(source);
-		saveConfigTimers[source] = undefined;
-	}, 3000);
-}
-
-//ace.config.loadModule("ace/ext/language_tools", function(m) { turtleduck.editor_language_tools = m; });
-//ace.config.loadModule('ace/ext/options', function(m) { turtleduck.editor_options = m; });
-
 const animalList = animals.split(/\s+/).filter(function (a) { return a.length > 0; })
 turtleduck.animals = {
 	pranimals: animalList.filter(function (a) { return !a.startsWith("-"); }),
@@ -410,57 +266,6 @@ turtleduck.hints = {
 	random: () => hintList[Math.floor(Math.random() * hintList.length)]
 }
 
-function storageAvailable(type) {
-	var storage;
-	try {
-		storage = window[type];
-		var x = '__storage_test__';
-		storage.setItem(x, x);
-		storage.removeItem(x);
-		return true;
-	}
-	catch (e) {
-		return e instanceof DOMException && (
-			// everything except Firefox
-			e.code === 22 ||
-			// Firefox
-			e.code === 1014 ||
-			// test name field too, because code might not be present
-			// everything except Firefox
-			e.name === 'QuotaExceededError' ||
-			// Firefox
-			e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-			// acknowledge QuotaExceededError only if there's something already stored
-			(storage && storage.length !== 0);
-	}
-}
-
-turtleduck.hasLocalStorage = storageAvailable('localStorage');
-turtleduck.hasSessionStorage = storageAvailable('sessionStorage');
-turtleduck.localStorage = storageAvailable('localStorage') ? window.localStorage : {
-	dict: {},
-	getItem: function (key) { return dict[key]; },
-	setItem: function (key, value) { dict[key] = value; },
-	removeItem: function (key) { dict[key] = undefined; },
-};
-
-turtleduck.sessionStorage = storageAvailable('sessionStorage') ? window.sessionStorage : {
-	dict: {},
-	getItem: function (key) { return dict[key]; },
-	setItem: function (key, value) { dict[key] = value; },
-	removeItem: function (key) { dict[key] = undefined; },
-};
-
-
-turtleduck.alwaysShowSplashHelp = function (enable = true) {
-	if (enable)
-		turtleduck.localStorage.setItem('alwaysShowSplashHelp', true);
-	else
-		turtleduck.localStorage.removeItem('alwaysShowSplashHelp');
-};
-
-
-turtleduck.loadConfig();
 turtleduck.history.sessions().then(ss => {
 	if (!turtleduck.getConfig('session.name')) {
 		const name = ss.length > 0 ? ss[0].session : turtleduck.animals.random();
@@ -476,20 +281,16 @@ turtleduck.shellServiceProxy = new ShellServiceProxy(turtleduck.pyController);
 
 turtleduck.tabSelect = function (tabsId, key) {
 	let previous = undefined;
-	jquery('[data-tab="' + tabsId + '"]').each(function (index, elt) {
-		const thisKey = jquery(elt).attr('data-tab-key');
-		const isDef = jquery(elt).attr('data-tab-define') == 'true';
+	document.querySelectorAll('[data-tab="' + tabsId + '"]').forEach(elt => {
+		const thisKey = elt.dataset.tabKey;
+		const isDef = elt.dataset.tabDefine === 'true';
 		if (isDef) {
-			if (jquery(elt).hasClass('selected')) {
+			if (elt.classList.contains('selected')) {
 				previous = thisKey;
 			}
-			if (thisKey == key) {
-				jquery(elt).toggleClass('selected', true);
-			} else {
-				jquery(elt).toggleClass('selected', false);
-			}
+			elt.classList.toggle('selected', thisKey === key);
 		} else {
-			if (thisKey == key) {
+			if (thisKey === key) {
 				elt.style.setProperty('display', 'block');
 			} else {
 				elt.style.setProperty('display', 'none');
@@ -500,19 +301,19 @@ turtleduck.tabSelect = function (tabsId, key) {
 }
 
 turtleduck.updateInfo = function () {
-	jquery('[data-from]').each(function () {
-		const froms = (jquery(this).attr('data-from') || "").split("||");
+	document.querySelectorAll('[data-from]').forEach(elt => {
+		const froms = (elt.dataset.from || "").split("||");
 		for (var i = 0; i < froms.length; i++) {
 			const from = froms[i].trim();
 			if (from) {
 				const val = turtleduck.getConfig(from);
 				if (val) {
-					jquery(this).text(val);
+					elt.innerText = val;
 					return;
 				}
 			}
 		}
-		jquery(this).text("");
+		elt.innerText = "";
 	});
 }
 
@@ -534,17 +335,8 @@ function linkClickHandler(e) {
 	}
 }
 async function handleKey(key, button, event) {
-	const page = jquery('#page');
-	function unsetLayout() {
-		const layouts = page.attr('data-layouts').split(' ');
-		let next = '';
-		layouts.forEach((layout, idx) => {
-			if (page.hasClass(layout))
-				next = layouts[(idx + 1) % layouts.length];
-			page.toggleClass(layout, false);
-		});
-		return next;
-	}
+	const page = document.getElementById('page');
+
 	var params = undefined;
 	if (event.header && event.header.msg_type === key) { // it's actually a message!
 		params = event.content;
@@ -572,18 +364,12 @@ async function handleKey(key, button, event) {
 				turtleduck.jshell.focus();
 			break;
 		case "code-gfx":
-			const nextLayout = jquery(this).attr('data-target');
-			if (nextLayout)
-				page.toggleClass(nextLayout, true);
-			turtleduck.terminal.fit();
 			break;
 		case "help":
-			jquery("#page").toggleClass('show-splash-help');
+			document.getElementById("page").classList.toggle('show-splash-help');
 			break;
 		case "esc":
-			if (page.hasClass('show-splash-help')) {
-				page.toggleClass('show-splash-help', false);
-			}
+			document.getElementById("page").classList.toggle('show-splash-help', false);
 			break;
 		case "projects":
 
@@ -728,13 +514,17 @@ async function handleKey(key, button, event) {
 turtleduck.handleKey = handleKey;
 
 turtleduck.activateToggle = function (element, toggleClass, target, ...targets) {
-	const jqtgt = jquery(target);
-	jquery(element).click(function (e) {
-		var active = jqtgt.hasClass(toggleClass);
-		//console.log(jqtgt, active);
-		jqtgt.toggleClass(toggleClass, !active);
-		targets.forEach(elt => jquery(elt).toggleClass(toggleClass, !active));
-		//console.log("done");
+	element.addEventListener('click', e => {
+		console.log("activateToggle", target, targets);
+		let active = target.classList.contains(toggleClass);
+		if (toggleClass.startsWith('+')) {
+			active = false;
+		} else if (toggleClass.startsWith('-')) {
+			active = true;
+		};
+		toggleClass = toggleClass.replaceAll(/^\+|-/g, '');
+		target.classList.toggle(toggleClass, !active);
+		targets.forEach(elt => elt.classList.toggle(toggleClass, !active));
 		return false;
 	});
 }
@@ -826,121 +616,37 @@ turtleduck.dismissElements = e => {
 	});
 };
 
-jquery(function () {
-	jquery('button[data-shortcut]').each(function (index) {
-		const button = this;
-		const handler = async function (e) {
-			return handleKey(button.id, button, e).then(r => { console.log("handleKey", r); return r; });
-		};
-		const keyHandler = function (e) {
-
-			return false;
-
-		};
-		const shortcut = this.classList.contains('not-implemented') ? '(not implemented)' : this.dataset.shortcut;
-		const shortcutText = shortcut.replace('ctrl+', '⌘').replace('shift+', '↑');
-		const icon = this.dataset.icon;
-		if (icon) {
-			jquery(this).prepend(jquery('<span class="icon"><span>' + icon + '</span></span>'));
-		}
-		if (shortcut) {
-			jquery(this).prepend(jquery('<span></span>').addClass('bg'));
-			jquery(this).attr('data-shortcut-text', shortcutText);
-			jquery(this).append(jquery('<span class="shortcut"><span>' + shortcut + '</span></span>'))
-			Mousetrap.bindGlobal(shortcut, keyHandler);
-		}
-		//jquery(this).find(".icon").prepend(jquery('<span>'+shortcutText+'</span>'));//.attr('data-shortcut-text', shortcutText)
-		jquery(this).click(handler);
-	});
-
+window.addEventListener('DOMContentLoaded', loadedEvent => {
 	Mousetrap.bindGlobal('esc', e => handleKey('esc', null, e));
 
 	document.documentElement.addEventListener("click", turtleduck.dismissElements);
 
-	jquery('[data-tab-define]').each((idx, elt) => {
-		const key = jquery(elt).attr('data-tab-key');
-		const tabs = jquery(elt).attr('data-tab');
-		jquery(elt).click(e => { turtleduck.tabSelect(tabs, key); });
-		if (jquery(elt).hasClass('selected')) {
+	document.querySelectorAll('[data-tab-define]').forEach(elt => {
+		const key = elt.dataset.tabKey;
+		const tabs = elt.dataset.tab;
+		elt.addEventListener('click', e => { turtleduck.tabSelect(tabs, key); });
+		if (elt.classList.contains('selected')) {
 			turtleduck.tabSelect(tabs, key);
 		}
 	});
 
-	jquery('[data-toggle]').each(function (index) {
-		const button = this;
-		const toggleType = jquery(this).attr('data-toggle');
-		const ref = jquery(this).attr('href') || jquery(this).attr('data-target');
-		const target = jquery(ref);
-		turtleduck.activateToggle(this, toggleType, ref);
-		/*	if (toggleType == 'collapse') {
-				jquery(button).click(function(e) {
-					var active = jquery(button).hasClass('open');
-					jquery(button).toggleClass('open', !active);
-					target.toggleClass('open', !active);
-					return false;
-				});
-			} else if (toggleType == 'button') {
-				jquery(button).click(function(e) {
-					var active = jquery(button).hasClass('active');
-					jquery(button).toggleClass('active', !active);
-					target.toggleClass('active', !active);
-					return false;
-				});
-			}*/
+	document.querySelectorAll('[data-toggle]').forEach(button => {
+		const toggleType = button.dataset.toggle;
+		const ref = button.getAttribute('href') || button.dataset.target;
+		turtleduck.activateToggle(button, toggleType, document.querySelector(ref));
 	});
 
-	jquery('[data-reset-onclick]').each(function () {
-		console.log("data-reset-onclick");
-		console.log(this);
-		const cls = jquery(this).attr('data-reset-onclick');
-		jquery(this).find('a').each(function () {
-			jquery(this).click(function (e) {
-				jquery('#page').removeClass(cls);
-			});
-		});
+	document.querySelectorAll('[data-paste]').forEach(link => {
+		const ref = link.getAttribute('href').replace('#', '') || link.dataset.target;
+		turtleduck.activatePaste(link, ref, link.dataset.paste);
 	});
 
-	jquery('[data-paste]').each(function (index) {
-		const link = this;
-		const ref = jquery(this).attr('href').replace('#', '') || jquery(this).attr('data-target');
-		jquery(link).click(function (e) {
-			const target = window.turtleduck[ref];;
-			const text = jquery(link).attr('data-paste');
-			target.paste(text);
-			target.focus();
-			return false;
-		});
-	});
-
-
-	jquery('[data-menu]').each(function (index) {
-		const menu = this;
-		const id = this.dataset.menu;
-		const select = this.dataset.select;
-		this.tabIndex = -1;
-		//this.addEventListener("mouseout", e => { menu.classList.remove("show"); });
-		this.addEventListener("focusout", e => { menu.classList.remove("show"); });
-		this.addEventListener("click", e => {
-			const target = e.target;
-			if (target.classList.contains("menu-entry")) {
-				const data = { select: select };
-				const dset = target.dataset;
-				for (var k in dset) {
-					data[k] = dset[k];
-				}
-				menu.classList.remove("show");
-				const r = turtleduck.actions.handle('menu:' + id, data, event);
-			}
-			e.stopPropagation();
-		});
-	});
-
-	jquery('[data-tooltip]').each(function (index) {
-		const id = this.dataset.tooltip;
+	document.querySelectorAll('[data-tooltip]').forEach(elt => {
+		const id = elt.dataset.tooltip;
 		const tipElt = document.createElement("div");
 		tipElt.className = "tooltip dismissable";
-		this.appendChild(tipElt);
-		this.style.position = 'relative';
+		elt.appendChild(tipElt);
+		elt.style.position = 'relative';
 		var timer;
 		var clicked = false;
 		const unremove = () => {
@@ -956,7 +662,7 @@ jquery(function () {
 				}, 3000);
 			}
 		}
-		this.addEventListener("mouseenter", async e => {
+		elt.addEventListener("mouseenter", async e => {
 			tipElt.classList.remove("fade3");
 			if (timer !== undefined) {
 				unremove();
@@ -966,82 +672,18 @@ jquery(function () {
 				tipElt.classList.add("show");
 				clicked = false;
 			}
-			/*			if(r) {
-							tipElt.replaceChildren(r);
-						} else {
-							tipElt.replaceChildren([]);
-							tipElt.classList.remove("show");			
-						}*/
-
 		});
-		this.addEventListener("click", async e => {
+		elt.addEventListener("click", async e => {
 			if (timer !== undefined) {
 				unremove();
 			}
 			clicked = true;
 		});
-		this.addEventListener("mouseleave", e => {
+		elt.addEventListener("mouseleave", e => {
 			remove();
 		});
 	});
-	jquery('[data-below]').each(function (index) {
-		console.log(index, this);
-		const belowElt = this;
-		var elt = document.createElement("div");
-		elt.className = "ns-resizer";
-		//belowElt.insertBefore(elt, this.firstElementChild);
-	});
-	jquery('[data-left-of]').each(function (index) {
-		console.log(index, this);
-		const leftElt = this;
-		var elt = document.createElement("div");
-		elt.className = "ew-resizer";
-		const rightElts = this.dataset.leftOf.split(",").map(id => document.getElementById(id)).filter(e => e);
-		console.log("leftElt", leftElt, "rightElts", rightElts);
-		var column, minColumn, maxColumn;
-		const midElt = leftElt.parentElement;
-		const mouseMoveListener = function (e) {
-			e.stopPropagation();
-			e.preventDefault();
-			console.log(e.clientX, midElt.clientWidth, 32 * e.clientX / midElt.clientWidth);
-			const c = Math.min(maxColumn, Math.max(minColumn, 1 + Math.round(32 * e.clientX / midElt.clientWidth)));
-			if (c !== column) {
-				column = c;
-				console.log("column: ", column)
-				leftElt.style.gridColumnEnd = column;
-				rightElts.forEach(re => { re.style.gridColumnStart = column; });
-			}
-		};
-		elt.addEventListener("mousedown", e => {
-			const style = window.getComputedStyle(leftElt);
-			minColumn = 1 + Math.max(1, parseInt(style.gridColumnStart));
-			maxColumn = 32;
-			rightElts.forEach(re => {
-				var c = parseInt(window.getComputedStyle(re).gridColumnEnd);
-				if (c < 0)
-					c = c + 33;
-				maxColumn = Math.min(maxColumn, c);
-			});
-			column = parseInt(style.gridColumnEnd) + 1;
-			console.log("resize: min=", minColumn, "col=", column, "max=", maxColumn);
-			const controller = new AbortController();
-			const signal = controller.signal;
-			midElt.addEventListener("mousemove", mouseMoveListener, {
-				capture: true, signal: signal
-			});
-			document.body.addEventListener("mouseup", e2 => {
-				console.log("mouseup!");
-				controller.abort();
-			}, { capture: true, once: true, signal: signal });
-			document.body.addEventListener("mouseleave", e2 => {
-				console.log("mouseleave!");
-				controller.abort();
-			}, { capture: false, once: true, signal: signal });
-			e.stopPropagation();
-			e.preventDefault();
-		});
-		//this.insertBefore(elt, this.firstElementChild);
-	});
+
 });
 
 var mqlPortrait;
@@ -1060,7 +702,7 @@ turtleduck.initializeWM = function () {
 		turtleduck.wm.initialize(turtleduck.layoutSpec, turtleduck.layoutPrefs);
 }
 
-jquery(document).ready(() => {
+window.addEventListener('DOMContentLoaded', loadedEvent => {
 	const mqlDesktop = window.matchMedia('(hover: hover) and (pointer: fine)');
 	function handleDesktop(mql) {
 		if (turtleduck.isDesktop !== undefined) {
@@ -1075,8 +717,8 @@ jquery(document).ready(() => {
 	function handleColorPreference(mql) {
 		if (mql.matches) {
 			const dark = mql.media.endsWith('dark)');
-			jquery('#page').toggleClass('light', !dark);
-			jquery('#page').toggleClass('dark', dark);
+			document.querySelector('#page').classList.toggle('light', !dark);
+			document.querySelector('#page').classList.toggle('dark', dark);
 			console.log(mql);
 			console.log(document.getElementById('page').classList);
 		}
@@ -1087,13 +729,6 @@ jquery(document).ready(() => {
 	mqlLight.onchange = handleColorPreference;
 
 	turtleduck.runningOnSafari = window.safari !== undefined;
-
-	if (false) {
-		if (turtleduck.localStorage.getItem('alwaysShowSplashHelp') || !turtleduck.localStorage.getItem('hasSeenSplashHelp')) {
-			jquery('#page').toggleClass('show-splash-help', true);
-			turtleduck.localStorage.setItem('hasSeenSplashHelp', true);
-		}
-	}
 
 	const resizeObserver = new ResizeObserver(entries => {
 		console.log('Console size changed');
@@ -1138,5 +773,3 @@ turtleduck._initializationComplete = function (err) {
 }
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;
-window.$ = jquery;
-//window.ace = ace;
