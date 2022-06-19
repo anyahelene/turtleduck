@@ -29,6 +29,7 @@
 		}
 	],
 	"settings": {
-		"java.configuration.updateBuildConfiguration": "interactive"
+		"java.configuration.updateBuildConfiguration": "interactive",
+		"js/ts.implicitProjectConfig.module": "ES2020"
 	}
 }

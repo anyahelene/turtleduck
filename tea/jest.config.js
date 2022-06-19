@@ -5,3 +5,4 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   modulePaths: ["<rootDir>/src/main/webroot/"]
 };
+
