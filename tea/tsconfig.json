@@ -4,13 +4,16 @@
         "target": "ES2020",
         "moduleResolution":"Node",
        // "allowSyntheticDefaultImports": true,
-       // "esModuleInterop": true,
-        "resolveJsonModule": true,
-        "strict": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": false,
+        "strict": false,
         "baseUrl": "./", 
+        "rootDir": "./src/main/webroot/",
+        "outDir": "target/classes/webroot/",
        // "paths": {"node/getopts":["node_modules/getopts/index.d.ts" ]}
      //   "allowJs": true
     },
+    "include": ["src/main/webroot/**/*.ts"],
     "exclude": [
         "node_modules"
     ],

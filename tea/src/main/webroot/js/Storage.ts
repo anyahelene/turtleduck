@@ -1,82 +1,90 @@
+/// <reference path="../../../../node_modules/@isomorphic-git/lightning-fs/index.d.ts" />
 import path from '@isomorphic-git/lightning-fs/src/path'
 import MagicPortal from 'magic-portal'
 import { turtleduck } from './TurtleDuck';
+import { Printer, Terminal } from './Terminal';
 import SubSystem from './SubSystem';
 import Settings from './Settings';
+import FS from '@isomorphic-git/lightning-fs';
+
 class StorageContext {
-	constructor(fs, cwd) {
+	fs: FS.PromisifiedFS;
+	private _path: any;
+	public cwd: string;
+	constructor(fs: any, cwd: string) {
 		this.fs = fs;
 		this._path = path;
 		this.cwd = this._path.normalize(cwd);
 	}
-	realpath(filepath) {
+	realpath(filepath: string): string {
 		return this._path.resolve(this.cwd, filepath);
 	}
-	async withCwd(filepath = '', opts) {
+	async withCwd(filepath: string = ''): Promise<StorageContext> {
 		const ctx = new StorageContext(this.fs, this.cwd);
-		return ctx.chdir(filepath, opts);
+		return ctx.chdir(filepath);
 	}
-	async chdir(filepath = '', opts) {
+	async chdir(filepath: string = ''): Promise<this> {
 		const newCwd = this.realpath(filepath);
 		console.log("cd to: ", newCwd);
-		return this.fs.stat(newCwd, opts).then(res => { this.cwd = newCwd; return this; });
+		return this.fs.stat(newCwd).then(res => { this.cwd = newCwd; return this; });
 	}
-	async mkdir(filepath, opts) {
+	async mkdir(filepath: string, opts?: FS.MKDirOptions): Promise<void> {
 		return this.fs.mkdir(this.realpath(filepath), opts);
 	}
-	async rmdir(filepath, opts) {
-		return this.fs.rmdir(this.realpath(filepath), opts);
+	async rmdir(filepath: string): Promise<void> {
+		return this.fs.rmdir(this.realpath(filepath));
 	}
-	async readdir(filepath = '', opts) {
-		console.log("readdir", filepath, opts)
-		const r = this.fs.readdir(this.realpath(filepath), opts);
-		console.log("r", r);
-		return r;
+	async readdir(filepath: string = ''): Promise<string[]> {
+		return this.fs.readdir(this.realpath(filepath));
 	}
-	async writetextfile(filepath, data, encoding = 'utf8', mode = 0o777) {
-		if (typeof data !== "string") {
-			data = `{data}`;
-		}
-		return this.fs.writeFile(this.realpath(filepath), data, { encoding: encoding, mode: mode });
+	async writetextfile(filepath: string, data: string | any, mode: number = 0o777): Promise<void> {
+		return this.fs.writeFile(this.realpath(filepath), typeof data === 'string' ? data : `{data}`, { encoding: 'utf8', mode: mode });
 	}
-	async writebinfile(filepath, data, mode = 0o777) {
-		if (!(data instanceof Uint8Array)) {
-			data = Uint8Array.from(data);
-		}
-		return this.fs.writeFile(this.realpath(filepath), data, { encoding: undefined, mode: mode });
+	async writebinfile(filepath: string, data: Uint8Array | Iterable<number>, mode = 0o777): Promise<void> {
+		return this.fs.writeFile(this.realpath(filepath), data instanceof Uint8Array ? data : Uint8Array.from(data), { encoding: undefined, mode: mode });
 	}
-	async readtextfile(filepath, encoding = 'utf8') {
-		return this.fs.readFile(this.realpath(filepath), { encoding: encoding });
+	async readtextfile(filepath: string): Promise<string> {
+		return this.fs.readFile(this.realpath(filepath), { encoding: 'utf8' }) as Promise<string>;
 	}
-	async readbinfile(filepath) {
-		return this.fs.readFile(this.realpath(filepath), { encoding: undefined });
+	async readbinfile(filepath: string): Promise<Uint8Array> {
+		return this.fs.readFile(this.realpath(filepath), { encoding: undefined }) as Promise<Uint8Array>;
 	}
-	async unlink(filepath, opts) {
-		return this.fs.unlink(this.realpath(filepath), opts);
+	async unlink(filepath: string): Promise<void> {
+		return this.fs.unlink(this.realpath(filepath));
 	}
-	async rename(oldFilepath, newFilepath, opts) {
-		return this.fs.rename(this.realpath(oldFilepath), this.realpath(newFilepath), opts);
+	async rename(oldFilepath: string, newFilepath: string): Promise<void> {
+		return this.fs.rename(this.realpath(oldFilepath), this.realpath(newFilepath));
 	}
-	async stat(filepath = '', opts) {
-		return this.fs.stat(this.realpath(filepath), opts);
+	async stat(filepath: string = ''): Promise<FS.Stats> {
+		return this.fs.stat(this.realpath(filepath));
 	}
-	async lstat(filepath = '', opts) {
-		return this.fs.lstat(this.realpath(filepath), opts);
+	async lstat(filepath: string = ''): Promise<FS.Stats> {
+		return this.fs.lstat(this.realpath(filepath));
 	}
-	async symlink(target = '.', filepath, opts) {
-		return this.fs.symlink(target, this.realpath(filepath), opts);
+	async symlink(target: string = '.', filepath: string): Promise<void> {
+		return this.fs.symlink(target, this.realpath(filepath));
 	}
-	async readlink(filepath = '', opts) {
-		return this.fs.readlink(this.realpath(filepath), opts);
+	async readlink(filepath: string = ''): Promise<string> {
+		return this.fs.readlink(this.realpath(filepath));
 	}
-	async backFile(filepath, opts) {
+	async backFile(filepath: string, opts?: FS.BackFileOptions): Promise<void> {
 		return this.fs.backFile(this.realpath(filepath), opts);
 	}
-	async du(filepath = '') {
+	async du(filepath: string = ''): Promise<number> {
 		return this.fs.du(this.realpath(filepath));
 	}
 }
 class Storage {
+	fs: any;
+	_MagicPortal: any;
+	_initialized: boolean;
+	worker?: Worker;
+	portal: any;
+	printer?: Printer;
+	ui: any;
+	git: any;
+	cwd?: StorageContext;
+	persisted: boolean = false;
 
 	constructor() {
 		this._MagicPortal = MagicPortal;
@@ -90,19 +98,19 @@ class Storage {
 		console.warn("Storage init", fsConfig);
 		this.worker = new Worker(new URL("./StorageWorker.js", import.meta.url));
 		this.portal = new MagicPortal(this.worker);
-		this.worker.addEventListener("message", ({ data }) => console.log("from storage worker:", data));
+		//this.worker.addEventListener("message", ({ data }) => console.log("from storage worker:", data));
 		const storage = this;
 
 		this.ui = {
 			async config() {
 				return fsConfig;
 			},
-			async print(message) {
+			async print(message: string) {
 				if (storage.printer) {
 					storage.printer.print(message);
 				}
 			},
-			async progress(evt) {
+			async progress(evt: any) {
 				const progress = 100 * (evt.total ? evt.loaded / evt.total : 0.5);
 				if (evt.total) {
 					turtleduck.userlog(`${evt.phase}: ${evt.loaded} / ${evt.total}`);
@@ -113,12 +121,12 @@ class Storage {
 				// $("progress").value = evt.total ? evt.loaded / evt.total : 0.5;
 				return;
 			},
-			async fill(url) {
+			async fill(url: URL) {
 				let username = window.prompt("Username:");
 				let password = window.prompt("Password:");
 				return { username, password };
 			},
-			async rejected({ url, auth }) {
+			async rejected({ url, auth }: any) {
 				window.alert("Authentication rejected");
 				return;
 			}
@@ -136,7 +144,7 @@ class Storage {
 	}
 
 	async clone(url, dest, proxy) {
-		this.printer = turtleduck.consolePrinter("git");
+		this.printer = Terminal.consolePrinter("git");
 		this.printer.print(`Cloning ${url} into /`);
 		await this.git.setDir(dest);
 
@@ -153,16 +161,13 @@ class Storage {
 		const allowed = Settings.getConfig("storage.persistenceAllowed", false);
 		if (navigator.storage) {
 			var persisted = false;
-			var estimate = {};
+			var estimate: StorageEstimate;
 			if (navigator.storage.persisted)
 				persisted = await navigator.storage.persisted();
 			if (navigator.storage.estimate)
 				estimate = await navigator.storage.estimate();
-			estimate.persisted = persisted;
-			estimate.requested = requested;
-			estimate.allowed = allowed;
 			this.persisted = persisted;
-			return estimate;
+			return { persisted, requested, allowed, ...estimate };
 		} else {
 			this.persisted = false;
 			return {
@@ -179,7 +184,7 @@ class Storage {
 					console.info("Storage is persistent: Storage will not be cleared except by explicit user action");
 				else
 					console.warn("Storage is not persistent: Storage may be cleared by the UA under storage pressure.");
-				turtleduck.setConfig({ "storage.persistenceRequested": true, "storage.persistenceAllowed": persistent }, "user");
+				Settings.setConfig({ "storage.persistenceRequested": true, "storage.persistenceAllowed": persistent }, "user");
 				return persistent;
 			});
 		} else {
@@ -187,7 +192,7 @@ class Storage {
 		}
 	}
 	async showInfo() {
-		const printer = turtleduck.consolePrinter("git");
+		const printer = Terminal.consolePrinter("git");
 		const branches = await this.git.listBranches({ remote: "origin" });
 		printer.print("BRANCHES:\n" + branches.map(b => `  ${b}`).join("\n") + "\n");
 
@@ -203,14 +208,14 @@ class Storage {
 	}
 }
 
-export { Storage };
+export { Storage, StorageContext };
 
 
 const systemSpec = {
 	depends: ['settings'],
 	name: 'storage',
 	start: (sys) => sys.api.init(),
-	 api: new Storage()
+	api: new Storage()
 
 }
 

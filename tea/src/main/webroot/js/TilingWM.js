@@ -340,6 +340,7 @@ class TilingWM {
 	_setupResizing(spec) {
 		const dir = spec.dir;
 		const items = spec.items;
+		console.groupCollapsed('setup resizing');
 		items.forEach((current, i) => {
 			console.log("looking at", i, i + 1, current, items[i + 1]);
 			if (items[i + 1]) {
@@ -429,6 +430,7 @@ class TilingWM {
 				this._setupResizing(current);
 			}
 		});
+		console.groupEnd()
 	}
 
 	_resizeMoveCalc(dir, e) {
@@ -525,7 +527,7 @@ function prealloc(items, avail) {
 
 }
 function layout(item, area, fun) {
-	console.log(item);
+	console.groupCollapsed('layout', item);
 	const dir = item.dir;
 	const k0 = dir === 'H' ? 0 : 1;
 	const k1 = dir === 'H' ? 1 : 0;
@@ -573,6 +575,7 @@ function layout(item, area, fun) {
 			it.area = allocArea;
 		}
 	});
+	console.groupEnd();
 	return item;
 }
 

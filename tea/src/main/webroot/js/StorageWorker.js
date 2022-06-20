@@ -7,14 +7,14 @@ const Git = require("isomorphic-git");
 const GitHttp = require("isomorphic-git/http/web/index.js");
 const MagicPortal = require("magic-portal/dist/index.js");
 
-console.log("mp:", MagicPortal);
-console.log("lfs:", LightningFS);
-console.log("git:", Git);
-console.log("githttp:", GitHttp);
+// console.log("mp:", MagicPortal);
+// console.log("lfs:", LightningFS);
+// console.log("git:", Git);
+// console.log("githttp:", GitHttp);
 
 const portal = new MagicPortal(self);
-self.addEventListener("message", ({ data }) => console.log("from main thread: ", data));
-console.warn("StorageWorker init", self, self.performance.timeOrigin, self.foo);
+//self.addEventListener("message", ({ data }) => console.log("from main thread: ", data));
+//console.warn("StorageWorker init", self, self.performance.timeOrigin, self.foo);
 
 
 (async () => {

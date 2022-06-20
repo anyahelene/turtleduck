@@ -1,8 +1,9 @@
 import { defaultsDeep, assign, get, set } from 'lodash-es';
 import SubSystem from './SubSystem';
 
-export type Config = { [cfgName: string]: Config | Config[] | string | number | boolean };
-const configs: Config[] = [{}, {}, {}, {}, {}];
+export type ConfigDict = { [cfgName: string]: Config };
+export type Config = ConfigDict | Config[] | string | number | boolean;
+const configs: ConfigDict[] = [{}, {}, {}, {}, {}];
 export const configNames = ['override', 'session', 'user', 'remote', 'default'];
 
 
@@ -34,7 +35,7 @@ export function saveConfig(source = 'all') {
 	}
 	try {
 		if (source === 'all' || source === 'user') {
-			const dict = assign({}, configs[2]);
+			const dict : Config = assign({}, configs[2]);
 			delete dict.session;
 			localStorage.setItem('turtleduck.userConfig', JSON.stringify(dict));
 		}
@@ -124,7 +125,7 @@ export const sessionStorage = storageAvailable('sessionStorage') ? window.sessio
 };
 
 
-const Settings = {
+const _Settings = {
 	getConfig,
 	setConfig,
 	saveConfig,
@@ -134,10 +135,11 @@ const Settings = {
 	autoSaveConfig,
 	configs,
 };
-export default Settings;
+export default _Settings;
+export type Settings = typeof _Settings;
 
 const systemSpec = {
-	api: Settings,
+	api: _Settings,
 	depends: [],
 	name: 'settings',
 	start() {
@@ -148,9 +150,4 @@ const systemSpec = {
 	}
 };
 
-try {
-	throw new Error("Imported Settings");
-} catch (e) {
-	console.error(e);
-}
 SubSystem.register(systemSpec);

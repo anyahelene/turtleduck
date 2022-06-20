@@ -1,16 +1,23 @@
-import { html, render } from "uhtml";
+import SubSystem from './SubSystem';
+import { Hole, html, render } from "uhtml";
 import { turtleduck } from './TurtleDuck';
 import Mousetrap from 'mousetrap';
-
+import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
+interface Command {
+	name: string,
+	element?: HonkCommand
+	icon?: string,
+	text?: string,
+	shortcut?: string,
+	[propName: string]: any
+}
 let uniqueId = 0;
 /** maps name to command object */
-const commands = {};
-/** maps  */
-const buttons = {};
+const commands: { [cmdName: string]: Command } = {};
 /** maps button id to command name */
-const defaultBindings = {};
-const ctrlSymbols = { mac: '⌘', caret: '⌃', iso: '⎈' }
-const keyboardSymbols = { ctrl: ctrlSymbols.mac, shift: "⇧", tab: "↹", option: "⌥" };
+const defaultBindings: { [buttonId: string]: Command } = {};
+const ctrlSymbols: { [keyName: string]: string } = { mac: '⌘', caret: '⌃', iso: '⎈' }
+const keyboardSymbols: { [keyName: string]: string } = { ctrl: ctrlSymbols.mac, shift: "⇧", tab: "↹", option: "⌥" };
 
 /** The honk-command element represents a command that can be bound to a key or button.
  * 
@@ -23,46 +30,45 @@ const keyboardSymbols = { ctrl: ctrlSymbols.mac, shift: "⇧", tab: "↹", optio
  * @field data-text-LL Localised text
  */
 class HonkCommand extends HTMLElement {
+	name: string = '';
 	constructor() {
 		super();
 	}
 	connectedCallback() {
 		console.log('element added to page.', this, this.isConnected);
 		this.style.display = 'none';
-		this.name = this.getAttribute('name');
+		this.name = this.getAttribute('name') ?? '';
 	}
 	/** Run this command
 	 * 
 	 * @param elt (optional) The element that triggered the command
 	 * @param event (optional)  The event that triggered the command
 	 */
-	async run(elt=this, event=null) {
+	async run(elt: HonkCommand | HonkButton = this, event?: Event) {
 		console.log("command.run", this.name, elt, event);
 		await turtleduck.handleKey(this.name, elt, event);
 	}
 }
 const styleRef = 'css/buttons.css';
 
-function loadCommand(element) {
-	if (element) {
-		const cmd = { name: element.getAttribute('name'), element: element, ...element.dataset };
-		const binding = element.dataset.bind;
-		console.log(cmd, binding);
-		if (binding) {
-			if (defaultBindings[binding]) {
-				console.warn('extra binding for key', binding, ":", cmd, ", original is", defaultBindings[binding]);
-			} else {
-				defaultBindings[binding] = cmd;
-			}
+function loadCommand(element: HonkCommand): Command {
+	const cmd: Command = { name: element.getAttribute('name') ?? '', element: element, ...element.dataset };
+	const binding = element.dataset.bind;
+	console.log(cmd, binding);
+	if (binding) {
+		if (defaultBindings[binding]) {
+			console.warn('extra binding for key', binding, ":", cmd, ", original is", defaultBindings[binding]);
+		} else {
+			defaultBindings[binding] = cmd;
 		}
-		if (cmd.name) {
-			if (commands[cmd.name]) {
-				console.warn('extra definition for command', cmd.name, ":", cmd, ", original is", commands[cmd.name]);
-			}
-			commands[cmd.name] = cmd;
-		}
-		return cmd;
 	}
+	if (cmd.name) {
+		if (commands[cmd.name]) {
+			console.warn('extra definition for command', cmd.name, ":", cmd, ", original is", commands[cmd.name]);
+		}
+		commands[cmd.name] = cmd;
+	}
+	return cmd;
 }
 
 /** A button element that can be bound to a `honk-command`.
@@ -71,6 +77,8 @@ function loadCommand(element) {
  * @field data-shortcut Default key shortcut
  */
 class HonkButton extends HTMLElement {
+	_command?: Command;
+	clickHandler: (e: Event) => Promise<void>;
 	constructor(id = '', shortcut = '', command = undefined) {
 		super();
 		if (id)
@@ -82,12 +90,12 @@ class HonkButton extends HTMLElement {
 			this._command = command;
 		this.attachShadow({ mode: "open" });
 
-		this.clickHandler = this.click.bind(this);
+		this.clickHandler = this._clickHandler.bind(this);
 	}
 
 	static get observedAttributes() { return ['class']; }
 
-	set command(cmd) {
+	set command(cmd: Command) {
 		this._command = cmd;
 		this.update();
 	}
@@ -98,15 +106,15 @@ class HonkButton extends HTMLElement {
 
 		let cmd = defaultBindings[this.id];
 		if (!cmd && cmd !== null) {
-			const elt = document.querySelector(`honk-command[data-bind="${this.id}"]`);
+			const elt = document.querySelector(`honk-command[data-bind="${this.id}"]`) as HonkCommand;
 			cmd = loadCommand(elt);
 		}
-		return cmd || { icon: this.dataset.icon || '', text: this.dataset.text || '' };
+		return cmd || { name: '', icon: this.dataset.icon || '', text: this.dataset.text || '' };
 
 	}
 
-	async click(e) {
-		if(this.classList.contains('disabled')) {
+	async _clickHandler(e: Event) {
+		if (this.classList.contains('disabled')) {
 			console.log("click on disabled button: ", this);
 			return;
 		}
@@ -126,15 +134,15 @@ class HonkButton extends HTMLElement {
 
 		if (!active) { // debounce
 			*/
-			await this.run(e);
+		await this.run(e);
 		//}
 	}
 
-	async run(e) {
+	async run(e: Event) {
 		const cmd = this.command;
-		if(cmd) {
+		if (cmd) {
 			console.log("Run command", cmd, "button", this, "event", e);
-			if(cmd.element) {
+			if (cmd.element) {
 				await cmd.element.run(this, e);
 			} else {
 				await turtleduck.handleKey(cmd.name, this, e);
@@ -142,7 +150,7 @@ class HonkButton extends HTMLElement {
 		} else {
 			console.warn("No command bound to ", this, e);
 			await turtleduck.handleKey(this.id, this, e);
-		} 
+		}
 	}
 	connectedCallback() {
 		console.log('element added to page.', this, this.isConnected);
@@ -157,27 +165,27 @@ class HonkButton extends HTMLElement {
 		console.log('moved to new page.', this);
 	}
 
-	attributeChangedCallback(name, oldValue, newValue) {
+	attributeChangedCallback(name: string, oldValue: string, newValue: string) {
 		console.log('element attributes changed.', name, oldValue, newValue);
 		this.update();
 	}
-	styleChanged(ref) {
-		console.log('style changed', this, ref);
+	styleChanged() {
+		console.log('style changed', this);
 	}
 	template() {
 		const command = this.command;
 		const text = command.text;
-		let icon = command.icon || this.dataset.icon || '';
+		let icon : string | Hole = command.icon || this.dataset.icon || '';
 		if (command.iconSrc || this.dataset.iconSrc)
 			icon = html`<img src="${command.iconSrc || this.dataset.iconSrc}" style="height:1em" alt="${icon}" />`;
-		const shortcut = this.classList.contains('not-implemented') ? '(not implemented)'
+		const shortcut: string = this.classList.contains('not-implemented') ? '(not implemented)'
 			: command.shortcut || this.dataset.shortcut || '';
 		const keys = shortcut.split('+').map(s => html`<span>${keyboardSymbols[s] || s}</span>`)
 		const shortcutText = shortcut.replace('ctrl+', '⌘').replace('shift+', '↑');
 		const classList = `${icon ? "has-icon" : "no-icon"} ${text ? "has-text" : "no-text"}`;
 
 		this.dataset.currentBinding = command.name;
-		if(shortcut && shortcut !== '(not implemented)')
+		if (shortcut && shortcut !== '(not implemented)')
 			Mousetrap.bindGlobal(shortcut, this.clickHandler);
 
 		console.log(this.id, command, icon, shortcut, shortcutText, keys);
@@ -189,16 +197,26 @@ class HonkButton extends HTMLElement {
 	}
 
 	update() {
-		render(this.shadowRoot, this.template());
+		render(this.shadowRoot as Node, this.template());
 	}
 }
 
-customElements.define("honk-button", HonkButton);
-customElements.define("honk-command", HonkCommand);
-turtleduck.deps.addListener(styleRef, e => {
-	document.querySelectorAll('honk-button').forEach(elt => {
-		elt.styleChanged(e);
-	});
-});
+const Buttons = { HonkButton, HonkCommand, commands, ctrlSymbols, keyboardSymbols };
+export default Buttons;
 
-export { HonkButton, HonkCommand, commands, buttons, ctrlSymbols, keyboardSymbols };
+SubSystem.register({
+	api: Buttons,
+	depends: ['dom'],
+	name: 'Buttons',
+	start(dep) {
+		console.groupCollapsed("defining buttons:");
+		customElements.define("honk-button", HonkButton);
+		customElements.define("honk-command", HonkCommand);
+		console.groupEnd();
+		SubSystem.waitFor(styleRef).then(() => {
+			document.querySelectorAll('honk-button').forEach((elt) => {
+				(elt as HonkButton).styleChanged();
+			});
+		});
+	},
+});

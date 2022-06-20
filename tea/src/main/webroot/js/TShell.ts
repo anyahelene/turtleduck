@@ -1,15 +1,16 @@
 
 import  getopts from 'getopts';
 import Settings from './Settings';
-
+import { Printer, Terminal } from './Terminal';
 import type { Options, ParsedOptions } from 'getopts/.';
 import SubSystem from './SubSystem';
+import { turtleduck } from './TurtleDuck';
+import { StorageContext } from './Storage';
 //import getopts = require('getopts');
 const homeDir = '/home';
 const options = {};
 type EnvValue = string | ((sh: TShell, val?: string) => string);
-type Printer = { print: (text: string) => void };
-declare const turtleduck : {elementPrinter(elt:HTMLElement, style:string):Printer};
+
 function createEnvironment(): Map<string, EnvValue> {
     let tmp: { [propName: string]: EnvValue } = {
         SHELL: '/bin/tsh',
@@ -29,10 +30,9 @@ function createEnvironment(): Map<string, EnvValue> {
     return new Map(Object.keys(tmp).map(k => [k, tmp[k]]));
 }
 const defaultEnvironment = createEnvironment();
-type Storage = any;
 type Program = {
     params: Options,
-    fun?(args: ParsedOptions, sh: TShell, ctx: Storage): Promise<number> | number | string | void
+    fun?(args: ParsedOptions, sh: TShell, ctx: StorageContext): Promise<number> | number | string | void
 };
 const programs: Map<string, Program> = new Map();
 
@@ -45,11 +45,11 @@ class TShell {
     private _outputElement?: HTMLElement;
     private _printer?: Printer;
     private _currentArguments?: Array<string>;
-    private _cwd : Storage;
-    constructor(cwd : Storage, parent?: TShell) {
+    private _cwd : StorageContext;
+    constructor(cwd? : StorageContext, parent?: TShell) {
         this._parent = parent;
         this.env = createEnvironment();
-        this._cwd = cwd;
+        this._cwd = cwd ?? turtleduck.cwd;
         defaultEnvironment.forEach((v, k) => {
             if (!this.env.has(k)) {
                 this.env.set(k, v);
@@ -113,12 +113,12 @@ class TShell {
 
         if (outputElement) {
             this._outputElement = outputElement;
-            this._printer = turtleduck.elementPrinter(outputElement, 'shell');
+            this._printer = Terminal.elementPrinter(outputElement, 'shell');
             console.log(this._printer);
         }
         const evalStep = async (i: number): Promise<number> => {
             if (i >= 0 && i < commands.length) {
-                if (commands[i + 1][0] === '|') {
+                if (commands[i + 1] && commands[i+1][0] === '|') {
                     // set up pipe
                 }
                 const cmd = commands[i];
@@ -207,7 +207,7 @@ programs.set('ls', {
     params: {
         boolean: ['all', 'long', 'time'], alias: { all: ['a'], long: ['l'], time: '' }
     },
-    fun: (args, sh, ctx) => ctx.readdir(args['_'][0]).then((res: string[]) => sh.println(res.join(' '))),
+    fun: (args, sh, ctx) => ctx.readdir(args['_'][0]).then((res: string[]) => sh.println(res.join(' '))).then(() => 0),
 });
 programs.set('echo', {
     params: { boolean: ['n', 'e', 'E'] },
@@ -215,7 +215,7 @@ programs.set('echo', {
 })
 programs.set('cd', {
     params: { boolean: ['L', 'P', 'e', '@'] },
-    fun: (args, sh, ctx) => ctx.chdir(args['_'][0])
+    fun: (args, sh, ctx) => ctx.chdir(args['_'][0]).then(() => 0)
 })
 programs.set('true', {
     params: {},
@@ -232,7 +232,7 @@ SubSystem.register({
 	depends: ['storage'],
 	name: 'tshell',
 	start(dep) {
-       return new TShell(SubSystem.get('storage').api);
+       return new TShell();
 	},
 });
 

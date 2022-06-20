@@ -6,7 +6,7 @@ import animals from './animals.txt';
 import hints from './hints.txt';
 import { turtleduck } from './js/TurtleDuck';
 import { fileSystem, FileSystem } from './js/FileSystem';
-import { History } from './js/History';
+import history from './js/History';
 import { Component } from './js/Component';
 import { TilingWM, TilingWindow } from './js/TilingWM';
 import { PyController } from './js/pycontroller';
@@ -32,7 +32,7 @@ import Settings from './js/Settings';
 
 var imports = {
 	SockJS, Mousetrap, animals, hints, fileSystem, FileSystem,
-	History, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
+	history, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
 	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, goose, timeAgo,
 	lodash, TShell, getopts, SubSystem, Settings
 };
@@ -48,7 +48,6 @@ turtleduck.Camera.addSubscription('copy', 'builtin', 'camera', 'Copy', '📋', '
 turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
 turtleduck.gridDisplay = new GridDisplayServer();
-turtleduck.history = new History(fileSystem);
 turtleduck.defaultConfig = defaultConfig;
 
 Object.defineProperty(turtleduck, 'cwd', { get: () => turtleduck.storage.cwd });
@@ -62,56 +61,8 @@ SubSystem.waitFor('settings').then((sys) => {
 });
 
 turtleduck.i18next = i18next;
-turtleduck.appendToConsole = function (style) {
-	if (turtleduck.shellComponent) {
-		const shell = turtleduck.shellComponent.current();
-		if (shell) {
-			return shell.terminal.appendBlock(style);
-		}
-	}
-}
-
-turtleduck.consolePrinter = function (style) {
-	if (turtleduck.shellComponent) {
-		const shell = turtleduck.shellComponent.current();
-		if (shell) {
-			const element = shell.terminal.appendBlock(style);
-			return turtleduck.elementPrinter(element, null, () => shell.terminal.scrollIntoView());
-		}
-	}
-}
-
-turtleduck.elementPrinter = function (element, style, afterPrint) {
-	const wrapperElt = element.closest('main');
-	const outputContainer = element.closest('.terminal-out-container');
-	if (typeof style === 'string') {
-		element = element.appendChild(html.node`<div class=${style}></div>`);
-	}
-	if (!afterPrint && wrapperElt && outputContainer) {
-		afterPrint = () => {
-			outputContainer.scrollTop = 0;
-			wrapperElt.scrollTop = wrapperElt.scrollHeight - wrapperElt.offsetHeight;
-		};
-	}
-	console.log(element, style, afterPrint);
-	let cr = false;
-	return {
-		print: text => {
-			let old = element.textContent;
-			if (cr) {
-				old = old.trim().replace(/.+$/, "");
-			}
-			cr = text.endsWith("\r");
-			element.textContent = old + text;
-			if (afterPrint) {
-				afterPrint();
-			}
-		}
-	}
-}
 
 
-turtleduck.userlog = msg => turtleduck.client.userlog(msg);
 turtleduck.TilingWM = TilingWM;
 turtleduck.TilingWindow = TilingWindow;
 turtleduck.wm = new TilingWM('mid', 32, 16);
@@ -266,14 +217,17 @@ turtleduck.hints = {
 	random: () => hintList[Math.floor(Math.random() * hintList.length)]
 }
 
-turtleduck.history.sessions().then(ss => {
-	if (!turtleduck.getConfig('session.name')) {
+SubSystem.waitFor('history').then(async () => {
+	const ss = await turtleduck.history.sessions();
+
+	if (!turtleduck.settings.getConfig('session.name')) {
 		const name = ss.length > 0 ? ss[0].session : turtleduck.animals.random();
 		const cfg = { session: { name: name } };
-		turtleduck.setConfig(cfg, 'session');
-		turtleduck.saveConfig('session');
+		turtleduck.settings.setConfig(cfg, 'session');
+		turtleduck.settings.saveConfig('session');
 	}
-});
+}
+);
 
 turtleduck.pyController = new PyController(true, turtleduck.getConfig('session.name'));
 turtleduck.shellServiceProxy = new ShellServiceProxy(turtleduck.pyController);
@@ -618,6 +572,10 @@ turtleduck.dismissElements = e => {
 
 window.addEventListener('DOMContentLoaded', loadedEvent => {
 	Mousetrap.bindGlobal('esc', e => handleKey('esc', null, e));
+
+	SubSystem.register({
+		name: 'dom'
+	});
 
 	document.documentElement.addEventListener("click", turtleduck.dismissElements);
 

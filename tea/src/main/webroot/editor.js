@@ -19,7 +19,7 @@ import { oneDark } from "@codemirror/theme-one-dark"
 import { darkDuck, darkDuckHighlightSpec, darkDuckHighlighter } from "./darktheme.js"
 import { closeLintPanel, lintKeymap, linter, nextDiagnostic, openLintPanel, setDiagnostics } from "@codemirror/lint"
 import { NodeProp } from '@lezer/common';
-import { highlightTree, classHighlighter, tags } from '@lezer/highlight'; 
+import { highlightTree, classHighlighter, tags } from '@lezer/highlight';
 import { Component } from './js/Component';
 //import { listTags } from "isomorphic-git";
 
@@ -273,7 +273,7 @@ class TDEditor extends Component {
 				return cls1 + ' ' + cls2;
 		}
 		highlightTree(tree, [darkDuckHighlighter, classHighlighter], highlight);
-	//	join(darkDuckHighlightStyle.match(tag, scope), classHighlightStyle.match(tag, scope)), highlight);
+		//	join(darkDuckHighlightStyle.match(tag, scope), classHighlightStyle.match(tag, scope)), highlight);
 		nolight(doc.length);
 		if (line.childElementCount > 0)
 			result.appendChild(line);
@@ -400,16 +400,17 @@ darkDuckHighlighter.module.rules.forEach(rule => {
 });
 // build definitions for classHighlighter css classes based on defs from darkDuckHighlighter
 highlight.classStyle = {};
-for(let tag in tags) {
+console.groupCollapsed("editor styles");
+for (let tag in tags) {
 	let t = tags[tag];
-	if(t.set) {
+	if (t.set) {
 		let ddStyleClass = '.' + darkDuckHighlighter.style([t]);
-		let clsStyleClass = '.'  + classHighlighter.style([t]);
+		let clsStyleClass = '.' + classHighlighter.style([t]);
 		console.log(ddStyleClass, clsStyleClass);
 		highlight.classStyle[clsStyleClass] = highlight.darkDuckStyle[ddStyleClass] || '{}'
 	}
 }
-
+console.groupEnd();
 highlight.classHighlighter = classHighlighter;
 highlight.darkDuck = darkDuck;
 highlight.tags = tags;
@@ -418,31 +419,34 @@ window.turtleduck.createLineEditor = function (elt, text, lang, handler) {
 	function enter({ state, dispatch }) {
 		let isComplete = true;
 		let changes = state.changeByRange(range => {
-			console.log("enter key pressed at ", range);
+			console.groupCollapsed("enter key pressed at ", range);
+			try {
+				let text = state.sliceDoc(range.from)
+				console.log("text: ", JSON.stringify(text));
+				// check if we're in the middle of the text
+				if (text.length > 0 && (!text.match(/^\r?\n/) || text.startsWith('/'))) { // TODO: line-break setting?
+					isComplete = true;
+					return { range };
+				}
+				let explode = range.from == range.to && isBetweenBrackets(state, range.from);
+				let cx = new IndentContext(state, { simulateBreak: range.from, simulateDoubleBreak: !!explode });
+				let indent = getIndentation(cx, range.from);
+				console.log("indent0: ", indent);
+				if (indent == null)
+					indent = /^\s*/.exec(state.doc.lineAt(range.from).text)[0].length;
+				console.log("indent1: ", indent, "explode: ", explode);
+				if (indent || explode)
+					isComplete = false;
 
-			let text = state.sliceDoc(range.from)
-			console.log("text: ", JSON.stringify(text));
-			// check if we're in the middle of the text
-			if (text.length > 0 && (!text.match(/^\r?\n/) || text.startsWith('/'))) { // TODO: line-break setting?
-				isComplete = true;
+				const tree = syntaxTree(state);
+				console.log("tree", tree);
+				let context = tree.resolve(range.anchor);
+				console.log("context", context);
+				console.log("enter key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o", range.from, range.to, range.anchor, range.head, state);
 				return { range };
+			} finally {
+				console.groupEnd();
 			}
-			let explode = range.from == range.to && isBetweenBrackets(state, range.from);
-			let cx = new IndentContext(state, { simulateBreak: range.from, simulateDoubleBreak: !!explode });
-			let indent = getIndentation(cx, range.from);
-			console.log("indent0: ", indent);
-			if (indent == null)
-				indent = /^\s*/.exec(state.doc.lineAt(range.from).text)[0].length;
-			console.log("indent1: ", indent, "explode: ", explode);
-			if (indent || explode)
-				isComplete = false;
-
-			const tree = syntaxTree(state);
-			console.log("tree", tree);
-			let context = tree.resolve(range.anchor);
-			console.log("context", context);
-			console.log("enter key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o", range.from, range.to, range.anchor, range.head, state);
-			return { range };
 		})
 		console.log("changes: ", changes);
 		if (isComplete) {
@@ -453,7 +457,6 @@ window.turtleduck.createLineEditor = function (elt, text, lang, handler) {
 	}
 	function tab({ state, dispatch }) {
 		let changes = state.changeByRange(range => {
-			console.log("enter key pressed at ", range);
 			console.log("tab key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o", range.from, range.to, range.anchor, range.head, state);
 			let context = syntaxTree(state).resolve(range.from);
 			console.log("context", context);

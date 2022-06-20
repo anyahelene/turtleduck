@@ -78,7 +78,9 @@ export class Dependency {
     }
 
     static debugAll(): void {
+        console.group('Subsystems:');
         Dependency.systems.forEach(dep => dep.debug());
+        console.groupEnd();
     }
 
     debug(): void {
@@ -133,9 +135,9 @@ export class Dependency {
         });
     }
     private setApi(api:any) {
-        if(typeof api === "function")
-            this._api = api();
-        else
+        //if(typeof api === "function")
+        //    this._api = api();
+        //else
             this._api = api;
         if(this._api)
             Dependency.targetObject[this.name] = this._api;
