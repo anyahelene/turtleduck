@@ -1,11 +1,12 @@
-import SubSystem from './SubSystem';
+import SubSystem from '../SubSystem';
+import { GooseElement, tagName } from './Geese';
 import { Hole, html, render } from "uhtml";
-import { turtleduck } from './TurtleDuck';
+import { turtleduck } from '../TurtleDuck';
 import Mousetrap from 'mousetrap';
 import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 interface Command {
 	name: string,
-	element?: HonkCommand
+	element?: GSCommand
 	icon?: string,
 	text?: string,
 	shortcut?: string,
@@ -29,7 +30,8 @@ const keyboardSymbols: { [keyName: string]: string } = { ctrl: ctrlSymbols.mac, 
  * @field data-text Default button/menu text
  * @field data-text-LL Localised text
  */
-class HonkCommand extends HTMLElement {
+class GSCommand extends GooseElement {
+    static tag = tagName('command');
 	name: string = '';
 	constructor() {
 		super();
@@ -44,14 +46,14 @@ class HonkCommand extends HTMLElement {
 	 * @param elt (optional) The element that triggered the command
 	 * @param event (optional)  The event that triggered the command
 	 */
-	async run(elt: HonkCommand | HonkButton = this, event?: Event) {
+	async run(elt: GSCommand | GSButton = this, event?: Event) {
 		console.log("command.run", this.name, elt, event);
 		await turtleduck.handleKey(this.name, elt, event);
 	}
 }
 const styleRef = 'css/buttons.css';
 
-function loadCommand(element: HonkCommand): Command {
+function loadCommand(element: GSCommand): Command {
 	const cmd: Command = { name: element.getAttribute('name') ?? '', element: element, ...element.dataset };
 	const binding = element.dataset.bind;
 	console.log(cmd, binding);
@@ -76,18 +78,16 @@ function loadCommand(element: HonkCommand): Command {
  * @field id The button's unique id
  * @field data-shortcut Default key shortcut
  */
-class HonkButton extends HTMLElement {
+class GSButton extends GooseElement {
+    static tag = tagName('button');
 	_command?: Command;
 	clickHandler: (e: Event) => Promise<void>;
-	constructor(id = '', shortcut = '', command = undefined) {
+	private _style: HTMLStyleElement;
+	styleChangedHandler: (e: Event) => void;
+	constructor() {
 		super();
-		if (id)
-			this.id = id;
-
-		if (shortcut)
-			this.dataset.shortcut = shortcut;
-		if (command)
-			this._command = command;
+        this._style = turtleduck.styles.get(styleRef);
+		this.styleChangedHandler = (e:Event) => this.styleChanged();
 		this.attachShadow({ mode: "open" });
 
 		this.clickHandler = this._clickHandler.bind(this);
@@ -106,7 +106,7 @@ class HonkButton extends HTMLElement {
 
 		let cmd = defaultBindings[this.id];
 		if (!cmd && cmd !== null) {
-			const elt = document.querySelector(`honk-command[data-bind="${this.id}"]`) as HonkCommand;
+			const elt = document.querySelector(`${GSCommand.tag}[data-bind="${this.id}"]`) as GSCommand;
 			cmd = loadCommand(elt);
 		}
 		return cmd || { name: '', icon: this.dataset.icon || '', text: this.dataset.text || '' };
@@ -154,10 +154,12 @@ class HonkButton extends HTMLElement {
 	}
 	connectedCallback() {
 		console.log('element added to page.', this, this.isConnected);
+        turtleduck.styles.attach(styleRef, this.styleChangedHandler);
 		this.update();
 	}
 
 	disconnectedCallback() {
+        turtleduck.styles.attach(styleRef, this.styleChangedHandler);
 		console.log('removed from page.', this);
 	}
 
@@ -169,9 +171,11 @@ class HonkButton extends HTMLElement {
 		console.log('element attributes changed.', name, oldValue, newValue);
 		this.update();
 	}
-	styleChanged() {
-		console.log('style changed', this);
-	}
+    styleChanged() {
+        this._style = turtleduck.styles.get(styleRef);
+        this.update();
+        console.log('style changed', this, styleRef, this._style);
+    }
 	template() {
 		const command = this.command;
 		const text = command.text;
@@ -189,7 +193,7 @@ class HonkButton extends HTMLElement {
 			Mousetrap.bindGlobal(shortcut, this.clickHandler);
 
 		console.log(this.id, command, icon, shortcut, shortcutText, keys);
-		return html`<link rel="stylesheet" href="${styleRef}">
+		return html`${this._style}
       <button id="${this.id}" onclick=${this.clickHandler} class="${classList}" type="button">
 		<span class="bg"></span><span class="icon">${icon}</span><span class="text">${command.text}</span><div class="shortcut">${keys}</div>
 	  </button>
@@ -201,22 +205,14 @@ class HonkButton extends HTMLElement {
 	}
 }
 
-const Buttons = { HonkButton, HonkCommand, commands, ctrlSymbols, keyboardSymbols };
+const Buttons = { GSButton, GSCommand, commands, ctrlSymbols, keyboardSymbols };
 export default Buttons;
 
-SubSystem.register({
-	api: Buttons,
-	depends: ['dom'],
-	name: 'Buttons',
-	start(dep) {
+SubSystem.declare('goose/buttons', Buttons).depends('dom')
+	.start((self,dep) => {
 		console.groupCollapsed("defining buttons:");
-		customElements.define("honk-button", HonkButton);
-		customElements.define("honk-command", HonkCommand);
+		customElements.define(GSButton.tag, GSButton);
+		customElements.define(GSCommand.tag, GSCommand);
 		console.groupEnd();
-		SubSystem.waitFor(styleRef).then(() => {
-			document.querySelectorAll('honk-button').forEach((elt) => {
-				(elt as HonkButton).styleChanged();
-			});
-		});
-	},
-});
+	})
+	.register();

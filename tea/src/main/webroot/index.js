@@ -11,7 +11,7 @@ import { Component } from './js/Component';
 import { TilingWM, TilingWindow } from './js/TilingWM';
 import { PyController } from './js/pycontroller';
 import { ShellServiceProxy } from './js/ShellServiceProxy';
-import { MDRender } from './js/MDRender';
+import { MDRender } from './js/goose/MDRender';
 import { Camera } from './js/Media';
 import { GridDisplayServer } from './js/GridDisplay';
 import { html, render } from 'uhtml';
@@ -20,7 +20,7 @@ import { timeAgo } from './js/TimeAgo';
 import { TShell } from './js/TShell';
 import * as lodash from 'lodash-es';
 import i18next from 'i18next';
-import * as goose from './js/goose';
+import goose from './js/goose';
 import getopts from 'getopts';
 //import { XTermJS } from './XTermJS';
 //import ace from "ace-builds";
@@ -41,7 +41,7 @@ console.log(turtleduck);
 globalThis.imports = imports;
 globalThis.turtleduck = turtleduck;
 globalThis.goose = goose;
-turtleduck.MDRender = MDRender;
+turtleduck.mdRender = MDRender;
 turtleduck.Camera = Camera;
 turtleduck.Camera.addSubscription('copy', 'builtin', 'qr', 'Copy', '📋', 'Copy to clipboard');
 turtleduck.Camera.addSubscription('copy', 'builtin', 'camera', 'Copy', '📋', 'Copy to clipboard');
@@ -722,7 +722,6 @@ turtleduck._initializationComplete = function (err) {
 				content: { error: err, status: 'error' }
 			});
 		});
-		return
 	});
 	turtleduck.client.route('grid-create', msg => turtleduck.gridDisplay.create(msg));
 	turtleduck.client.route('grid-update', msg => turtleduck.gridDisplay.update(msg));
@@ -731,3 +730,19 @@ turtleduck._initializationComplete = function (err) {
 }
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;
+
+//require.include('./css/frames.scss');
+import framesStyle from  './css/frames.scss';
+import buttonStyle from './css/buttons.scss';
+
+if (import.meta.webpackHot) {
+	console.warn("WebpackHot enabled");
+    import.meta.webpackHot.accept(['./css/frames.scss','./css/buttons.scss'], function (outdated) {
+		outdated.forEach(dep => {
+			turtleduck.styles.update(dep.replace('./','').replace('.scss', '.css'));
+		});
+	});
+  //  import.meta.webpackHot.accept('./css/frames.scss?raw', function (...args) {
+//		console.warn("frames", args);
+//	});
+}

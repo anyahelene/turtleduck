@@ -40,55 +40,56 @@
 
 			</nav>
 			<nav id="top-menu">
-				<honk-command name="save-and-run" data-bind="f1" data-shortcut="ctrl+s" data-icon="💾"
-					data-text="Save&Run"></honk-command>
-				<honk-command name="run" data-bind="f2" data-icon="🏃" data-text="Run"></honk-command>
-				<honk-command name="test" data-bind="f3" data-icon="🧪" data-text="Test"></honk-command>
-				<honk-command name="chat" data-bind="f4" data-icon="🦜" data-text="Chat"></honk-command>
-				<honk-command name="explorer" data-bind="f5" data-icon="🗺️" data-text="Explorer"></honk-command>
-				<honk-command name="code" data-bind="f6" data-icon="⌨️" data-text="Code"></honk-command>
-				<honk-command name="docs" data-bind="f7" data-icon="📖" data-text="Docs"></honk-command>
-				<honk-command name="code-gfx" data-bind="f8" data-icon="🖥️" data-text="Code/Gfx"></honk-command>
-				<honk-command name="language" data-bind="f9" data-icon="👄" data-text="Language"></honk-command>
-				<honk-command name="open" data-bind="f11" data-icon="📂" data-text="Open"></honk-command>
-				<honk-command name="debug" data-bind="f12" data-icon="🐛" data-text="Debug"></honk-command>
-				<honk-command name="publish" data-bind="f13" data-icon="🌐" data-text="Publish"></honk-command>
-				<honk-command name="profile" data-bind="f14" data-icon="🙃" data-text="Profile"></honk-command>
-				<honk-command name="projects" data-bind="f15" data-icon="🚧" data-text="Projects"></honk-command>
-				<honk-command name="quality" data-bind="f16" data-icon="🧐" data-text="Quality"></honk-command>
-				<honk-command name="hints" data-bind="f17" data-icon="✨" data-text="Hints"></honk-command>
-				<honk-command name="demos" data-bind="f18" data-icon="👩‍🏫" data-text="Demos"></honk-command>
-				<honk-command name="settings" data-bind="f19" data-icon="💅" data-alt-icon="⚙️" data-text="Settings"></honk-command>
-				<honk-command name="open-camera" data-bind="misc1" data-icon="📷"></honk-command>
-				<honk-command name="open-qr" data-bind="misc2" data-icon-src="images/qr-code.png"></honk-command>
-				<honk-command name="controllers" data-bind="misc3" data-icon="🎮"></honk-command>
-				<honk-command name="help" data-bind="misc4" data-icon="?"></honk-command>
+				<gs-command name="save-and-run" data-bind="f1" data-shortcut="ctrl+s" data-icon="💾"
+					data-text="Save&Run"></gs-command>
+				<gs-command name="run" data-bind="f2" data-icon="🏃" data-text="Run"></gs-command>
+				<gs-command name="test" data-bind="f3" data-icon="🧪" data-text="Test"></gs-command>
+				<gs-command name="chat" data-bind="f4" data-icon="🦜" data-text="Chat"></gs-command>
+				<gs-command name="explorer" data-bind="f5" data-icon="🗺️" data-text="Explorer"></gs-command>
+				<gs-command name="code" data-bind="f6" data-icon="⌨️" data-text="Code"></gs-command>
+				<gs-command name="docs" data-bind="f7" data-icon="📖" data-text="Docs"></gs-command>
+				<gs-command name="code-gfx" data-bind="f8" data-icon="🖥️" data-text="Code/Gfx"></gs-command>
+				<gs-command name="language" data-bind="f9" data-icon="👄" data-text="Language"></gs-command>
+				<gs-command name="open" data-bind="f11" data-icon="📂" data-text="Open"></gs-command>
+				<gs-command name="debug" data-bind="f12" data-icon="🐛" data-text="Debug"></gs-command>
+				<gs-command name="publish" data-bind="f13" data-icon="🌐" data-text="Publish"></gs-command>
+				<gs-command name="profile" data-bind="f14" data-icon="🙃" data-text="Profile"></gs-command>
+				<gs-command name="projects" data-bind="f15" data-icon="🚧" data-text="Projects"></gs-command>
+				<gs-command name="quality" data-bind="f16" data-icon="🧐" data-text="Quality"></gs-command>
+				<gs-command name="hints" data-bind="f17" data-icon="✨" data-text="Hints"></gs-command>
+				<gs-command name="demos" data-bind="f18" data-icon="👩‍🏫" data-text="Demos"></gs-command>
+				<gs-command name="settings" data-bind="f19" data-icon="💅" data-alt-icon="⚙️" data-text="Settings">
+				</gs-command>
+				<gs-command name="open-camera" data-bind="misc1" data-icon="📷"></gs-command>
+				<gs-command name="open-qr" data-bind="misc2" data-icon-src="images/qr-code.png"></gs-command>
+				<gs-command name="controllers" data-bind="misc3" data-icon="🎮"></gs-command>
+				<gs-command name="help" data-bind="misc4" data-icon="?"></gs-command>
 
-				<honk-button id="f1" data-shortcut="ctrl+s" class="row2"></honk-button>
-				<honk-button id="f2" data-shortcut="ctrl+2" class="row2"></honk-button>
-				<honk-button id="f3" data-shortcut="ctrl+3" class="row2 not-implemented"></honk-button>
-				<honk-button id="f4" data-shortcut="ctrl+4" class="row2"><span id="chat-notification"
-						class="notification">2</span></honk-button>
-				<honk-button id="f5" data-shortcut="ctrl+5" class="row2"></honk-button>
-				<honk-button id="f6" data-shortcut="ctrl+6" class="row2"></honk-button>
-				<honk-button id="f7" data-shortcut="ctrl+7" class="row2"></honk-button>
-				<honk-button id="f8" data-shortcut="ctrl+8" class="row2"></honk-button>
-				<honk-button id="f9" data-shortcut="ctrl+9" class="row2"></honk-button>
-				<honk-button id="f11" data-shortcut="shift+ctrl+11" class="row1"></honk-button>
-				<honk-button id="f12" data-shortcut="shift+ctrl+12" class="row1 not-implemented"></honk-button>
-				<honk-button id="f13" data-shortcut="shift+ctrl+13" class="row1 not-implemented"></honk-button>
-				<honk-button id="f14" data-shortcut="shift+ctrl+14" class="row1"></honk-button>
-				<honk-button id="f15" data-shortcut="shift+ctrl+15" class="row1"></honk-button>
-				<honk-button id="f16" data-shortcut="shift+ctrl+16" class="row1"></honk-button>
-				<honk-button id="f17" data-shortcut="shift+ctrl+17" class="row1"></honk-button>
-				<honk-button id="f18" data-shortcut="shift+ctrl+18" class="row1"></honk-button>
-				<honk-button id="f19" data-shortcut="shift+ctrl+19" class="row1"></honk-button>
+				<gs-button id="f1" data-shortcut="ctrl+s" class="row2"></gs-button>
+				<gs-button id="f2" data-shortcut="ctrl+2" class="row2"></gs-button>
+				<gs-button id="f3" data-shortcut="ctrl+3" class="row2 not-implemented"></gs-button>
+				<gs-button id="f4" data-shortcut="ctrl+4" class="row2"><span id="chat-notification"
+						class="notification">2</span></gs-button>
+				<gs-button id="f5" data-shortcut="ctrl+5" class="row2"></gs-button>
+				<gs-button id="f6" data-shortcut="ctrl+6" class="row2"></gs-button>
+				<gs-button id="f7" data-shortcut="ctrl+7" class="row2"></gs-button>
+				<gs-button id="f8" data-shortcut="ctrl+8" class="row2"></gs-button>
+				<gs-button id="f9" data-shortcut="ctrl+9" class="row2"></gs-button>
+				<gs-button id="f11" data-shortcut="shift+ctrl+11" class="row1"></gs-button>
+				<gs-button id="f12" data-shortcut="shift+ctrl+12" class="row1 not-implemented"></gs-button>
+				<gs-button id="f13" data-shortcut="shift+ctrl+13" class="row1 not-implemented"></gs-button>
+				<gs-button id="f14" data-shortcut="shift+ctrl+14" class="row1"></gs-button>
+				<gs-button id="f15" data-shortcut="shift+ctrl+15" class="row1"></gs-button>
+				<gs-button id="f16" data-shortcut="shift+ctrl+16" class="row1"></gs-button>
+				<gs-button id="f17" data-shortcut="shift+ctrl+17" class="row1"></gs-button>
+				<gs-button id="f18" data-shortcut="shift+ctrl+18" class="row1"></gs-button>
+				<gs-button id="f19" data-shortcut="shift+ctrl+19" class="row1"></gs-button>
 			</nav>
 			<nav id="top-right">
-				<honk-button id="misc1" data-shortcut="" class="rows"></honk-button>
-				<honk-button id="misc2" data-shortcut="" class="rows"></honk-button>
-				<honk-button id="misc3" data-shortcut="" class="rows"></honk-button>
-				<honk-button id="misc4" data-shortcut="" class="rows"></honk-button>
+				<gs-button id="misc1" data-shortcut="" class="rows"></gs-button>
+				<gs-button id="misc2" data-shortcut="" class="rows"></gs-button>
+				<gs-button id="misc3" data-shortcut="" class="rows"></gs-button>
+				<gs-button id="misc4" data-shortcut="" class="rows"></gs-button>
 				<div id="user">
 					<a href="command://profile"><img id="user-picture" style="height: 2.1rem; visibility: hidden" /></a>
 				</div>
@@ -96,7 +97,7 @@
 		</header>
 
 		<div id="mid">
-			<section id="explorer" class="box explorer focusable" style="background: none" data-left-of="editor,shell">
+			<gs-frame id="explorer" tab-name="Explorer" class="explorer focusable no-tabs no-tools" style="background: none">
 				<header>
 					<nav id="explorer-tabs" class="tabs">
 						<span class="tab selected">Explorer</span>
@@ -134,14 +135,14 @@
 						<ul id="explorer-import" class="collapse empty" data-role="listview"></ul>
 					</div>
 				</section>
-			</section>
+			</gs-frame>
 
-			<section id="editor" class="box focusable" data-left-of="screen">
+			<gs-frame id="editor" tab-name="Editor" frame-title="&lt;tab-title&gt; : editor" class="focusable">
+				<main class="wrapper" tab-name="Editor"></main>
 				<header id="editor-head">
 					<nav id="editor-tabs" class="tabs"></nav>
-					<nav id="editor-tools" class="toolbar"></nav>
+					<nav id="editor-tools" class="window-tools"></nav>
 				</header>
-				<main class="wrapper"></main>
 				<footer id="editor-foot">
 					<div class="box-foot editor-mode-foot"></div>
 				</footer>
@@ -156,19 +157,16 @@
 					</ul>
 					<p>to open shell snippets in editor.
 				</aside>
-			</section>
+			</gs-frame>
 
 			<!--div id="right-size" style="position:absolute;left:0px;margin-left:-5px;height:100%;width:5px;background:#ccc;z-index:100" ></div-->
-			<section id="screen" class="box screen focusable advanced-mode intermediate-mode beginner-mode">
-				<header id="screen-head">
-					<nav id="screen-tabs" class="tabs"></nav>
-					<nav id="screen-tools" class="toolbar"></nav>
-				</header>
-				<div data-insert-here="true" style="display: none"></div>
 
-				<main id="docs" data-tab="screen-tabs" data-tab-key="doc" style="display: block">
-					<div id="doc-display" class="text"></div>
+			<gs-frame id="screen" tab-name="Screen" frame-title="&lt;tab-title&gt; : display" class="screen focusable advanced-mode intermediate-mode beginner-mode">
+				<main id="docs" tab-name="DOC" data-tab="screen-tabs" data-tab-key="doc">
+					<div id=" doc-display" class="text">
+					</div>
 				</main>
+				<div data-insert-here="true" hidden></div>
 
 				<footer id="screen-foot"> </footer>
 				<aside data-toggle="-show-splash-help" data-target="#page" class="splashhelp">
@@ -183,21 +181,17 @@
 							</a>
 					</ul>
 				</aside>
-			</section>
+			</gs-frame>
 
-
-			<!-- div style="width: 100%; height: 10px; background: #f00"
-			draggable="true"></div-->
-			<section id="shell" class="box console focusable" data-below="editor,screen">
-				<div class="slack"></div>
-				<header>
-					<nav id="console-tabs" class="tabs"></nav>
-					<nav id="console-tools" class="toolbar"></nav>
-				</header>
-				<!--div id="code-size" style="position:relative;top:0px;margin-top:-5px;width:100%;height:5px;background:#ccc;z-index:100"></div-->
+			<gs-frame id="shell" tab-name="Terminal" frame-title="&lt;tab-title&gt; : terminal" class="console focusable">
 				<div data-insert-here="true" style="display: none"></div>
-
-				<aside data-toggle="-show-splash-help" data-target="#page"  class="splashhelp">
+				<gs-tab target="fooshell" tab-name="FooShell" frame-title="~/foo"></gs-tab>
+				<gs-tab target="barshell" tab-name="BarShell"></gs-tab>
+				<gs-tab target="bazshell" tab-name="BazShell"></gs-tab>
+				<main id="fooshell">Hello!</main>
+				<main id="barshell">Goodbye!</main>
+				<main id="bazshell">Yo!</main>
+				<aside data-toggle="-show-splash-help" data-target="#page" class="splashhelp">
 					<h2>Shell</h2>
 					<p>Evaluate expressions and declare variables, methods and
 						classes
@@ -209,16 +203,16 @@
 								a) { return a + a; }</a>
 					</ul>
 				</aside>
-			</section>
+			</gs-frame>
 
-			<aside id="popup" class="popup">
+			<aside id="popup" role="dialog" class="popup">
 				<h1>HINT</h1>
 				<figure class="card">
 					<blockquote>“Do or do not... there is no try.”</blockquote>
 					<figcaption>— Yoda</figcaption>
 				</figure>
 			</aside>
-			<aside id="dialog" class="popup">
+			<aside id="dialog role=" dialog" class="popup">
 				<h1></h1>
 				<figure class="card">
 				</figure>
@@ -227,7 +221,7 @@
 		</div>
 		<footer id="bottom">
 			<div id="foot-left">
-				<div class="last-message">
+				<div class="last-message" role="log" aria-label="Log messages">
 					<span id="last-message" data-from="turtleduck.lastMessage"></span>
 				</div>
 			</div>
@@ -255,7 +249,7 @@
 			</div>
 		</footer>
 	</div>
-	<div id="templates" style="display: none">
+	<div id="templates" style="display: none" hidden>
 		<aside data-template="file-dialog" class="file-dialog dismissable popup dialog">
 			<h1 data-text="files"></h1>
 			<figure class="card">

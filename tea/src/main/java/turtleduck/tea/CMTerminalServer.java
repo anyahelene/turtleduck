@@ -62,13 +62,13 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	private int redoLine = 0;
 	private HTMLElement outputContainer;
 	private String user;
-	private Component parent;
+	private HTMLElement parent;
 	private String name;
 	private Language lang;
 	private LanguageConsole console;
 	private boolean historyEnabled = true;
 
-	CMTerminalServer(Component parent, Shell shell) {
+	CMTerminalServer(HTMLElement parent, Shell shell) {
 		this.parent = parent;
 		this.shell = shell;
 		this.console = new LanguageConsole.ConsoleImpl(this);
@@ -77,9 +77,9 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	public void initialize(String name) {
 		this.name = name;
 		this.lang = shell.language();
-		logger.info("initialize({}, {},{})", name, lang, parent.element());
+		logger.info("initialize({}, {},{})", name, lang, parent);
 		wrapperElt = element("main", attr("id", name), clazz("waiting"));
-		outerElt = element("div", clazz("terminal"));
+		outerElt = element("div", clazz("terminal"), attr("title", name));
 		wrapperElt.appendChild(outerElt);
 		wrapperElt.addEventListener("keydown", (EventListener<KeyboardEvent>) this::keydown);
 
@@ -94,11 +94,11 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		outputContainer.appendChild(outputElt);
 
 		editor = EditorServer.createLineEditor(wrapperElt, "", lang.editMode, this::eventHandler);
-		editor.setParent(parent);
 		editor.set("anchorElt", anchorElt);
 		editor.set("outerElt", outerElt);
 		editor.set("outputElt", outputElt);
 		editor.set("terminal", this);
+		parent.appendChild(editor.element());
 		editor.register();
 
 		cursor = new HtmlCursorImpl(this, (s) -> {

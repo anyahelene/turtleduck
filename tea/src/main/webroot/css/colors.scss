@@ -1,9 +1,26 @@
+@use "sass:map";
+@use "sass:color";
+@use "sass:math";
+@use "sass:string";
+
 $PHOSPHOR_P1: #4aff00; // ~525nm
 $PHOSPHOR_P19: #ffdf00; // ~590nm
 
+$color-scheme: (
+	"frame": ( '=',  #aab ),
+	"focused": ( '=', #eea),
+	"selected": ( '+', 17),
+	"half": ( '*', .5),
+	"pen": ('=', #333),
+	"faded": ('*', 2),
+	"fade-80": ('#', .8),
+	"fade-50": ('#', .5),
+);
 $water: #66e;
 $page: #ccd;
 $page-light: #eeeaea;
+$frame: #ccd;
+$frame-accent: color.adjust($page, $hue: 180);
 $pen: #222;
 $pen-sharp: #000;
 $prompt: #fa6;
@@ -31,12 +48,77 @@ $debug: $LIGHT_BLUE;
 $info: $BLUE;
 $warning: #ff0;
 $error: #f00;
+@mixin dark-background {
+	background-color: #000;
+	background-image: //linear-gradient(90deg, #222 0%, #333 50%, #222 100%),
+		//linear-gradient(#1116 0%, #3336 50%, #1116 100%);
+		linear-gradient(89deg, #151314 0%, #252324 50%, #151314 100%),
+		linear-gradient(1deg, #141315 0%, #242325 50%, #141315 100%);
+	background-size: 100vw 100vh;
+	background-attachment: fixed;
+	background-blend-mode: screen;
+}
+
+@mixin light-background {
+	background-color: #fff;
+	background-image: linear-gradient(90deg, #ddd 0%, #ccc 50%, #ddd 100%),
+		linear-gradient(#eee6 0%, #ccc6 50%, #eee6 100%);
+	background-size: 100vw 100vh;
+	background-attachment: fixed;
+}
 
 :root {
-	--normalBg: $button-bg-normal;
-	--hoverBg: $button-bg-hover;
-	--activeBg: $button-bg-active;
-	--headerBg: $button-bg-header;
-	--normalFg: $pen;
-	--hoverFg: $pen-sharp;
+	@each $spec in map.keys($color-scheme) {
+		$cmd: nth(map.get($color-scheme, $spec), 1);
+		$arg: nth(map.get($color-scheme, $spec), 2);
+		@if $cmd == '=' {
+			--#{$spec}: #{$arg};
+			--#{$spec}-r: #{color.red($arg)};
+			--#{$spec}-g: #{color.green($arg)};
+			--#{$spec}-b: #{color.blue($arg)};
+			--#{$spec}-a: #{color.alpha($arg)};
+		}
+	}
+}
+@function replace($string, $search, $replace) {
+	$i: string.index($string, $search);
+	$l: string.length($search);
+	@return string.slice($string, 1, ($i)-1)+$replace+string.slice($string, $i+$l, -1);
+}
+@function color-lookup($specs...) {
+	$add: 0;
+	$mul: 1;
+	$c: #888;
+	$base_color:#888;
+	$cs: '&';
+	$base: 'color';
+	@each $spec in $specs {
+		$cmd: nth(map.get($color-scheme, $spec), 1);
+		$arg: nth(map.get($color-scheme, $spec), 2);
+		@if $cmd == '=' {
+			$c: $arg;
+			$base_color: $arg;
+			$base: $spec;
+		}
+	}
+	@each $spec in $specs {
+		$cmd: nth(map.get($color-scheme, $spec), 1);
+		$arg: nth(map.get($color-scheme, $spec), 2);
+		@if $cmd == '+' {
+			$c: color.change($c, $red: color.red($c)+$arg, $green: color.green($c)+$arg, $blue: color.blue($c)+$arg);
+			$cs: '(#{$cs} + #{$arg})';
+		} @else if $cmd == '*' {
+			$c: color.change($c, $red: color.red($c)*$arg, $green: color.green($c)*$arg, $blue: color.blue($c)*$arg);
+			$cs: '(#{$cs} * #{$arg})';
+		} @else if $cmd == '#' {
+			$c: color.change($c, $alpha: color.alpha($c)*$arg);
+			// todo
+		}
+	}
+	$cs: 'rgb(calc(#{replace($cs, '&', 'var(--#{$base}-r, #{color.red($base_color)})')}), calc(#{replace($cs, '&', 'var(--#{$base}-g, #{color.green($base_color)})')}), calc(#{replace($cs, '&', 'var(--#{$base}-b, #{color.blue($base_color)})')}))';
+	//$cs: 'calc'+string.slice($cs, 1, string.index($cs, '&')-1)+'var(--'+$base+')'+string.slice($cs, string.index($cs, '&')+1, -1);
+	@return $c; // string.unquote($cs);
+}
+@function rgbMul($base, $factor) {
+	@return rgb(calc(var(#{$base}-r)#{$factor}), calc(var(#{$base}-g)#{$factor}), calc(var(#{$base}-b)#{$factor}))
 }

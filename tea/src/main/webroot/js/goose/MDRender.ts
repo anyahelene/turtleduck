@@ -1,21 +1,23 @@
-import { Remarkable, utils } from 'remarkable';
+import { Remarkable } from 'remarkable';
+/// <reference path="../../../../node_modules/highlight.js/types/index.d.ts" />
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
 import json from 'highlight.js/lib/languages/json';
 import python from 'highlight.js/lib/languages/python';
 import java from 'highlight.js/lib/languages/java';
-import {assign} from 'lodash-es';
+import { assign } from 'lodash-es';
 import slugify from 'slugify';
+import { turtleduck } from '../TurtleDuck';
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('java', java);
 hljs.registerLanguage('json', json);
 hljs.registerLanguage('python', python);
 
-
+const utils = Remarkable.utils;
 /** Convert a flat document to one with a tree-like section structure; i.e.,
 	each heading and associated text will be placed in a DIV, with subsections
 	nested within. Nodes are removed from `rootElt` and added to `destElt` */
-function doc2tree(rootElt, destElt) {
+function doc2tree(rootElt: HTMLElement, destElt: HTMLElement) {
 	destElt.innerHTML = '';
 	var current = destElt;
 	var count = 0;
@@ -23,7 +25,7 @@ function doc2tree(rootElt, destElt) {
 	const stack = [destElt];
 	const path = [];
 
-	function newSection(elt, level) {
+	function newSection(elt, level?) {
 		const newSection = document.createElement('div');
 		if (elt.id) {
 			newSection.id = elt.id;
@@ -36,12 +38,12 @@ function doc2tree(rootElt, destElt) {
 		parent.appendChild(newSection);
 		stack.push(newSection);
 		path.push(count + 1);
-		newSection.dataset.level = path.length;
+		newSection.dataset.level = String(path.length);
 		newSection.dataset.path = path.join('.');
 		return newSection;
 	}
 
-	Array.from(rootElt.childNodes).forEach(elt => {
+	Array.from(rootElt.childNodes).forEach((elt: HTMLElement) => {
 		//console.log('doc2tree:', 'current', current, 'stack', stack, 'looking at', elt.innerHTML || elt.textContent);
 		var m;
 		if ((m = elt.nodeName.match(/^H([123456])$/)) != null) {
@@ -150,6 +152,15 @@ function makeToc(doc, elt, scroller) {
 
 const thresholds = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 0];
 class MDRender {
+	md: any;
+	Remarkable: typeof Remarkable;
+	utils: typeof Remarkable.utils;
+	_snippets: { code: string, language: string, opts?: string }[];
+	hljs: any;
+	javascript: any;
+	json: any;
+	python: any;
+	java: any;
 	constructor(opts = {}) {
 		this.md = new Remarkable(assign({
 			typographer: true,
@@ -158,7 +169,7 @@ class MDRender {
 		}, opts));
 
 		this.Remarkable = Remarkable;
-		this.utils = utils;
+		this.utils = Remarkable.utils;
 		this.hljs = hljs;
 		this.javascript = javascript;
 		this.json = json;
@@ -178,7 +189,7 @@ class MDRender {
 		this._snippets = [];
 		const doc = document.createElement('div');
 		doc.innerHTML = this.md.render(code);
-		doc.querySelectorAll('a[data-action]').forEach(link => {
+		doc.querySelectorAll('a[data-action]').forEach((link: HTMLAnchorElement) => {
 			const action = link.dataset.action;
 			//var m = link.href.match(/^([a-z]*):\/\/(.*)/);
 			//if(!m)
@@ -330,7 +341,7 @@ class MDRender {
 
 	_remarkableHighlight() {
 		const md = this;
-		return function (str, lang, opts) {
+		return function (str: string, lang: string, opts?: string) {
 			console.log('Highlight: ', lang, opts);
 			if (lang && hljs.getLanguage(lang)) {
 				try {

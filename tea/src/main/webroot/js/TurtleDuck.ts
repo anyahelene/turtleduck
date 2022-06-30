@@ -1,7 +1,11 @@
+/// <reference types="webpack/module" />
+
 import { StorageContext } from './Storage';
 import type { History, HistorySession } from './History';
 import type { Settings } from './Settings';
+import type { MDRender } from './goose/MDRender';
 import SubSystem from './SubSystem';
+import Styles from './goose/Styles';
 export { History, HistorySession };
 declare global {
 	interface Window {
@@ -74,7 +78,34 @@ let foo: phist;
 
 wrap2<History, 'get'>('get', 'history');
 
+let unique = 0;
 
+/**
+ * Generate unique id
+ * @param strOrElts list of elements that need ids
+ * @return the base prefix, or a fresh unique id if elts is empty
+ */
+function uniqueId(...strOrElts: (Element | string)[]): string {
+	let prefix = '_';
+	if ((typeof strOrElts[0] === 'string') && (typeof strOrElts[1] in ['undefined', 'string'])) {
+		prefix = strOrElts.shift() as string;
+	}
+	let suffix = '_';
+	for (const elt of strOrElts) {
+		if (typeof elt === 'string') {
+			suffix = elt;
+		} else if (elt && !elt.id) {
+			elt.id = `${prefix}${suffix}${unique++}`;
+		}
+	}
+	return `${prefix}${suffix}${unique++}`;
+}
+interface EditorOrShell {
+	paste(txt: string): void;
+	iconified(i: boolean): boolean;
+	focus(): void;
+	paste_to_file(filename: string, text: string, language: string): void;
+}
 interface TurtleDuck {
 	eyeDropper(): Promise<string | undefined>,
 	handleKey(key: string, button?: HTMLElement, event?: Event): Promise<any>;
@@ -84,6 +115,12 @@ interface TurtleDuck {
 	history: History;
 	settings: Settings;
 	makeProxy: typeof proxy;
+	uniqueId: typeof uniqueId;
+	pyshell: EditorOrShell;
+	editor: EditorOrShell;
+	wm: any;
+	mdRender: typeof MDRender;
+	styles: typeof Styles;
 }
 export const turtleduck: TurtleDuck = {
 	/** TODO: EyeDropper https://developer.mozilla.org/en-US/docs/Web/API/EyeDropper */
@@ -101,10 +138,35 @@ export const turtleduck: TurtleDuck = {
 	userlog(msg) { turtleduck.client.userlog(msg); },
 	history: proxy('history'),
 	cwd: proxy('cwd', 'storage'),
-	makeProxy: proxy
+	makeProxy: proxy,
+	styles: Styles,
+	uniqueId
 } as TurtleDuck;
 
 turtleduck['phistory'] = proxy('history');
+/*
+declare global {
+	interface ImportMeta {
+		webpackHot: {
+			accept(errorHandler: (err: any, { moduleId, dependencyId }) => void): void;
+			accept(dependencies: string | string[], callback?: () => void, errorHandler?: (err: any, { moduleId, dependencyId }) => void): void;
+			decline(dependencies?: string | string[]): void;
+			dispose(handler:(data:any) => void):void;
+			invalidate():void;
+		}
+	}
+}
+*/
+if (import.meta.webpackHot) {
+	console.warn("WebpackHot enabled");
+    import.meta.webpackHot.accept('./goose/Styles.ts', function (...args) {
+		console.log("old styles: ", turtleduck.styles, "new styles", Styles);
+		turtleduck.styles = Styles;
+        console.log('Accepting the updated Styles module!', args);
 
+    });
+	import.meta.webpackHot.addStatusHandler((status) => {
+		console.log("HMR status", status);
+	});
 
-
+}

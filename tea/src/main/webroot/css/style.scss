@@ -9,24 +9,6 @@
 @import 'button.scss';
 
 
-@mixin dark-background {
-	background-color: #000;
-	background-image: //linear-gradient(90deg, #222 0%, #333 50%, #222 100%),
-		//linear-gradient(#1116 0%, #3336 50%, #1116 100%);
-		linear-gradient(89deg, #151314 0%, #252324 50%, #151314 100%),
-		linear-gradient(1deg, #141315 0%, #242325 50%, #141315 100%);
-	background-size: 100vw 100vh;
-	background-attachment: fixed;
-	background-blend-mode: screen;
-}
-
-@mixin light-background {
-	background-color: #fff;
-	background-image: linear-gradient(90deg, #ddd 0%, #ccc 50%, #ddd 100%),
-		linear-gradient(#eee6 0%, #ccc6 50%, #eee6 100%);
-	background-size: 100vw 100vh;
-	background-attachment: fixed;
-}
 
 pre,
 code,
@@ -253,24 +235,6 @@ button {
 	border-color: #ff8;
 }
 
-.box main {
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-}
-
-.box header {
-	font-size: 0.7rem;
-	font-size-adjust: none;
-	margin-top: -1.05rem;
-	margin-bottom: .25rem;
-	display: flex;
-	flex-direction: row;
-	align-items: stretch;
-	height: 1.2rem;
-	line-height: 1.2rem;
-	justify-content: space-between;
-}
 
 #page.login .main {
 	grid-column: 1/-1;
@@ -529,61 +493,7 @@ main.doc-display {
 	font-size: 0.8rem;
 }
 
-.box header nav {
-	display: flex;
-	flex-direction: row;
-}
 
-.tabs .tab.saveable.unsaved::after {
-	content: " *";
-}
-
-header .tabs {
-	background: #ccd;
-	padding-left: .2rem;
-}
-
-.focused header .tabs {
-	background: #ff8;
-}
-
-.toolbar,
-.window-tools {
-	margin-left: .2rem;
-}
-
-.toolbar .disabled,
-.window-tools .disabled {
-	color: #888;
-}
-
-.tabs .tab,
-.toolbar button,
-.window-tools button {
-	padding: 0 .2rem;
-	display: block;
-	margin-right: .2rem;
-}
-
-.window-tools {
-	order: 9999;
-
-	button {
-		margin: 0;
-	}
-}
-
-.window-tools .min-button::before {
-	content: "🗕";
-}
-
-.window-tools .max-button::before {
-	content: "🗖";
-}
-
-.maximized .window-tools .max-button::before {
-	content: "🗗";
-}
 
 div.camera {
 	position: relative;
@@ -828,97 +738,6 @@ pre nav.toolbar button {
 .iconbox button:active {
 	margin: .2rem;
 	box-shadow: none;
-}
-
-.tab button {
-	background: transparent;
-}
-
-.tab.selected {
-	background-color: $page;
-}
-
-.focused .tab.selected,
-.focused header .toolbar button,
-.focused .window-tools button {
-	background-color: #ff8;
-}
-
-.toolbar button,
-.window-tools button,
-.iconbox button {
-	background-color: #ccd;
-}
-
-.tabs .tab {
-	background-color: $button-bg-header;
-}
-
-.tab .tab-close {
-	margin-left: .2rem;
-	margin-right: -.2rem;
-	opacity: .3;
-}
-
-nav .clickable,
-nav button {
-	cursor: pointer;
-}
-
-nav .clickable:active,
-nav button:active {
-	cursor: grabbing;
-}
-
-nav .clickable.disbled,
-nav button.disabled {
-	cursor: default !important;
-}
-
-//.box nav .clickable:hover, .box nav button:hover {
-//	text-shadow: 0 0 3px #888, 0 0 1px #000;
-//}
-
-.box nav .clickable,
-.box nav .clickable.disabled:active,
-.box nav .clickable.disabled:hover,
-.box nav button,
-.box nav button.disabled:active,
-.box nav button.disabled:hover {
-	transition: background-color ease .25s;
-	//background-color: $button-bg-header;
-	text-shadow: none;
-}
-
-.box nav .clickable:hover,
-.box nav button:hover {
-	background-color: $button-bg-hover;
-}
-
-.box nav .clickable:active,
-.box nav button:active {
-	background-color: $button-bg-active;
-	transition: background-color 0s;
-}
-
-.tabs .clickable {
-	display: inline-block;
-	padding: 0 .2rem;
-}
-
-.tab:hover .tab-close {
-	opacity: .7;
-	background-color: $button-bg-header;
-}
-
-.tab:hover .tab-close:hover {
-	opacity: 1;
-	color: #a00;
-	background-color: $button-bg-header;
-}
-
-.tab-close:active {
-	background-color: $button-bg-active;
 }
 
 .box .box-foot {
@@ -1282,7 +1101,7 @@ details.summary-only summary {
 
 
 #top-menu button,
-#top-menu honk-button {
+#top-menu gs-button {
 	//background-image:radial-gradient(ellipse at bottom right, #aab 0%, #667 100%);
 	//display: inline-block;
 	//align-self:stretch;
@@ -1298,7 +1117,7 @@ details.summary-only summary {
 }
 
 button,
-honk-button {
+gs-button {
 	@include lores-font;
 }
 
@@ -1308,16 +1127,18 @@ honk-button {
 	@include hires-font;
 }
 
-#top honk-button {
+
+
+#top gs-button {
 	background-color: $button-bg-header;
 }
 
-#top honk-button:hover {
+#top gs-button:hover {
 	background-color: $button-bg-hover;
 	color: $pen-sharp;
 }
 
-#top honk-button.active {
+#top gs-button.active {
 	transition: 0s;
 	background-color: $button-bg-active;
 }

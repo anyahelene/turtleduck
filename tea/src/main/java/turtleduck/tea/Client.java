@@ -18,6 +18,7 @@ import org.teavm.jso.core.JSObjects;
 import org.teavm.jso.core.JSString;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.html.HTMLElement;
+import org.teavm.jso.dom.xml.Document;
 
 import turtleduck.async.Async;
 import turtleduck.async.Async.Sink;
@@ -159,8 +160,8 @@ public class Client implements JSObject, ClientObject {
 			// DocDisplay docDisplay = new DocDisplay(screenComponent);
 			// docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
 			if (true) {
-				DocDisplay docDisplay2 = new DocDisplay(screenComponent);
-				docDisplay2.initFromUrl("examples/uncoil/uncoil.md", null, true);
+				// DocDisplay docDisplay2 = new DocDisplay(screenComponent);
+				// docDisplay2.initFromUrl("examples/uncoil/uncoil.md", null, true);
 			}
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
@@ -322,7 +323,7 @@ public class Client implements JSObject, ClientObject {
 			ChatConnection chatConnection = new ChatConnection("local-chat", this);
 			router.connect(chatConnection, "chat");
 			chat = new Shell(lang, chatConnection);
-			chatTerminal = new CMTerminalServer(shellComponent, chat);
+			chatTerminal = new CMTerminalServer(shellComponent.element(), chat);
 			chatTerminal.disableHistory();
 			chatTerminal.initialize("chat");
 			map.set("chat", chatTerminal.editor);
@@ -366,7 +367,7 @@ public class Client implements JSObject, ClientObject {
 			Client.client.userlog("Initializing Java environment...", true);
 			jshell = new Shell(lang, sockConn);
 
-			jterminal = new CMTerminalServer(shellComponent, jshell);
+			jterminal = new CMTerminalServer(shellComponent.element(), jshell);
 			jterminal.initialize("jshell");
 			map.set("jshell", jterminal.editor);
 			map.set("jterminal", jterminal);
@@ -421,7 +422,7 @@ public class Client implements JSObject, ClientObject {
 		if (pyshell == null) {
 			Client.client.userlog("Initializing Python environment...", true);
 			pyshell = new Shell(lang, pyConn);
-			pyterminal = new CMTerminalServer(shellComponent, pyshell);
+			pyterminal = new CMTerminalServer(shellComponent.element(), pyshell);
 			pyterminal.initialize("pyshell");
 			map.set("pyshell", pyterminal.editor);
 			map.set("pyterminal", pyterminal);

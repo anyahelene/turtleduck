@@ -1,5 +1,5 @@
-import * as Buttons from './Buttons';
+import Buttons from './goose/Buttons';
+import Frames from './goose/Frames';
+import Documents from './goose/Documents';
 
-
-
-export { Buttons };
+export default { Buttons, Frames, Documents };

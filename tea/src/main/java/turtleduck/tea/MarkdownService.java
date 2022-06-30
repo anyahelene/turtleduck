@@ -15,7 +15,7 @@ public class MarkdownService implements ShellService {
 	public final Logger logger = Logging.getLogger(MarkdownService.class);
 
 	private Component parent;
-	private Map<String, DocDisplay> openDocs = new HashMap<>();
+	private Map<String, Object> openDocs = new HashMap<>();
 
 	public MarkdownService(Component parent) {
 		this.parent = parent;
@@ -46,15 +46,17 @@ public class MarkdownService implements ShellService {
 		} else {
 			filename = String.format("%d.md", ref);
 		}
-		DocDisplay doc = openDocs.get(filename);
-		if (doc == null) {
-			doc = new DocDisplay(parent);
-			openDocs.put(filename, doc);
-		} else if (!doc.isopen()) {
-			doc.reopen();
-		}
-		doc.displayText(filename, null, code, true);
-		doc.select();
+		/*
+		 * DocDisplay doc = openDocs.get(filename);
+		 * if (doc == null) {
+		 * doc = new DocDisplay(parent);
+		 * openDocs.put(filename, doc);
+		 * } else if (!doc.isopen()) {
+		 * doc.reopen();
+		 * }
+		 * doc.displayText(filename, null, code, true);
+		 * doc.select();
+		 */
 		Dict result = Dict.create();
 		result.put(ShellService.REF, ref);
 		result.put(ShellService.COMPLETE, true);

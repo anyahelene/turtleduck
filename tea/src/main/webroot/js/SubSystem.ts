@@ -5,27 +5,77 @@ enum State {
 }
 
 
-export interface SubSystem {
+export interface SubSystem<T extends object> {
     name: string;
     depends?: Iterable<string>;
-    start?(dep: Dependency): Promise<object|void> | object | void;
+    start?(self:SubSystem<T>, dep: Dependency<T>): Promise<object|void> | object | void;
     stop?(): Promise<void> | void;
-    api? : object;
+    api? : T;
+    prototype? : T;
+    reloadable?: boolean
 }
 
 interface TargetObject {
     [propName : string]: object;
 }
+class SubSysBuilder<T extends object> {
+    sys:SubSystem<T>;
+    private _depends: string[];
 
-export class Dependency {
+    constructor(name:string, proto?:T) {
+        this._depends = [];
+        this.sys = {
+            name,
+            depends: this._depends,
+            reloadable:true
+        };
+        if(proto)
+            this.sys.prototype = proto;
+    }
+
+    depends(...deps:string[]): this {
+        this._depends.push(...deps);
+        return this;
+    }
+
+    stop(handler: () => Promise<void>|void): this {
+        this.sys.stop = handler;
+        return this;
+    }
+
+    start(handler: (self:SubSystem<T>, dep: Dependency<T>) => Promise<T|void> | object | void): this {
+        this.sys.start = handler;
+        return this;
+    }
+
+    prototype(proto:T): this {
+        this.sys.prototype = proto;
+        return this;
+    }
+
+    api(api:T): this {
+        this.sys.api = api;
+        return this;
+    }
+
+    reloadable(reloadable:boolean):this {
+        this.sys.reloadable = reloadable;
+        return this;
+    }
+
+    register(): Promise<void> {
+        return Dependency.register(this.sys);
+    }
+}
+export class Dependency<T extends object> {
     public static targetObject : TargetObject;
     private static counter = 0;
-    private static systems = new Map<string, Dependency>();
-    private static queue : SubSystem[] = [];
-    private promise: Promise<SubSystem>;
-    private resolve: (value: SubSystem | PromiseLike<SubSystem>) => void = (v) => { };
+    private static systems = new Map<string, Dependency<object>>();
+    private static queue : SubSystem<object>[] = [];
+    private promise: Promise<SubSystem<T>>;
+    private resolve: (value: SubSystem<T> | PromiseLike<SubSystem<T>>) => void = (v) => { };
     private reject: (reason: Error) => void = (r) => { };
-    private deps: Set<Dependency> = new Set();
+    private deps: Set<Dependency<object>> = new Set();
     private id: number = Dependency.counter++;
     
     private _name : string;
@@ -38,7 +88,7 @@ export class Dependency {
         return this._api;
     }
     private state: State = State.STOPPED;
-    private subsystem?: SubSystem;
+    private subsystem?: SubSystem<T>;
     constructor(name: string) {
         this._name = name;
         this.promise = new Promise((resolve, reject) => {
@@ -48,12 +98,12 @@ export class Dependency {
         console.log("Created", this.toString());
     }
 
-    dependencies(): Set<Dependency> {
+    dependencies(): Set<Dependency<object>> {
         return new Set(this.deps);
     }
 
-    dependents(): Set<Dependency> {
-        let result: Set<Dependency> = new Set();
+    dependents(): Set<Dependency<object>> {
+        let result: Set<Dependency<object>> = new Set();
         Dependency.systems.forEach(sys => {
             if (sys.deps.has(this)) {
                 result.add(sys);
@@ -62,7 +112,7 @@ export class Dependency {
         return result;
     }
 
-    forEach(callback : (value:Dependency) => void) : void {
+    forEach(callback : (value:Dependency<object>) => void) : void {
         this.deps.forEach(callback);
     }
     isStarted() : boolean {
@@ -87,7 +137,7 @@ export class Dependency {
         console.log(this.toString(), ":", [...this.deps].map(d => d.name).join(", "));
     }
 
-    static get(sysName: string): Dependency {
+    static get(sysName: string): Dependency<object> {
         let sys = Dependency.systems.get(sysName);
         if (!sys) {
             sys = new Dependency(sysName);
@@ -105,19 +155,19 @@ export class Dependency {
             sys = Dependency.queue.shift();
         }
     }
-    static async waitFor(sysName : string): Promise<Dependency> {
+    static async waitFor(sysName : string): Promise<Dependency<object>> {
         const dep = Dependency.get(sysName);
         await dep.promise;
         return Promise.resolve(dep);
     }
-    static register(sys: SubSystem) {
+    static register(sys: SubSystem<object>) {
         const depsys = Dependency.get(sys.name);
         if(!Dependency.targetObject) {
             Dependency.queue.push(sys);
             console.log(`System not ready, enqueing '${sys.name}'`);
             return;
         }
-        if (depsys.state !== State.STOPPED) {
+        if (depsys.state !== State.STOPPED && !sys.reloadable) {
             throw new Error(`Already registered: ${sys.name}`);
         }
         depsys.deps.clear();
@@ -150,7 +200,8 @@ export class Dependency {
             this.state = State.STARTING;
             console.log("Starting", this.toString());
             const start = this.subsystem.start ?? (() => Promise.resolve());
-            Promise.resolve(start(this)).then(obj => {
+
+            Promise.resolve(start(this.subsystem, this)).then(obj => {
                 this.state = State.STARTED;
                 if(obj)
                     this.setApi(obj);
@@ -171,6 +222,9 @@ export class Dependency {
             this.resolve(this.subsystem);
         }
     }
+    static declare<T extends object>(name:string, prototype?:T):SubSysBuilder<T> {
+        return new SubSysBuilder(name);
+    }
 }
 
 export default { 
@@ -178,5 +232,6 @@ export default {
         register: Dependency.register,
         get: Dependency.get,
         setup: Dependency.setup,
-        waitFor: Dependency.waitFor
+        waitFor: Dependency.waitFor,
+        declare: Dependency.declare
 }

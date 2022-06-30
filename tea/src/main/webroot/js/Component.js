@@ -37,6 +37,8 @@ class Component {
 	constructor(name, element, tdstate, parent = null) {
 		if (!name)
 			name = element.id;
+		if(!element.hasAttribute('tab-name'))
+			element.setAttribute('tab-name', name);
 		console.log("new Component(%o,%o,%o)", name, element, tdstate);
 		this.name = name;
 		this._element = element;
@@ -47,7 +49,8 @@ class Component {
 		this._toolbar = element.querySelector("nav.toolbar")
 		this._registered = false;
 		if (this._tabs) {
-			element.childNodes.forEach(node => { if (node.dataset && node.dataset.insertHere) this._insertHere = node; });
+			this._insertHere = element.querySelector('[data-insert-here]');
+			//element.childNodes.forEach(node => { if (node.dataset && node.dataset.insertHere) this._insertHere = node; });
 		}
 		this._tab = element.dataset.tab || (this._tabs && (this._tabs.dataset.tab || this._tabs.id)) || null;
 		this._tabKey = element.dataset.tabKey;
@@ -91,17 +94,17 @@ class Component {
 			child._tabKey = child.name;
 			child._hasTab = true;
 			var sel = "";
-			if (!this._tabs.hasChildNodes()) {
+			/*if (!this._tabs.hasChildNodes()) {
 				sel = " selected";
 				childElt.style.display = "block";
 			} else {
 				childElt.style.display = "none";
-			}
+			}*/
 			child._tabElt = makeTab(child._title || dataset.title || child.name,
 				this._tab, sel, child)
 			this._tabs.appendChild(child._tabElt);
 			if (this._insertHere) {
-				this._element.insertBefore(child._element, this._insertHere);
+				this._insertHere.parentElement.insertBefore(child._element, this._insertHere);
 			} else {
 				this._element.appendChild(child._element);
 			}
@@ -186,6 +189,7 @@ class Component {
 			console.error("setTitle() after register():", this.name, this._element);
 		}
 		this._title = title;
+		this._element.setAttribute('tab-name', title);
 	}
 
 	title() {

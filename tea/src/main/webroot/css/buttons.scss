@@ -4,6 +4,9 @@
 :host {
 	position: relative;
 	display: inline-block;
+	&[hidden] {
+        display: none;
+    }
 }
 
 :host(.rows) button {
@@ -44,7 +47,7 @@ button {
 }
 
 button:active {
-	background-color: red;
+	background-color: #0f0;
 }
 button.has-text {
 	text-align: end;

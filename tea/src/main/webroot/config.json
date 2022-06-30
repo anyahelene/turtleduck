@@ -182,7 +182,7 @@
 		},
 		"python": {
 			"title": "Python",
-			"enabled": "always",
+			"enabled": "optional",
 			"shellName": "PyShell",
 			"shellTitle": "PyShell",
 			"editMode": "python",
