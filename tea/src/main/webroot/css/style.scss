@@ -1101,7 +1101,7 @@ details.summary-only summary {
 
 
 #top-menu button,
-#top-menu gs-button {
+#top-menu borb-button {
 	//background-image:radial-gradient(ellipse at bottom right, #aab 0%, #667 100%);
 	//display: inline-block;
 	//align-self:stretch;
@@ -1117,7 +1117,7 @@ details.summary-only summary {
 }
 
 button,
-gs-button {
+borb-button {
 	@include lores-font;
 }
 
@@ -1129,16 +1129,16 @@ gs-button {
 
 
 
-#top gs-button {
+#top borb-button {
 	background-color: $button-bg-header;
 }
 
-#top gs-button:hover {
+#top borb-button:hover {
 	background-color: $button-bg-hover;
 	color: $pen-sharp;
 }
 
-#top gs-button.active {
+#top borb-button.active {
 	transition: 0s;
 	background-color: $button-bg-active;
 }

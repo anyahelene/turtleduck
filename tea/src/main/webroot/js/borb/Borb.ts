@@ -5,7 +5,7 @@ export class BorbElement extends HTMLElement {
     }
 }
 
-export const prefix = 'gs-';
+export const prefix = 'borb-';
 export function tagName(name:string, revision:number = 0) {
     const suffix = revision > 0 ? `_${revision}` : '';
     return `${prefix}${name}${suffix}`;
