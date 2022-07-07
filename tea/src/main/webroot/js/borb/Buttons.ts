@@ -6,7 +6,7 @@ import Mousetrap from 'mousetrap';
 import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 interface Command {
 	name: string,
-	element?: GSCommand
+	element?: BorbCommand
 	icon?: string,
 	text?: string,
 	shortcut?: string,
@@ -20,7 +20,7 @@ const defaultBindings: { [buttonId: string]: Command } = {};
 const ctrlSymbols: { [keyName: string]: string } = { mac: '⌘', caret: '⌃', iso: '⎈' }
 const keyboardSymbols: { [keyName: string]: string } = { ctrl: ctrlSymbols.mac, shift: "⇧", tab: "↹", option: "⌥" };
 
-/** The honk-command element represents a command that can be bound to a key or button.
+/** The borb-command element represents a command that can be bound to a key or button.
  * 
  * @field name The unique id of the command
  * @field data-bind Default key/button binding
@@ -30,7 +30,7 @@ const keyboardSymbols: { [keyName: string]: string } = { ctrl: ctrlSymbols.mac, 
  * @field data-text Default button/menu text
  * @field data-text-LL Localised text
  */
-class GSCommand extends BorbElement {
+class BorbCommand extends BorbElement {
     static tag = tagName('command');
 	name: string = '';
 	constructor() {
@@ -46,14 +46,14 @@ class GSCommand extends BorbElement {
 	 * @param elt (optional) The element that triggered the command
 	 * @param event (optional)  The event that triggered the command
 	 */
-	async run(elt: GSCommand | GSButton = this, event?: Event) {
+	async run(elt: BorbCommand | BorbButton = this, event?: Event) {
 		console.log("command.run", this.name, elt, event);
 		await turtleduck.handleKey(this.name, elt, event);
 	}
 }
 const styleRef = 'css/buttons.css';
 
-function loadCommand(element: GSCommand): Command {
+function loadCommand(element: BorbCommand): Command {
 	const cmd: Command = { name: element.getAttribute('name') ?? '', element: element, ...element.dataset };
 	const binding = element.dataset.bind;
 	console.log(cmd, binding);
@@ -73,12 +73,12 @@ function loadCommand(element: GSCommand): Command {
 	return cmd;
 }
 
-/** A button element that can be bound to a `honk-command`.
+/** A button element that can be bound to a `borb-command`.
  * 
  * @field id The button's unique id
  * @field data-shortcut Default key shortcut
  */
-class GSButton extends BorbElement {
+class BorbButton extends BorbElement {
     static tag = tagName('button');
 	_command?: Command;
 	clickHandler: (e: Event) => Promise<void>;
@@ -106,7 +106,7 @@ class GSButton extends BorbElement {
 
 		let cmd = defaultBindings[this.id];
 		if (!cmd && cmd !== null) {
-			const elt = document.querySelector(`${GSCommand.tag}[data-bind="${this.id}"]`) as GSCommand;
+			const elt = document.querySelector(`${BorbCommand.tag}[data-bind="${this.id}"]`) as BorbCommand;
 			cmd = loadCommand(elt);
 		}
 		return cmd || { name: '', icon: this.dataset.icon || '', text: this.dataset.text || '' };
@@ -205,14 +205,14 @@ class GSButton extends BorbElement {
 	}
 }
 
-const Buttons = { GSButton, GSCommand, commands, ctrlSymbols, keyboardSymbols };
+const Buttons = { BorbButton, BorbCommand, commands, ctrlSymbols, keyboardSymbols };
 export default Buttons;
 
-SubSystem.declare('goose/buttons', Buttons).depends('dom')
+SubSystem.declare('borb/buttons', Buttons).depends('dom')
 	.start((self,dep) => {
 		console.groupCollapsed("defining buttons:");
-		customElements.define(GSButton.tag, GSButton);
-		customElements.define(GSCommand.tag, GSCommand);
+		customElements.define(BorbButton.tag, BorbButton);
+		customElements.define(BorbCommand.tag, BorbCommand);
 		console.groupEnd();
 	})
 	.register();

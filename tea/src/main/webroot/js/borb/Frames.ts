@@ -17,10 +17,10 @@ const styleRef = 'css/frames.css';
 const revision: number = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['revision'] + 1 : 0;
 const OldFrames: typeof Frames = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['Frames'] : undefined;
 
-class GSPanel extends HTMLElement {
+class BorbPanel extends HTMLElement {
 
 }
-class GSTab extends BorbElement {
+class BorbTab extends BorbElement {
     static tag = tagName('tab', revision);
     _target?: HTMLElement;
     get targetElement(): HTMLElement {
@@ -58,7 +58,7 @@ dragImage.style.background = 'none';
 //const dragImage = (html.node`<img width="0" height="0" style="background:green!important;opacity:0%" id="transparent-pixel" src="">`;
 
 class FrameDragState {
-    _frame: GSFrame;
+    _frame: BorbFrame;
     _srcNav: HTMLElement;
     _count = 0;
     _offsetX: number;
@@ -66,7 +66,7 @@ class FrameDragState {
     _startX: number;
     _startY: number;
     _handler: (e: DragEvent) => void;
-    constructor(src: GSFrame, ev: DragEvent) {
+    constructor(src: BorbFrame, ev: DragEvent) {
         console.log('dragsession[frame]', src, ev);
         this._frame = src;
         this._offsetX = src.offsetLeft;
@@ -75,7 +75,7 @@ class FrameDragState {
         this._startY = ev.pageY;
         this._frame.style.transitionProperty = '';
         ev.dataTransfer.effectAllowed = "move";
-        ev.dataTransfer.setData("application/x-goose-frame", src.id);
+        ev.dataTransfer.setData("application/x-borb-frame", src.id);
         src.appendChild(dragImage);
         console.log(window.getComputedStyle(dragImage));
         ev.dataTransfer.setDragImage(dragImage, -9999, -9999);
@@ -95,7 +95,7 @@ class FrameDragState {
         this._frame.style.top = '0';
         this._frame.style.left = '0';
         document.removeEventListener('dragover', this._handler);
-        GSFrame._dragSession = undefined;
+        BorbFrame._dragSession = undefined;
 
     }
 
@@ -103,7 +103,7 @@ class FrameDragState {
         this._frame.classList.remove('move');
         this._count = 0;
     }
-    dragHandler(e: DragEvent, dest: GSFrame) {
+    dragHandler(e: DragEvent, dest: BorbFrame) {
         const dataTransfer = e.dataTransfer;
         if (e.type == 'dragend') {
             this.endSession();
@@ -115,7 +115,7 @@ class FrameDragState {
             console.log(this._startX, this._startY, (e as any).layerX, (e as any).layerY);
         } else if (e.type == 'dragenter' && dataTransfer) {
             console.info("drag enter", e.currentTarget === e.target, this._count, e);
-            if (this._count === 0 && dataTransfer.getData('application/x-goose-tabpanel')) {
+            if (this._count === 0 && dataTransfer.getData('application/x-borb-tabpanel')) {
                 this._frame.classList.add('move');
                 e.preventDefault();
             }
@@ -135,14 +135,14 @@ class FrameDragState {
 
 }
 class TabDragState {
-    _dragSource: GSFrame;
+    _dragSource: BorbFrame;
     _srcPlaceholder: HTMLElement;
     _dstPlaceholder: HTMLElement;
     _count = 0;
     _tab: TabEntry;
     _origTabs: Element[][];
     _dropping = false;
-    constructor(src: GSFrame, tab: TabEntry, ev: DragEvent) {
+    constructor(src: BorbFrame, tab: TabEntry, ev: DragEvent) {
         const elt = tab.button;
         console.log('dragsession', src, elt, ev);
         this._dragSource = src;
@@ -154,7 +154,7 @@ class TabDragState {
         this._dstPlaceholder.style.background = '#f00';
         this._dstPlaceholder.className = '';
         ev.dataTransfer.effectAllowed = "move";
-        ev.dataTransfer.setData("application/x-goose-tabpanel", this._tab.element.id);
+        ev.dataTransfer.setData("application/x-borb-tabpanel", this._tab.element.id);
         ev.dataTransfer.setDragImage(elt, elt.offsetWidth / 2, -elt.offsetHeight);
         console.log(ev.dataTransfer);
         elt.classList.add('dragging');
@@ -163,7 +163,7 @@ class TabDragState {
     }
     _saveTabPositions() {
         const result = [];
-        document.querySelectorAll(`${GSFrame.tag} nav.tabs`).forEach(nav => {
+        document.querySelectorAll(`${BorbFrame.tag} nav.tabs`).forEach(nav => {
             result.push([...nav.children]);
         });
         return result;
@@ -174,7 +174,7 @@ class TabDragState {
         this._tab.button.classList.remove('dragging');
         this._tab.button.classList.remove('moving');
         //this._srcPlaceholder.remove();
-        GSFrame._dragSession = undefined;
+        BorbFrame._dragSession = undefined;
 
     }
 
@@ -202,7 +202,7 @@ class TabDragState {
         this._tab.button.classList.add('move');
         this._dropping = true;
     }
-    dragHandler(e: DragEvent, dest: GSFrame) {
+    dragHandler(e: DragEvent, dest: BorbFrame) {
         const dataTransfer = e.dataTransfer;
         const elt = e.currentTarget as HTMLElement;
         if (e.type == 'dragend') {
@@ -225,7 +225,7 @@ class TabDragState {
             }
             //            console.log("dragOver", e, e.offsetX, elt.offsetWidth);
         } else if (e.type == 'dragenter') {
-            if (this._count === 0 && dataTransfer?.getData('application/x-goose-tabpanel') && !dest.classList.contains('no-tabs')) {
+            if (this._count === 0 && dataTransfer?.getData('application/x-borb-tabpanel') && !dest.classList.contains('no-tabs')) {
                 this.beginDropAttempt();
                 e.preventDefault();
             }
@@ -271,13 +271,13 @@ class TabEntry {
     panel: HTMLElement;
     button: HTMLElement;
     observer: MutationObserver;
-    frame: GSFrame;
-    constructor(elt: HTMLElement, frame: GSFrame) {
+    frame: BorbFrame;
+    constructor(elt: HTMLElement, frame: BorbFrame) {
         if (!elt.id)
             elt.id = uniqueId();
         this.element = elt;
         this.frame = frame;
-        this.panel = elt instanceof GSTab ? elt.targetElement : elt;
+        this.panel = elt instanceof BorbTab ? elt.targetElement : elt;
         this.observer = new MutationObserver(() => this.update());
         this.button = html.node`<button role="tab" draggable="true" aria-controls=${this.panel.id ?? ''} type="button"></button>`;
     }
@@ -319,7 +319,7 @@ class TabEntry {
     }
 }
 
-class GSFrame extends HTMLElement {
+class BorbFrame extends HTMLElement {
     static tag = tagName('frame', revision);
     static _dragSession?: TabDragState | FrameDragState;
     _tabs: IndexedMap<TabEntry, 'element'> = new IndexedMap('element', 'button');
@@ -348,19 +348,19 @@ class GSFrame extends HTMLElement {
             console.log(e);
             if (e.type == 'dragstart') {
                 const elt = e.currentTarget as HTMLElement;
-                if (GSFrame._dragSession) {
-                    console.warn("new drag started while old session still active", GSFrame._dragSession, e)
-                    GSFrame._dragSession.endSession();
+                if (BorbFrame._dragSession) {
+                    console.warn("new drag started while old session still active", BorbFrame._dragSession, e)
+                    BorbFrame._dragSession.endSession();
                 }
                 if (elt instanceof HTMLButtonElement)
-                    GSFrame._dragSession = new TabDragState(this, this._tabs.get(elt, 'button'), e);
+                    BorbFrame._dragSession = new TabDragState(this, this._tabs.get(elt, 'button'), e);
                 else
-                    GSFrame._dragSession = new FrameDragState(this, e);
+                    BorbFrame._dragSession = new FrameDragState(this, e);
                 // e.preventDefault();
-                console.debug('starting new drag session', GSFrame._dragSession, e);
-            } else if (GSFrame._dragSession) {
-                console.debug('continuing drag session', GSFrame._dragSession, e);
-                GSFrame._dragSession.dragHandler(e, this);
+                console.debug('starting new drag session', BorbFrame._dragSession, e);
+            } else if (BorbFrame._dragSession) {
+                console.debug('continuing drag session', BorbFrame._dragSession, e);
+                BorbFrame._dragSession.dragHandler(e, this);
             } else {
                 console.warn("drag event with no session: ", e);
             }
@@ -512,19 +512,19 @@ class GSFrame extends HTMLElement {
 
 }
 
-export const Frames = { GSFrame, GSTab, GSPanel, styleRef, version: 9, revision };
+export const Frames = { BorbFrame, BorbTab, BorbPanel, styleRef, version: 9, revision };
 export default Frames;
 
-SubSystem.declare('goose/frames', Frames)
+SubSystem.declare('borb/frames', Frames)
     .depends('dom')
     .start((self, dep) => {
         console.groupCollapsed("defining frames:");
         try {
-            customElements.define(GSFrame.tag, GSFrame);
-            customElements.define(GSTab.tag, GSTab);
+            customElements.define(BorbFrame.tag, BorbFrame);
+            customElements.define(BorbTab.tag, BorbTab);
             if (OldFrames) {
-                document.querySelectorAll(OldFrames.GSFrame.tag).forEach(oldElt => {
-                    const newElt = new GSFrame();
+                document.querySelectorAll(OldFrames.BorbFrame.tag).forEach(oldElt => {
+                    const newElt = new BorbFrame();
                     console.log("upgrading", oldElt, "to", newElt);
                     oldElt.getAttributeNames().forEach(attrName => {
                         console.log('set', attrName, oldElt.getAttribute(attrName));

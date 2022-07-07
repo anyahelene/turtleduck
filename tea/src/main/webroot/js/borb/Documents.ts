@@ -5,7 +5,7 @@ import { turtleduck } from '../TurtleDuck';
 import type { MDRender } from './MDRender';
 const styleRef = 'css/markdown.css';
 
-class GSDocument extends HTMLElement {
+class BorbDocument extends HTMLElement {
     static tag = tagName('document');
     styleChanged() {
         throw new Error('Method not implemented.');
@@ -80,14 +80,14 @@ class GSDocument extends HTMLElement {
 
 
 
-export const Documents = { GSDocument, styleRef };
+export const Documents = { BorbDocument, styleRef };
 export default Documents;
 
-SubSystem.declare('goose/documents', Documents)
+SubSystem.declare('borb/documents', Documents)
     .depends('dom')
     .start((self, dep) => {
         console.groupCollapsed(`defining mddisplay: ${self.name}`);
-        customElements.define(GSDocument.tag, GSDocument);
+        customElements.define(BorbDocument.tag, BorbDocument);
         console.groupEnd();
         return Documents;
     }).register();

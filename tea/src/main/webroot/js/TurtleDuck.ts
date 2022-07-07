@@ -163,7 +163,7 @@ declare global {
 */
 if (import.meta.webpackHot) {
 	console.warn("WebpackHot enabled");
-    import.meta.webpackHot.accept('./goose/Styles.ts', function (...args) {
+    import.meta.webpackHot.accept('./borb/Styles.ts', function (...args) {
 		console.log("old styles: ", turtleduck.styles, "new styles", Styles);
 		turtleduck.styles = Styles;
         console.log('Accepting the updated Styles module!', args);
