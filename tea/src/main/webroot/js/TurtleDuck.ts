@@ -3,10 +3,10 @@
 import { StorageContext } from './Storage';
 import type { History, HistorySession } from './History';
 import type { Settings } from './Settings';
-import type { MDRender } from './goose/MDRender';
+import type { MDRender } from './borb/MDRender';
 import SubSystem from './SubSystem';
-import Styles from './goose/Styles';
-import IndexedMap from './goose/IndexedMap';
+import Styles from './borb/Styles';
+import IndexedMap from './borb/IndexedMap';
 
 export { History, HistorySession };
 declare global {
