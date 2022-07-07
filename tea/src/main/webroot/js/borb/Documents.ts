@@ -1,5 +1,5 @@
 import SubSystem from '../SubSystem';
-import { GooseElement, tagName } from './Geese';
+import { BorbElement, tagName } from './Borb';
 import { Hole, html, render } from "uhtml";
 import { turtleduck } from '../TurtleDuck';
 import type { MDRender } from './MDRender';

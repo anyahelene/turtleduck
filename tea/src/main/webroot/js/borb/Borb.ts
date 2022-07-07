@@ -1,5 +1,5 @@
 
-export class GooseElement extends HTMLElement {
+export class BorbElement extends HTMLElement {
     constructor() {
         super();
     }

@@ -1,7 +1,7 @@
 import SubSystem from '../SubSystem';
 import { Hole, html, render } from "uhtml";
 import { turtleduck } from '../TurtleDuck';
-import { GooseElement, tagName, assert } from './Geese';
+import { BorbElement, tagName, assert } from './Borb';
 import { data } from './Styles';
 import IndexedMap from './IndexedMap';
 import { uniqueId } from 'lodash-es';
@@ -20,7 +20,7 @@ const OldFrames: typeof Frames = import.meta.webpackHot && import.meta.webpackHo
 class GSPanel extends HTMLElement {
 
 }
-class GSTab extends GooseElement {
+class GSTab extends BorbElement {
     static tag = tagName('tab', revision);
     _target?: HTMLElement;
     get targetElement(): HTMLElement {

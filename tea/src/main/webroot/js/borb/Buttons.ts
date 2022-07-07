@@ -1,5 +1,5 @@
 import SubSystem from '../SubSystem';
-import { GooseElement, tagName } from './Geese';
+import { BorbElement, tagName } from './Borb';
 import { Hole, html, render } from "uhtml";
 import { turtleduck } from '../TurtleDuck';
 import Mousetrap from 'mousetrap';
@@ -30,7 +30,7 @@ const keyboardSymbols: { [keyName: string]: string } = { ctrl: ctrlSymbols.mac, 
  * @field data-text Default button/menu text
  * @field data-text-LL Localised text
  */
-class GSCommand extends GooseElement {
+class GSCommand extends BorbElement {
     static tag = tagName('command');
 	name: string = '';
 	constructor() {
@@ -78,7 +78,7 @@ function loadCommand(element: GSCommand): Command {
  * @field id The button's unique id
  * @field data-shortcut Default key shortcut
  */
-class GSButton extends GooseElement {
+class GSButton extends BorbElement {
     static tag = tagName('button');
 	_command?: Command;
 	clickHandler: (e: Event) => Promise<void>;
