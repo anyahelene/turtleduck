@@ -6,6 +6,8 @@ import type { Settings } from './Settings';
 import type { MDRender } from './goose/MDRender';
 import SubSystem from './SubSystem';
 import Styles from './goose/Styles';
+import IndexedMap from './goose/IndexedMap';
+
 export { History, HistorySession };
 declare global {
 	interface Window {
@@ -121,6 +123,7 @@ interface TurtleDuck {
 	wm: any;
 	mdRender: typeof MDRender;
 	styles: typeof Styles;
+	IndexedMap: typeof IndexedMap;
 }
 export const turtleduck: TurtleDuck = {
 	/** TODO: EyeDropper https://developer.mozilla.org/en-US/docs/Web/API/EyeDropper */
@@ -140,7 +143,8 @@ export const turtleduck: TurtleDuck = {
 	cwd: proxy('cwd', 'storage'),
 	makeProxy: proxy,
 	styles: Styles,
-	uniqueId
+	uniqueId,
+	IndexedMap
 } as TurtleDuck;
 
 turtleduck['phistory'] = proxy('history');

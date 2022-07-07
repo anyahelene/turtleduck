@@ -174,7 +174,7 @@ class GSButton extends GooseElement {
     styleChanged() {
         this._style = turtleduck.styles.get(styleRef);
         this.update();
-        console.log('style changed', this, styleRef, this._style);
+        //console.log('style changed', this, styleRef, this._style);
     }
 	template() {
 		const command = this.command;
@@ -192,7 +192,7 @@ class GSButton extends GooseElement {
 		if (shortcut && shortcut !== '(not implemented)')
 			Mousetrap.bindGlobal(shortcut, this.clickHandler);
 
-		console.log(this.id, command, icon, shortcut, shortcutText, keys);
+		//console.log(this.id, command, icon, shortcut, shortcutText, keys);
 		return html`${this._style}
       <button id="${this.id}" onclick=${this.clickHandler} class="${classList}" type="button">
 		<span class="bg"></span><span class="icon">${icon}</span><span class="text">${command.text}</span><div class="shortcut">${keys}</div>

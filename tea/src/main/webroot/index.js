@@ -741,6 +741,8 @@ if (import.meta.webpackHot) {
 		outdated.forEach(dep => {
 			turtleduck.styles.update(dep.replace('./','').replace('.scss', '.css'));
 		});
+	}, (err, context) => {
+		console.error("HMR failed:", err, context);
 	});
   //  import.meta.webpackHot.accept('./css/frames.scss?raw', function (...args) {
 //		console.warn("frames", args);

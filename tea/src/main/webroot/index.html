@@ -97,7 +97,7 @@
 		</header>
 
 		<div id="mid">
-			<gs-frame id="explorer" tab-name="Explorer" class="explorer focusable no-tabs no-tools" style="background: none">
+			<gs-frame id="explorer" tab-title="Explorer" class="explorer focusable no-tabs no-tools" style="background: none">
 				<header>
 					<nav id="explorer-tabs" class="tabs">
 						<span class="tab selected">Explorer</span>
@@ -137,8 +137,8 @@
 				</section>
 			</gs-frame>
 
-			<gs-frame id="editor" tab-name="Editor" frame-title="&lt;tab-title&gt; : editor" class="focusable">
-				<main class="wrapper" tab-name="Editor"></main>
+			<gs-frame id="editor" tab-title="Editor" frame-title="&lt;tab-title&gt; : editor" class="focusable">
+				<main class="wrapper" tab-title="Editor"></main>
 				<header id="editor-head">
 					<nav id="editor-tabs" class="tabs"></nav>
 					<nav id="editor-tools" class="window-tools"></nav>
@@ -161,8 +161,8 @@
 
 			<!--div id="right-size" style="position:absolute;left:0px;margin-left:-5px;height:100%;width:5px;background:#ccc;z-index:100" ></div-->
 
-			<gs-frame id="screen" tab-name="Screen" frame-title="&lt;tab-title&gt; : display" class="screen focusable advanced-mode intermediate-mode beginner-mode">
-				<main id="docs" tab-name="DOC" data-tab="screen-tabs" data-tab-key="doc">
+			<gs-frame id="screen" tab-title="Screen" frame-title="&lt;tab-title&gt; : display" class="screen focusable advanced-mode intermediate-mode beginner-mode">
+				<main id="docs" tab-title="DOC" data-tab="screen-tabs" data-tab-key="doc">
 					<div id=" doc-display" class="text">
 					</div>
 				</main>
@@ -183,11 +183,11 @@
 				</aside>
 			</gs-frame>
 
-			<gs-frame id="shell" tab-name="Terminal" frame-title="&lt;tab-title&gt; : terminal" class="console focusable">
+			<gs-frame id="shell" tab-title="Terminal" frame-title="&lt;tab-title&gt; : terminal" class="console focusable">
 				<div data-insert-here="true" style="display: none"></div>
-				<gs-tab target="fooshell" tab-name="FooShell" frame-title="~/foo"></gs-tab>
-				<gs-tab target="barshell" tab-name="BarShell"></gs-tab>
-				<gs-tab target="bazshell" tab-name="BazShell"></gs-tab>
+				<gs-tab target="fooshell" tab-title="FooShell" frame-title="~/foo"></gs-tab>
+				<gs-tab target="barshell" tab-title="BarShell"></gs-tab>
+				<gs-tab target="bazshell" tab-title="BazShell"></gs-tab>
 				<main id="fooshell">Hello!</main>
 				<main id="barshell">Goodbye!</main>
 				<main id="bazshell">Yo!</main>

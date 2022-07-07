@@ -10,7 +10,9 @@
         "baseUrl": "./", 
         "rootDir": "./src/main/webroot/",
         "outDir": "target/classes/webroot/",
-        "paths": {"css/frames.css" : ["./target/classes/webroot/css/frames.css"]}
+        "explainFiles" : true,
+        "listEmittedFiles":true,
+        "paths": {"css/frames.css" : ["./target/classes/webroot/css/frames.css"]},
     //    "types": ["webpack/module"],
        // "paths": {"node/getopts":["node_modules/getopts/index.d.ts" ]}
      //   "allowJs": true
