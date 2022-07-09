@@ -55,7 +55,7 @@ class PromptWidget extends WidgetType {
 }
 
 function stdConfig() {
-	return [basicSetup, EditorState.tabSize.of(4), markKeymap, keymap.of({ key: 'Tab', run: indentMore, shift: indentLess }), darkDuck];
+	return [basicSetup, EditorState.tabSize.of(4), markKeymap, keymap.of({ key: 'Tab', run: indentMore, shift: indentLess }), oneDark];
 }
 const configs = { '': [] };
 function langConfig(lang) {
@@ -207,7 +207,7 @@ class TDEditor extends Component {
 		}, true);
 		const state = this.createState(lang, text);
 		this.EditorView = EditorView;
-		this.view = new EditorView({ state: state, parent: elt });
+		this.view = new EditorView({ state: state, parent: elt, root: document });
 		this.$markField = markField;
 		this.$addMark = addMark;
 		this._debugState = false;

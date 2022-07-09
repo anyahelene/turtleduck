@@ -1372,19 +1372,14 @@ nav li {
 }
 
 
-#editor {
-	//display:flex;
-	//flex-direction: column;
-}
-
-#editor .wrapper,
+.editor.wrapper,
 .cm-editor,
 .terminal {
 	width: 100%;
 	font-size: 1.4rem;
 }
 
-#editor .wrapper .cm-editor {
+.editor.wrapper .cm-editor {
 	@include fill-container-height;
 }
 

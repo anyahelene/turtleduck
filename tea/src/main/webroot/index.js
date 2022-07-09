@@ -22,10 +22,6 @@ import * as lodash from 'lodash-es';
 import i18next from 'i18next';
 import borb from './js/borb';
 import getopts from 'getopts';
-//import { XTermJS } from './XTermJS';
-//import ace from "ace-builds";
-//import "ace-builds/webpack-resolver";
-//var ace = require('ace-builds/src-noconflict/ace')
 import defaultConfig from './config.json';
 import SubSystem from './js/SubSystem';
 import Settings from './js/Settings';
@@ -737,6 +733,7 @@ import buttonStyle from './css/buttons.scss';
 
 if (import.meta.webpackHot) {
 	console.warn("WebpackHot enabled");
+	turtleduck.webpackHot =  import.meta.webpackHot;
     import.meta.webpackHot.accept(['./css/frames.scss','./css/buttons.scss'], function (outdated) {
 		outdated.forEach(dep => {
 			turtleduck.styles.update(dep.replace('./','').replace('.scss', '.css'));
