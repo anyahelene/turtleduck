@@ -248,13 +248,12 @@ button {
       //  background: #0f0 !important;
      //   height: 2rem;
         margin-top: 0;
-        z-index:0;
+        z-index:9999;
         animation: Wiggle .75s linear infinite ;
         //cursor:move;
     }
 
-    &.dragging.move {
-       opacity: 90%;
+    &.dragging.moving {
        //cursor: move;
        background-color: aqua;
         //    display: none;
