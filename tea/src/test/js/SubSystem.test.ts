@@ -4,7 +4,7 @@ jest.useFakeTimers();
 
 describe("", () => {
     test("", async () => {
-        let start = jest.fn((dep:Dependency) => {
+        let start = jest.fn((dep:Dependency<object>) => {
             console.log(dep.name);
             dep.forEach(d => {console.log(d.toString(), d.isStarted()); expect(d.isStarted() && false).toBeTruthy()});
             return Promise.resolve();

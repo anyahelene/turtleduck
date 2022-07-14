@@ -5,7 +5,7 @@ import org.teavm.jso.JSObject;
 import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.dom.html.HTMLElement;
 
-public interface TDEditor extends Component {
+public interface TDEditor extends JSMapLike<JSObject> {
 
 	HTMLElement wrapper();
 
@@ -27,6 +27,8 @@ public interface TDEditor extends Component {
 
 	HTMLElement highlightTree(HTMLElement prompt);
 
+	void focus();
+	
 	public interface State extends JSObject {
 
 	}

@@ -98,8 +98,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		editor.set("outerElt", outerElt);
 		editor.set("outputElt", outputElt);
 		editor.set("terminal", this);
-		parent.appendChild(editor.element());
-		editor.register();
+		parent.appendChild(wrapperElt);
 
 		cursor = new HtmlCursorImpl(this, (s) -> {
 		});

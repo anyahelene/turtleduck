@@ -1,4 +1,4 @@
-import { Remarkable } from 'remarkable';
+import { Remarkable, utils } from './remarkable';
 /// <reference path="../../../../node_modules/highlight.js/types/index.d.ts" />
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -13,7 +13,8 @@ hljs.registerLanguage('java', java);
 hljs.registerLanguage('json', json);
 hljs.registerLanguage('python', python);
 
-const utils = Remarkable.utils;
+
+console.warn("REMARKABLE", Remarkable, utils);
 /** Convert a flat document to one with a tree-like section structure; i.e.,
 	each heading and associated text will be placed in a DIV, with subsections
 	nested within. Nodes are removed from `rootElt` and added to `destElt` */
@@ -154,7 +155,6 @@ const thresholds = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55,
 class MDRender {
 	md: any;
 	Remarkable: typeof Remarkable;
-	utils: typeof Remarkable.utils;
 	_snippets: { code: string, language: string, opts?: string }[];
 	hljs: any;
 	javascript: any;
@@ -169,7 +169,6 @@ class MDRender {
 		}, opts));
 
 		this.Remarkable = Remarkable;
-		this.utils = Remarkable.utils;
 		this.hljs = hljs;
 		this.javascript = javascript;
 		this.json = json;

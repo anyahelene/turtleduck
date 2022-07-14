@@ -188,9 +188,9 @@ export const wordHover = hoverTooltip((view, pos, side) => {
 
 
 
-class TDEditor extends Component {
+class TDEditor {
 	constructor(name, outer, elt, text, lang, exts, tdstate, preExts = []) {
-		super(name, outer, tdstate);
+		// super(name, outer, tdstate);
 
 		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, text, exts, tdstate, preExts)
 		this.elt = elt;
@@ -202,6 +202,7 @@ class TDEditor extends Component {
 				e.preventDefault();
 		}, true);
 		elt.addEventListener("drop", e => {
+			console.log(e.dataTransfer);
 			this.paste(e.dataTransfer.getData("text/plain"));
 			e.preventDefault();
 		}, true);
@@ -291,7 +292,7 @@ class TDEditor extends Component {
 		return this.view.state;
 	}
 	focus() {
-		this.select();
+		// this.select();  TODO
 		this.view.focus();
 		return "TDEditor";
 	}

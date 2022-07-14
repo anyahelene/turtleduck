@@ -15,6 +15,7 @@ $color-scheme: (
 	"faded": ('*', 2),
 	"fade-80": ('#', .8),
 	"fade-50": ('#', .5),
+	"defocus": ('*', .8)
 );
 $water: #66e;
 $page: #ccd;
@@ -64,6 +65,20 @@ $error: #f00;
 	background-size: 100vw 100vh;
 	background-attachment: fixed;
 	background-blend-mode: screen;
+
+	color: $terminal;
+
+	a:link {
+		color: #9abaff;
+	}
+
+	a:visited {
+		color: #ba9aff;
+	}
+
+	a:hover {
+		color: #ff8a4a;
+	}
 }
 
 @mixin light-background {
@@ -71,6 +86,8 @@ $error: #f00;
 	background-image: var(--main-bg-image-light);
 	background-size: 100vw 100vh;
 	background-attachment: fixed;
+	color: $pen-sharp;
+
 }
 
 :root {
@@ -91,7 +108,9 @@ $error: #f00;
 @function replace($string, $search, $replace) {
 	@if $string ==$search {
 		@return $replace;
-	} @else {
+	}
+
+	@else {
 		$i: string.index($string, $search);
 		$l: string.length($search);
 		@return string.slice($string, 1, ($i)-1)+$replace+string.slice($string, $i+$l, -1);

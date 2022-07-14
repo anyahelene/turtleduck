@@ -35,10 +35,11 @@ function makeTab(title, tab, sel, comp) {
 }
 class Component {
 	constructor(name, element, tdstate, parent = null) {
+		console.log("Component(",name, element, tdstate, parent, ")");
 		if (!name)
 			name = element.id;
-		if(!element.hasAttribute('tab-name'))
-			element.setAttribute('tab-name', name);
+		if(!element.hasAttribute('tab-title'))
+			element.setAttribute('tab-title', name);
 		console.log("new Component(%o,%o,%o)", name, element, tdstate);
 		this.name = name;
 		this._element = element;
@@ -189,7 +190,7 @@ class Component {
 			console.error("setTitle() after register():", this.name, this._element);
 		}
 		this._title = title;
-		this._element.setAttribute('tab-name', title);
+		this._element.setAttribute('tab-title', title);
 	}
 
 	title() {

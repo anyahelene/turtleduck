@@ -100,14 +100,10 @@ public class EditorServer implements EditorService {
 			"message" }, script = "return turtleduck.editor.diagnostic(from, to, severity, message, [])")
 	native static JSObject diagnostic(int from, int to, String severity, String message);
 
-	EditorServer(HTMLElement element, Component parent) {
+	EditorServer(HTMLElement element) {
 		this.tabs = JSUtil.getElementsByClassName(element, "tabs").get(0);
 		this.modeFooterElement = element.querySelector(".editor-mode-foot");
 		this.editor = createEditor(element, "", "");
-		if (parent != null)
-			editor.setParent(parent);
-		editor.setTitle("Editor");
-		editor.addWindowTools();
 		editor.set("_paste_to_file", (JSTriConsumer<JSString, JSString, JSString>) (obj1, obj2,
 				obj3) -> paste(obj1.stringValue(), obj2.stringValue(), obj3.stringValue()));
 
@@ -189,7 +185,6 @@ public class EditorServer implements EditorService {
 		HTMLDocument document = Window.current().getDocument();
 		saveButton = document.getElementById("tb-save");
 		closeButton = document.getElementById("tb-close");
-		editor.register();
 		if (tabs != null)
 			tabs.addEventListener("click", (e) -> {
 				logger.info("Tab op: {}", e);

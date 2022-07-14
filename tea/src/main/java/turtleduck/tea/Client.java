@@ -131,7 +131,7 @@ public class Client implements JSObject, ClientObject {
 			sessionName = getConfig("session.name", "?");
 			projectName = getConfig("session.project", null);
 
-			editorImpl = new EditorServer(Browser.document.getElementById("editor"), wm);
+			editorImpl = new EditorServer(Browser.document.getElementById("editor"));
 			editorImpl.initialize();
 			router.route(new EditorDispatch(editorImpl));
 			map.set("editor", editorImpl.editor);
@@ -157,12 +157,7 @@ public class Client implements JSObject, ClientObject {
 			loadLanguages();
 
 			WINDOW_MAP.set("turtleduck", map);
-			// DocDisplay docDisplay = new DocDisplay(screenComponent);
-			// docDisplay.initFromUrl("doc/TODO-PROJECTS.md", "TODO", true);
-			if (true) {
-				// DocDisplay docDisplay2 = new DocDisplay(screenComponent);
-				// docDisplay2.initFromUrl("examples/uncoil/uncoil.md", null, true);
-			}
+
 //		ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
 //		ws.setOnData((data) -> terminal.write(data));
 			updateInfo();

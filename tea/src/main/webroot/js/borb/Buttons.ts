@@ -2,6 +2,7 @@ import SubSystem from '../SubSystem';
 import { BorbElement, tagName } from './Borb';
 import { Hole, html, render } from "uhtml";
 import { turtleduck } from '../TurtleDuck';
+import { DragNDrop, BorbDragEvent } from './DragNDrop';
 import Mousetrap from 'mousetrap';
 import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 interface Command {
@@ -91,6 +92,12 @@ class BorbButton extends BorbElement {
 		this.attachShadow({ mode: "open" });
 
 		this.clickHandler = this._clickHandler.bind(this);
+		this.addEventListener('borbdragstart', (ev:BorbDragEvent) => {
+			ev.originalEvent.dataTransfer.setData('text/plain', this.outerHTML);
+			ev.originalEvent.dataTransfer.setData('application/json', JSON.stringify({
+				type: 'button', id: this.id, binding: this.command.name
+			}));
+		});
 	}
 
 	static get observedAttributes() { return ['class']; }
@@ -154,12 +161,14 @@ class BorbButton extends BorbElement {
 	}
 	connectedCallback() {
 		console.log('element added to page.', this, this.isConnected);
+		DragNDrop.attachDraggable(this);
         turtleduck.styles.attach(styleRef, this.styleChangedHandler);
 		this.update();
 	}
 
 	disconnectedCallback() {
         turtleduck.styles.attach(styleRef, this.styleChangedHandler);
+		DragNDrop.detachDraggable(this);
 		console.log('removed from page.', this);
 	}
 

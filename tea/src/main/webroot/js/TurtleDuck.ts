@@ -7,6 +7,7 @@ import type { MDRender } from './borb/MDRender';
 import SubSystem from './SubSystem';
 import Styles from './borb/Styles';
 import IndexedMap from './borb/IndexedMap';
+import DragNDrop from './borb/DragNDrop';
 
 export { History, HistorySession };
 declare global {
@@ -23,13 +24,13 @@ function proxy<Name extends keyof TurtleDuck, Type extends TurtleDuck[Name]>(nam
 	const obj = new Proxy({} as Type, {
 		get(target, p, receiver) {
 			console.trace(`using proxy for ${name}.${String(p)}`);
-			const funcObj: any = {
+			const funcObj:any = {
 				async [p](...args: any[]) {
 					await SubSystem.waitFor(subsys);
 					const api = turtleduck[name];
 					if (api) {
 						const fn = api[p];
-						if (typeof fn === 'function') {
+						if (typeof fn === 'function' && !fn.proxy) {
 							console.trace(`calling proxy for ${name}.${String(p)}`);
 							return await fn(args);
 						}
@@ -37,7 +38,9 @@ function proxy<Name extends keyof TurtleDuck, Type extends TurtleDuck[Name]>(nam
 					throw new TypeError(`${String(p)} is not a function`);
 				}
 			}
-			return funcObj[p];
+			const f = funcObj[p]; // as (...args:any[]) => Promise<any>;
+			f.proxy = true;
+			return f;
 		}
 	});
 	return obj;
@@ -124,6 +127,7 @@ interface TurtleDuck {
 	mdRender: typeof MDRender;
 	styles: typeof Styles;
 	IndexedMap: typeof IndexedMap;
+	borb: {dragndrop : typeof DragNDrop};
 }
 export const turtleduck: TurtleDuck = {
 	/** TODO: EyeDropper https://developer.mozilla.org/en-US/docs/Web/API/EyeDropper */
@@ -144,7 +148,7 @@ export const turtleduck: TurtleDuck = {
 	makeProxy: proxy,
 	styles: Styles,
 	uniqueId,
-	IndexedMap
+	IndexedMap,
 } as TurtleDuck;
 
 turtleduck['phistory'] = proxy('history');

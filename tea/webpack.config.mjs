@@ -17,7 +17,7 @@ export default {
     loggingDebug: ["sass-loader"],
   },
   entry: {
-    bundle: { import: ['./index.js', './css/style.scss', './css/buttons.scss', './css/frames.scss', './terms-no.md'], filename: 'js/bundle.js' },
+    bundle: { import: ['./index.js', './css/style.scss', './css/buttons.scss', './css/frames.scss', './css/markdown.scss', './terms-no.md'], filename: 'js/bundle.js' },
     // path.join(__dirname, 'src', 'main', 'webroot','css', 'style.scss'),
     //html: ['./webroot/terms-no.md'],
   },
@@ -29,7 +29,11 @@ export default {
   devServer: {
       static: ['./target/classes/webroot/',{
           directory: '../fonts/',
-          publicPath: '/fonts'}
+          publicPath: '/fonts'},
+            { 
+                directory: '../py/pyodide',
+                publicPath: '/py'
+            }
       ],
       hot: 'only',
       liveReload: false,

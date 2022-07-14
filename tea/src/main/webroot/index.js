@@ -727,14 +727,14 @@ turtleduck._initializationComplete = function (err) {
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;
 
-//require.include('./css/frames.scss');
 import framesStyle from  './css/frames.scss';
 import buttonStyle from './css/buttons.scss';
+//import markdownStyle from './css/markdown.scss';
 
 if (import.meta.webpackHot) {
 	console.warn("WebpackHot enabled");
 	turtleduck.webpackHot =  import.meta.webpackHot;
-    import.meta.webpackHot.accept(['./css/frames.scss','./css/buttons.scss'], function (outdated) {
+    import.meta.webpackHot.accept(['./css/frames.scss','./css/buttons.scss', './css/markdown.scss'], function (outdated) {
 		outdated.forEach(dep => {
 			turtleduck.styles.update(dep.replace('./','').replace('.scss', '.css'));
 		});
