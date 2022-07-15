@@ -16,11 +16,11 @@ import { markdown, insertNewlineContinueMarkup } from "@codemirror/lang-markdown
 import { css } from "@codemirror/lang-css"
 import { z80 } from "@codemirror/legacy-modes/mode/z80"
 import { oneDark } from "@codemirror/theme-one-dark"
-import { darkDuck, darkDuckHighlightSpec, darkDuckHighlighter } from "./darktheme.js"
+import { darkDuck, darkDuckHighlightSpec, darkDuckHighlighter } from "../darktheme.js"
 import { closeLintPanel, lintKeymap, linter, nextDiagnostic, openLintPanel, setDiagnostics } from "@codemirror/lint"
 import { NodeProp } from '@lezer/common';
 import { highlightTree, classHighlighter, tags } from '@lezer/highlight';
-import { Component } from './js/Component';
+import { Component } from './Component';
 //import { listTags } from "isomorphic-git";
 
 function isBetweenBrackets(state, pos) {

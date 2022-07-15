@@ -45,7 +45,7 @@ turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
 turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.defaultConfig = defaultConfig;
-import {TDEditor,createEditor, createLineEditor} from './editor';
+import {TDEditor,createEditor, createLineEditor} from './js/Editor';
 turtleduck.createEditor = createEditor;
 turtleduck.createLineEditor = createLineEditor;
 turtleduck.TDEditor = TDEditor;
