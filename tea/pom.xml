@@ -227,21 +227,6 @@
 									<skip>false</skip>
 								</configuration>
 							</execution>
-							<execution>
-								<?m2e execute onConfiguration,onIncremental?>
-								<id>rollup</id>
-								<phase>generate-resources</phase>
-								<goals>
-									<goal>exec</goal>
-								</goals>
-								<configuration>
-									<executable>rollup</executable>
-									<arguments>-c
-									</arguments>
-									<systemProperties></systemProperties>
-									<skip>false</skip>
-								</configuration>
-							</execution>
 						</executions>
 					</plugin>
 				</plugins>

@@ -3,9 +3,9 @@
 //import {defaultKeymap} from "@codemirror/commands"
 import { EditorView, Decoration, keymap, WidgetType, showPanel, hoverTooltip } from "@codemirror/view"
 import { EditorState, EditorSelection, StateField, StateEffect } from "@codemirror/state"
-import { indentWithTab, indentMore, indentLess, insertNewlineAndIndent } from "@codemirror/commands"
+import { indentWithTab, indentMore, indentLess, insertNewlineAndIndent, historyField } from "@codemirror/commands"
 import { syntaxTree, getIndentation, indentUnit, IndentContext, LanguageSupport, StreamLanguage } from '@codemirror/language';
-import { autocompletion, completionStatus, currentCompletions, } from "@codemirror/autocomplete";
+import { autocompletion, completionStatus, currentCompletions, prevSnippetField } from "@codemirror/autocomplete";
 
 import { basicSetup } from "@codemirror/basic-setup"
 import { java } from "@codemirror/lang-java"
@@ -54,7 +54,7 @@ class PromptWidget extends WidgetType {
 
 }
 
-function stdConfig() {
+export function stdConfig() {
 	return [basicSetup, EditorState.tabSize.of(4), markKeymap, keymap.of({ key: 'Tab', run: indentMore, shift: indentLess }), oneDark];
 }
 const configs = { '': [] };
@@ -188,7 +188,9 @@ export const wordHover = hoverTooltip((view, pos, side) => {
 
 
 
-class TDEditor {
+export class TDEditor {
+	historyField = historyField;
+	prevSnippetField = prevSnippetField;
 	constructor(name, outer, elt, text, lang, exts, tdstate, preExts = []) {
 		// super(name, outer, tdstate);
 
@@ -379,9 +381,7 @@ class TDEditor {
 	}
 }
 
-window.TDEditor = TDEditor;
-
-window.turtleduck.createEditor = function (elt, text, lang = "java") {
+export const createEditor = function (elt, text, lang = "java") {
 	const outer = elt;
 	const elts = elt.getElementsByClassName('wrapper');
 	if (elts[0])
@@ -392,8 +392,7 @@ window.turtleduck.createEditor = function (elt, text, lang = "java") {
 	return editor;
 }
 
-const highlight = {};
-window.turtleduck.highlight = highlight;
+export const highlight = {};
 highlight.darkDuckStyle = {};
 // for each style rule, split, e.g., ".ͼu {color: #cc0;}" into ".ͼu": "{color: #cc0;}"
 darkDuckHighlighter.module.rules.forEach(rule => {
@@ -416,7 +415,7 @@ highlight.classHighlighter = classHighlighter;
 highlight.darkDuck = darkDuck;
 highlight.tags = tags;
 
-window.turtleduck.createLineEditor = function (elt, text, lang, handler) {
+export const createLineEditor = function (elt, text, lang, handler) {
 	function enter({ state, dispatch }) {
 		let isComplete = true;
 		let changes = state.changeByRange(range => {

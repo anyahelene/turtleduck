@@ -45,7 +45,10 @@ turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
 turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.defaultConfig = defaultConfig;
-
+import {TDEditor,createEditor, createLineEditor} from './editor';
+turtleduck.createEditor = createEditor;
+turtleduck.createLineEditor = createLineEditor;
+turtleduck.TDEditor = TDEditor;
 Object.defineProperty(turtleduck, 'cwd', { get: () => turtleduck.storage.cwd });
 turtleduck.getConfig = (...args) => turtleduck.settings.getConfig(...args);
 turtleduck.setConfig = (...args) => turtleduck.settings.setConfig(...args);
