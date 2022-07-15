@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
+import org.teavm.jso.JSBody;
 import org.teavm.jso.JSFunctor;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.core.JSNumber;
@@ -67,6 +68,9 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 	private Language lang;
 	private LanguageConsole console;
 	private boolean historyEnabled = true;
+	
+	@JSBody(params = { "element", "id" }, script = "element.select(id)")
+	native static void selectTab(HTMLElement element, String id);
 
 	CMTerminalServer(HTMLElement parent, Shell shell) {
 		this.parent = parent;
@@ -78,7 +82,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		this.name = name;
 		this.lang = shell.language();
 		logger.info("initialize({}, {},{})", name, lang, parent);
-		wrapperElt = element("main", attr("id", name), clazz("waiting"));
+		wrapperElt = element("main", attr("id", name), attr("tab-title", lang.shellTitle), clazz("waiting"));
 		outerElt = element("div", clazz("terminal"), attr("title", name));
 		wrapperElt.appendChild(outerElt);
 		wrapperElt.addEventListener("keydown", (EventListener<KeyboardEvent>) this::keydown);
@@ -99,7 +103,7 @@ public class CMTerminalServer implements TerminalService, ExplorerService, HtmlC
 		editor.set("outputElt", outputElt);
 		editor.set("terminal", this);
 		parent.appendChild(wrapperElt);
-
+		selectTab(parent, name);
 		cursor = new HtmlCursorImpl(this, (s) -> {
 		});
 		out = new TerminalPrintStream(cursor, true);

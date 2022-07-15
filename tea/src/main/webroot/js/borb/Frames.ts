@@ -4,7 +4,7 @@ import { turtleduck } from '../TurtleDuck';
 import { BorbElement, tagName, assert } from './Borb';
 import { data } from './Styles';
 import IndexedMap from './IndexedMap';
-import { times, uniqueId } from 'lodash-es';
+import { isEqual, times, uniqueId } from 'lodash-es';
 import { DragNDrop, BorbDragEvent } from './DragNDrop';
 
 //import 'css/frames.css';
@@ -351,12 +351,14 @@ class BorbFrame extends HTMLElement {
     }
 
     select(elementOrName: string | HTMLElement) {
+        this.updateChildren();
         const elt = typeof elementOrName === 'string' ? document.getElementById(elementOrName) : elementOrName;
         const tab = this._tabs.get(elt);
         if (tab) {
             tab.select();
         } else {
             console.error("BorbFrame.select: no tab found for", elementOrName, elt, this);
+            this.queueUpdate();
         }
     }
 
@@ -364,7 +366,8 @@ class BorbFrame extends HTMLElement {
         this._childListChanged = false;
         let selected: TabEntry = undefined;
         const removedChildren = new Set(this._tabs.keys());
-        console.log("updateChildren before", ...this._nav.children);
+        const before = [...this._nav.children];
+        console.log("updateChildren before", before);
         this._nav.replaceChildren();
         for (const elt of this.children) {
             if (elt instanceof HTMLElement) {
@@ -377,12 +380,14 @@ class BorbFrame extends HTMLElement {
                 }
             }
         }
-        console.log("updateChildren after", ...this._nav.children);
+        const after = [...this._nav.children];
+        console.log("updateChildren after", after);
         removedChildren.forEach(elt => this.delTab(elt));
         if (selected)
             this.selected = selected;
         else
             this.selected = this._nav.children?.[0] as TabEntry;
+        return !isEqual(before, after);
     }
 
     connectedCallback() {

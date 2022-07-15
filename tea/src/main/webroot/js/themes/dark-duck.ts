@@ -1,12 +1,25 @@
 import { EditorView } from '@codemirror/view';
+import { Extension } from "@codemirror/state";
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 
 // Using https://github.com/one-dark/vscode-one-dark-theme/ as reference for the colors
-const type = "#cc0", name = "#3f3", op = "#56b6c2", invalid = "#ffffff", def = "#8f8", comment = "#880", // Brightened compared to original to increase contrast
-    func = "#3f3", string = "#a8e389", bool = "#d19a66", keyword = "#f6f", //
-    darkBackground = "#3330", highlightBackground = "#1114", background = "#3330", //
-    selection = "#3E4451", cursor = "#f00";
+const type = "#cc0",
+    name = "#3f3",
+    op = "#56b6c2",
+    invalid = "#ffffff",
+    def = "#8f8",
+    comment = "#880",
+    func = "#3f3",
+    string = "#a8e389",
+    bool = "#d19a66",
+    keyword = "#f6f",
+    darkBackground = "#3330",
+    highlightBackground = "#1114",
+    background = "#3330",
+    tooltipBackground = "#353a42",
+    selection = "#3E4451",
+    cursor = "#f00";
 /// The editor theme styles for One Dark.
 const darkDuckTheme = EditorView.theme({
     "&": {
@@ -16,12 +29,11 @@ const darkDuckTheme = EditorView.theme({
         caretColor: cursor
         //		backgroundBlendMode: "normal"
     },
-    ".cm-cursor": { display: "block", borderLeftColor: "#800", borderLeftWidth: ".5em" },
+    ".cm-cursor, .cm-dropCursor": { display: "block", borderLeftColor: "#800", borderLeftWidth: ".5em" },
     ".cm-cursorLayer": { mixBlendMode: "exclusion" },
-    "&.cm-focused .cm-cursor, .focused .cm-cursor": { borderLeftColor: cursor },
     "&.cm-focused .cm-cursor-secondary": { borderLeftColor: "#ff0" },
     ".cm-cursor-secondary": { borderLeftColor: "#880" },
-    "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": { backgroundColor: selection },
+    "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content::selection": { backgroundColor: selection },
     ".cm-panels": { backgroundColor: darkBackground, color: def },
     ".cm-panels.cm-panels-top": { borderBottom: "1px solid #8808" },
     ".cm-panels.cm-panels-bottom": { borderTop: "1px solid #8808" },
@@ -35,7 +47,7 @@ const darkDuckTheme = EditorView.theme({
     ".cm-activeLine": { backgroundColor: highlightBackground, textShadow: "none" },
     //   ".cm-activeLine": { backgroundColor: background, textShadow: "none" },
     ".cm-selectionMatch": { backgroundColor: "#aafe661a" },
-    ".cm-matchingBracket, .cm-nonmatchingBracket": {
+    "&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket": {
         backgroundColor: "#bad0f847",
         outline: "1px solid #515a6b"
     },
@@ -46,6 +58,9 @@ const darkDuckTheme = EditorView.theme({
         border: "none",
         borderRight: "1px solid #8808"
     },
+    ".cm-activeLineGutter": {
+        backgroundColor: highlightBackground
+    },
     ".cm-lineNumbers .cm-gutterElement": { color: "inherit" },
     ".cm-foldPlaceholder": {
         backgroundColor: "transparent",
@@ -53,8 +68,16 @@ const darkDuckTheme = EditorView.theme({
         color: "#ddd"
     },
     ".cm-tooltip": {
-        border: "1px solid #181a1f",
-        backgroundColor: darkBackground
+        border: "none",
+        backgroundColor: tooltipBackground
+    },
+    ".cm-tooltip .cm-tooltip-arrow:before": {
+        borderTopColor: "transparent",
+        borderBottomColor: "transparent"
+    },
+    ".cm-tooltip .cm-tooltip-arrow:after": {
+        borderTopColor: tooltipBackground,
+        borderBottomColor: tooltipBackground
     },
     ".cm-tooltip-autocomplete": {
         "& > ul > li[aria-selected]": {
@@ -106,6 +129,10 @@ const darkDuckHighlightSpec = [
         fontStyle: "italic"
     },
     {
+        tag: tags.strikethrough,
+        textDecoration: "line-through"
+    },
+    {
         tag: tags.link,
         color: comment,
         textDecoration: "underline"
@@ -132,6 +159,6 @@ const darkDuckHighlighter = HighlightStyle.define(darkDuckHighlightSpec);
 
 /// Extension to enable the One Dark theme (both the editor theme and
 /// the highlight style).
-const darkDuck = [darkDuckTheme, syntaxHighlighting(darkDuckHighlighter)];
+const darkDuck: Extension = [darkDuckTheme, syntaxHighlighting(darkDuckHighlighter)];
 
 export { darkDuck, darkDuckHighlighter, darkDuckTheme, darkDuckHighlightSpec };

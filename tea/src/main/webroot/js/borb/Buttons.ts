@@ -38,7 +38,6 @@ class BorbCommand extends BorbElement {
 		super();
 	}
 	connectedCallback() {
-		console.log('element added to page.', this, this.isConnected);
 		this.style.display = 'none';
 		this.name = this.getAttribute('name') ?? '';
 	}
@@ -48,7 +47,6 @@ class BorbCommand extends BorbElement {
 	 * @param event (optional)  The event that triggered the command
 	 */
 	async run(elt: BorbCommand | BorbButton = this, event?: Event) {
-		console.log("command.run", this.name, elt, event);
 		await turtleduck.handleKey(this.name, elt, event);
 	}
 }
@@ -57,7 +55,6 @@ const styleRef = 'css/buttons.css';
 function loadCommand(element: BorbCommand): Command {
 	const cmd: Command = { name: element.getAttribute('name') ?? '', element: element, ...element.dataset };
 	const binding = element.dataset.bind;
-	console.log(cmd, binding);
 	if (binding) {
 		if (defaultBindings[binding]) {
 			console.warn('extra binding for key', binding, ":", cmd, ", original is", defaultBindings[binding]);
@@ -122,10 +119,9 @@ class BorbButton extends BorbElement {
 
 	async _clickHandler(e: Event) {
 		if (this.classList.contains('disabled')) {
-			console.log("click on disabled button: ", this);
+			console.warn("click on disabled button: ", this);
 			return;
 		}
-		console.log("click", this);
 		/*
 		const active = this.classList.contains('active');
 		this.classList.add('active');
@@ -148,7 +144,7 @@ class BorbButton extends BorbElement {
 	async run(e: Event) {
 		const cmd = this.command;
 		if (cmd) {
-			console.log("Run command", cmd, "button", this, "event", e);
+			// console.log("Run command", cmd, "button", this, "event", e);
 			if (cmd.element) {
 				await cmd.element.run(this, e);
 			} else {
@@ -160,7 +156,6 @@ class BorbButton extends BorbElement {
 		}
 	}
 	connectedCallback() {
-		console.log('element added to page.', this, this.isConnected);
 		DragNDrop.attachDraggable(this);
         turtleduck.styles.attach(styleRef, this.styleChangedHandler);
 		this.update();
@@ -169,15 +164,13 @@ class BorbButton extends BorbElement {
 	disconnectedCallback() {
         turtleduck.styles.attach(styleRef, this.styleChangedHandler);
 		DragNDrop.detachDraggable(this);
-		console.log('removed from page.', this);
 	}
 
 	adoptedCallback() {
-		console.log('moved to new page.', this);
 	}
 
 	attributeChangedCallback(name: string, oldValue: string, newValue: string) {
-		console.log('element attributes changed.', name, oldValue, newValue);
+		// console.log('element attributes changed.', name, oldValue, newValue);
 		this.update();
 	}
     styleChanged() {

@@ -360,6 +360,10 @@ async function handleKey(key, button, event) {
 			}
 			break;
 		}
+		case "language": {
+			turtleduck.client.loadLanguage('python')
+			break;
+		}
 		case "snap": {
 			const config = { mode: 'camera', once: true };
 			if (params) {

@@ -1,12 +1,12 @@
 //import {EditorState} from "@codemirror/state"
 //import {EditorView, keymap} from "@codemirror/view"
 //import {defaultKeymap} from "@codemirror/commands"
-import { EditorView, Decoration, keymap, WidgetType, showPanel, hoverTooltip } from "@codemirror/view"
-import { EditorState, EditorSelection, StateField, StateEffect } from "@codemirror/state"
+import { EditorView, Decoration, keymap, WidgetType, showPanel, hoverTooltip, DecorationSet } from "@codemirror/view"
+import { EditorState, EditorSelection, StateField, StateEffect, ChangeDesc, ChangeSpec, SelectionRange, Extension, Text } from "@codemirror/state"
 import { indentWithTab, indentMore, indentLess, insertNewlineAndIndent, historyField } from "@codemirror/commands"
 import { syntaxTree, getIndentation, indentUnit, IndentContext, LanguageSupport, StreamLanguage } from '@codemirror/language';
 import { autocompletion, completionStatus, currentCompletions, prevSnippetField } from "@codemirror/autocomplete";
-
+import { StyleModule } from "style-mod";
 import { basicSetup } from "@codemirror/basic-setup"
 import { java } from "@codemirror/lang-java"
 import { cpp } from "@codemirror/lang-cpp"
@@ -16,11 +16,10 @@ import { markdown, insertNewlineContinueMarkup } from "@codemirror/lang-markdown
 import { css } from "@codemirror/lang-css"
 import { z80 } from "@codemirror/legacy-modes/mode/z80"
 import { oneDark } from "@codemirror/theme-one-dark"
-import { darkDuck, darkDuckHighlightSpec, darkDuckHighlighter } from "../darktheme.js"
-import { closeLintPanel, lintKeymap, linter, nextDiagnostic, openLintPanel, setDiagnostics } from "@codemirror/lint"
+import { darkDuck, darkDuckHighlightSpec, darkDuckHighlighter } from "./themes/dark-duck"
+import { closeLintPanel, lintKeymap, linter, nextDiagnostic, openLintPanel, setDiagnostics, Diagnostic, Action } from "@codemirror/lint"
 import { NodeProp } from '@lezer/common';
 import { highlightTree, classHighlighter, tags } from '@lezer/highlight';
-import { Component } from './Component';
 //import { listTags } from "isomorphic-git";
 
 function isBetweenBrackets(state, pos) {
@@ -36,9 +35,10 @@ function isBetweenBrackets(state, pos) {
 }
 
 class PromptWidget extends WidgetType {
-	constructor(prompt) { super() }
+	checked = false;
+	constructor(public prompt: string) { super() }
 
-	eq(other) { return other.prompt == this.prompt }
+	eq(other: PromptWidget) { return other.prompt == this.prompt }
 
 	toDOM() {
 		let wrap = document.createElement("span")
@@ -46,7 +46,7 @@ class PromptWidget extends WidgetType {
 		wrap.className = "cm-boolean-toggle"
 		let box = wrap.appendChild(document.createElement("input"))
 		box.type = "checkbox"
-		box.checked = this.checked
+		box.checked = this.checked;
 		return wrap
 	}
 
@@ -55,10 +55,10 @@ class PromptWidget extends WidgetType {
 }
 
 export function stdConfig() {
-	return [basicSetup, EditorState.tabSize.of(4), markKeymap, keymap.of({ key: 'Tab', run: indentMore, shift: indentLess }), oneDark];
+	return [basicSetup, EditorState.tabSize.of(4), markKeymap, keymap.of([{ key: 'Tab', run: indentMore, shift: indentLess }]), darkDuck];
 }
 const configs = { '': [] };
-function langConfig(lang) {
+function langConfig(lang: string) {
 	if (configs[lang]) {
 		return configs[lang];
 	} else {
@@ -93,7 +93,7 @@ function langConfig(lang) {
 		}
 	}
 }
-function fontConfig(elt) {
+function fontConfig(elt: HTMLElement) {
 	var fontFamily = window.getComputedStyle(elt).fontFamily;
 	if (!fontFamily)
 		fontFamily = window.getComputedStyle(document.body).fontFamily;
@@ -113,18 +113,19 @@ function fontConfig(elt) {
 	});
 	return myFontTheme;
 }
-const addMark = StateEffect.define();
-
-const markField = StateField.define({
+const addMark = StateEffect.define<{ from: number, to: number }>();
+const markField = StateField.define<DecorationSet>({
 	create() {
 		return Decoration.none;
 	},
 	update(marks, tr) {
 		marks = marks.map(tr.changes);
-		for (let e of tr.effects) if (e.is(addMark)) {
-			marks = marks.update({
-				add: [markDecoration.range(e.value.from, e.value.to)]
-			})
+		for (let e of tr.effects) {
+			if (e.is(addMark)) {
+				marks = marks.update({
+					add: [markDecoration.range(e.value.from, e.value.to)]
+				});
+			}
 		}
 		return marks
 	},
@@ -136,21 +137,21 @@ const markDecoration = Decoration.mark({ class: "cm-underline" });
 const markTheme = EditorView.baseTheme({
 	".cm-underline": { textDecoration: "underline wavy 1px red" }
 })
-export function markSelection(view) {
-	let effects = view.state.selection.ranges
+export function markSelection(view: EditorView) {
+	let effects: StateEffect<unknown>[] = view.state.selection.ranges
 		.filter(r => !r.empty)
 		.map(({ from, to }) => addMark.of({ from, to }))
 	if (!effects.length) return false
 
 	if (!view.state.field(markField, false))
 		effects.push(StateEffect.appendConfig.of([markField,
-			markTheme]))
-	view.dispatch({ effects })
+			markTheme]));
+	view.dispatch({ effects });
 	return true
 }
 
-export function markRange(view, from, to) {
-	let effects = [addMark.of({ from, to })];
+export function markRange(view: EditorView, from: number, to: number) {
+	let effects: StateEffect<unknown>[] = [addMark.of({ from, to })];
 	if (!effects.length) return false
 
 	if (!view.state.field(markField, false))
@@ -187,17 +188,20 @@ export const wordHover = hoverTooltip((view, pos, side) => {
 
 
 
-
 export class TDEditor {
 	historyField = historyField;
 	prevSnippetField = prevSnippetField;
-	constructor(name, outer, elt, text, lang, exts, tdstate, preExts = []) {
+	EditorView: typeof EditorView;
+	view: EditorView;
+	$markField: StateField<DecorationSet>;
+	$addMark: any;
+	_debugState: boolean;
+	_after_paste?: () => void;
+	_paste_to_file: { accept: (filename: string, text: string, language: string) => void };
+	constructor(private name: string, private outer: HTMLElement, private elt: HTMLElement, text: string, lang: string, private exts: Extension[], private preExts: Extension[] = []) {
 		// super(name, outer, tdstate);
 
-		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, text, exts, tdstate, preExts)
-		this.elt = elt;
-		this.exts = exts;
-		this.preExts = preExts;
+		console.log("TDEditor(%s,%o,%o,%o,%o,%o)", name, elt, text, exts, preExts)
 
 		elt.addEventListener("dragenter", e => {
 			if (e.dataTransfer.types.includes("text/plain"))
@@ -221,12 +225,12 @@ export class TDEditor {
 		return this.view.scrollDOM;
 	}
 
-	highlightTree(prompt) {
+	highlightTree(prompt: HTMLElement) {
 		const state = this.view.state;
 		const doc = state.doc;
 		const result = document.createElement('div');
 		result.setAttribute('class', 'cm-content');
-		let line = null;
+		let line: HTMLElement = null;
 		const tree = syntaxTree(this.view.state);
 		let pos = 0;
 
@@ -241,7 +245,7 @@ export class TDEditor {
 		if (prompt)
 			line.appendChild(prompt);
 
-		function nolight(to) {
+		function nolight(to: number) {
 			if (to > pos) {
 				const text = doc.sliceString(pos, to, "\n");
 				const lines = text.split("\n");
@@ -257,7 +261,7 @@ export class TDEditor {
 				pos = to;
 			}
 		}
-		function highlight(from, to, classes) {
+		function highlight(from: number, to: number, classes: string) {
 			if (from > pos) {
 				nolight(from);
 			}
@@ -267,7 +271,7 @@ export class TDEditor {
 			elt.textContent = doc.sliceString(from, to, "\n");
 			line.appendChild(elt);
 		}
-		function join(cls1, cls2) {
+		function join(cls1: string, cls2: string) {
 			if (cls1 == null)
 				return cls2;
 			else if (cls2 == null)
@@ -298,15 +302,15 @@ export class TDEditor {
 		this.view.focus();
 		return "TDEditor";
 	}
-	paste(text, cursorAdj = 0) {
+	paste(text: string | Text, cursorAdj = 0) {
 		const tr = this.view.state.replaceSelection(text);
-		if (cursorAdj != 0) {
+		if (cursorAdj != 0 && tr.selection instanceof EditorSelection) {
 			const move = EditorSelection.create(tr.selection.ranges.map(r => {
 				if (r.empty) {
-					r.from--;
-					r.to--;
+					(r as { from: number }).from--;
+					(r as { to: number }).to--;
 				} else {
-					r.to--;
+					(r as { to: number }).to--;
 				}
 				return r;
 			}), tr.selection.mainIndex);
@@ -320,7 +324,7 @@ export class TDEditor {
 	paste_to_file(filename = '', text = '', language = '') {
 		this._paste_to_file.accept(filename, text, language);
 	}
-	switchState(newState) {
+	switchState(newState: EditorState) {
 		if (this._debugState)
 			console.log("switchState");
 		const oldState = this.view.state;
@@ -330,11 +334,11 @@ export class TDEditor {
 		return oldState;
 	}
 
-	addMark(from, to) {
+	addMark(from: number, to: number) {
 		markRange(this.view, from, to);
 	}
-	createState(lang, text, pos) {
-		let selection;
+	createState(lang: string, text: string, pos?: number) {
+		let selection: { anchor: number; };
 		if (this._debugState)
 			console.log("createState: ", lang, text, text.length, pos);
 		if (pos) {
@@ -356,50 +360,62 @@ export class TDEditor {
 		return state;
 	}
 
-	mark(spec) {
+	mark(spec: Parameters<typeof Decoration.mark>[0]): Decoration {
 		return Decoration.mark(spec);
 	}
 
-	widgetDecor(spec) {
+	widgetDecor(spec: Parameters<typeof Decoration.widget>[0]) {
 		return Decoration.widget(spec);
 	}
 
-	replaceDecor(spec) {
+	replaceDecor(spec: Parameters<typeof Decoration.replace>[0]) {
 		return Decoration.replace(spec);
 	}
 
-	lineDecor(spec) {
+	lineDecor(spec: Parameters<typeof Decoration.line>[0]) {
 		return Decoration.line(spec);
 	}
 
-	diagnostic(from, to, severity, message, actions = []) {
-		return { from: from, to: to, severity: severity, message: message, actions: actions };
+	diagnostic(from: number, to: number, severity: ("info" | "warning" | "error"), message: string, actions: Action[] = []): Diagnostic {
+		return { from, to, severity, message, actions };
 	}
 
-	setDiagnostics(state, diags) {
+	setDiagnostics(state: EditorState, diags: readonly Diagnostic[]) {
 		return setDiagnostics(state, diags);
 	}
 }
 
-export const createEditor = function (elt, text, lang = "java") {
+export const createEditor = function (elt: HTMLElement, text: string, lang = "java") {
 	const outer = elt;
 	const elts = elt.getElementsByClassName('wrapper');
 	if (elts[0])
-		elt = elts[0];
+		elt = elts[0] as HTMLElement;
 
-	let editor = new TDEditor(outer.id, outer, elt, lang, text, [fontConfig(elt), stdConfig()], window.turtleduck);
+	let editor = new TDEditor(outer.id, outer, elt, lang, text, [fontConfig(elt), stdConfig()]);
 
 	return editor;
 }
 
-export const highlight = {};
-highlight.darkDuckStyle = {};
+export const highlight = {
+	darkDuckStyle: {},
+	classStyle: {},
+	classHighlighter,
+	darkDuck,
+	tags
+};
+
+
+// hack to get style rules as list instead of newline-separated string
+declare module 'style-mod' {
+	interface StyleModule {
+		rules: string[]
+	}
+}
 // for each style rule, split, e.g., ".ͼu {color: #cc0;}" into ".ͼu": "{color: #cc0;}"
-darkDuckHighlighter.module.rules.forEach(rule => {
+darkDuckHighlighter.module.rules.forEach((rule: string) => {
 	highlight.darkDuckStyle[rule.replace(/\s*{.*$/, "")] = rule.replace(/^[^{]*{/, "{");
 });
 // build definitions for classHighlighter css classes based on defs from darkDuckHighlighter
-highlight.classStyle = {};
 console.groupCollapsed("editor styles");
 for (let tag in tags) {
 	let t = tags[tag];
@@ -411,14 +427,12 @@ for (let tag in tags) {
 	}
 }
 console.groupEnd();
-highlight.classHighlighter = classHighlighter;
-highlight.darkDuck = darkDuck;
-highlight.tags = tags;
 
-export const createLineEditor = function (elt, text, lang, handler) {
+
+export const createLineEditor = function (elt: HTMLElement, text: string, lang: string, handler: (arg0: string, arg1: any) => any) {
 	function enter({ state, dispatch }) {
 		let isComplete = true;
-		let changes = state.changeByRange(range => {
+		let changes = state.changeByRange((range: { from: number; to: any; anchor: number; head: any; }) => {
 			console.groupCollapsed("enter key pressed at ", range);
 			try {
 				let text = state.sliceDoc(range.from)
@@ -477,7 +491,7 @@ export const createLineEditor = function (elt, text, lang, handler) {
 	const outer = elt;
 	const elts = elt.getElementsByClassName('wrapper');
 	if (elts[0])
-		elt = elts[0];
+		elt = elts[0] as HTMLElement;
 
 	let editor = new TDEditor(outer.id, outer, elt, text, lang, [
 		fontConfig(elt), stdConfig(),
@@ -487,11 +501,11 @@ export const createLineEditor = function (elt, text, lang, handler) {
 			}
 		}),
 		keymap.of([{ key: "ArrowUp", run: arrowUp }, { key: "ArrowDown", run: arrowDown }])
-	], window.turtleduck,
+	],
 		[keymap.of([{ key: "Enter", run: enter, shift: shiftEnter }, { key: "Tab", run: tab, shift: indentLess }])]);
 
 	editor._after_paste = () => {
-		outer.scrollTop = outer.scrollTopMax;
+		outer.scrollIntoView({ block: "end", inline: "nearest" });
 	};
 	return editor;
 }
