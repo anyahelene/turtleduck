@@ -110,6 +110,10 @@
 	}
 }
 
+.doc-display {
+	height:100%;
+	overflow-y: auto;
+}
 .doc-display.has-contents-bar {
 	margin-bottom: 1.2rem;
 }

@@ -214,11 +214,15 @@ class TabEntry extends HTMLButtonElement {
         }
         return '';
     }
+
     select() {
         console.warn('select', this);
         this.frame.selected = this;
         this.frame.queueUpdate();
-        this.panel.focus();
+        queueMicrotask(() => {
+           // this.frame._focusin(undefined);
+            this.panel.focus();
+        });
     }
     get slotId(): string {
         return this.element.slot;
@@ -229,6 +233,10 @@ class TabEntry extends HTMLButtonElement {
 
     isLeftOf(other: HTMLElement): boolean {
         return this.parentElement === other.parentElement && this.offsetLeft < other.offsetLeft;
+    }
+
+    get tag() {
+        return TabEntry.tag;
     }
 }
 
@@ -257,7 +265,7 @@ class BorbFrame extends HTMLElement {
         this._header.dataset.drop = "true";
         this._header.addEventListener('borbdragenter', (ev: BorbDragEvent) => {
             if (ev.dragSource instanceof TabEntry && ev.dragSource.canDropTo(this)) {
-                console.log("FRAME enter", ev.target, ev);
+                console.log("FRAME enter", this.frameName, ev.target, ev);
                 ev.allowDrop('move');
                 if (ev.target === ev.dragSource) {
                     // do nothing
@@ -270,13 +278,13 @@ class BorbFrame extends HTMLElement {
         });
         this._header.addEventListener('borbdragleave', (ev: BorbDragEvent) => {
             if (ev.dragSource instanceof TabEntry && !ev.newTarget) {
-                console.log("FRAME leave", ev.target, ev);
+                console.log("FRAME leave", this.frameName, ev.target, ev);
                 ev.dragState.cancelDropAttempt();
             }
         });
         this._header.addEventListener('borbdrop', (ev: BorbDragEvent) => {
             if (ev.dragSource instanceof TabEntry) {
-                console.log("FRAME drop", ev.target, ev.dragSource, ev, this);
+                console.log("FRAME drop", this.frameName, ev.target, ev.dragSource, ev, this);
                 const nextElement = ev.dragSource.nextTabEntryElement();
                 if (nextElement) {
                     assert(nextElement !== ev.dragSource.element, 'nextElement !== ev.dragSource.element');
@@ -288,8 +296,13 @@ class BorbFrame extends HTMLElement {
                 }
                 if (ev.dropped) {
                     ev.dragSource.frame.queueUpdate(true);
+                    ev.dragSource.frame._childListChanged = true;
+                    ev.dragSource.select();
                     if (this != ev.dragSource.frame)
-                        this.queueUpdate(true);
+                        this._tabs.set(ev.dragSource.element, ev.dragSource);
+                    ev.dragSource.frame = this;
+                    this.updateChildren();
+                    ev.dragSource.select();
                 }
             }
         });
@@ -307,7 +320,11 @@ class BorbFrame extends HTMLElement {
         let tabTitle = this.selected ? this.selected.tabTitle : '';
         return title.replace('<tab-title>', tabTitle);
     }
-
+    get frameName(): string {
+        let title = this.hasAttribute('frame-title') ? this.getAttribute('frame-title') : '<tab-title>';
+        let tabTitle = this.selected ? this.selected.tabTitle : '';
+        return title.replace('<tab-title>', '').replace(/^\s*(:\s*)?/, '');
+    }
     prevTab() {
         this.id
     }
@@ -337,16 +354,18 @@ class BorbFrame extends HTMLElement {
     }
     newTab(elt: HTMLElement): TabEntry {
         const entry = new TabEntry().init(elt, this);
-        console.log("Frames: adding tab", entry);
+        console.log("Frames:", this.frameName, "adding tab", entry);
         this._tabs.set(elt, entry);
         return entry;
     }
     delTab(elt: Element) {
         const entry = this._tabs.get(elt);
-        console.log("Frames: removing tab", entry);
-        if (entry) {
+        if (entry && entry.parentElement === this._nav) {
+            console.log("Frames:", this.frameName, "removing tab", entry, entry.element);
             entry.dispose();
             this._tabs.delete(elt);
+        } else {
+            console.log("Frames:", this.frameName, "tab removed", entry, entry.element);
         }
     }
 
@@ -357,7 +376,7 @@ class BorbFrame extends HTMLElement {
         if (tab) {
             tab.select();
         } else {
-            console.error("BorbFrame.select: no tab found for", elementOrName, elt, this);
+            console.error("BorbFrame.select: no tab found for", elementOrName, elt, this.frameName, this);
             this.queueUpdate();
         }
     }
@@ -367,7 +386,7 @@ class BorbFrame extends HTMLElement {
         let selected: TabEntry = undefined;
         const removedChildren = new Set(this._tabs.keys());
         const before = [...this._nav.children];
-        console.log("updateChildren before", before);
+        console.log("updateChildren", this.frameName, "before", before);
         this._nav.replaceChildren();
         for (const elt of this.children) {
             if (elt instanceof HTMLElement) {
@@ -381,7 +400,7 @@ class BorbFrame extends HTMLElement {
             }
         }
         const after = [...this._nav.children];
-        console.log("updateChildren after", after);
+        console.log("updateChildren", this.frameName, "after", after);
         removedChildren.forEach(elt => this.delTab(elt));
         if (selected)
             this.selected = selected;
@@ -392,12 +411,14 @@ class BorbFrame extends HTMLElement {
 
     connectedCallback() {
         if (this.isConnected) {
+            console.log("connected", this.tagName, this);
             if (!this.shadowRoot) {
+                console.log('creating shadow root');
                 this.attachShadow({ mode: "open" });
-                this.addEventListener("focusin", this._focusin, false);
-                this.addEventListener("focusout", this._focusout, false);
             }
-            console.log('element added to page.', this, this.isConnected, this.shadowRoot);
+            this.addEventListener("focusin", this._focusin, false);
+            this.addEventListener("focusout", this._focusout, false);
+            console.log('element', this.frameName, 'added to page.', this, this.isConnected, this.shadowRoot);
             this._observer.observe(this, {
                 childList: true,
                 attributeFilter: ['frame-title']
@@ -419,11 +440,11 @@ class BorbFrame extends HTMLElement {
         this.removeEventListener("focusout", this._focusout, false);
         DragNDrop.detachDropZone(this._header);
         turtleduck.styles.detach(styleRef, this._styleChangedHandler);
-        console.log('removed from page.', this);
+        console.log('removed from page.', this.frameName, this);
     }
 
     adoptedCallback() {
-        console.log('moved to new page.', this);
+        console.log('moved to new page.', this.frameName, this);
     }
 
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -439,17 +460,18 @@ class BorbFrame extends HTMLElement {
     _focusin(ev: FocusEvent) {
         this.classList.add("focused", "focusin");
         const last = BorbFrame.currentFocus;
-        console.log("focusin", "this:", this, "last:", last);
+        console.log("focusin", this.frameName, "this:", this, "last:", last);
         if (last !== this) {
             BorbFrame.currentFocus = this;
             BorbFrame.lastFocus = last;
             if (last)
-                last.classList.remove("focused","focusin");
+                last.classList.remove("focused", "focusin");
         }
-        ev.stopPropagation();
+        if (ev)
+            ev.stopPropagation();
     }
     _focusout(ev: FocusEvent) {
-        console.log("focusout", this, ev);
+        console.log("focusout", this.frameName, this, ev);
         this.classList.remove("focusin");
         console.log(this.classList);
     }

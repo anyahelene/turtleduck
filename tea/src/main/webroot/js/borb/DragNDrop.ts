@@ -184,7 +184,7 @@ function leaveDropTarget(ev: DragEvent, newTgt?: HTMLElement) {
         else
             console.log("DragNDrop LEAVE", ev.type, dragState.dropTarget, ev);
         dragState.dropTarget.removeAttribute('borb-drop');
-        const bev = new BorbDragEvent('borbdragleave', ev);
+        const bev = new BorbDragEvent(`borb${ev.type}`, ev);
         bev.newTarget = newTgt;
         if (ev.type === 'dragend')
             bev.dropped = dragState.dropped;
@@ -274,6 +274,7 @@ function dragstart(ev: DragEvent) {
 
 function dragend(ev: DragEvent) {
     console.log("DragNDrop end", ev.currentTarget, ev, dragState);
+    dragState.dragSource.removeAttribute('borb-dragging');
     leaveDropTarget(ev);
     dragState.reset();
 }
