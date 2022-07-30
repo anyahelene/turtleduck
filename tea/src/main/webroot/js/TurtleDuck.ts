@@ -3,7 +3,7 @@
 import { StorageContext } from './Storage';
 import type { History, HistorySession } from './History';
 import type { Settings } from './Settings';
-import { SubSystem, Styles, DragNDrop, Borb, MDRender, Frames } from 'borb';
+import { SubSystem, Styles, DragNDrop, Borb, MDRender, Frames } from '../borb';
 Borb.tagName('foo ');
 export { History, HistorySession };
 declare global {

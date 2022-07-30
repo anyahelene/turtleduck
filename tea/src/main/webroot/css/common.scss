@@ -1,0 +1,50 @@
+
+@import 'normalize/normalize.scss';
+@import 'colors.scss';
+
+
+// GLOBAL
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+
+// LINKS
+
+a:link {
+    text-decoration: none;
+    color: var(--text-fg-link);
+}
+a:visited {
+    text-decoration: none;
+    color: var(--text-fg-visited);
+}
+
+a:hover, a:active {
+    text-decoration: underline;
+    color: var(--text-fg-hover);
+}
+
+// TEXT
+p {
+    color: var(--text-fg);
+}
+// MARGINS
+p,
+dl,
+multicol {
+    margin-block-start: .5em;
+    margin-block-end: .2em;
+}
+
+
+
+
+
+// :host {
+//     @include dark-background;
+// }
+

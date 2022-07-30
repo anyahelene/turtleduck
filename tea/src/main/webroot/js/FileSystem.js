@@ -290,13 +290,13 @@ class FileSystem {
 				if (!f.kind) {
 					if (fs._debug)
 						console.log("not found");
-					return Promise.reject(new Error("file not found: " + fullpath + "/" + n));
+					return Promise.reject(new Error("file not found: " + fullpath + '/' + n));
 				} else if (path.length == 0) {
 					return Promise.resolve(f);
 				} else if (f.kind === 'm') {
-					return f.data._stat(path, 0, fullpath + "/" + n, handler, rev, opts);
+					return f.data._stat(path, 0, fullpath + '/' + n, handler, rev, opts);
 				} else {
-					return f.fs._stat(path, f.inode, fullpath + "/" + n, handler, rev, opts);
+					return f.fs._stat(path, f.inode, fullpath + '/' + n, handler, rev, opts);
 				}
 			}
 			return this._stat_impl(n, parent, f => {
@@ -345,7 +345,7 @@ class FileSystem {
 	}
 
 	_filenameToPath(filename) {
-		return filename.split("/");
+		return filename.split('/');
 	}
 	/** */
 	write(filename, data, rev = -1) {

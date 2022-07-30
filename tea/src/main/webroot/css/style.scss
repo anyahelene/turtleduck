@@ -1,16 +1,53 @@
 @use "sass:color";
+@use "sass:map";
+@use "sass:math";
+@use "sass:string";
 @import 'defs.scss';
 @import 'mixins.scss';
-@import 'normalize/normalize.scss';
 @import 'breakpoints.scss';
 @import 'colors.scss';
+@import 'common.scss';
 @import 'normal.scss';
 @import 'fonts.scss';
 @import 'scrollbar.scss';
 @import 'button.scss';
 
+:root {
 
 
+	--ui-fg: #222;
+	--ui-fg-strong: #222;
+
+	@each $spec in map.keys($color-scheme) {
+		$cmd: nth(map.get($color-scheme, $spec), 1);
+		$arg: nth(map.get($color-scheme, $spec), 2);
+
+		@if $cmd =='=' {
+			--#{$spec}: #{$arg};
+			--#{$spec}-r: #{color.red($arg)};
+			--#{$spec}-g: #{color.green($arg)};
+			--#{$spec}-b: #{color.blue($arg)};
+			--#{$spec}-a: #{color.alpha($arg)};
+		}
+	}
+}
+:root.dark, :root {
+	--text-fg: #{$terminal};
+	--text-fg-strong: #{$terminal-alt};
+	--text-fg-link: #9abaff;
+	--text-fg-hover: #ff8a4a;
+	--text-fg-visited: #ba9aff;
+	--text-bg: #000;
+	--text-bg-image: linear-gradient(89deg, #151314 0%, #252324 50%, #151314 100%),
+	linear-gradient(1deg, #141315 0%, #242325 50%, #141315 100%);
+}
+:root.light {
+	--text-fg: #{$pen};
+	--text-fg-strong: #{$pen-sharp};
+	--text-bg: #{$page};
+	--text-bg-image: linear-gradient(90deg, #dde 0%, #ccd 50%, #dde 100%),
+	linear-gradient(#eef6 0%, #ccd6 50%, #eef6 100%)
+}
 pre,
 code,
 kbd,
@@ -177,26 +214,7 @@ sub {
 	cursor: ns-resize;
 }
 
-a:link {
-	text-decoration: none;
-}
 
-a:hover {
-	text-decoration: underline;
-}
-
-
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-}
-
-p,
-dl,
-multicol {
-	margin-top: .5em 0;
-}
 
 button {
 	@include lores-font;

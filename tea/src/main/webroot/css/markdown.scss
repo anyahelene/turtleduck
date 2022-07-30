@@ -14,7 +14,8 @@
 	font-family: 'Andika';
 	font-size: 1.2rem;
 	line-height: 1.6rem;
-    @include dark-background;
+	color: var(--text-fg);
+	// background-color: var(--main-bg-color-dark);
 }
 
 .text p {
@@ -30,23 +31,10 @@
 	font-size: inherit;
 	margin: 1em 0 .2em 0;
 	@include pixel-font;
-	//	font-variant:small-caps;
-	//color: $pen-sharp;
-	//background: #001800;
-	//padding: .5rem;
 }
 
 .text h1 {
 	margin: 1.5em 0 .2em 0;
-}
-
-.dark .text h1,
-.dark .text h2,
-.dark .text h3,
-.dark .text h4,
-.dark .text h5,
-.dark .text h6 {
-	//text-shadow: 0 0 .5rem;
 }
 
 .text h1.title {
@@ -55,18 +43,6 @@
 	margin: .2rem -.2rem;
 	@include pixel-font;
 	font-variant: normal;
-}
-
-.dark .text h1,
-.dark .text h2 {
-	background: $terminal;
-	color: #333;
-
-	code {
-		color: #333;
-	}
-
-	//	background: #0308;
 }
 
 .text h2,

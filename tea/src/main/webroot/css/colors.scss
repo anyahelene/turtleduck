@@ -2,6 +2,7 @@
 @use "sass:color";
 @use "sass:math";
 @use "sass:string";
+@use "sass:meta";
 
 $PHOSPHOR_P1: #4aff00; // ~525nm
 $PHOSPHOR_P19: #ffdf00; // ~590nm
@@ -50,14 +51,6 @@ $info: $BLUE;
 $warning: #ff0;
 $error: #f00;
 
-:root {
-	--main-bg-color-dark: #000;
-	--main-bg-image-dark: linear-gradient(89deg, #151314 0%, #252324 50%, #151314 100%),
-		linear-gradient(1deg, #141315 0%, #242325 50%, #141315 100%);
-	--main-bg-color-light: #fff;
-	--main-bg-image-light: linear-gradient(90deg, #dde 0%, #ccd 50%, #dde 100%),
-		linear-gradient(#eef6 0%, #ccd6 50%, #eef6 100%);
-}
 
 @mixin dark-background {
 	background-color: var(--main-bg-color-dark);
@@ -90,26 +83,11 @@ $error: #f00;
 
 }
 
-:root {
-	@each $spec in map.keys($color-scheme) {
-		$cmd: nth(map.get($color-scheme, $spec), 1);
-		$arg: nth(map.get($color-scheme, $spec), 2);
-
-		@if $cmd =='=' {
-			--#{$spec}: #{$arg};
-			--#{$spec}-r: #{color.red($arg)};
-			--#{$spec}-g: #{color.green($arg)};
-			--#{$spec}-b: #{color.blue($arg)};
-			--#{$spec}-a: #{color.alpha($arg)};
-		}
-	}
-}
 
 @function replace($string, $search, $replace) {
 	@if $string ==$search {
 		@return $replace;
 	}
-
 	@else {
 		$i: string.index($string, $search);
 		$l: string.length($search);
@@ -126,13 +104,20 @@ $error: #f00;
 	$base: 'color';
 
 	@each $spec in $specs {
-		$cmd: nth(map.get($color-scheme, $spec), 1);
-		$arg: nth(map.get($color-scheme, $spec), 2);
-
-		@if $cmd =='=' {
-			$c: $arg;
-			$base_color: $arg;
+		@if meta.type-of($spec)=='color' {
+			$c: $spec;
+			$base_color: $spec;
 			$base: $spec;
+		}
+		@else {
+			$cmd: nth(map.get($color-scheme, $spec), 1);
+			$arg: nth(map.get($color-scheme, $spec), 2);
+
+			@if $cmd =='=' {
+				$c: $arg;
+				$base_color: $arg;
+				$base: $spec;
+			}
 		}
 	}
 

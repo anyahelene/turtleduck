@@ -18,7 +18,7 @@ export default {
     loggingDebug: ["sass-loader"],
   },
   entry: {
-    bundle: { import: ['./index.js', './css/style.scss', './css/buttons.scss', './css/frames.scss', './css/markdown.scss', './terms-no.md'], filename: 'js/bundle.js' },
+    bundle: { import: ['./index.js', './css/style.scss', './css/common.scss', './css/buttons.scss', './css/frames.scss', './css/markdown.scss', './terms-no.md'], filename: 'js/bundle.js' },
     // path.join(__dirname, 'src', 'main', 'webroot','css', 'style.scss'),
     //html: ['./webroot/terms-no.md'],
   },

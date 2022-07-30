@@ -35,7 +35,9 @@ button {
 	@include pixel-font;
 	font-size-adjust: none;
 }
-
+button:focus-visible, [type="button"]:focus-visible {
+	outline: 1px auto;
+}
 :host(.disappear) button .text, :host(.disappear) button .icon {
 	font-size: 0;
 	transition: font-size 2s;

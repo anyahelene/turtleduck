@@ -43,7 +43,7 @@ turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
 turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.defaultConfig = defaultConfig;
-import {TDEditor,createEditor, createLineEditor} from './js/Editor';
+import { TDEditor, createEditor, createLineEditor } from './js/Editor';
 turtleduck.createEditor = createEditor;
 turtleduck.createLineEditor = createLineEditor;
 turtleduck.TDEditor = TDEditor;
@@ -51,6 +51,7 @@ Object.defineProperty(turtleduck, 'cwd', { get: () => turtleduck.storage.cwd });
 turtleduck.getConfig = (...args) => turtleduck.settings.getConfig(...args);
 turtleduck.setConfig = (...args) => turtleduck.settings.setConfig(...args);
 turtleduck.saveConfig = (...args) => turtleduck.settings.saveConfig(...args);
+turtleduck.SubSystem = SubSystem;
 SubSystem.setup(turtleduck);
 SubSystem.waitFor('settings').then((sys) => {
 	console.warn("CONFIGS:", sys.api.configs);
@@ -73,7 +74,7 @@ turtleduck.openCamera = function (config) {
 		elt.classList.add('active');
 		return turtleduck.camera.initialize(config);
 	}
-}
+};
 
 turtleduck.closeCamera = function (now = false) {
 	const elt = document.getElementById('camera');
@@ -84,7 +85,7 @@ turtleduck.closeCamera = function (now = false) {
 		turtleduck.camera.dispose();
 
 	}
-}
+};
 
 turtleduck.openFiles = function (ctx) {
 	if (!ctx)
@@ -96,10 +97,10 @@ turtleduck.openFiles = function (ctx) {
 		const data = {
 			'files': "Files",
 			'fileList': res.map(file => html`<a href="#">${file}</a>`)
-		}
+		};
 		elt = turtleduck.displayDialog("file-dialog", data);
 	});
-}
+};
 
 turtleduck.unique = 0;
 turtleduck.instantiateTemplate = function (templateType, data = {}) {
@@ -146,7 +147,7 @@ turtleduck.instantiateTemplate = function (templateType, data = {}) {
 	} else {
 		throw `Template not found: ${templateType}`;
 	}
-}
+};
 turtleduck.displayDialog = function (dialogType, data = {}) {
 	const tmpl = turtleduck.instantiateTemplate(dialogType, data);
 	if (tmpl) {
@@ -159,7 +160,7 @@ turtleduck.displayDialog = function (dialogType, data = {}) {
 		}
 		return elt;
 	}
-}
+};
 turtleduck.displayPopup = function (title, text, caption, style) {
 	const elt = document.getElementById("popup");
 	if (elt) {
@@ -169,7 +170,7 @@ turtleduck.displayPopup = function (title, text, caption, style) {
 		elt.querySelector("figcaption").innerText = caption;
 	}
 	return elt;
-}
+};
 
 turtleduck.checkLogin = function (resolve, reject) {
 	fetch("login/whoami").then(res => res.json()).then(res => {
@@ -188,9 +189,9 @@ turtleduck.checkLogin = function (resolve, reject) {
 			console.log("Opened login window: ", win);
 		}
 	});
-}
+};
 
-const animalList = animals.split(/\s+/).filter(function (a) { return a.length > 0; })
+const animalList = animals.split(/\s+/).filter(function (a) { return a.length > 0; });
 turtleduck.animals = {
 	pranimals: animalList.filter(function (a) { return !a.startsWith("-"); }),
 	postimals: animalList.filter(function (a) { return !(a.endsWith("-") || a.endsWith(":")); }),
@@ -200,9 +201,9 @@ turtleduck.animals = {
 		const b = this.postimals[Math.floor(Math.random() * this.postimals.length)];
 		return (a + " " + b).replaceAll(/(:|- -?| -)/g, '');
 	}
-}
+};
 const hintList = hints.split(/\n/).filter(a => a.length > 0).map(q => {
-	const m = q.match(/^(“[^”]*”)\s*[-–—]\s*([^,]+)\s*,?\s*(.*)$/)
+	const m = q.match(/^(“[^”]*”)\s*[-–—]\s*([^,]+)\s*,?\s*(.*)$/);
 	if (m) {
 		return [m[1], m[2], m[3]];
 	} else {
@@ -212,7 +213,7 @@ const hintList = hints.split(/\n/).filter(a => a.length > 0).map(q => {
 turtleduck.hints = {
 	list: hintList,
 	random: () => hintList[Math.floor(Math.random() * hintList.length)]
-}
+};
 
 SubSystem.waitFor('history').then(async () => {
 	const ss = await turtleduck.history.sessions();
@@ -249,7 +250,7 @@ turtleduck.tabSelect = function (tabsId, key) {
 		}
 	});
 	return previous;
-}
+};
 
 turtleduck.updateInfo = function () {
 	document.querySelectorAll('[data-from]').forEach(elt => {
@@ -266,7 +267,7 @@ turtleduck.updateInfo = function () {
 		}
 		elt.innerText = "";
 	});
-}
+};
 
 
 function ctrl(key) {
@@ -359,7 +360,7 @@ async function handleKey(key, button, event) {
 			break;
 		}
 		case "language": {
-			turtleduck.client.loadLanguage('python')
+			turtleduck.client.loadLanguage('python');
 			break;
 		}
 		case "snap": {
@@ -482,7 +483,7 @@ turtleduck.activateToggle = function (element, toggleClass, target, ...targets) 
 		targets.forEach(elt => elt.classList.toggle(toggleClass, !active));
 		return false;
 	});
-}
+};
 
 turtleduck.activateDrag = function (element, type, value) {
 	element.addEventListener("dragstart", e => {
@@ -490,7 +491,7 @@ turtleduck.activateDrag = function (element, type, value) {
 		e.preventDefault();
 		return false;
 	});
-}
+};
 
 turtleduck.createComponent = (name, element) => new Component(name, element, turtleduck);
 
@@ -522,7 +523,7 @@ turtleduck.activatePaste = function (element, target, text, cursorAdj = 0, then 
 		}
 		return false;
 	}, false);
-}
+};
 turtleduck.currentFocus = null;
 turtleduck.lastFocus = null;
 turtleduck.changeButton = function (button, icon, text) {
@@ -540,7 +541,7 @@ turtleduck.changeButton = function (button, icon, text) {
 		textElt.innerText = text;
 	}
 	console.log("icon/title elts after: ", iconElt, textElt);
-}
+};
 
 turtleduck.trackMouse = function (element, coordElement) {
 	element.addEventListener("mousemove", e => {
@@ -552,7 +553,7 @@ turtleduck.trackMouse = function (element, coordElement) {
 		coordElement.textContent = "(" + Math.round(p.x) + ","
 			+ Math.round(p.y) + ")";
 	});
-}
+};
 
 turtleduck.dismissElements = e => {
 	const elts = document.querySelectorAll(".dismissable.show");
@@ -573,10 +574,6 @@ turtleduck.dismissElements = e => {
 
 window.addEventListener('DOMContentLoaded', loadedEvent => {
 	Mousetrap.bindGlobal('esc', e => handleKey('esc', null, e));
-
-	SubSystem.register({
-		name: 'dom'
-	});
 
 	document.documentElement.addEventListener("click", turtleduck.dismissElements);
 
@@ -620,7 +617,7 @@ window.addEventListener('DOMContentLoaded', loadedEvent => {
 					timer = undefined;
 				}, 3000);
 			}
-		}
+		};
 		elt.addEventListener("mouseenter", async e => {
 			tipElt.classList.remove("fade3");
 			if (timer !== undefined) {
@@ -651,7 +648,7 @@ turtleduck.initializeWM = function () {
 		mqlPortrait = window.matchMedia('(max-width: 899px)');
 		mqlPortrait.onchange = turtleduck.initializeWM;
 	}
-	console.log('media size change: ', mqlPortrait)
+	console.log('media size change: ', mqlPortrait);
 	if (mqlPortrait.matches) {
 		turtleduck.layoutPrefs = turtleduck.getConfig('prefs.layout-portrait');
 	} else {
@@ -659,7 +656,7 @@ turtleduck.initializeWM = function () {
 	}
 	if (turtleduck.layoutSpec && turtleduck.layoutPrefs)
 		turtleduck.wm.initialize(turtleduck.layoutSpec, turtleduck.layoutPrefs);
-}
+};
 
 window.addEventListener('DOMContentLoaded', loadedEvent => {
 	const mqlDesktop = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -671,8 +668,8 @@ window.addEventListener('DOMContentLoaded', loadedEvent => {
 	}
 	handleDesktop(mqlDesktop);
 	mqlDesktop.onchange = handleDesktop;
-	const mqlDark = window.matchMedia('(prefers-color-scheme: dark)')
-	const mqlLight = window.matchMedia('(prefers-color-scheme: light)')
+	const mqlDark = window.matchMedia('(prefers-color-scheme: dark)');
+	const mqlLight = window.matchMedia('(prefers-color-scheme: light)');
 	function handleColorPreference(mql) {
 		if (mql.matches) {
 			const dark = mql.media.endsWith('dark)');
@@ -691,11 +688,11 @@ window.addEventListener('DOMContentLoaded', loadedEvent => {
 
 	const resizeObserver = new ResizeObserver(entries => {
 		console.log('Console size changed');
-	})
+	});
 	resizeObserver.observe(document.getElementById('shell'));
 
 
-})
+});
 
 turtleduck._initializationComplete = function (err) {
 	if (err) {
@@ -728,25 +725,27 @@ turtleduck._initializationComplete = function (err) {
 	turtleduck.client.route('grid-update', msg => turtleduck.gridDisplay.update(msg));
 	turtleduck.client.route('grid-style', msg => turtleduck.gridDisplay.style(msg));
 	turtleduck.client.route('grid-dispose', msg => turtleduck.gridDisplay.dispose(msg));
-}
+};
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;
 
-import framesStyle from  './css/frames.scss';
-import buttonStyle from './css/buttons.scss';
-//import markdownStyle from './css/markdown.scss';
+import './css/style.scss';
+import './css/frames.scss';
+import './css/buttons.scss';
+import './css/common.scss';
+import './css/markdown.scss';
 
 if (import.meta.webpackHot) {
 	console.warn("WebpackHot enabled");
-	turtleduck.webpackHot =  import.meta.webpackHot;
-    import.meta.webpackHot.accept(['./css/frames.scss','./css/buttons.scss', './css/markdown.scss'], function (outdated) {
+	turtleduck.webpackHot = import.meta.webpackHot;
+	import.meta.webpackHot.accept(['./css/style.scss', './css/frames.scss', './css/buttons.scss', './css/common.scss', './css/markdown.scss'], function (outdated) {
 		outdated.forEach(dep => {
-			turtleduck.styles.update(dep.replace('./','').replace('.scss', '.css'));
+			turtleduck.styles.update(dep.replace('./', '').replace('.scss', '.css'));
 		});
 	}, (err, context) => {
 		console.error("HMR failed:", err, context);
 	});
-  //  import.meta.webpackHot.accept('./css/frames.scss?raw', function (...args) {
-//		console.warn("frames", args);
-//	});
+	//  import.meta.webpackHot.accept('./css/frames.scss?raw', function (...args) {
+	//		console.warn("frames", args);
+	//	});
 }
