@@ -1,4 +1,3 @@
-
 import getopts from 'getopts';
 import Settings from './Settings';
 import { Printer, Terminal } from './Terminal';
@@ -18,21 +17,24 @@ function createEnvironment(): Map<string, EnvValue> {
         LOGNAME: () => Settings.getConfig('user.username', ''),
         USER: () => Settings.getConfig('user.username', ''),
         PWD: (sh: TShell, dir?: string) => {
-            if (dir)
-                sh.currentDirectory = dir;
+            if (dir) sh.currentDirectory = dir;
             return sh.currentDirectory;
         },
         SHLVL: '1',
         _: (sh: TShell) => sh.currentCommand,
         '?': (sh: TShell) => String(sh.returnCode),
         PATH: '/home/bin:/bin',
-    }
-    return new Map(Object.keys(tmp).map(k => [k, tmp[k]]));
+    };
+    return new Map(Object.keys(tmp).map((k) => [k, tmp[k]]));
 }
 const defaultEnvironment = createEnvironment();
 type Program = {
-    params: Options,
-    fun?(args: ParsedOptions, sh: TShell, ctx: StorageContext): Promise<number> | number | string | void
+    params: Options;
+    fun?(
+        args: ParsedOptions,
+        sh: TShell,
+        ctx: StorageContext,
+    ): Promise<number> | number | string | void;
 };
 const programs: Map<string, Program> = new Map();
 
@@ -105,7 +107,7 @@ class TShell {
     }
 
     async eval(line: string, outputElement?: HTMLElement): Promise<number> {
-        console.log("eval", line, outputElement);
+        console.log('eval', line, outputElement);
         const commands = this.parseCommand(line);
 
         const oldOutput = this._outputElement;
@@ -140,13 +142,15 @@ class TShell {
             this._outputElement = oldOutput;
             this._printer = oldPrinter;
             return Promise.resolve(0);
-        }
+        };
 
         return evalStep(0);
     }
 
     async evalCommand(prog: string, args: string[]): Promise<number> {
-        args = args.map(arg => arg.startsWith('$') ? this.getenv(arg.substring(1)) : arg);
+        args = args.map((arg) =>
+            arg.startsWith('$') ? this.getenv(arg.substring(1)) : arg,
+        );
         const { params, fun } = this.findProgram(prog);
 
         const pArgs = getopts(args, params);
@@ -161,8 +165,7 @@ class TShell {
                 const ret = await fun(pArgs, this, this._cwd);
                 this._returnCode = Number(ret) || 0;
 
-                if (typeof ret === 'string')
-                    this.println(ret);
+                if (typeof ret === 'string') this.println(ret);
             } else {
                 throw `Command not found: ${prog}`;
             }
@@ -185,7 +188,7 @@ class TShell {
     }
 
     println(...args: string[]): void {
-        const text = args.map(a => String(a)).join(' ');
+        const text = args.map((a) => String(a)).join(' ');
         if (this._printer) {
             this._printer.print(text + '\n');
         } else {
@@ -194,7 +197,7 @@ class TShell {
     }
 
     print(...args: string[]): void {
-        const text = args.map(a => String(a)).join(' ');
+        const text = args.map((a) => String(a)).join(' ');
         if (this._printer) {
             this._printer.print(text);
         } else {
@@ -205,26 +208,31 @@ class TShell {
 
 programs.set('ls', {
     params: {
-        boolean: ['all', 'long', 'time'], alias: { all: ['a'], long: ['l'], time: '' }
+        boolean: ['all', 'long', 'time'],
+        alias: { all: ['a'], long: ['l'], time: '' },
     },
-    fun: (args, sh, ctx) => ctx.readdir(args['_'][0]).then((res: string[]) => sh.println(res.join(' '))).then(() => 0),
+    fun: (args, sh, ctx) =>
+        ctx
+            .readdir(args['_'][0])
+            .then((res: string[]) => sh.println(res.join(' ')))
+            .then(() => 0),
 });
 programs.set('echo', {
     params: { boolean: ['n', 'e', 'E'] },
-    fun: (args, sh, ctx) => sh.println(args['_'].join(' '))
-})
+    fun: (args, sh, ctx) => sh.println(args['_'].join(' ')),
+});
 programs.set('cd', {
     params: { boolean: ['L', 'P', 'e', '@'] },
-    fun: (args, sh, ctx) => ctx.chdir(args['_'][0]).then(() => 0)
-})
+    fun: (args, sh, ctx) => ctx.chdir(args['_'][0]).then(() => 0),
+});
 programs.set('true', {
     params: {},
-    fun: () => 0
-})
+    fun: () => 0,
+});
 programs.set('false', {
     params: {},
-    fun: () => 1
-})
+    fun: () => 1,
+});
 export { TShell };
 
 SubSystem.register({
@@ -234,8 +242,7 @@ SubSystem.register({
     start(dep) {
         return new TShell();
     },
-	revision:0
+    revision: 0,
 });
 
 const obj = {};
-

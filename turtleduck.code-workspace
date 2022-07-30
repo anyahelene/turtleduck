@@ -33,6 +33,7 @@
 	],
 	"settings": {
 		"java.configuration.updateBuildConfiguration": "interactive",
-		"js/ts.implicitProjectConfig.module": "ES2020"
+		"js/ts.implicitProjectConfig.module": "ES2020",
+		"editor.formatOnSave": true
 	}
 }
