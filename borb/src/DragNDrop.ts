@@ -1,12 +1,4 @@
-import SubSystem from '../SubSystem';
-import { Hole, html, render } from "uhtml";
-import { turtleduck } from '../TurtleDuck';
-import { BorbElement, tagName, assert } from './Borb';
-import { data } from './Styles';
-import IndexedMap from './IndexedMap';
-import { uniqueId } from 'lodash-es';
-import exports from 'webpack';
-//import 'css/frames.css';
+import SubSystem from './SubSystem';
 
 const subsys_name = 'DragNDrop';
 const revision: number = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['revision'] + 1 : 0;
@@ -347,17 +339,14 @@ const self = {
 export const DragNDrop = self;
 export default DragNDrop;
 const subsys_id = `borb/${subsys_name.toLowerCase()}`
-const globalListener = (ev:DragEvent) => ev.preventDefault();
-SubSystem.declare(subsys_id, self)
+const globalListener = (ev: DragEvent) => ev.preventDefault();
+SubSystem.declare(subsys_id, self, revision)
+    .reloadable(true)
     .depends('dom')
     .start((self, dep) => {
-        console.groupCollapsed("defining ${subsys_name}:");
-        try {
-            document.addEventListener('drop', globalListener);
-            document.addEventListener('dragover', globalListener);
-        } finally {
-            console.groupEnd();
-        }
+        document.addEventListener('drop', globalListener);
+        document.addEventListener('dragover', globalListener);
+
         return DragNDrop;
     })
     .register();

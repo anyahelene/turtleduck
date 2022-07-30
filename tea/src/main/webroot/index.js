@@ -11,7 +11,7 @@ import { Component } from './js/Component';
 import { TilingWM, TilingWindow } from './js/TilingWM';
 import { PyController } from './js/pycontroller';
 import { ShellServiceProxy } from './js/ShellServiceProxy';
-import { MDRender } from './js/borb/MDRender';
+import { MDRender, SubSystem, Borb, Buttons, Frames } from './borb';
 import { Camera } from './js/Media';
 import { GridDisplayServer } from './js/GridDisplay';
 import { html, render } from 'uhtml';
@@ -20,23 +20,21 @@ import { timeAgo } from './js/TimeAgo';
 import { TShell } from './js/TShell';
 import * as lodash from 'lodash-es';
 import i18next from 'i18next';
-import borb from './js/borb';
 import getopts from 'getopts';
 import defaultConfig from './config.json';
-import SubSystem from './js/SubSystem';
 import Settings from './js/Settings';
 
 var imports = {
 	SockJS, Mousetrap, animals, hints, fileSystem, FileSystem,
 	history, Component, TilingWM, TilingWindow, PyController, ShellServiceProxy,
-	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, borb, timeAgo,
+	MDRender, Camera, GridDisplayServer, html, render, Storage, i18next, Borb, timeAgo,
 	lodash, TShell, getopts, SubSystem, Settings
 };
 
 console.log(turtleduck);
 globalThis.imports = imports;
 globalThis.turtleduck = turtleduck;
-globalThis.borb = borb;
+globalThis.borb = Borb;
 turtleduck.mdRender = MDRender;
 turtleduck.Camera = Camera;
 turtleduck.Camera.addSubscription('copy', 'builtin', 'qr', 'Copy', '📋', 'Copy to clipboard');

@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import { PromiseExtended } from 'dexie';
-import SubSystem from './SubSystem';
+import { SubSystem } from '../borb/SubSystem';
 
 function make_key(s: string, id?: number): [string, string, number?] {
 	const i = s.indexOf('/');
@@ -326,5 +326,6 @@ SubSystem.register({
 			history = FakeHistory;
 			return FakeHistory;
 		}
-	}
+	},
+	revision:0
 });

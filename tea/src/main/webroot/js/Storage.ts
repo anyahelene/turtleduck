@@ -3,7 +3,7 @@ import path from '@isomorphic-git/lightning-fs/src/path'
 import MagicPortal from 'magic-portal'
 import { turtleduck } from './TurtleDuck';
 import { Printer, Terminal } from './Terminal';
-import SubSystem from './SubSystem';
+import { SubSystem } from '../borb/SubSystem';
 import Settings from './Settings';
 import FS from '@isomorphic-git/lightning-fs';
 
@@ -215,7 +215,8 @@ const systemSpec = {
 	depends: ['settings'],
 	name: 'storage',
 	start: (sys) => sys.api.init(),
-	api: new Storage()
+	api: new Storage(),
+	revision:0
 
 }
 

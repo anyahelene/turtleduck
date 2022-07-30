@@ -1,6 +1,9 @@
 {
 	"folders": [
 		{
+			"path": "parent"
+		},
+		{
 			"path": "base"
 		},
 		{
@@ -22,10 +25,10 @@
 			"path": "shell"
 		},
 		{
-			"path": "tea"
+			"path": "borb"
 		},
 		{
-			"path": "parent"
+			"path": "tea"
 		}
 	],
 	"settings": {

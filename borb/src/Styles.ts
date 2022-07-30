@@ -1,16 +1,22 @@
 /// <reference types="webpack/module" />
+
+import SubSystem from './SubSystem';
+
+const subsys_name = 'Styles';
+const revision: number = import.meta.webpackHot && import.meta.webpackHot.data ? (import.meta.webpackHot.data['revision'] || 0) + 1 : 0;
+const previousVersion: typeof self = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['self'] : undefined;
+
+
 interface StylesData {
     styles: Map<string, string>,
     styleNodes: Map<string, HTMLStyleElement>,
     styleStatus: Map<string, string>
 }
-const oldData: StylesData = import.meta.webpackHot ? import.meta.webpackHot.data as StylesData : undefined;
-export const data: StylesData = oldData ? { ...oldData } : {
+export const data: StylesData = previousVersion ? { ...previousVersion.data } : {
     styles: new Map<string, string>(),
     styleNodes: new Map<string, HTMLStyleElement>(),
     styleStatus: new Map<string, string>()
 }
-console.log("foobar");
 export function attach(name: string, listener: (ev: Event) => void): void {
     let node = data.styleNodes.get(name);
     if (!node) {
@@ -110,12 +116,20 @@ export function update(name: string): void {
     console.log("updating stylesheet", name);
     load(name, true);
 }
-export const Styles = { get, update, load, attach, detach, data, version:7 };
+const self  = { get, update, load, attach, detach, data, version:7 };
+
+export const Styles = self;
 export default Styles;
 
-console.warn("Styles load!");
+SubSystem.declare(`borb/${subsys_name.toLowerCase()}`, self, revision)
+    .start((self, dep) => {
+    })
+    .register();
+
+console.warn("Styles *loaded*!!!!");
 
 if (import.meta.webpackHot) {
+    import.meta.webpackHot.accept();
     import.meta.webpackHot.addDisposeHandler((d:StylesData) => {
         d.styles = data.styles;
         d.styleNodes = data.styleNodes;

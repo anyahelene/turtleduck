@@ -1,11 +1,23 @@
-import SubSystem from '../SubSystem';
-import { BorbElement, tagName } from './Borb';
+import SubSystem from './SubSystem';
+import { BorbElement, tagName, handleKey } from './Common';
 import { Hole, html, render } from "uhtml";
-import { turtleduck } from '../TurtleDuck';
 import { DragNDrop, BorbDragEvent } from './DragNDrop';
+import Styles from './Styles';
 import Mousetrap from 'mousetrap';
 import 'mousetrap/plugins/global-bind/mousetrap-global-bind';
-interface Command {
+
+declare module './SubSystem' {
+	interface Sys {
+		Buttons: typeof _self
+	}
+}
+const subsys_name = 'Buttons';
+const revision: number = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['revision'] + 1 : 0;
+const previousVersion: typeof _self = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['self'] : undefined;
+const styleRef = 'css/buttons.css';
+
+
+export interface Command {
 	name: string,
 	element?: BorbCommand
 	icon?: string,
@@ -31,8 +43,8 @@ const keyboardSymbols: { [keyName: string]: string } = { ctrl: ctrlSymbols.mac, 
  * @field data-text Default button/menu text
  * @field data-text-LL Localised text
  */
-class BorbCommand extends BorbElement {
-    static tag = tagName('command');
+export class BorbCommand extends BorbElement {
+	static tag = tagName('command');
 	name: string = '';
 	constructor() {
 		super();
@@ -47,10 +59,9 @@ class BorbCommand extends BorbElement {
 	 * @param event (optional)  The event that triggered the command
 	 */
 	async run(elt: BorbCommand | BorbButton = this, event?: Event) {
-		await turtleduck.handleKey(this.name, elt, event);
+		await handleKey(this.name, elt, event);
 	}
 }
-const styleRef = 'css/buttons.css';
 
 function loadCommand(element: BorbCommand): Command {
 	const cmd: Command = { name: element.getAttribute('name') ?? '', element: element, ...element.dataset };
@@ -76,20 +87,20 @@ function loadCommand(element: BorbCommand): Command {
  * @field id The button's unique id
  * @field data-shortcut Default key shortcut
  */
-class BorbButton extends BorbElement {
-    static tag = tagName('button');
+export class BorbButton extends BorbElement {
+	static tag = tagName('button');
 	_command?: Command;
 	clickHandler: (e: Event) => Promise<void>;
 	private _style: HTMLStyleElement;
 	styleChangedHandler: (e: Event) => void;
 	constructor() {
 		super();
-        this._style = turtleduck.styles.get(styleRef);
-		this.styleChangedHandler = (e:Event) => this.styleChanged();
+		this._style = Styles.get(styleRef);
+		this.styleChangedHandler = (e: Event) => this.styleChanged();
 		this.attachShadow({ mode: "open" });
 
 		this.clickHandler = this._clickHandler.bind(this);
-		this.addEventListener('borbdragstart', (ev:BorbDragEvent) => {
+		this.addEventListener('borbdragstart', (ev: BorbDragEvent) => {
 			ev.originalEvent.dataTransfer.setData('text/plain', this.outerHTML);
 			ev.originalEvent.dataTransfer.setData('application/json', JSON.stringify({
 				type: 'button', id: this.id, binding: this.command.name
@@ -148,21 +159,21 @@ class BorbButton extends BorbElement {
 			if (cmd.element) {
 				await cmd.element.run(this, e);
 			} else {
-				await turtleduck.handleKey(cmd.name, this, e);
+				await handleKey(cmd.name, this, e);
 			}
 		} else {
 			console.warn("No command bound to ", this, e);
-			await turtleduck.handleKey(this.id, this, e);
+			await handleKey(this.id, this, e);
 		}
 	}
 	connectedCallback() {
 		DragNDrop.attachDraggable(this);
-        turtleduck.styles.attach(styleRef, this.styleChangedHandler);
+		Styles.attach(styleRef, this.styleChangedHandler);
 		this.update();
 	}
 
 	disconnectedCallback() {
-        turtleduck.styles.attach(styleRef, this.styleChangedHandler);
+		Styles.attach(styleRef, this.styleChangedHandler);
 		DragNDrop.detachDraggable(this);
 	}
 
@@ -173,15 +184,15 @@ class BorbButton extends BorbElement {
 		// console.log('element attributes changed.', name, oldValue, newValue);
 		this.update();
 	}
-    styleChanged() {
-        this._style = turtleduck.styles.get(styleRef);
-        this.update();
-        //console.log('style changed', this, styleRef, this._style);
-    }
+	styleChanged() {
+		this._style = Styles.get(styleRef);
+		this.update();
+		//console.log('style changed', this, styleRef, this._style);
+	}
 	template() {
 		const command = this.command;
 		const text = command.text;
-		let icon : string | Hole = command.icon || this.dataset.icon || '';
+		let icon: string | Hole = command.icon || this.dataset.icon || '';
 		if (command.iconSrc || this.dataset.iconSrc)
 			icon = html`<img src="${command.iconSrc || this.dataset.iconSrc}" style="height:1em" alt="${icon}" />`;
 		const shortcut: string = this.classList.contains('not-implemented') ? '(not implemented)'
@@ -207,14 +218,16 @@ class BorbButton extends BorbElement {
 	}
 }
 
-const Buttons = { BorbButton, BorbCommand, commands, ctrlSymbols, keyboardSymbols };
+const _self = {
+	BorbButton, BorbCommand, commands, ctrlSymbols, keyboardSymbols,
+};
+export const Buttons = _self;
 export default Buttons;
 
-SubSystem.declare('borb/buttons', Buttons).depends('dom')
-	.start((self,dep) => {
-		console.groupCollapsed("defining buttons:");
-		customElements.define(BorbButton.tag, BorbButton);
-		customElements.define(BorbCommand.tag, BorbCommand);
-		console.groupEnd();
+SubSystem.declare('borb/buttons', _self, revision)
+	.reloadable(false)
+	.depends('dom', 'borb/styles')
+	.elements(BorbButton, BorbCommand)
+	.start((self, dep) => {
 	})
 	.register();

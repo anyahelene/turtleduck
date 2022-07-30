@@ -31,6 +31,7 @@
     "@isomorphic-git/lightning-fs": "^4.4.1",
     "@types/estree": "^0.0.51",
     "bind-mousetrap-global": "^1.0.1",
+    "borb": "file:../borb",
     "dexie": "^3.0.3",
     "file-saver": "^2.0.5",
     "getopts": "^2.3.0",

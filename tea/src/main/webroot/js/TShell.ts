@@ -1,9 +1,9 @@
 
-import  getopts from 'getopts';
+import getopts from 'getopts';
 import Settings from './Settings';
 import { Printer, Terminal } from './Terminal';
 import type { Options, ParsedOptions } from 'getopts/.';
-import SubSystem from './SubSystem';
+import { SubSystem } from '../borb/SubSystem';
 import { turtleduck } from './TurtleDuck';
 import { StorageContext } from './Storage';
 //import getopts = require('getopts');
@@ -37,7 +37,7 @@ type Program = {
 const programs: Map<string, Program> = new Map();
 
 class TShell {
-    private env : Map<string,EnvValue>;
+    private env: Map<string, EnvValue>;
     private _returnCode: number = 0;
     private _programs = programs;
     private _parent?: TShell;
@@ -45,8 +45,8 @@ class TShell {
     private _outputElement?: HTMLElement;
     private _printer?: Printer;
     private _currentArguments?: Array<string>;
-    private _cwd : StorageContext;
-    constructor(cwd? : StorageContext, parent?: TShell) {
+    private _cwd: StorageContext;
+    constructor(cwd?: StorageContext, parent?: TShell) {
         this._parent = parent;
         this.env = createEnvironment();
         this._cwd = cwd ?? turtleduck.cwd;
@@ -118,7 +118,7 @@ class TShell {
         }
         const evalStep = async (i: number): Promise<number> => {
             if (i >= 0 && i < commands.length) {
-                if (commands[i + 1] && commands[i+1][0] === '|') {
+                if (commands[i + 1] && commands[i + 1][0] === '|') {
                     // set up pipe
                 }
                 const cmd = commands[i];
@@ -228,12 +228,13 @@ programs.set('false', {
 export { TShell };
 
 SubSystem.register({
-	api: undefined,
-	depends: ['storage'],
-	name: 'tshell',
-	start(dep) {
-       return new TShell();
-	},
+    api: undefined,
+    depends: ['storage'],
+    name: 'tshell',
+    start(dep) {
+        return new TShell();
+    },
+	revision:0
 });
 
 const obj = {};

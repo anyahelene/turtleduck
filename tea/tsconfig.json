@@ -8,16 +8,17 @@
         "resolveJsonModule": true,
         "strict": false,
         "baseUrl": "./", 
-        "rootDir": "./src/main/webroot/",
+        "rootDirs": ["./src/main/webroot/"],
         "outDir": "target/classes/webroot/",
-        "explainFiles" : true,
-        "listEmittedFiles":true,
-        "paths": {"css/frames.css" : ["./target/classes/webroot/css/frames.css"]},
+      //  "explainFiles" : true,
+      //  "listEmittedFiles":true,
+        "paths": {"css/frames.css" : ["./target/classes/webroot/css/frames.css"]//, "borb":["./src/main/webroot/borb/borb.ts"], "borb/*":["./src/main/webroot/borb/*"]
+        },
     //    "types": ["webpack/module"],
        // "paths": {"node/getopts":["node_modules/getopts/index.d.ts" ]}
      //   "allowJs": true
     },
-    "include": ["src/main/webroot/**/*.ts"],
+    "include": ["./src/main/webroot/**/*.ts","../borb/src/**/*.ts"],
     "exclude": [
         "node_modules"
     ],

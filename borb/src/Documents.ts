@@ -1,16 +1,15 @@
-import SubSystem from '../SubSystem';
-import { BorbElement, tagName, upgradeElements } from './Borb';
+import SubSystem from './SubSystem';
+import { BorbElement, tagName, uniqueId } from './Common';
 import { Hole, html, render } from "uhtml";
-import { turtleduck } from '../TurtleDuck';
-import type { MDRender } from './MDRender';
+import { MDRender } from './MDRender';
+import Styles from './Styles';
 
 const subsys_name = 'Documents';
 const revision: number = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['revision'] + 1 : 0;
-const previousVersion: typeof self = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['self'] : undefined;
-
+const previousVersion: typeof _self = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['self'] : undefined;
 const styleRef = 'css/markdown.css';
 
-class BorbDocument extends HTMLElement {
+export class BorbDocument extends HTMLElement {
     static tag = tagName('document', revision);
     textElement: HTMLElement;
     _style: HTMLStyleElement;
@@ -60,7 +59,7 @@ class BorbDocument extends HTMLElement {
     }
     engine(url: URL | string): any {
         if (!this.mdRender) {
-            this.mdRender = new turtleduck.mdRender({ html: true, hrefPrefix: `${url}`.replace(/[^\/]*$/, '') });
+            this.mdRender = new MDRender({ html: true, hrefPrefix: `${url}`.replace(/[^\/]*$/, '') });
         }
         return this.mdRender;
     }
@@ -97,7 +96,7 @@ class BorbDocument extends HTMLElement {
         } else {
             srcText = ''
             this.childNodes.forEach(node => {
-                if(node instanceof Text) {
+                if (node instanceof Text) {
                     srcText = srcText + node.textContent;
                 } else if (node instanceof HTMLElement) {
                     srcText = srcText + (node.innerText || '')
@@ -134,19 +133,20 @@ class BorbDocument extends HTMLElement {
                 attributeFilter: ['src', 'frame-title']
             });
 
-            turtleduck.uniqueId("document", this);
-            turtleduck.styles.attach(styleRef, this._styleChangedHandler);
+            uniqueId("document", this);
+            Styles.attach(styleRef, this._styleChangedHandler);
             this.queueUpdate(true);
         }
     }
 
     disconnectedCallback() {
         this._observer.disconnect();
-        turtleduck.styles.detach(styleRef, this._styleChangedHandler);
+        console.log('element  removed from page.', this, this.isConnected, this.shadowRoot);
+        Styles.detach(styleRef, this._styleChangedHandler);
     }
 
     styleChanged() {
-        this._style = turtleduck.styles.get(styleRef);
+        this._style = Styles.get(styleRef);
         this.update();
         console.log('style changed', this, styleRef, this._style);
     }
@@ -161,20 +161,16 @@ class BorbDocument extends HTMLElement {
 
 
 
-const self = { BorbDocument, styleRef, revision };
-export const Documents = self;
+const _self = { BorbDocument, styleRef, revision };
+export const Documents = _self;
 
 export default Documents;
 
-SubSystem.declare(`borb/${subsys_name.toLowerCase()}`, self)
-    .depends('dom')
+SubSystem.declare(`borb/${subsys_name.toLowerCase()}`, _self, revision)
+    .reloadable(true)
+    .depends('dom', 'borb/styles')
+    .elements(BorbDocument)
     .start((self, dep) => {
-        console.groupCollapsed("defining ${subsys_name}:");
-        try {
-            customElements.define(BorbDocument.tag, BorbDocument);
-        } finally {
-            console.groupEnd();
-        }
     })
     .register();
 
@@ -187,10 +183,7 @@ if (import.meta.webpackHot) {
     import.meta.webpackHot.addDisposeHandler(data => {
         console.warn(`Unloading ${subsys_name}`);
         data['revision'] = revision;
-        data['self'] = self;
+        data['self'] = _self;
         console.log(previousVersion?.BorbDocument.tag, BorbDocument.tag);
-        if (previousVersion) {
-            upgradeElements(previousVersion.BorbDocument.tag, BorbDocument);
-        }
     });
 }

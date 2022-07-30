@@ -1,5 +1,5 @@
 import { defaultsDeep, assign, get, set } from 'lodash-es';
-import SubSystem from './SubSystem';
+import { SubSystem } from '../borb/SubSystem';
 
 export type ConfigDict = { [cfgName: string]: Config };
 export type Config = ConfigDict | Config[] | string | number | boolean;
@@ -147,7 +147,8 @@ const systemSpec = {
 	},
 	stop() {
 		saveConfig('all');
-	}
+	},
+	revision:0
 };
 
 SubSystem.register(systemSpec);

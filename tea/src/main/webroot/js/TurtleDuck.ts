@@ -3,12 +3,8 @@
 import { StorageContext } from './Storage';
 import type { History, HistorySession } from './History';
 import type { Settings } from './Settings';
-import type { MDRender } from './borb/MDRender';
-import SubSystem from './SubSystem';
-import Styles from './borb/Styles';
-import IndexedMap from './borb/IndexedMap';
-import DragNDrop from './borb/DragNDrop';
-
+import { SubSystem, Styles, DragNDrop, Borb, MDRender, Frames } from 'borb';
+Borb.tagName('foo ');
 export { History, HistorySession };
 declare global {
 	interface Window {
@@ -24,7 +20,7 @@ function proxy<Name extends keyof TurtleDuck, Type extends TurtleDuck[Name]>(nam
 	const obj = new Proxy({} as Type, {
 		get(target, p, receiver) {
 			console.trace(`using proxy for ${name}.${String(p)}`);
-			const funcObj:any = {
+			const funcObj: any = {
 				async [p](...args: any[]) {
 					await SubSystem.waitFor(subsys);
 					const api = turtleduck[name];
@@ -83,28 +79,7 @@ let foo: phist;
 
 wrap2<History, 'get'>('get', 'history');
 
-let unique = 0;
 
-/**
- * Generate unique id
- * @param strOrElts list of elements that need ids
- * @return the base prefix, or a fresh unique id if elts is empty
- */
-function uniqueId(...strOrElts: (Element | string)[]): string {
-	let prefix = '_';
-	if ((typeof strOrElts[0] === 'string') && (typeof strOrElts[1] in ['undefined', 'string'])) {
-		prefix = strOrElts.shift() as string;
-	}
-	let suffix = '_';
-	for (const elt of strOrElts) {
-		if (typeof elt === 'string') {
-			suffix = elt;
-		} else if (elt && !elt.id) {
-			elt.id = `${prefix}${suffix}${unique++}`;
-		}
-	}
-	return `${prefix}${suffix}${unique++}`;
-}
 interface EditorOrShell {
 	paste(txt: string): void;
 	iconified(i: boolean): boolean;
@@ -120,14 +95,12 @@ interface TurtleDuck {
 	history: History;
 	settings: Settings;
 	makeProxy: typeof proxy;
-	uniqueId: typeof uniqueId;
 	pyshell: EditorOrShell;
 	editor: EditorOrShell;
 	wm: any;
 	mdRender: typeof MDRender;
 	styles: typeof Styles;
-	IndexedMap: typeof IndexedMap;
-	borb: {dragndrop : typeof DragNDrop};
+	borb: { dragndrop: typeof DragNDrop };
 }
 export const turtleduck: TurtleDuck = {
 	/** TODO: EyeDropper https://developer.mozilla.org/en-US/docs/Web/API/EyeDropper */
@@ -147,8 +120,6 @@ export const turtleduck: TurtleDuck = {
 	cwd: proxy('cwd', 'storage'),
 	makeProxy: proxy,
 	styles: Styles,
-	uniqueId,
-	IndexedMap,
 } as TurtleDuck;
 
 turtleduck['phistory'] = proxy('history');
@@ -165,16 +136,12 @@ declare global {
 	}
 }
 */
+
 if (import.meta.webpackHot) {
 	console.warn("WebpackHot enabled");
-    import.meta.webpackHot.accept('./borb/Styles.ts', function (...args) {
-		console.log("old styles: ", turtleduck.styles, "new styles", Styles);
-		turtleduck.styles = Styles;
-        console.log('Accepting the updated Styles module!', args);
-
-    });
 	import.meta.webpackHot.addStatusHandler((status) => {
 		console.log("HMR status", status);
 	});
 
 }
+

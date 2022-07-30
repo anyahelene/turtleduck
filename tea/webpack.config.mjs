@@ -7,6 +7,7 @@ import webpack from 'webpack';
 //import HotModuleReplacementPlugin from 'webpack/lib/HotModuleReplacementPlugin';
 const renderer = new marked.Renderer();
 const hmrp = new webpack.HotModuleReplacementPlugin();
+const isDevServer = process.env.WEBPACK_SERVE;
 
 export default {
   mode: 'development',
@@ -27,19 +28,29 @@ export default {
     filename: 'js/[name].[contenthash].js'
   },
   devServer: {
-      static: ['./target/classes/webroot/',{
-          directory: '../fonts/',
-          publicPath: '/fonts'},
-            { 
-                directory: '../py/pyodide',
-                publicPath: '/py'
-            }
+      static: ['./target/classes/webroot/',
+          {
+            directory: '../fonts/',
+            publicPath: '/fonts'
+          },
+          { 
+            directory: '../py/pyodide',
+            publicPath: '/py'
+          }
       ],
       hot: 'only',
       liveReload: false,
+      watchFiles: ['../borb/**/*.ts', '../borb/**/*.js']
   },
   resolve: {
-      extensions: [".ts", ".mts", ".tsx", ".js", ".mjs"]
+      extensions: [".ts", ".mts", ".tsx", ".js", ".mjs"],
+      symlinks: false,
+      alias: {
+//          'borb$': path.resolve(__dirname, 'src/main/webroot/borb/borb'),
+  //        'borb': path.resolve(__dirname, 'src/main/webroot/borb'),
+  //        '../../../../borb/src/Styles.ts$': path.resolve(__dirname, '../borb/src/Styles.ts'),
+    //      '../../../../borb/src': path.resolve(__dirname, '../borb/src')
+      }
   //  fallback: { 
   //      "querystring": require.resolve("querystring-es3/"),
   //      "buffer": require.resolve("buffer/")
@@ -60,7 +71,8 @@ export default {
   },
   cache: {
     type: 'filesystem',
-    buildDependencies: { config: [__filename] },
+    cacheDirectory: path.resolve(__dirname, `node_modules/.cache/webpack${isDevServer?'-serve':''}`),
+    buildDependencies: { config: [__filename, path.resolve(__dirname, 'tsconfig.json')] },
   },
   module: {
     rules: [

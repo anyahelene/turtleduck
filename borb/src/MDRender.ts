@@ -6,14 +6,26 @@ import json from 'highlight.js/lib/languages/json';
 import python from 'highlight.js/lib/languages/python';
 import java from 'highlight.js/lib/languages/java';
 import { assign } from 'lodash-es';
+import { handleKey } from './Common';
 import slugify from 'slugify';
-import { turtleduck } from '../TurtleDuck';
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('java', java);
 hljs.registerLanguage('json', json);
 hljs.registerLanguage('python', python);
 
-
+interface EditorOrShell {
+	paste(txt: string): void;
+	iconified(i: boolean): boolean;
+	focus(): void;
+	paste_to_file(filename: string, text: string, language: string): void;
+}
+interface TurtleDuck {
+	userlog(msg: string): void;
+	pyshell: EditorOrShell;
+	editor: EditorOrShell;
+	wm: any;
+}
+declare const turtleduck : TurtleDuck;
 console.warn("REMARKABLE", Remarkable, utils);
 /** Convert a flat document to one with a tree-like section structure; i.e.,
 	each heading and associated text will be placed in a DIV, with subsections
@@ -197,7 +209,7 @@ class MDRender {
 			link.addEventListener('click', e => {
 				e.preventDefault();
 				e.stopPropagation();
-				turtleduck.handleKey(link.href, link, e);
+				handleKey(link.href, link, e);
 			});
 
 		});

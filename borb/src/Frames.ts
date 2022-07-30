@@ -1,15 +1,19 @@
-import SubSystem from '../SubSystem';
-import { Hole, html, render } from "uhtml";
-import { turtleduck } from '../TurtleDuck';
-import { BorbElement, tagName, assert } from './Borb';
-import { data } from './Styles';
-import IndexedMap from './IndexedMap';
-import { isEqual, times, uniqueId } from 'lodash-es';
+import { SubSystem, Sys } from './SubSystem';
+import { html, render } from "uhtml";
+import { BorbElement, tagName, assert, uniqueId } from './Common';
+import { isEqual } from 'lodash-es';
 import { DragNDrop, BorbDragEvent } from './DragNDrop';
+import Styles from './Styles';
+
+declare module './SubSystem' {
+    interface Sys {
+        Frames: typeof Frames
+    }
+}
 
 //import 'css/frames.css';
 
-
+const subsys_name = 'Frames';
 type TabEvent = "show" | "hide";
 
 type TabCallback = (data: any, tabEvent: TabEvent, origEvent: Event) => void;
@@ -19,11 +23,11 @@ const styleRef = 'css/frames.css';
 const revision: number = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['revision'] + 1 : 0;
 const OldFrames: typeof Frames = import.meta.webpackHot && import.meta.webpackHot.data ? import.meta.webpackHot.data['Frames'] : undefined;
 
-class BorbPanel extends HTMLElement {
+export class BorbPanel extends HTMLElement {
     static tag = tagName('panel', revision);
 
 }
-class BorbTab extends BorbElement {
+export class BorbTab extends BorbElement {
     static tag = tagName('tab', revision);
     _target?: HTMLElement;
     get targetElement(): HTMLElement {
@@ -220,7 +224,7 @@ class TabEntry extends HTMLButtonElement {
         this.frame.selected = this;
         this.frame.queueUpdate();
         queueMicrotask(() => {
-           // this.frame._focusin(undefined);
+            // this.frame._focusin(undefined);
             this.panel.focus();
         });
     }
@@ -240,7 +244,7 @@ class TabEntry extends HTMLButtonElement {
     }
 }
 
-class BorbFrame extends HTMLElement {
+export class BorbFrame extends HTMLElement {
     static tag = tagName('frame', revision);
     static currentFocus: HTMLElement;
     static lastFocus: HTMLElement;
@@ -255,7 +259,7 @@ class BorbFrame extends HTMLElement {
     private _header: HTMLElement;
     constructor() {
         super();
-        this._style = turtleduck.styles.get(styleRef);
+        this._style = Styles.get(styleRef);
         this._observer = new MutationObserver(muts => this.queueUpdate(true));
         this._nav = html.node`<nav class="tabs" role="tablist"></nav>`
         const maxIcon = false ? '🗗' : '🗖';
@@ -360,9 +364,10 @@ class BorbFrame extends HTMLElement {
     }
     delTab(elt: Element) {
         const entry = this._tabs.get(elt);
-        if (entry && entry.parentElement === this._nav) {
+        if (entry) {
             console.log("Frames:", this.frameName, "removing tab", entry, entry.element);
-            entry.dispose();
+            if (entry.parentElement === this._nav)
+                entry.dispose();
             this._tabs.delete(elt);
         } else {
             console.log("Frames:", this.frameName, "tab removed", entry, entry.element);
@@ -425,8 +430,8 @@ class BorbFrame extends HTMLElement {
             });
             DragNDrop.attachDropZone(this._header, '[role="tab"], header');
 
-            turtleduck.uniqueId("tabbedFrame", this);
-            turtleduck.styles.attach(styleRef, this._styleChangedHandler);
+            uniqueId("tabbedFrame", this);
+            Styles.attach(styleRef, this._styleChangedHandler);
             this.queueUpdate(true);
         }
     }
@@ -439,7 +444,7 @@ class BorbFrame extends HTMLElement {
         this.removeEventListener("focusin", this._focusin, false);
         this.removeEventListener("focusout", this._focusout, false);
         DragNDrop.detachDropZone(this._header);
-        turtleduck.styles.detach(styleRef, this._styleChangedHandler);
+        Styles.detach(styleRef, this._styleChangedHandler);
         console.log('removed from page.', this.frameName, this);
     }
 
@@ -452,7 +457,7 @@ class BorbFrame extends HTMLElement {
         this.update();
     }
     styleChanged() {
-        this._style = turtleduck.styles.get(styleRef);
+        this._style = Styles.get(styleRef);
         this.update();
         console.log('style changed', this, styleRef, this._style);
     }
@@ -480,30 +485,27 @@ class BorbFrame extends HTMLElement {
 export const Frames = { BorbFrame, BorbTab, BorbPanel, styleRef, version: 9, revision };
 export default Frames;
 
-SubSystem.declare('borb/frames', Frames)
-    .depends('dom')
+SubSystem.declare('borb/frames', Frames, revision)
+    .reloadable(true)
+    .depends('dom', 'borb/styles')
+    .elements(BorbFrame, BorbTab, BorbPanel)
     .start((self, dep) => {
-        console.groupCollapsed("defining frames:");
-        try {
-            customElements.define(TabEntry.tag, TabEntry, { extends: 'button' });
-            customElements.define(BorbFrame.tag, BorbFrame);
-            customElements.define(BorbTab.tag, BorbTab);
-            customElements.define(BorbPanel.tag, BorbPanel);
-            if (OldFrames) {
-                document.querySelectorAll(OldFrames.BorbFrame.tag).forEach(oldElt => {
-                    const newElt = new BorbFrame();
-                    console.log("upgrading", oldElt, "to", newElt);
-                    oldElt.getAttributeNames().forEach(attrName => {
-                        console.log('set', attrName, oldElt.getAttribute(attrName));
-                        newElt.setAttribute(attrName, oldElt.getAttribute(attrName));
-                    });
-                    newElt.replaceChildren(...oldElt.childNodes);
-                    console.log('replacedChildren:', newElt.children);
-                    oldElt.parentElement.replaceChild(newElt, oldElt);
+        customElements.define(TabEntry.tag, TabEntry, { extends: 'button' });
+        // customElements.define(BorbFrame.tag, BorbFrame);
+        // customElements.define(BorbTab.tag, BorbTab);
+        // customElements.define(BorbPanel.tag, BorbPanel);
+        if (OldFrames) {
+            document.querySelectorAll(OldFrames.BorbFrame.tag).forEach(oldElt => {
+                const newElt = new BorbFrame();
+                console.log("upgrading", oldElt, "to", newElt);
+                oldElt.getAttributeNames().forEach(attrName => {
+                    console.log('set', attrName, oldElt.getAttribute(attrName));
+                    newElt.setAttribute(attrName, oldElt.getAttribute(attrName));
                 });
-            }
-        } finally {
-            console.groupEnd();
+                newElt.replaceChildren(...oldElt.childNodes);
+                console.log('replacedChildren:', newElt.children);
+                oldElt.parentElement.replaceChild(newElt, oldElt);
+            });
         }
     })
     .register();
@@ -512,7 +514,7 @@ SubSystem.declare('borb/frames', Frames)
 if (import.meta.webpackHot) {
     import.meta.webpackHot.accept();
     import.meta.webpackHot.accept(styleRef, () => {
-        turtleduck.styles.update(styleRef);
+        Styles.update(styleRef);
     });
     import.meta.webpackHot.addDisposeHandler(data => {
         console.warn("Unloading TabbedFrame");

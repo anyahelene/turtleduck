@@ -1,4 +1,4 @@
-import { keys } from "lodash-es";
+import { BorbElement, upgradeElements } from "./Common";
 
 enum State {
     STOPPED, WAITING, STARTING, STARTED
@@ -6,13 +6,15 @@ enum State {
 
 
 export interface SubSystem<T extends object> {
+    customElements?: (typeof BorbElement)[];
     name: string;
     depends?: Iterable<string>;
     start?(self: SubSystem<T>, dep: Dependency<T>): Promise<object | void> | object | void;
     stop?(): Promise<void> | void;
     api?: T;
     prototype?: T;
-    reloadable?: boolean
+    reloadable?: boolean;
+    revision: number
 }
 
 interface TargetObject {
@@ -22,12 +24,13 @@ class SubSysBuilder<T extends object> {
     sys: SubSystem<T>;
     private _depends: string[];
 
-    constructor(name: string, proto?: T) {
+    constructor(name: string, proto: T, revision: number) {
         this._depends = [];
         this.sys = {
             name,
             depends: this._depends,
-            reloadable: true
+            reloadable: true,
+            revision
         };
         if (proto)
             this.sys.prototype = proto;
@@ -65,6 +68,11 @@ class SubSysBuilder<T extends object> {
 
     register(): Promise<void> {
         return Dependency.register(this.sys);
+    }
+
+    elements(...customElements: (typeof BorbElement)[]): this {
+        this.sys.customElements = customElements;
+        return this;
     }
 }
 export class Dependency<T extends object> {
@@ -146,7 +154,7 @@ export class Dependency<T extends object> {
         return sys;
     }
 
-    static getApi<T extends object>(sysName:string) : T {
+    static getApi<T extends object>(sysName: string): T {
         const sys = Dependency.get(sysName) as Dependency<T>;
         return sys._api;
     }
@@ -198,9 +206,9 @@ export class Dependency<T extends object> {
         if (this._api) {
             const names = this.name.split('/');
             let target = Dependency.targetObject;
-            names.slice(0,-1).forEach(n => {
+            names.slice(0, -1).forEach(n => {
                 console.log('find', names, n, target);
-                if(!target[n]) {
+                if (!target[n]) {
                     target[n] = {};
                 }
                 target = target[n] as TargetObject;
@@ -217,7 +225,21 @@ export class Dependency<T extends object> {
             const subsystem = this.subsystem;
             this.state = State.STARTING;
             console.log("Starting", this.toString());
-            const start = this.subsystem.start ?? (() => Promise.resolve());
+            const start = this.subsystem.start ? (sys: SubSystem<T>, dep: Dependency<T>) => {
+                console.groupCollapsed(`Starting ${this.subsystem.name} rev.${this.subsystem.revision}`);
+                try {
+                    (subsystem.customElements ?? []).forEach(eltDef => {
+                        console.debug('defining custom element %s: %o', eltDef.tag, eltDef);
+                        customElements.define(eltDef.tag, eltDef);
+                        if(subsystem.revision > 0) {
+                            upgradeElements(eltDef);
+                        }
+                    });
+                    return this.subsystem.start(sys, dep);
+                } finally {
+                    console.groupEnd();
+                }
+            } : (() => Promise.resolve());
 
             Promise.resolve(start(this.subsystem, this)).then(obj => {
                 this.state = State.STARTED;
@@ -240,12 +262,12 @@ export class Dependency<T extends object> {
             this.resolve(this.subsystem);
         }
     }
-    static declare<T extends object>(name: string, prototype?: T): SubSysBuilder<T> {
-        return new SubSysBuilder(name);
+    static declare<T extends object>(name: string, prototype?: T, revision = 0): SubSysBuilder<T> {
+        return new SubSysBuilder(name, prototype, revision);
     }
 }
 
-export default {
+const self = {
     debugAll: Dependency.debugAll,
     register: Dependency.register,
     get: Dependency.get,
@@ -254,3 +276,14 @@ export default {
     waitFor: Dependency.waitFor,
     declare: Dependency.declare
 }
+export const SubSystem = self;
+export default SubSystem;
+
+export interface Sys {
+    SubSystem: typeof self
+}
+
+declare global {
+    const BORB: Sys
+}
+
