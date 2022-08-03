@@ -1,6 +1,16 @@
 import Dexie from 'dexie';
 import { PromiseExtended } from 'dexie';
-import { SubSystem } from '../borb/SubSystem';
+import { sysId } from './Common';
+import { SubSystem } from './SubSystem';
+const id = sysId(import.meta.url);
+const revision: number =
+    import.meta.webpackHot && import.meta.webpackHot.data
+        ? import.meta.webpackHot.data['revision'] + 1
+        : 0;
+const previousVersion: typeof _self_proto =
+    import.meta.webpackHot && import.meta.webpackHot.data
+        ? import.meta.webpackHot.data['self']
+        : undefined;
 
 function make_key(s: string, id?: number): [string, string, number?] {
     const i = s.indexOf('/');
@@ -108,6 +118,8 @@ export interface HistorySession {
 }
 
 export interface History {
+    _id: string;
+    _revision: number;
     forSession(session: string): Promise<HistorySession>;
     get(session: string, id?: number): Promise<string>;
     put(session: string, data: string, id?: number): Promise<number>;
@@ -206,6 +218,8 @@ class DBHistorySession implements HistorySession {
     }
 }
 const DBHistory: History = {
+    _id: id,
+    _revision: revision,
     async forSession(session: string): Promise<HistorySession> {
         const hist = new DBHistorySession(session);
         await hist.init();
@@ -263,8 +277,8 @@ const DBHistory: History = {
         const seen = {};
         const result = [];
         const ss = await db.sessions.reverse().sortBy(sortBy);
-        for (var i = 0; i < ss.length; i++) {
-            var session = ss[i];
+        for (let i = 0; i < ss.length; i++) {
+            let session = ss[i];
             const count = await db.entries
                 .where({ session: session.session, shell: session.shell })
                 .count();
@@ -336,9 +350,11 @@ class FakeHistorySession implements HistorySession {
     }
 }
 
-const fakeHistorySessions: {} = {};
+const fakeHistorySessions = {};
 const fakeHistoryEntries: { [sessionName: string]: Entry[] } = {};
 const FakeHistory = {
+    _id: id,
+    _revision: revision,
     async forSession(session: string): Promise<HistorySession> {
         const hist = new FakeHistorySession(session);
         await hist.init();
@@ -378,30 +394,73 @@ const FakeHistory = {
         return Promise.resolve([]);
     },
     currentId(session: string): Promise<number> {
-        var currentId = fakeHistorySessions[session];
+        let currentId = fakeHistorySessions[session];
         if (!currentId) currentId = 0;
         fakeHistorySessions[session] = currentId;
         return Promise.resolve(currentId);
     },
 };
-let history: History;
+
+const _self_proto = {
+    _id: id,
+    _revision: revision,
+    forSession(session: string): Promise<HistorySession> {
+        return SubSystem.waitFor<History>(_self_proto._id).then((h) =>
+            h.forSession(session),
+        );
+    },
+    get(session: string, id?: number): Promise<string> {
+        return SubSystem.waitFor<History>(_self_proto._id).then((h) =>
+            h.get(session, id),
+        );
+    },
+    put(session: string, data: string, id?: number): Promise<number> {
+        return SubSystem.waitFor<History>(_self_proto._id).then((h) =>
+            h.put(session, data, id),
+        );
+    },
+    list(session: string): Promise<Entry[]> {
+        return SubSystem.waitFor<History>(_self_proto._id).then((h) =>
+            h.list(session),
+        );
+    },
+    sessions(sortBy: string): Promise<Session[]> {
+        return SubSystem.waitFor<History>(_self_proto._id).then((h) =>
+            h.sessions(sortBy),
+        );
+    },
+    currentId(session: string): Promise<number> {
+        return SubSystem.waitFor<History>(_self_proto._id).then((h) =>
+            h.currentId(session),
+        );
+    },
+};
+export let history: History = _self_proto;
 export default history;
 
-SubSystem.register({
-    depends: [],
-    name: 'history',
-    start: async () => {
+SubSystem.declare(_self_proto)
+    .reloadable(true)
+    .depends()
+    .elements()
+    .start(async () => {
         try {
             const dbobj = await new HistoryDexie().open();
             db = dbobj;
             console.log('history db open', db);
             history = DBHistory;
-            return DBHistory;
         } catch (err) {
             console.warn('HistoryDB open failed', err);
             history = FakeHistory;
-            return FakeHistory;
         }
-    },
-    revision: 0,
-});
+        return history;
+    })
+    .register();
+
+if (import.meta.webpackHot) {
+    import.meta.webpackHot.decline();
+    import.meta.webpackHot.addDisposeHandler((data) => {
+        console.warn(`Unloading ${_self_proto._id}`);
+        data['revision'] = revision;
+        data['self'] = _self_proto;
+    });
+}

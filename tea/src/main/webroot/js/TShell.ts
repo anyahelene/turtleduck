@@ -1,5 +1,5 @@
 import getopts from 'getopts';
-import Settings from './Settings';
+import Settings from '../../../../../borb/src/Settings';
 import { Printer, Terminal } from './Terminal';
 import type { Options, ParsedOptions } from 'getopts/.';
 import { SubSystem } from '../borb/SubSystem';
@@ -57,6 +57,14 @@ class TShell {
                 this.env.set(k, v);
             }
         });
+    }
+
+    get printer(): Printer {
+        return this._printer;
+    }
+
+    set printer(p: Printer) {
+        this._printer = p;
     }
 
     get currentCommand(): string {

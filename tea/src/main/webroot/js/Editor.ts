@@ -1,6 +1,8 @@
 //import {EditorState} from "@codemirror/state"
 //import {EditorView, keymap} from "@codemirror/view"
 //import {defaultKeymap} from "@codemirror/commands"
+import { SubSystem } from '../borb/SubSystem';
+
 import {
     EditorView,
     Decoration,
@@ -20,6 +22,8 @@ import {
     SelectionRange,
     Extension,
     Text,
+    StateCommand,
+    Transaction,
 } from '@codemirror/state';
 import {
     indentWithTab,
@@ -73,6 +77,20 @@ import {
 import { NodeProp } from '@lezer/common';
 import { highlightTree, classHighlighter, tags } from '@lezer/highlight';
 //import { listTags } from "isomorphic-git";
+type CommandTarget = {
+    state: EditorState;
+    dispatch: (transaction: Transaction) => void;
+};
+
+const revision: number =
+    import.meta.webpackHot && import.meta.webpackHot.data
+        ? import.meta.webpackHot.data['revision'] + 1
+        : 0;
+const previousVersion: typeof _self =
+    import.meta.webpackHot && import.meta.webpackHot.data
+        ? import.meta.webpackHot.data['self']
+        : undefined;
+const styleRef = 'css/terminal.css';
 
 function isBetweenBrackets(state, pos) {
     if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
@@ -160,7 +178,8 @@ function langConfig(lang: string) {
             configs[lang] = langext;
             return langext;
         } else {
-            throw Error('No configuration found for ' + lang);
+            console.error('No configuration found for ' + lang);
+            return [];
         }
     }
 }
@@ -277,6 +296,7 @@ export class TDEditor {
         lang: string,
         private exts: Extension[],
         private preExts: Extension[] = [],
+        root: Document | ShadowRoot = document,
     ) {
         // super(name, outer, tdstate);
 
@@ -311,7 +331,7 @@ export class TDEditor {
         this.view = new EditorView({
             state: state,
             parent: elt,
-            root: document,
+            root,
         });
         this.$markField = markField;
         this.$addMark = addMark;
@@ -484,15 +504,22 @@ export const createEditor = function (
     elt: HTMLElement,
     text: string,
     lang = 'java',
+    root: Document | ShadowRoot = document,
 ) {
     const outer = elt;
     const elts = elt.getElementsByClassName('wrapper');
     if (elts[0]) elt = elts[0] as HTMLElement;
 
-    let editor = new TDEditor(outer.id, outer, elt, lang, text, [
-        fontConfig(elt),
-        stdConfig(),
-    ]);
+    let editor = new TDEditor(
+        outer.id,
+        outer,
+        elt,
+        lang,
+        text,
+        [fontConfig(elt), stdConfig()],
+        [],
+        root,
+    );
 
     return editor;
 };
@@ -537,58 +564,56 @@ export const createLineEditor = function (
     text: string,
     lang: string,
     handler: (arg0: string, arg1: any) => any,
+    root: Document | ShadowRoot = document,
 ) {
-    function enter({ state, dispatch }) {
+    function enter({ state, dispatch }: CommandTarget): boolean {
         let isComplete = true;
-        let changes = state.changeByRange(
-            (range: { from: number; to: any; anchor: number; head: any }) => {
-                console.groupCollapsed('enter key pressed at ', range);
-                try {
-                    let text = state.sliceDoc(range.from);
-                    console.log('text: ', JSON.stringify(text));
-                    // check if we're in the middle of the text
-                    if (
-                        text.length > 0 &&
-                        (!text.match(/^\r?\n/) || text.startsWith('/'))
-                    ) {
-                        // TODO: line-break setting?
-                        isComplete = true;
-                        return { range };
-                    }
-                    let explode =
-                        range.from == range.to &&
-                        isBetweenBrackets(state, range.from);
-                    let cx = new IndentContext(state, {
-                        simulateBreak: range.from,
-                        simulateDoubleBreak: !!explode,
-                    });
-                    let indent = getIndentation(cx, range.from);
-                    console.log('indent0: ', indent);
-                    if (indent == null)
-                        indent = /^\s*/.exec(
-                            state.doc.lineAt(range.from).text,
-                        )[0].length;
-                    console.log('indent1: ', indent, 'explode: ', explode);
-                    if (indent || explode) isComplete = false;
-
-                    const tree = syntaxTree(state);
-                    console.log('tree', tree);
-                    let context = tree.resolve(range.anchor);
-                    console.log('context', context);
-                    console.log(
-                        'enter key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o',
-                        range.from,
-                        range.to,
-                        range.anchor,
-                        range.head,
-                        state,
-                    );
+        let changes = state.changeByRange((range) => {
+            console.groupCollapsed('enter key pressed at ', range);
+            try {
+                let text = state.sliceDoc(range.from);
+                console.log('text: ', JSON.stringify(text));
+                // check if we're in the middle of the text
+                if (
+                    text.length > 0 &&
+                    (!text.match(/^\r?\n/) || text.startsWith('/'))
+                ) {
+                    // TODO: line-break setting?
+                    isComplete = true;
                     return { range };
-                } finally {
-                    console.groupEnd();
                 }
-            },
-        );
+                let explode =
+                    range.from == range.to &&
+                    isBetweenBrackets(state, range.from);
+                let cx = new IndentContext(state, {
+                    simulateBreak: range.from,
+                    simulateDoubleBreak: !!explode,
+                });
+                let indent = getIndentation(cx, range.from);
+                console.log('indent0: ', indent);
+                if (indent == null)
+                    indent = /^\s*/.exec(state.doc.lineAt(range.from).text)[0]
+                        .length;
+                console.log('indent1: ', indent, 'explode: ', explode);
+                if (indent || explode) isComplete = false;
+
+                const tree = syntaxTree(state);
+                console.log('tree', tree);
+                let context = tree.resolve(range.anchor);
+                console.log('context', context);
+                console.log(
+                    'enter key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o',
+                    range.from,
+                    range.to,
+                    range.anchor,
+                    range.head,
+                    state,
+                );
+                return { range };
+            } finally {
+                console.groupEnd();
+            }
+        });
         console.log('changes: ', changes);
         if (isComplete) {
             return handler('enter', state);
@@ -596,7 +621,7 @@ export const createLineEditor = function (
             return insertNewlineAndIndent({ state, dispatch });
         }
     }
-    function tab({ state, dispatch }) {
+    function tab({ state, dispatch }: CommandTarget): boolean {
         let changes = state.changeByRange((range) => {
             console.log(
                 'tab key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o',
@@ -617,11 +642,11 @@ export const createLineEditor = function (
         lang === 'markdown' || lang === 'chat'
             ? insertNewlineContinueMarkup
             : insertNewlineAndIndent;
-    function arrowUp({ state, dispatch }) {
+    function arrowUp({ state, dispatch }: CommandTarget): boolean {
         return handler('arrowUp', state);
     }
 
-    function arrowDown({ state, dispatch }) {
+    function arrowDown({ state, dispatch }: CommandTarget): boolean {
         return handler('arrowDown', state);
     }
 
@@ -654,6 +679,7 @@ export const createLineEditor = function (
                 { key: 'Tab', run: tab, shift: indentLess },
             ]),
         ],
+        root,
     );
 
     editor._after_paste = () => {
@@ -661,3 +687,31 @@ export const createLineEditor = function (
     };
     return editor;
 };
+
+const _self = {
+    _id: 'editor',
+    _revision: revision,
+    EditorState,
+    EditorView,
+    EditorSelection,
+    createEditor,
+    createLineEditor,
+    TDEditor,
+};
+export const Editor = _self;
+export default Editor;
+
+SubSystem.declare(_self)
+    .reloadable(true)
+    .depends('dom')
+    //    .elements(BorbTerminal)
+    .register();
+
+if (import.meta.webpackHot) {
+    import.meta.webpackHot.accept();
+    import.meta.webpackHot.addDisposeHandler((data) => {
+        console.warn(`Unloading ${_self._id}`);
+        data['revision'] = revision;
+        data['self'] = _self;
+    });
+}

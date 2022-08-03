@@ -1,16 +1,31 @@
 import { defaultsDeep, assign, get, set } from 'lodash-es';
-import { SubSystem } from '../borb/SubSystem';
+import { html, render } from 'uhtml';
+import { BorbBaseElement } from './BaseElement';
+import { sysId, tagName } from './Common';
+import Styles, { load } from './Styles';
+import { SubSystem } from './SubSystem';
+
+const revision: number =
+    import.meta.webpackHot && import.meta.webpackHot.data
+        ? import.meta.webpackHot.data['revision'] + 1
+        : 0;
+const previousVersion: typeof _self =
+    import.meta.webpackHot && import.meta.webpackHot.data
+        ? import.meta.webpackHot.data['self']
+        : undefined;
 
 export type ConfigDict = { [cfgName: string]: Config };
 export type Config = ConfigDict | Config[] | string | number | boolean;
-const configs: ConfigDict[] = [{}, {}, {}, {}, {}];
+const configs: ConfigDict[] = previousVersion
+    ? previousVersion.configs
+    : [{}, {}, {}, {}, {}];
 export const configNames = ['override', 'session', 'user', 'remote', 'default'];
 
 export function getConfig<T extends string | Config>(
     path: string,
     defaultResult: T,
 ): T {
-    for (let c of configs) {
+    for (const c of configs) {
         const result = get(c, path);
         if (result !== undefined) {
             //if (typeof result === typeof defaultResult)
@@ -20,7 +35,8 @@ export function getConfig<T extends string | Config>(
     return defaultResult;
 }
 export function setConfig(config: Config, source: string | number) {
-    let src = typeof source === 'number' ? source : configNames.indexOf(source);
+    const src =
+        typeof source === 'number' ? source : configNames.indexOf(source);
     if (src >= 0) {
         configs[src] = assign(configs[src], config);
         console.log('setConfig', config, source, '=>', configs[src]);
@@ -41,7 +57,7 @@ export function saveConfig(source = 'all') {
     try {
         if (source === 'all' || source === 'user') {
             const dict: Config = assign({}, configs[2]);
-            delete dict.session;
+            delete dict['session'];
             localStorage.setItem('turtleduck.userConfig', JSON.stringify(dict));
         }
     } catch (e) {
@@ -94,11 +110,11 @@ function autoSaveConfig(source: string) {
     }, 3000);
 }
 function storageAvailable(type: string) {
-    var storage;
+    let storage: Storage;
     try {
         storage =
             type === 'local' ? window.localStorage : window.sessionStorage;
-        var x = '__storage_test__';
+        const x = '__storage_test__';
         storage.setItem(x, x);
         storage.removeItem(x);
         return true;
@@ -154,8 +170,54 @@ export const sessionStorage = storageAvailable('sessionStorage')
               delete this.dict[key];
           },
       };
+class BorbSettings extends BorbBaseElement {
+    static tag = tagName('settings', revision);
+    private _observer: MutationObserver = new MutationObserver((muts) =>
+        this.queueUpdate(true),
+    );
 
-const _Settings = {
+    constructor() {
+        super(['css/common.css']);
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        if (this.isConnected) {
+            if (!this.shadowRoot) {
+                this.attachShadow({ mode: 'open' });
+            }
+            console.log(
+                'element added to page.',
+                this,
+                this.isConnected,
+                this.shadowRoot,
+            );
+            this._observer.observe(this, {
+                childList: true,
+                attributeFilter: [],
+            });
+        }
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this._observer.disconnect();
+        // DragNDrop.detachDropZone(this._header);
+        console.log('removed from page.', this);
+    }
+
+    update() {
+        render(
+            this.shadowRoot,
+            html`${this.styles}
+                <pre>${JSON.stringify(configs, null, 4)}</pre>`,
+        );
+    }
+}
+
+const _self = {
+    _id: sysId(import.meta.url),
+    _revision: revision,
     getConfig,
     setConfig,
     saveConfig,
@@ -165,20 +227,21 @@ const _Settings = {
     autoSaveConfig,
     configs,
 };
-export default _Settings;
-export type Settings = typeof _Settings;
+export const Settings = _self;
+export default Settings;
 
-const systemSpec = {
-    api: _Settings,
-    depends: [],
-    name: 'settings',
-    start() {
-        loadConfig();
-    },
-    stop() {
-        saveConfig('all');
-    },
-    revision: 0,
-};
+SubSystem.declare(_self)
+    .reloadable(true)
+    .depends()
+    .elements(BorbSettings)
+    .start(() => loadConfig())
+    .register();
 
-SubSystem.register(systemSpec);
+if (import.meta.webpackHot) {
+    import.meta.webpackHot.accept();
+    import.meta.webpackHot.addDisposeHandler((data) => {
+        console.warn(`Unloading ${_self._id}`);
+        data['revision'] = revision;
+        data['self'] = _self;
+    });
+}

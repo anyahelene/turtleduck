@@ -170,6 +170,7 @@ It's a place where you can <i>view</i>documents.
 	Moar stuf
 </p>
 				</borb-document>
+                <borb-settings tab-title="Settings"></borb-settings>
 				<main id="docs" tab-title="DOC" data-tab="screen-tabs" data-tab-key="doc">
 					<div id=" doc-display" class="text">
 					</div>
@@ -193,6 +194,7 @@ It's a place where you can <i>view</i>documents.
 
 			<borb-frame id="shell" tab-title="Terminal" frame-title="&lt;tab-title&gt; : terminal" class="console focusable">
 				<div data-insert-here="true" style="display: none"></div>
+                <borb-terminal id="stdout" tab-title="Terminal" shell="tshell"></borb-terminal>
 				<borb-tab target="fooshell" tab-title="FooShell" frame-title="~/foo"></borb-tab>
 				<borb-tab target="barshell" tab-title="BarShell"></borb-tab>
 				<borb-tab target="bazshell" tab-title="BazShell"></borb-tab>

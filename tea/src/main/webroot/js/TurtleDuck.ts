@@ -1,8 +1,8 @@
 /// <reference types="webpack/module" />
 
 import { StorageContext } from './Storage';
-import type { History, HistorySession } from './History';
-import type { Settings } from './Settings';
+import type { History, HistorySession } from '../../../../../borb/src/History';
+import type { Settings } from '../../../../../borb/src/Settings';
 import { SubSystem, Styles, DragNDrop, Borb, MDRender, Frames } from '../borb';
 Borb.tagName('foo ');
 export { History, HistorySession };
@@ -113,7 +113,7 @@ interface TurtleDuck {
     userlog(msg: string): void;
     cwd: StorageContext;
     history: History;
-    settings: Settings;
+    settings: typeof Settings;
     makeProxy: typeof proxy;
     pyshell: EditorOrShell;
     editor: EditorOrShell;

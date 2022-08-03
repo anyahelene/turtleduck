@@ -4,7 +4,7 @@ import MagicPortal from 'magic-portal';
 import { turtleduck } from './TurtleDuck';
 import { Printer, Terminal } from './Terminal';
 import { SubSystem } from '../borb/SubSystem';
-import Settings from './Settings';
+import Settings from '../../../../../borb/src/Settings';
 import FS from '@isomorphic-git/lightning-fs';
 
 class StorageContext {
@@ -261,7 +261,7 @@ class Storage {
 export { Storage, StorageContext };
 
 const systemSpec = {
-    depends: ['settings'],
+    depends: ['borb/settings'],
     name: 'storage',
     start: (sys) => sys.api.init(),
     api: new Storage(),
