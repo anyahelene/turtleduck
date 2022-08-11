@@ -1,10 +1,11 @@
 import getopts from 'getopts';
-import Settings from '../../../../../borb/src/Settings';
+import Settings from '../borb/Settings';
 import { Printer, Terminal } from './Terminal';
 import type { Options, ParsedOptions } from 'getopts/.';
 import { SubSystem } from '../borb/SubSystem';
 import { turtleduck } from './TurtleDuck';
 import { StorageContext } from './Storage';
+import type { HistorySession } from '../borb/History';
 //import getopts = require('getopts');
 const homeDir = '/home';
 const options = {};
@@ -48,6 +49,7 @@ class TShell {
     private _printer?: Printer;
     private _currentArguments?: Array<string>;
     private _cwd: StorageContext;
+    history?: HistorySession;
     constructor(cwd?: StorageContext, parent?: TShell) {
         this._parent = parent;
         this.env = createEnvironment();
@@ -240,6 +242,21 @@ programs.set('true', {
 programs.set('false', {
     params: {},
     fun: () => 1,
+});
+programs.set('history', {
+    params: {},
+    fun: async (args, sh, ctx) => {
+        if (sh.history) {
+            const entries = await sh.history.list();
+            const l = Math.max(...entries.map((e) => e.id)).toString().length;
+            entries.forEach((e) =>
+                sh.println(`[${e.id.toString().padStart(l)}] ${e.data}`),
+            );
+            return 0;
+        } else {
+            return 1;
+        }
+    },
 });
 export { TShell };
 

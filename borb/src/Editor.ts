@@ -1,7 +1,7 @@
 //import {EditorState} from "@codemirror/state"
 //import {EditorView, keymap} from "@codemirror/view"
 //import {defaultKeymap} from "@codemirror/commands"
-import { SubSystem } from '../borb/SubSystem';
+import { SubSystem } from './SubSystem';
 
 import {
     EditorView,
@@ -47,7 +47,7 @@ import {
     prevSnippetField,
 } from '@codemirror/autocomplete';
 import { StyleModule } from 'style-mod';
-import { basicSetup } from '@codemirror/basic-setup';
+import { basicSetup } from 'codemirror';
 import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { python } from '@codemirror/lang-python';
@@ -58,6 +58,7 @@ import {
 } from '@codemirror/lang-markdown';
 import { css } from '@codemirror/lang-css';
 import { z80 } from '@codemirror/legacy-modes/mode/z80';
+import { shell } from '@codemirror/legacy-modes/mode/shell';
 import { oneDark } from '@codemirror/theme-one-dark';
 import {
     darkDuck,
@@ -76,8 +77,9 @@ import {
 } from '@codemirror/lint';
 import { NodeProp } from '@lezer/common';
 import { highlightTree, classHighlighter, tags } from '@lezer/highlight';
+import { sysId } from './Common';
 //import { listTags } from "isomorphic-git";
-type CommandTarget = {
+export type CommandTarget = {
     state: EditorState;
     dispatch: (transaction: Transaction) => void;
 };
@@ -92,13 +94,13 @@ const previousVersion: typeof _self =
         : undefined;
 const styleRef = 'css/terminal.css';
 
-function isBetweenBrackets(state, pos) {
+export function isBetweenBrackets(state, pos) {
     if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1)))
         return { from: pos, to: pos };
-    let context = syntaxTree(state).resolve(pos);
-    let before = context.childBefore(pos),
-        after = context.childAfter(pos),
-        closedBy;
+    const context = syntaxTree(state).resolve(pos);
+    const before = context.childBefore(pos),
+        after = context.childAfter(pos);
+    let closedBy: string | readonly string[];
     if (
         before &&
         after &&
@@ -123,10 +125,10 @@ class PromptWidget extends WidgetType {
     }
 
     toDOM() {
-        let wrap = document.createElement('span');
+        const wrap = document.createElement('span');
         wrap.setAttribute('aria-hidden', 'true');
         wrap.className = 'cm-boolean-toggle';
-        let box = wrap.appendChild(document.createElement('input'));
+        const box = wrap.appendChild(document.createElement('input'));
         box.type = 'checkbox';
         box.checked = this.checked;
         return wrap;
@@ -144,14 +146,19 @@ export function stdConfig() {
         markKeymap,
         keymap.of([{ key: 'Tab', run: indentMore, shift: indentLess }]),
         darkDuck,
+        EditorView.scrollMargins.of((view) => ({
+            top: 15,
+            bottom: 15,
+            right: 15,
+        })),
     ];
 }
 const configs = { '': [] };
-function langConfig(lang: string) {
+export function langConfig(lang: string) {
     if (configs[lang]) {
         return configs[lang];
     } else {
-        var langext = undefined;
+        let langext = undefined;
 
         if (lang == 'java' || lang == 'jsh') {
             langext = java();
@@ -171,6 +178,10 @@ function langConfig(lang: string) {
             console.log('z80');
             langext = new LanguageSupport(StreamLanguage.define(z80));
             console.log(langext);
+        } else if (lang == 'shell') {
+            console.log('shell');
+            langext = new LanguageSupport(StreamLanguage.define(shell));
+            console.log(langext);
         } else if (lang == 'plain') {
             langext = [];
         }
@@ -183,8 +194,8 @@ function langConfig(lang: string) {
         }
     }
 }
-function fontConfig(elt: HTMLElement) {
-    var fontFamily = window.getComputedStyle(elt).fontFamily;
+export function fontConfig(elt: HTMLElement) {
+    let fontFamily = window.getComputedStyle(elt).fontFamily;
     if (!fontFamily)
         fontFamily = window.getComputedStyle(document.body).fontFamily;
     const myFontTheme = EditorView.theme({
@@ -210,7 +221,7 @@ const markField = StateField.define<DecorationSet>({
     },
     update(marks, tr) {
         marks = marks.map(tr.changes);
-        for (let e of tr.effects) {
+        for (const e of tr.effects) {
             if (e.is(addMark)) {
                 marks = marks.update({
                     add: [markDecoration.range(e.value.from, e.value.to)],
@@ -228,7 +239,7 @@ const markTheme = EditorView.baseTheme({
     '.cm-underline': { textDecoration: 'underline wavy 1px red' },
 });
 export function markSelection(view: EditorView) {
-    let effects: StateEffect<unknown>[] = view.state.selection.ranges
+    const effects: StateEffect<unknown>[] = view.state.selection.ranges
         .filter((r) => !r.empty)
         .map(({ from, to }) => addMark.of({ from, to }));
     if (!effects.length) return false;
@@ -240,7 +251,7 @@ export function markSelection(view: EditorView) {
 }
 
 export function markRange(view: EditorView, from: number, to: number) {
-    let effects: StateEffect<unknown>[] = [addMark.of({ from, to })];
+    const effects: StateEffect<unknown>[] = [addMark.of({ from, to })];
     if (!effects.length) return false;
 
     if (!view.state.field(markField, false))
@@ -258,7 +269,7 @@ export const markKeymap = keymap.of([
 ]);
 
 export const wordHover = hoverTooltip((view, pos, side) => {
-    let { from, to, text } = view.state.doc.lineAt(pos);
+    const { from, to, text } = view.state.doc.lineAt(pos);
     let start = pos,
         end = pos;
     while (start > from && /\w/.test(text[start - from - 1])) start--;
@@ -269,7 +280,7 @@ export const wordHover = hoverTooltip((view, pos, side) => {
         end,
         above: true,
         create(view) {
-            let dom = document.createElement('div');
+            const dom = document.createElement('div');
             dom.textContent = text.slice(start - from, end - from);
             return { dom };
         },
@@ -365,6 +376,7 @@ export class TDEditor {
                 const lines = text.split('\n');
                 while (lines.length > 0) {
                     const lineText = lines.shift();
+                    console.log('nolight "%s"', lineText);
                     if (lineText.length > 0) {
                         line.appendChild(document.createTextNode(lineText));
                     }
@@ -383,6 +395,7 @@ export class TDEditor {
             const elt = document.createElement('span');
             elt.setAttribute('class', classes);
             elt.textContent = doc.sliceString(from, to, '\n');
+            console.log('highlight "%s"', elt.textContent);
             line.appendChild(elt);
         }
         function join(cls1: string, cls2: string) {
@@ -393,7 +406,8 @@ export class TDEditor {
         highlightTree(tree, [darkDuckHighlighter, classHighlighter], highlight);
         //	join(darkDuckHighlightStyle.match(tag, scope), classHighlightStyle.match(tag, scope)), highlight);
         nolight(doc.length);
-        if (line.childElementCount > 0) result.appendChild(line);
+        console.log('line', line, 'result', result);
+        if (line.hasChildNodes()) result.appendChild(line);
         return result;
     }
 
@@ -510,7 +524,7 @@ export const createEditor = function (
     const elts = elt.getElementsByClassName('wrapper');
     if (elts[0]) elt = elts[0] as HTMLElement;
 
-    let editor = new TDEditor(
+    const editor = new TDEditor(
         outer.id,
         outer,
         elt,
@@ -547,11 +561,11 @@ darkDuckHighlighter.module.rules.forEach((rule: string) => {
 });
 // build definitions for classHighlighter css classes based on defs from darkDuckHighlighter
 console.groupCollapsed('editor styles');
-for (let tag in tags) {
-    let t = tags[tag];
+for (const tag in tags) {
+    const t = tags[tag];
     if (t.set) {
-        let ddStyleClass = '.' + darkDuckHighlighter.style([t]);
-        let clsStyleClass = '.' + classHighlighter.style([t]);
+        const ddStyleClass = '.' + darkDuckHighlighter.style([t]);
+        const clsStyleClass = '.' + classHighlighter.style([t]);
         console.log(ddStyleClass, clsStyleClass);
         highlight.classStyle[clsStyleClass] =
             highlight.darkDuckStyle[ddStyleClass] || '{}';
@@ -559,143 +573,14 @@ for (let tag in tags) {
 }
 console.groupEnd();
 
-export const createLineEditor = function (
-    elt: HTMLElement,
-    text: string,
-    lang: string,
-    handler: (arg0: string, arg1: any) => any,
-    root: Document | ShadowRoot = document,
-) {
-    function enter({ state, dispatch }: CommandTarget): boolean {
-        let isComplete = true;
-        let changes = state.changeByRange((range) => {
-            console.groupCollapsed('enter key pressed at ', range);
-            try {
-                let text = state.sliceDoc(range.from);
-                console.log('text: ', JSON.stringify(text));
-                // check if we're in the middle of the text
-                if (
-                    text.length > 0 &&
-                    (!text.match(/^\r?\n/) || text.startsWith('/'))
-                ) {
-                    // TODO: line-break setting?
-                    isComplete = true;
-                    return { range };
-                }
-                let explode =
-                    range.from == range.to &&
-                    isBetweenBrackets(state, range.from);
-                let cx = new IndentContext(state, {
-                    simulateBreak: range.from,
-                    simulateDoubleBreak: !!explode,
-                });
-                let indent = getIndentation(cx, range.from);
-                console.log('indent0: ', indent);
-                if (indent == null)
-                    indent = /^\s*/.exec(state.doc.lineAt(range.from).text)[0]
-                        .length;
-                console.log('indent1: ', indent, 'explode: ', explode);
-                if (indent || explode) isComplete = false;
-
-                const tree = syntaxTree(state);
-                console.log('tree', tree);
-                let context = tree.resolve(range.anchor);
-                console.log('context', context);
-                console.log(
-                    'enter key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o',
-                    range.from,
-                    range.to,
-                    range.anchor,
-                    range.head,
-                    state,
-                );
-                return { range };
-            } finally {
-                console.groupEnd();
-            }
-        });
-        console.log('changes: ', changes);
-        if (isComplete) {
-            return handler('enter', state);
-        } else {
-            return insertNewlineAndIndent({ state, dispatch });
-        }
-    }
-    function tab({ state, dispatch }: CommandTarget): boolean {
-        let changes = state.changeByRange((range) => {
-            console.log(
-                'tab key pressed: from=%o, to=%o, anchor=%o, head=%o, state=%o',
-                range.from,
-                range.to,
-                range.anchor,
-                range.head,
-                state,
-            );
-            let context = syntaxTree(state).resolve(range.from);
-            console.log('context', context);
-            return { range };
-        });
-        console.log('changes: ', changes);
-        return indentMore({ state, dispatch });
-    }
-    const shiftEnter =
-        lang === 'markdown' || lang === 'chat'
-            ? insertNewlineContinueMarkup
-            : insertNewlineAndIndent;
-    function arrowUp({ state, dispatch }: CommandTarget): boolean {
-        return handler('arrowUp', state);
-    }
-
-    function arrowDown({ state, dispatch }: CommandTarget): boolean {
-        return handler('arrowDown', state);
-    }
-
-    const outer = elt;
-    const elts = elt.getElementsByClassName('wrapper');
-    if (elts[0]) elt = elts[0] as HTMLElement;
-
-    let editor = new TDEditor(
-        outer.id,
-        outer,
-        elt,
-        text,
-        lang,
-        [
-            fontConfig(elt),
-            stdConfig(),
-            EditorView.theme({
-                '.cm-lineNumbers .cm-gutterElement': {
-                    display: 'none',
-                },
-            }),
-            keymap.of([
-                { key: 'ArrowUp', run: arrowUp },
-                { key: 'ArrowDown', run: arrowDown },
-            ]),
-        ],
-        [
-            keymap.of([
-                { key: 'Enter', run: enter, shift: shiftEnter },
-                { key: 'Tab', run: tab, shift: indentLess },
-            ]),
-        ],
-        root,
-    );
-
-    editor._after_paste = () => {
-        outer.scrollIntoView({ block: 'end', inline: 'nearest' });
-    };
-    return editor;
-};
-
 const _self = {
-    _id: 'editor',
+    _id: sysId(import.meta.url),
     _revision: revision,
     EditorState,
     EditorView,
     EditorSelection,
+    StateEffect,
     createEditor,
-    createLineEditor,
     TDEditor,
 };
 export const Editor = _self;

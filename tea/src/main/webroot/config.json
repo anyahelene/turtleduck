@@ -1,216 +1,198 @@
 {
-	"user": {
-		"id": "__anon__",
-		"name": "Anas Chelonia",
-		"username": "tduck",
-		"nickname": "",
-		"website": "",
-		"picture": "images/turtleduck-icon.png",
-		"profile": "",
-		"email": "tduck@example.com"
-	},
-	"prefs": {
-		"layout": {
-			"explorer": {
-				"height": 16
-			},
-			"editor": {
-				"width": 15
-			},
-			"screen": {
-				"width": 29
-			},
-			"shell": {
-				"height": 7
-			}
-		},
-		"layout-portrait": {
-			"explorer": {
-				"height": 16,
-				"iconified": true
-			},
-			"editor": {
-				"width": 15
-			},
-			"screen": {
-				"width": 29
-			},
-			"shell": {
-				"height": 7
-			}
-		}
-	},
-	"session": {
-		"name": "",
-		"private": false,
-		"offline": false
-	},
-	"layout": {
-		"dir": "H",
-		"items": [
-			{
-				"size": 3,
-				"dir": "V",
-				"items": [
-					{
-						"size": 16,
-						"item": "explorer"
-					}
-				]
-			},
-			{
-				"size": 29,
-				"dir": "V",
-				"max_container": true,
-				"items": [
-					{
-						"size": 9,
-						"dir": "H",
-						"items": [
-							{
-								"size": 15,
-								"item": "editor"
-							},
-							{
-								"size": 14,
-								"item": "screen"
-							}
-						]
-					},
-					{
-						"size": 7,
-						"item": "shell"
-					}
-				]
-			}
-		]
-	},
-	"connections": {
-		"remote-turtleduck": {
-			"kind": "SockJSConnection",
-			"enabled": "optional",
-			"remote": true,
-			"provides": [
-				"jshell",
-				"default"
-			]
-		},
-		"local-pyodide": {
-			"kind": "PyConnection",
-			"enabled": "optional",
-			"provides": [
-				"pyshell"
-			]
-		}
-	},
-	"languages": {
-		"chat": {
-			"title": "Chat",
-			"enabled": "optional",
-			"shellName": "chat",
-			"shellTitle": "Chat",
-			"editMode": "plain",
-			"icon": "🦜",
-			"editable": false,
-			"extensions": [],
-			"services": {}
-		},
-		"java": {
-			"title": "Java",
-			"enabled": "optional",
-			"shellName": "jshell",
-			"shellTitle": "JShell",
-			"editMode": "java",
-			"icon": "☕",
-			"extensions": [
-				"java",
-				"jsh",
-				"jshell"
-			],
-			"shellExtensions": [
-				"jsh",
-				"jshell"
-			],
-			"services": {
-				"jshell": "ShellService"
-			}
-		},
-		"cpp": {
-			"title": "C/C++",
-			"enabled": "optional",
-			"shellName": "cshell",
-			"shellTitle": "CShell",
-			"editMode": "cpp",
-			"icon": "🇨",
-			"extensions": [
-				"c",
-				"h",
-				"C",
-				"H",
-				"cpp",
-				"cc",
-				"hpp"
-			],
-			"services": {}
-		},
-		"markdown": {
-			"title": "Markdown",
-			"enabled": "optional",
-			"shellName": "mdshell",
-			"shellTitle": "MDShell",
-			"editMode": "markdown",
-			"icon": "📝",
-			"extensions": [
-				"md",
-				"markdown"
-			],
-			"services": {
-				"mdshell": "ShellService"
-			}
-		},
-		"z80": {
-			"title": "Z80",
-			"enabled": "optional",
-			"shellName": "z80shell",
-			"shellTitle": "Z80Shell",
-			"editMode": "jz80",
-			"icon": "🧬",
-			"extensions": [
-				"z80"
-			],
-			"services": {}
-		},
-		"python": {
-			"title": "Python",
-			"enabled": "optional",
-			"shellName": "PyShell",
-			"shellTitle": "PyShell",
-			"editMode": "python",
-			"icon": "🐍",
-			"extensions": [
-				"py"
-			],
-			"services": {
-				"pyshell": "ShellService"
-			},
-			"init": [
-				"ShellService.cwd = '/examples'"
-			],
-			"install": [
-				"Pillow",
-				"lark"
-			],
-			"import": []
-		},
-		"plain": {
-			"title": "plain",
-			"enabled": "fallback",
-			"shellName": "shell",
-			"shellTitle": "Shell",
-			"editMode": "plain",
-			"icon": "",
-			"extensions": [],
-			"services": {}
-		}
-	}
+    "user": {
+        "id": "__anon__",
+        "name": "Anas Chelonia",
+        "username": "tduck",
+        "nickname": "",
+        "website": "",
+        "picture": "images/turtleduck-icon.png",
+        "profile": "",
+        "email": "tduck@example.com"
+    },
+    "prefs": {
+        "layout": {
+            "explorer": {
+                "height": 16
+            },
+            "editor": {
+                "width": 15
+            },
+            "screen": {
+                "width": 29
+            },
+            "shell": {
+                "height": 7
+            }
+        },
+        "layout-portrait": {
+            "explorer": {
+                "height": 16,
+                "iconified": true
+            },
+            "editor": {
+                "width": 15
+            },
+            "screen": {
+                "width": 29
+            },
+            "shell": {
+                "height": 7
+            }
+        }
+    },
+    "session": {
+        "name": "",
+        "private": false,
+        "offline": false
+    },
+    "layout": {
+        "dir": "H",
+        "items": [
+            {
+                "size": 3,
+                "dir": "V",
+                "items": [
+                    {
+                        "size": 16,
+                        "item": "explorer"
+                    }
+                ]
+            },
+            {
+                "size": 29,
+                "dir": "V",
+                "max_container": true,
+                "items": [
+                    {
+                        "size": 9,
+                        "dir": "H",
+                        "items": [
+                            {
+                                "size": 15,
+                                "item": "editor"
+                            },
+                            {
+                                "size": 14,
+                                "item": "screen"
+                            }
+                        ]
+                    },
+                    {
+                        "size": 7,
+                        "item": "shell"
+                    }
+                ]
+            }
+        ]
+    },
+    "connections": {
+        "remote-turtleduck": {
+            "kind": "SockJSConnection",
+            "enabled": "optional",
+            "remote": true,
+            "provides": ["jshell", "default"]
+        },
+        "local-pyodide": {
+            "kind": "PyConnection",
+            "enabled": "optional",
+            "provides": ["pyshell"]
+        }
+    },
+    "languages": {
+        "chat": {
+            "title": "Chat",
+            "enabled": "optional",
+            "shellName": "chat",
+            "shellTitle": "Chat",
+            "editMode": "plain",
+            "icon": "🦜",
+            "editable": false,
+            "extensions": [],
+            "services": {}
+        },
+        "java": {
+            "title": "Java",
+            "enabled": "optional",
+            "shellName": "jshell",
+            "shellTitle": "JShell",
+            "editMode": "java",
+            "icon": "☕",
+            "extensions": ["java", "jsh", "jshell"],
+            "shellExtensions": ["jsh", "jshell"],
+            "services": {
+                "jshell": "ShellService"
+            }
+        },
+        "cpp": {
+            "title": "C/C++",
+            "enabled": "optional",
+            "shellName": "cshell",
+            "shellTitle": "CShell",
+            "editMode": "cpp",
+            "icon": "🇨",
+            "extensions": ["c", "h", "C", "H", "cpp", "cc", "hpp"],
+            "services": {}
+        },
+        "markdown": {
+            "title": "Markdown",
+            "enabled": "optional",
+            "shellName": "mdshell",
+            "shellTitle": "MDShell",
+            "editMode": "markdown",
+            "icon": "📝",
+            "extensions": ["md", "markdown"],
+            "services": {
+                "mdshell": "ShellService"
+            }
+        },
+        "z80": {
+            "title": "Z80",
+            "enabled": "optional",
+            "shellName": "z80shell",
+            "shellTitle": "Z80Shell",
+            "editMode": "jz80",
+            "icon": "🧬",
+            "extensions": ["z80"],
+            "services": {}
+        },
+        "python": {
+            "title": "Python",
+            "enabled": "optional",
+            "shellName": "PyShell",
+            "shellTitle": "PyShell",
+            "editMode": "python",
+            "icon": "🐍",
+            "extensions": ["py"],
+            "services": {
+                "pyshell": "ShellService"
+            },
+            "init": ["ShellService.cwd = '/examples'"],
+            "install": ["Pillow", "lark"],
+            "import": [],
+            "worker": "shared",
+            "scriptName": "pywebworker.js"
+        },
+        "plain": {
+            "title": "plain",
+            "enabled": "fallback",
+            "shellName": "shell",
+            "shellTitle": "Shell",
+            "editMode": "plain",
+            "icon": "",
+            "extensions": [],
+            "services": {}
+        },
+        "tshell": {
+            "title": "plain",
+            "enabled": "optional",
+            "shellName": "tshell",
+            "shellTitle": "TShell",
+            "editMode": "shell",
+            "icon": "🐢",
+            "extensions": ["sh", "tsh"],
+            "services": {
+                "tshell": "ShellService"
+            }
+        }
+    }
 }

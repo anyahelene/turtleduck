@@ -96,7 +96,7 @@
 		</header>
 
 		<div id="mid">
-			<borb-frame id="explorer" tab-title="Explorer" class="explorer focusable no-tabs no-tools" style="background: none">
+			<borb-frame id="explorer" frame-title="Explorer" class="explorer focusable no-tabs no-tools" style="background: none">
 				<header>
 					<nav id="explorer-tabs" class="tabs">
 						<span class="tab selected">Explorer</span>
@@ -136,7 +136,7 @@
 				</section>
 			</borb-frame>
 
-			<borb-frame id="editor" tab-title="Editor" frame-title="&lt;tab-title&gt; : editor" class="focusable">
+			<borb-frame id="editor" tab-title="Editor" frame-title="${tab-title{ : }}editor" class="focusable">
 				<main class="editor wrapper" tab-title="Editor"></main>
 				<header id="editor-head">
 					<nav id="editor-tabs" class="tabs"></nav>
@@ -160,7 +160,7 @@
 
 			<!--div id="right-size" style="position:absolute;left:0px;margin-left:-5px;height:100%;width:5px;background:#ccc;z-index:100" ></div-->
 
-			<borb-frame id="screen" tab-title="Screen" frame-title="&lt;tab-title&gt; : display" class="screen focusable advanced-mode intermediate-mode beginner-mode">
+			<borb-frame id="screen" tab-title="Screen" frame-title="${tab-title{ : }}display" class="screen focusable advanced-mode intermediate-mode beginner-mode">
 				<borb-document type="text/markdown" data-title="Text">
 # Document View
 This is the *document view*.
@@ -192,7 +192,7 @@ It's a place where you can <i>view</i>documents.
 				</aside>
 			</borb-frame>
 
-			<borb-frame id="shell" tab-title="Terminal" frame-title="&lt;tab-title&gt; : terminal" class="console focusable">
+			<borb-frame id="shell" tab-title="Terminal" frame-title="${tab-title{ : }}terminal" class="console focusable">
 				<div data-insert-here="true" style="display: none"></div>
                 <borb-terminal id="stdout" tab-title="Terminal" shell="tshell"></borb-terminal>
 				<borb-tab target="fooshell" tab-title="FooShell" frame-title="~/foo"></borb-tab>

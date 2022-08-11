@@ -7,8 +7,7 @@ import { turtleduck } from './js/TurtleDuck';
 import { fileSystem, FileSystem } from './js/FileSystem';
 import { Component } from './js/Component';
 import { TilingWM, TilingWindow } from './js/TilingWM';
-import { PyController } from './js/pycontroller';
-import { ShellServiceProxy } from './js/ShellServiceProxy';
+import { WorkerController } from './js/WorkerController';
 import {
     MDRender,
     SubSystem,
@@ -18,6 +17,8 @@ import {
     Settings,
     History,
 } from './borb';
+import { Shell, ChangeReporter, ShellConnection } from './js/Shell';
+import { Messaging } from './borb/Messaging';
 import { Camera } from './js/Media';
 import { GridDisplayServer } from './js/GridDisplay';
 import { html, render } from 'uhtml';
@@ -28,6 +29,8 @@ import * as lodash from 'lodash-es';
 import i18next from 'i18next';
 import getopts from 'getopts';
 import defaultConfig from './config.json';
+import { WorkerConnection } from './js/WorkerConnection';
+import { Languages } from './js/Language';
 
 var imports = {
     SockJS,
@@ -39,8 +42,7 @@ var imports = {
     Component,
     TilingWM,
     TilingWindow,
-    PyController,
-    ShellServiceProxy,
+    WorkerController,
     MDRender,
     Camera,
     GridDisplayServer,
@@ -57,6 +59,12 @@ var imports = {
     Settings,
     Buttons,
     Frames,
+    Shell,
+    ChangeReporter,
+    ShellConnection,
+    Messaging,
+    WorkerConnection,
+    Languages,
 };
 
 console.log(turtleduck);
@@ -85,7 +93,8 @@ turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
 turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.defaultConfig = defaultConfig;
-import { TDEditor, createEditor, createLineEditor } from './js/Editor';
+import { TDEditor, createEditor } from './borb/Editor';
+import { createLineEditor } from './borb/LineEditor';
 turtleduck.createEditor = createEditor;
 turtleduck.createLineEditor = createLineEditor;
 turtleduck.TDEditor = TDEditor;
@@ -283,15 +292,6 @@ SubSystem.waitFor('borb/history').then(async () => {
         turtleduck.settings.setConfig(cfg, 'session');
         turtleduck.settings.saveConfig('session');
     }
-});
-SubSystem.waitFor('borb/settings').then(() => {
-    turtleduck.pyController = new PyController(
-        true,
-        turtleduck.getConfig('session.name'),
-    );
-    turtleduck.shellServiceProxy = new ShellServiceProxy(
-        turtleduck.pyController,
-    );
 });
 
 turtleduck.tabSelect = function (tabsId, key) {

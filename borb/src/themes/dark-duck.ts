@@ -35,6 +35,9 @@ const darkDuckTheme = EditorView.theme(
             borderLeftColor: '#800',
             borderLeftWidth: '.5em',
         },
+        '&.cm-focused .cm-cursor, &.cm-focused .cm-dropCursor': {
+            borderLeftColor: '#f00',
+        },
         '.cm-cursorLayer': { mixBlendMode: 'exclusion' },
         '&.cm-focused .cm-cursor-secondary': { borderLeftColor: '#ff0' },
         '.cm-cursor-secondary': { borderLeftColor: '#880' },

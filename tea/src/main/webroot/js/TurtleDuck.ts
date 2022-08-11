@@ -1,8 +1,8 @@
 /// <reference types="webpack/module" />
 
 import { StorageContext } from './Storage';
-import type { History, HistorySession } from '../../../../../borb/src/History';
-import type { Settings } from '../../../../../borb/src/Settings';
+import type { History, HistorySession } from '../borb/History';
+import type { Settings } from '../borb/Settings';
 import { SubSystem, Styles, DragNDrop, Borb, MDRender, Frames } from '../borb';
 Borb.tagName('foo ');
 export { History, HistorySession };
