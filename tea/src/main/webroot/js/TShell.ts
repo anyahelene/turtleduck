@@ -6,10 +6,21 @@ import { SubSystem } from '../borb/SubSystem';
 import { turtleduck } from './TurtleDuck';
 import { StorageContext } from './Storage';
 import type { HistorySession } from '../borb/History';
+import { LangInit, LanguageConnection } from './Language';
+import {
+    BaseConnection,
+    Message,
+    Messaging,
+    MessagingError,
+    Payload,
+} from '../borb/Messaging';
+import { EvalReply, EvalRequest } from './Shell';
+import { eq } from 'lodash-es';
 //import getopts = require('getopts');
 const homeDir = '/home';
 const options = {};
 type EnvValue = string | ((sh: TShell, val?: string) => string);
+let seq = 0;
 
 function createEnvironment(): Map<string, EnvValue> {
     let tmp: { [propName: string]: EnvValue } = {
@@ -39,7 +50,8 @@ type Program = {
 };
 const programs: Map<string, Program> = new Map();
 
-class TShell {
+class TShell extends BaseConnection implements LanguageConnection {
+    public readonly id: string;
     private env: Map<string, EnvValue>;
     private _returnCode: number = 0;
     private _programs = programs;
@@ -50,7 +62,10 @@ class TShell {
     private _currentArguments?: Array<string>;
     private _cwd: StorageContext;
     history?: HistorySession;
+    private _terminal: string;
+    private _explorer: string;
     constructor(cwd?: StorageContext, parent?: TShell) {
+        super(Messaging, `tshell:${seq++}`);
         this._parent = parent;
         this.env = createEnvironment();
         this._cwd = cwd ?? turtleduck.cwd;
@@ -60,7 +75,57 @@ class TShell {
             }
         });
     }
+    connect(): Promise<string> {
+        return Promise.resolve(this.id);
+    }
+    deliverRemote(msg: Message, transfers: Transferable[] = []): void {
+        if (msg.header.msg_type === 'eval_request') {
+            const req = msg.content as EvalRequest;
+            this.eval(req.code).then((n) =>
+                this.deliverHost(
+                    Messaging.reply(msg, {
+                        code: req.code,
+                        ref: req.ref,
+                        diag: [],
+                        complete: true,
+                        value: n,
+                        multi: [],
+                    }),
+                ),
+            );
+            return;
+        }
+        const m = this[msg.header.msg_type] as (
+            msg: Payload,
+        ) => Promise<Payload>;
+        console.log('got request', msg, transfers, m);
+        if (typeof m === 'function') {
+            m.bind(this)(msg.content).then((reply) => {
+                this.deliverHost(this.router.reply(msg, reply));
+            });
+            return;
+        }
+        throw new MessagingError('Method not implemented', msg);
+    }
+    deliverHost: (msg: Message) => Promise<void>;
 
+    async langInit({
+        config,
+        terminal,
+        explorer,
+        session,
+    }: LangInit): Promise<Payload> {
+        this._terminal = terminal;
+        this._explorer = explorer;
+        this.setenv('SESSION', session);
+        this._printer = {
+            print: (text: string) =>
+                Messaging.send({ text }, 'print', this._terminal).then(() =>
+                    Promise.resolve(),
+                ),
+        };
+        return {};
+    }
     get printer(): Printer {
         return this._printer;
     }
@@ -258,6 +323,14 @@ programs.set('history', {
         }
     },
 });
+
+// TODO: load language
+// TODO: open in editor
+// TODO: router info, router echo
+// TODO: send message
+// TODO: file IO
+// TODO: slash commands in language shells
+// TODO:
 export { TShell };
 
 SubSystem.register({

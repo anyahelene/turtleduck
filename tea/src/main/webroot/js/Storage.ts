@@ -187,7 +187,13 @@ class Storage {
         turtleduck.userlog('clone complete');
     }
 
-    async info() {
+    async info(): Promise<{
+        quota?: number;
+        usage?: number;
+        persisted: boolean;
+        requested: false;
+        allowed?: false;
+    }> {
         const requested = Settings.getConfig(
             'storage.persistenceRequested',
             false,

@@ -194,5 +194,8 @@
                 "tshell": "ShellService"
             }
         }
+    },
+    "terminal": {
+        "defaultFrame": "shell"
     }
 }

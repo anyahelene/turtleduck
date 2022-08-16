@@ -100,14 +100,14 @@ header {
     }
 
     border-top-left-radius: .5rem;
-    font-size: 0.7rem;
+    font-size: 1rem;
+    line-height: 1rem;
     font-size-adjust: none;
     margin: 0;
     display: flex;
     flex-direction: row;
     align-items: stretch;
     height: 1.2rem;
-    line-height: 1.2rem;
     justify-content: space-between;
     width: 100%;
     flex-grow: 0;
@@ -205,6 +205,7 @@ button {
     pointer-events: auto;
 
     //cursor: pointer;
+
 
     :host(.focused) & {
         background-color: color-lookup(frame, focused, selected);

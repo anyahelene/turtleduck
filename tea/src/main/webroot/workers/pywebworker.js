@@ -28,23 +28,25 @@ debug = true;
 waiting_for = null;
 
 clients = [];
-let seq = 0;
-
+seq = 0;
+function msgId() {
+    return `${self.seq++}`;
+}
 /** Whether any clients are already connected */
 existing = false;
 
 function connect(port) {
-    pymsg = function (e) {
+    const pymsg = (e) => {
         console.log(e);
         port.postMessage({
-            header: { msg_type: 'python_status', msg_id: 'i1' },
+            header: { msg_type: 'python_status', msg_id: msgId() },
             content: { status: e },
         });
     };
-    pyerr = function (e) {
+    const pyerr = (e) => {
         console.error(e);
         port.postMessage({
-            header: { msg_type: 'python_error', msg_id: 'i1' },
+            header: { msg_type: 'python_error', msg_id: msgId() },
             content: { status: e },
         });
     };
@@ -63,14 +65,25 @@ function connect(port) {
     const queue = [];
 
     port.onmessage = async function (e) {
-        try {
-            const data = e.data;
+        const data = e.data;
+        if (!data.header) {
+            console.error('invalid message', e);
+            return;
+        }
+        const msg_id = data.header.msg_id;
+        const msg_type = data.header.msg_type;
+        const content = data.content;
+        console.log('msg_type', msg_type);
 
+        try {
             if (!self.loadPyodide.inProgress) {
                 queue.push(e);
                 console.log('loading pyodide');
                 port.postMessage({
-                    header: { msg_type: 'python_status', msg_id: 'i0' },
+                    header: {
+                        msg_type: 'python_status',
+                        msg_id: msgId(),
+                    },
                     content: { status: 'Loading Pyodide...', wait: true },
                 });
                 self.pyodide = await loadPyodide({
@@ -79,7 +92,11 @@ function connect(port) {
                 });
                 if (!self.pyodide) {
                     port.postMessage({
-                        header: { msg_type: 'error_reply', msg_id: 'e' },
+                        header: {
+                            msg_type: 'error_reply',
+                            msg_id: msgId(),
+                            ref_id: data.header.msg_id,
+                        },
                         content: {
                             status: 'error',
                             ename: 'InitializationError',
@@ -91,7 +108,7 @@ function connect(port) {
                 }
                 //console.log(self.pyodide._module); // provoke unhashable type bug
                 port.postMessage({
-                    header: { msg_type: 'python_status', msg_id: 'i1' },
+                    header: { msg_type: 'python_status', msg_id: msgId() },
                     content: { status: 'Pyodide loaded.' },
                 });
                 while (queue.length) {
@@ -108,10 +125,6 @@ function connect(port) {
             }
 
             if (data.header) {
-                const msg_id = data.header.msg_id;
-                const msg_type = data.header.msg_type;
-                const content = data.content;
-                console.log('msg_type', msg_type);
                 if (msg_type === 'hello') {
                     console.log('hello', content);
                     const id = self.clients.push(port);
@@ -119,7 +132,7 @@ function connect(port) {
                         header: {
                             msg_type: 'welcome',
                             ref_id: msg_id,
-                            msg_id: 'r' + msg_id,
+                            msg_id: msgId(),
                         },
                         content: {
                             status: 'ok',
@@ -134,7 +147,7 @@ function connect(port) {
                         header: {
                             msg_type: 'echo_reply',
                             ref_id: msg_id,
-                            msg_id: 'r' + msg_id,
+                            msg_id: msgId(),
                         },
                         content: { status: 'ok', content },
                     });
@@ -168,7 +181,7 @@ function connect(port) {
                         header: {
                             msg_type: 'langInit_reply',
                             ref_id: msg_id,
-                            msg_id: `_${self.seq++}`,
+                            msg_id: msgId(),
                         },
                         content: { status: 'ok' },
                     });
@@ -193,7 +206,7 @@ function connect(port) {
                                         header: {
                                             msg_type: msg_type + '_reply',
                                             ref_id: msg_id,
-                                            msg_id: `_${self.seq++}`,
+                                            msg_id: msgId(),
                                         },
                                         content: res,
                                     };
@@ -205,7 +218,7 @@ function connect(port) {
                                     header: {
                                         msg_type: msg_type + '_reply',
                                         ref_id: msg_id,
-                                        msg_id: `_${self.seq++}`,
+                                        msg_id: msgId(),
                                     },
                                     content: { result: res },
                                 };
@@ -218,7 +231,11 @@ function connect(port) {
             // if you prefer messages with the error
             console.log(e);
             port.postMessage({
-                header: { msg_type: 'error_reply', msg_id: `_${self.seq++}` },
+                header: {
+                    msg_type: 'error_reply',
+                    msg_id: msgId(),
+                    ref_id: msg_id,
+                },
                 content: {
                     status: 'error',
                     ename: e.name,
@@ -233,9 +250,10 @@ function connect(port) {
 
 async function initPython(content, runPython) {
     const result = [];
-    const installs = content.install || [];
-    const imports = content.import || [];
-    const inits = content.init || [];
+    const config = content.config;
+    const installs = config.install || [];
+    const imports = config.import || [];
+    const inits = config.init || [];
 
     await runPython(
         'import micropip\n' + //
@@ -251,7 +269,10 @@ async function initPython(content, runPython) {
     for (const init of inits) {
         await runPython(init);
     }
-    await runPython("ShellService.setup_io('pyshell')\n");
+    await runPython(`ShellService.setup_io('${content.terminal || ''}')\n`);
+    await runPython(
+        `ShellService.setup_explorer('${content.explorer || ''}')\n`,
+    );
     await runPython('ShellService.use_msg_io()\n');
     await runPython(
         'ShellService.do_imports([' +

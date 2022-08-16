@@ -129,14 +129,15 @@ async def receive():
         if ref_id and ref_id in requests:
             del requests[ref_id]
         return to_js(None)
-    if ref_id and ref_id in requests:
-        try:
-            handler = requests[ref_id]
-            del requests[ref_id]
-            handler(content, header)
-        except Exception as ex:
-            debug("reply handler failed", header, ex)
-        await run_tasks()
+    if ref_id:
+        if ref_id in requests:
+            try:
+                handler = requests[ref_id]
+                del requests[ref_id]
+                handler(content, header)
+            except Exception as ex:
+                debug("reply handler failed", header, ex)
+            await run_tasks()
         return to_js(None)
 
     await run_tasks()
@@ -199,7 +200,7 @@ async def receive():
             tasks.append(e)
     else:
         reply_header['msg_type'] = 'error_reply'
-        reply['content'] = {'ename':'unknown message type', 'evalue':'', 'traceback':[]}
+        reply['content'] = {'ename':'unknown message type', 'evalue':'', 'traceback':[], 'data':msg}
         send(reply)
 
 
@@ -422,6 +423,8 @@ def diffContext(old, new, code, ns = 'main'):
     return deleted, changed
 
 def send_update(name, oldVal, newVal, ns = 'main'):
+    if not _explorer:
+        return
     data = {'kind':'snippet','sym':'','new':False}
     if oldVal is None:
         data[VERB.key] = 'created'
@@ -452,7 +455,7 @@ def send_update(name, oldVal, newVal, ns = 'main'):
     data[TYPE.key] = typename
     data[SNIP_NS.key] = ns
 
-    message = {'header':{'msg_type':'update'}, 'content':{'info':data}}
+    message = {'header':{'msg_type':'update', 'to':_explorer}, 'content':{'info':data}}
     send(message)
 
 def icon_of(typename):
@@ -520,7 +523,8 @@ async def complete(code, cursorPos, detailLevel = 0):
 
 
 class MsgBuffer(io.RawIOBase):
-    def __init__(self, name):
+    def __init__(self, terminal, name):
+        self.terminal = terminal
         self.name = name
 
     def writable(self):
@@ -534,13 +538,13 @@ class MsgBuffer(io.RawIOBase):
 
     def write(self, data):
         text = data.tobytes().decode('utf-8')
-        message = {'header':{'msg_type':'print'},
+        message = {'header':{'msg_type':'print', 'to':self.terminal},
                     'content':{'text':text, 'stream':self.name}}
         send(message)
         return len(data)
 
     def display(self, data):
-        message = {'header':{'msg_type':'display'},
+        message = {'header':{'msg_type':'display', 'to':self.terminal},
                     'content':{'data':data, 'stream':self.name}}
         send(message)
         return len(data)
@@ -575,15 +579,19 @@ def open_file(file, mode='r', buffering=-1, encoding=None, errors=None, newline=
     else:
         raise OSError(errno.EACCESS, "writing files not supported", file)
 
-def setup_io(stream_name):
+def setup_explorer(explorer):
+    global _explorer
+    _explorer = explorer
+
+def setup_io(terminal):
     global _old_stdout, _old_stderr, _old_stdin
     global _msg_stdout, _msg_stderr, _msg_stdin
     global _msg_outbuf, _msg_errbuf
     _old_stdout = sys.stdout
     _old_stderr = sys.stderr
     _old_stdin = sys.stdin
-    _msg_outbuf = MsgBuffer(stream_name+"out")
-    _msg_errbuf = MsgBuffer(stream_name+"err")
+    _msg_outbuf = MsgBuffer(terminal, "stdout")
+    _msg_errbuf = MsgBuffer(terminal, "stderr")
     _msg_stdout = io.TextIOWrapper(io.BufferedWriter(_msg_outbuf), line_buffering=True)
     _msg_stderr = io.TextIOWrapper(io.BufferedWriter(_msg_errbuf), line_buffering=True)
 

@@ -17,7 +17,7 @@ import {
     Settings,
     History,
 } from './borb';
-import { Shell, ChangeReporter, ShellConnection } from './js/Shell';
+import { Shell, ShellConnection } from './js/Shell';
 import { Messaging } from './borb/Messaging';
 import { Camera } from './js/Media';
 import { GridDisplayServer } from './js/GridDisplay';
@@ -31,7 +31,7 @@ import getopts from 'getopts';
 import defaultConfig from './config.json';
 import { WorkerConnection } from './js/WorkerConnection';
 import { Languages } from './js/Language';
-
+import { handleKey } from './js/Commands';
 var imports = {
     SockJS,
     Mousetrap,
@@ -60,7 +60,6 @@ var imports = {
     Buttons,
     Frames,
     Shell,
-    ChangeReporter,
     ShellConnection,
     Messaging,
     WorkerConnection,
@@ -69,8 +68,11 @@ var imports = {
 
 console.log(turtleduck);
 globalThis.imports = imports;
+if (!turtleduck.borb) turtleduck.borb = {};
 globalThis.turtleduck = turtleduck;
-globalThis.borb = Borb;
+globalThis.borb = turtleduck.borb;
+turtleduck.handleKey = handleKey;
+Borb.setKeyHandler(handleKey);
 turtleduck.mdRender = MDRender;
 turtleduck.Camera = Camera;
 turtleduck.Camera.addSubscription(
@@ -104,7 +106,11 @@ turtleduck.setConfig = (...args) => turtleduck.borb.settings.setConfig(...args);
 turtleduck.saveConfig = (...args) =>
     turtleduck.borb.settings.saveConfig(...args);
 turtleduck.SubSystem = SubSystem;
-SubSystem.setup(turtleduck);
+SubSystem.setup(turtleduck, {
+    proxy: true,
+    hotReload: !!import.meta.webpackHot,
+    global: true,
+});
 SubSystem.waitFor('borb/settings').then((settings) => {
     turtleduck.settings = settings;
     console.warn('CONFIGS:', settings.configs);
@@ -338,258 +344,6 @@ function ctrl(key) {
 function meta(key) {
     return ['alt+' + key, 'meta+' + key];
 }
-
-function linkClickHandler(e) {
-    e.preventDefault();
-    const link = e.target.closest('a');
-    if (link && link.href) {
-        handleKey(link.href, link, e);
-    } else {
-        console.error('linkClickHandler: no link found', e, link);
-    }
-}
-async function handleKey(key, button, event) {
-    const page = document.getElementById('page');
-
-    var params = undefined;
-    if (event.header && event.header.msg_type === key) {
-        // it's actually a message!
-        params = event.content;
-        // nop these
-        event.stopPropagation = () => {};
-        event.preventDefault = () => {};
-    }
-    var m = key.match(/^([a-z]*):\/\/(.*)$/);
-    if (m != null) {
-        const url = new URL(key);
-        params = { path: url.pathname.replace(/^\/\//, '') };
-        url.searchParams.forEach((v, k) => (params[k] = v));
-        console.log('handleKey decoded url', key, m[1], params);
-        key = m[1];
-    }
-    console.log('handleKey', key, button, event);
-
-    switch (key) {
-        case 'explorer':
-            return turtleduck.openFiles();
-        case 'code':
-            if (turtleduck.pyshell) turtleduck.pyshell.focus();
-            else if (turtleduck.jshell) turtleduck.jshell.focus();
-            break;
-        case 'code-gfx':
-            break;
-        case 'help':
-            document
-                .getElementById('page')
-                .classList.toggle('show-splash-help');
-            break;
-        case 'esc':
-            document
-                .getElementById('page')
-                .classList.toggle('show-splash-help', false);
-            break;
-        case 'projects':
-            break;
-        case 'quality':
-            let code = turtleduck.editor.current().state().sliceDoc(0);
-            fetch(
-                'https://master-thesis-web-backend-prod.herokuapp.com/analyse',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                        'cache-control': 'no-cache',
-                        pragma: 'no-cache',
-                    },
-                    body: code,
-                },
-            ).then((res) => {
-                if (res.ok) {
-                    res.json().then((data) => {
-                        document.querySelector('#screen .text').innerText =
-                            JSON.stringify(data, null, '    ');
-                    });
-                }
-            });
-            break;
-        case 'hints': {
-            const qs = turtleduck.hints.random();
-
-            turtleduck.displayPopup('HINT', qs[0], qs[1], 'hints');
-
-            break;
-        }
-        case 'focus': {
-            const win = turtleduck[params.path];
-            //console.log("focus:", param, win);
-            if (win) {
-                win.focus();
-            }
-            break;
-        }
-        case 'language': {
-            turtleduck.client.loadLanguage('python');
-            break;
-        }
-        case 'snap': {
-            const config = { mode: 'camera', once: true };
-            if (params) {
-                config.params = params;
-                config.mirror = false;
-            }
-            const r = turtleduck.openCamera(config);
-            event.stopPropagation();
-            event.preventDefault();
-            return r;
-        }
-        case 'qrscan': {
-            const config = { mode: 'qr', once: true };
-            if (params) {
-                config.params = params;
-                config.mirror = false;
-            }
-            const r = turtleduck.openCamera(config);
-            event.stopPropagation();
-            event.preventDefault();
-            return r;
-        }
-        case 'open-camera': {
-            const r = turtleduck.openCamera({ mode: 'camera' });
-            event.stopPropagation();
-            event.preventDefault();
-            return r;
-        }
-        case 'open-qr': {
-            const r = turtleduck.openCamera({ mode: 'qr' });
-            event.stopPropagation();
-            event.preventDefault();
-            return r;
-        }
-        case 'tooltip:sessionInfo': {
-            const projectName = turtleduck.getConfig('session.project');
-            const sessionName = turtleduck.getConfig('session.name');
-            const renderShells = (s) =>
-                s.shells.map(
-                    (sh) =>
-                        html`<span class="icon"
-                            ><span class=${`shell-type-${sh[0]}`}></span
-                            ><span class="icon-text"
-                                >${sh[0]} (${sh[1]})</span
-                            ></span
-                        >`,
-                );
-            const renderSession = (s) => {
-                console.log(s);
-                return html`<li class="item-with-icon session-entry">
-                    <a
-                        onclick=${linkClickHandler}
-                        href="${`session://${s.session}`}"
-                        >${s.session}
-                        <span class="time-ago">(${timeAgo(s.date)})</span>
-                        <span class="icon-list">${renderShells(s)}</span></a
-                    >
-                </li>`;
-            };
-            return turtleduck.history.sessions().then((ss) => {
-                render(
-                    button,
-                    html`<ul class="session-list">
-                            ${ss.map(renderSession)}
-                        </ul>
-                        <dl>
-                            <dt>Session</dt>
-                            <dd>${sessionName}</dd>
-                            <dt>Project</dt>
-                            <dd>
-                                ${projectName
-                                    ? projectName
-                                    : html`<input type="text" name="projectName"></input>`}
-                            </dd>
-                        </dl>`,
-                );
-            });
-            /*return fileSystem.list("/home/projects/").map(files -> {
-				HTMLElement l = element("ul");
-				for(TDFile file : files) {
-					String n = file.name();
-					l.appendChild(element("li", element("a", attr("href", "?project=" + n), n)));
-				}
-				list.appendChild(l);
-				return Promise.Util.resolve(list);
-			}).mapFailure(err -> Promise.Util.resolve(list));
-			*/
-        }
-        case 'tooltip:storageInfo': {
-            return turtleduck.storage.info().then((info) => {
-                var askButton = '';
-                if (!info.persisted) {
-                    askButton = html.node`<button id="requestPersistence" type="button">Allow persistent storage</button>`;
-                    askButton.addEventListener('click', async function (e) {
-                        return handleKey(askButton.id, askButton, e).then(
-                            (r) => {
-                                console.log('handleKey', r);
-                                return r;
-                            },
-                        );
-                    });
-                }
-                render(
-                    button,
-                    html.node`<dl><dt>Storage</dt><dd>${
-                        info.persisted ? 'persistent' : 'not persistent'
-                    }</dd>
-					${
-                        info.usage
-                            ? html`<dt>Usage</dt>
-                                  <dd>${info.usage}</dd>`
-                            : ''
-                    }</dl>
-					${askButton}`,
-                );
-                return button;
-            });
-        }
-        case 'requestPersistence': {
-            return turtleduck.storage.requestPersistence().then((res) => {
-                button.textContent = res ? 'OK!' : 'Rejected';
-            });
-        }
-        default:
-            if (button.dataset.showMenu) {
-                const elt = document.getElementById(button.dataset.showMenu);
-                console.log('show: ', elt);
-                elt.classList.add('show');
-            } else if (button.classList.contains('not-implemented')) {
-                if (Math.random() < 0.5) {
-                    button.classList.add('disappear');
-                } else {
-                    turtleduck.displayPopup(
-                        'Warning',
-                        'Please do not press this button again.',
-                        '',
-                        'warning',
-                    );
-                }
-                turtleduck.userlog('Sorry! Not implemented. 😕');
-            } else {
-                //console.log(key, button, event);
-                const r = turtleduck.actions.handle(
-                    key,
-                    { button: button },
-                    event,
-                );
-                //console.log("r =>", r);
-                event.stopPropagation();
-                event.preventDefault();
-                return r;
-            }
-    }
-    event.stopPropagation();
-    event.preventDefault();
-    return false;
-}
-
-turtleduck.handleKey = handleKey;
 
 turtleduck.activateToggle = function (
     element,

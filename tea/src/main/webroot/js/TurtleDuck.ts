@@ -1,9 +1,11 @@
 /// <reference types="webpack/module" />
 
-import { StorageContext } from './Storage';
+import { Storage, StorageContext } from './Storage';
 import type { History, HistorySession } from '../borb/History';
-import type { Settings } from '../borb/Settings';
+import type { ConfigDict, Settings } from '../borb/Settings';
 import { SubSystem, Styles, DragNDrop, Borb, MDRender, Frames } from '../borb';
+import { BorbFrame, BorbPanelBuilder } from '../borb/Frames';
+import type { TDEditor } from '../borb/Editor';
 Borb.tagName('foo ');
 export { History, HistorySession };
 declare global {
@@ -95,8 +97,6 @@ function wrap2<Type, Name extends keyof OnlyPromises<Type>>(
         throw Error(`SubSystem not ready: '${subsys}'`);
     };
 }
-type phist = OnlyPromises<StorageContext>;
-let foo: phist;
 
 wrap2<History, 'get'>('get', 'history');
 
@@ -105,13 +105,18 @@ interface EditorOrShell {
     iconified(i: boolean): boolean;
     focus(): void;
     paste_to_file(filename: string, text: string, language: string): void;
+    current(): TDEditor;
 }
 interface TurtleDuck {
+    openCamera(config: ConfigDict);
+    displayPopup(arg0: string, arg1: any, arg2: any, arg3: string);
+    hints: any;
     eyeDropper(): Promise<string | undefined>;
     handleKey(key: string, button?: HTMLElement, event?: Event): Promise<any>;
     client: any;
-    userlog(msg: string): void;
+    userlog(msg: string, wait?: boolean): void;
     cwd: StorageContext;
+    storage: Storage;
     history: History;
     settings: typeof Settings;
     makeProxy: typeof proxy;
@@ -121,7 +126,10 @@ interface TurtleDuck {
     mdRender: typeof MDRender;
     styles: typeof Styles;
     borb: { dragndrop: typeof DragNDrop };
+    createPanel(): BorbPanelBuilder;
+    openFiles(): Promise<void>;
 }
+
 export const turtleduck: TurtleDuck = {
     /** TODO: EyeDropper https://developer.mozilla.org/en-US/docs/Web/API/EyeDropper */
     async eyeDropper(): Promise<string | undefined> {
@@ -142,8 +150,12 @@ export const turtleduck: TurtleDuck = {
     },
     history: proxy('history'),
     cwd: proxy('cwd', 'storage'),
+    storage: proxy('storage'),
     makeProxy: proxy,
     styles: Styles,
+    createPanel() {
+        return new BorbPanelBuilder();
+    },
 } as TurtleDuck;
 
 turtleduck['phistory'] = proxy('history');

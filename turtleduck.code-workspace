@@ -1,36 +1,39 @@
 {
 	"folders": [
-		{
-			"path": "parent"
-		},
-		{
-			"path": "base"
-		},
-		{
-			"path": "anno"
-		},
-		{
-			"path": "auth"
-		},
-		{
-			"path": "demo"
-		},
-		{
-			"path": "gl"
-		},
-		{
-			"path": "server"
-		},
-		{
-			"path": "shell"
-		},
-		{
-			"path": "borb"
-		},
-		{
-			"path": "tea"
-		}
-	],
+        {
+            "path": "parent"
+        },
+        {
+            "path": "base"
+        },
+        {
+            "path": "anno"
+        },
+        {
+            "path": "auth"
+        },
+        {
+            "path": "demo"
+        },
+        {
+            "path": "gl"
+        },
+        {
+            "path": "server"
+        },
+        {
+            "path": "shell"
+        },
+        {
+            "path": "borb"
+        },
+        {
+            "path": "tea"
+        },
+        {
+            "path": "py"
+        }
+    ],
 	"settings": {
 		"java.configuration.updateBuildConfiguration": "interactive",
 		"js/ts.implicitProjectConfig.module": "ES2020",

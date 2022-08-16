@@ -117,7 +117,7 @@ export class WorkerController {
     terminate() {
         if (this.worker) {
             this.port.postMessage({
-                header: { msg_type: 'goodbye', msg_id: '_' },
+                header: { msg_type: 'shutdown', msg_id: '_' },
                 content: {},
             });
             if (this.worker instanceof Worker) this.worker.terminate();
