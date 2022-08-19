@@ -2,28 +2,30 @@
     "compilerOptions": {
         "module": "ES2020",
         "target": "ES2020",
-        "moduleResolution":"Node",
-       // "allowSyntheticDefaultImports": true,
+        "moduleResolution": "Node",
+        // "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "strict": false,
-        "baseUrl": "./", 
+        "baseUrl": "./",
         "rootDirs": ["./src/main/webroot/"],
         "outDir": "target/classes/webroot/",
-      //  "explainFiles" : true,
-      //  "listEmittedFiles":true,
-        "paths": {"css/frames.css" : ["./target/classes/webroot/css/frames.css"]//, "borb":["./src/main/webroot/borb/borb.ts"], "borb/*":["./src/main/webroot/borb/*"]
-        },
-    //    "types": ["webpack/module"],
-       // "paths": {"node/getopts":["node_modules/getopts/index.d.ts" ]}
-     //   "allowJs": true
+        "experimentalDecorators": true,
+        "declaration": true,
+        "strictNullChecks": false,
+        //  "explainFiles" : true,
+        //  "listEmittedFiles":true,
+        "paths": {
+            "css/frames.css": ["./target/classes/webroot/css/frames.css"] //, "borb":["./src/main/webroot/borb/borb.ts"], "borb/*":["./src/main/webroot/borb/*"]
+        }
+        //    "types": ["webpack/module"],
+        // "paths": {"node/getopts":["node_modules/getopts/index.d.ts" ]}
+        //   "allowJs": true
     },
-    "include": ["./src/main/webroot/**/*.ts","../borb/src/**/*.ts"],
-    "exclude": [
-        "node_modules"
-    ],
+    "include": ["./src/main/webroot/**/*.ts", "../borb/src/**/*.ts"],
+    "exclude": ["node_modules"],
     "ts-node": {
         "logError": false,
-        "compilerOptions": {"module": "ES2020"}
+        "compilerOptions": { "module": "ES2020" }
     }
 }

@@ -1,13 +1,21 @@
 /// <reference types="webpack/module" />
 
 import { Storage, StorageContext } from './Storage';
-import type { History, HistorySession } from '../borb/History';
+// import type { LineHistory, HistorySession } from '../borb/LineHistory';
 import type { ConfigDict, Settings } from '../borb/Settings';
-import { SubSystem, Styles, DragNDrop, Borb, MDRender, Frames } from '../borb';
+import {
+    SubSystem,
+    Styles,
+    DragNDrop,
+    Borb,
+    MDRender,
+    Frames,
+    History,
+} from '../borb';
 import { BorbFrame, BorbPanelBuilder } from '../borb/Frames';
 import type { TDEditor } from '../borb/Editor';
 Borb.tagName('foo ');
-export { History, HistorySession };
+// export { History, HistorySession };
 declare global {
     interface Window {
         EyeDropper: new () => {
@@ -47,58 +55,6 @@ function proxy<Name extends keyof TurtleDuck, Type extends TurtleDuck[Name]>(
     });
     return obj;
 }
-function wrap<
-    Type,
-    Prop extends keyof Type,
-    R,
-    F extends Type[Prop] & ((...args: any[]) => Promise<R>),
->(name: Prop): (...args: Parameters<F>) => Promise<R> {
-    return async (...args: Parameters<F>): Promise<R> => {
-        await SubSystem.waitFor('');
-        const obj: Type = turtleduck['history'] as unknown as Type;
-        if (obj) {
-            const fn = obj[name] as F;
-            return await fn(...args);
-        }
-    };
-}
-type AsyncMethodOf<Type, Name extends keyof Type> = Type[Name] extends (
-    ...args: infer Args
-) => Promise<infer R>
-    ? [Args, R]
-    : never;
-type IsAsync<Type, Name extends keyof Type> = Type[Name] extends (
-    ...args: infer Args
-) => Promise<infer R>
-    ? Name
-    : never;
-type OnlyPromises<Type> = {
-    [Property in keyof Type as IsAsync<Type, Property>]: Type[Property];
-};
-
-type foo = AsyncMethodOf<History, 'get'>;
-let bar: foo[0];
-function wrap2<Type, Name extends keyof OnlyPromises<Type>>(
-    propName: Name,
-    subsys: string,
-): (
-    ...args: AsyncMethodOf<Type, Name>[0]
-) => Promise<AsyncMethodOf<Type, Name>[1]> {
-    type Args = AsyncMethodOf<Type, Name>[0];
-    type Ret = Promise<AsyncMethodOf<Type, Name>[1]>;
-    type Fn = (...args: Args) => Ret;
-    return async (...args: Args): Ret => {
-        await SubSystem.waitFor('');
-        const obj: Type = turtleduck[subsys] as unknown as Type;
-        if (obj && typeof obj[propName] === 'function') {
-            const fn = obj[propName] as unknown as Fn;
-            return await fn(...args);
-        }
-        throw Error(`SubSystem not ready: '${subsys}'`);
-    };
-}
-
-wrap2<History, 'get'>('get', 'history');
 
 interface EditorOrShell {
     paste(txt: string): void;
@@ -117,7 +73,7 @@ interface TurtleDuck {
     userlog(msg: string, wait?: boolean): void;
     cwd: StorageContext;
     storage: Storage;
-    history: History;
+    history: typeof history;
     settings: typeof Settings;
     makeProxy: typeof proxy;
     pyshell: EditorOrShell;
@@ -148,7 +104,7 @@ export const turtleduck: TurtleDuck = {
     userlog(msg) {
         turtleduck.client.userlog(msg);
     },
-    history: proxy('history'),
+    history,
     cwd: proxy('cwd', 'storage'),
     storage: proxy('storage'),
     makeProxy: proxy,

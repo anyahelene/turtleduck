@@ -4,7 +4,7 @@ import Settings, { Config } from '../borb/Settings';
 import { timeAgo } from './TimeAgo';
 import { turtleduck } from './TurtleDuck';
 import { Storage } from './Storage';
-import { Session } from '../borb/History';
+import LineHistory, { Session } from '../borb/LineHistory';
 
 interface EventMessage extends Message {
     stopPropagation?: () => void;
@@ -89,6 +89,16 @@ export async function handleKey(
 
             break;
         }
+        case 'settings': {
+            const panel = turtleduck
+                .createPanel()
+                .frame('screen')
+                .panel('borb-settings')
+                .title('settings')
+                .select()
+                .done();
+            break;
+        }
         case 'focus': {
             const win = turtleduck[params.path];
             //console.log("focus:", param, win);
@@ -160,7 +170,7 @@ export async function handleKey(
                     >
                 </li>`;
             };
-            return turtleduck.history.sessions().then((ss: Session[]) => {
+            return LineHistory.sessions().then((ss: Session[]) => {
                 render(
                     button,
                     html`<ul class="session-list">

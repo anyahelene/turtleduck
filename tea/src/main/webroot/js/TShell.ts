@@ -2,10 +2,10 @@ import getopts from 'getopts';
 import Settings from '../borb/Settings';
 import { Printer, Terminal } from './Terminal';
 import type { Options, ParsedOptions } from 'getopts/.';
-import { SubSystem } from '../borb/SubSystem';
+import Systems from '../borb/SubSystem';
 import { turtleduck } from './TurtleDuck';
 import { StorageContext } from './Storage';
-import type { HistorySession } from '../borb/History';
+import type { HistorySession } from '../borb/LineHistory';
 import { LangInit, LanguageConnection } from './Language';
 import {
     BaseConnection,
@@ -50,7 +50,7 @@ type Program = {
 };
 const programs: Map<string, Program> = new Map();
 
-class TShell extends BaseConnection implements LanguageConnection {
+export class TShell extends BaseConnection implements LanguageConnection {
     public readonly id: string;
     private env: Map<string, EnvValue>;
     private _returnCode: number = 0;
@@ -331,16 +331,3 @@ programs.set('history', {
 // TODO: file IO
 // TODO: slash commands in language shells
 // TODO:
-export { TShell };
-
-SubSystem.register({
-    api: undefined,
-    depends: ['storage'],
-    name: 'tshell',
-    start(dep) {
-        return new TShell();
-    },
-    revision: 0,
-});
-
-const obj = {};

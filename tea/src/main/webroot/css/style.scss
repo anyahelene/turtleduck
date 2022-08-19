@@ -84,44 +84,6 @@ pre {
     }
 }
 
-@keyframes FlashIcon {
-    0% {
-        transform: scale(0) translate(-25%);
-        opacity: 0;
-    }
-
-    90% {
-        transform: scale(8) translate(-25%);
-        opacity: 100%;
-    }
-
-    100% {
-        transform: scale(10) translate(-25%);
-        opacity: 0;
-    }
-
-}
-
-#iconflash {
-    display: block;
-    opacity: 0;
-    ;
-}
-
-#iconflash.flash {
-    animation: FlashIcon 1s
-}
-
-.right {
-    float: right;
-    clear: right;
-}
-
-.left {
-    float: left;
-    clear: left;
-}
-
 
 @media (hover: hover) and (pointer: fine) {
     .phone-only {

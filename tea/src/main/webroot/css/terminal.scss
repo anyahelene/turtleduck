@@ -108,6 +108,11 @@
     border-left: .2rem solid currentcolor;
     padding-left: .3rem;
     margin-left: -.5rem;
+    white-space: normal;
+}
+
+.terminal-out .diag-code {
+    white-space: pre-wrap;
 }
 
 .eval-result img {

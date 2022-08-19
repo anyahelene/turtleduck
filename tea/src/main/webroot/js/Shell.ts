@@ -1,4 +1,4 @@
-import { html } from 'uhtml';
+import { Hole, html } from 'uhtml';
 import { BorbTerminal, DisplayData } from '../borb/Terminal';
 import {
     Messaging,
@@ -11,76 +11,23 @@ import {
 import { Language } from './Language';
 import Settings from '../borb/Settings';
 import { LineEditor } from '../borb/LineEditor';
-import { History, turtleduck } from './TurtleDuck';
+import { turtleduck } from './TurtleDuck';
 import { uniqueId } from '../borb/Common';
-import { Line } from '@codemirror/state';
-
+import { Optionals } from './Util';
+import { defaultsDeep } from 'lodash-es';
+import { Location } from './Location';
 interface ShellMessage {
-    category: any;
-    /**
-     * Request/(Reply): Code to be executed. In a reply, this is the code that was
-     * actually executed, which may be different (e.g, minor syntax corrections,
-     * such as missing semicolon)
-     */
-    code: string;
-    /**
-     * Request/Reply: The code location
-     */
-    loc?: string;
-    /**
-     * Reply:
-     */
-    value?: unknown;
     prompt?: string;
-    /**
-     * Request: Additional options to the evaluator
-     */
-    opts?: Payload;
 
-    display?: DisplayData;
-    /**
-     * Reply: The kind of snippet that was evaluated.
-     *
-     * One of error, expression, import, method, statement, type or var; with
-     * optional subtypes provided after a dot. (E.g., <code>var.decl.init</code>)
-     */
-    snipkind?: string;
-    /**
-     * Reply: Identifier for an evaluated snippet; this will match the id sent in
-     * any Explorer updates
-     */
-    snipid?: string;
-    snipns?: string;
     doc?: string;
-    /**
-     * Request/Reply: A numeric reference provided by the caller
-     */
-    ref: number;
-    /**
-     * Reply: True if evaluation involved executing code (i.e., not just declaring
-     * something)
-     */
-    exec?: boolean;
+
     /**
      * Reply: True if source code is complete, false if more input is needed
      */
     complete: boolean; // = true
-    /**
-     * Reply: True if evaluation involved defining/declaring something
-     *
-     * @see #SYMBOL
-     */
-    def?: boolean;
     persistent?: boolean;
     active?: boolean;
 
-    /**
-     * Reply: The symbol that was (re)declared/defined, if any.
-     *
-     * @see #DEF
-     */
-    name?: string;
-    signature?: string;
     names?: string[];
     docs?: string[];
     /**
@@ -91,50 +38,28 @@ interface ShellMessage {
      * @see #DEF
      */
     fullname?: string;
-    /**
-     * Reply: The type of the result, if any.
-     *
-     * @see #VALUE
-     */
-    type?: string;
 
-    /**
-     * Icon for the result type, if any
-     */
-    icon?: string;
     /**
      * Reply: An array of multiple eval replies, if the input code was split into
      * multiple snippets
      */
     multi: EvalReply[];
-    /**
-     * Reply: An array of error/diagnostic messages.
-     *
-     * Message fields include "msg", "start", "end", "pos"
-     */
-    diag: Diag[];
-    /**
-     * Reply: An exception, if one was thrown.
-     *
-     * Includes "exception" (exception class name), "message" (the message), "trace"
-     * (array with stack trace), and optional "cause" (another exception)
-     */
-    exception?: Exception;
+
     text?: string;
     heapUse?: number;
     heapTotal?: number;
     heapMax?: number;
     cpuTime?: number; // = 0.0
-
-    sym?: string;
-    verb?: string;
-    info?: Payload;
 }
 interface Diag {
     msg: string;
+    line?: string;
     start: number;
     end: number;
     pos: number;
+    ename: string;
+    evalue: string;
+    loc: string;
 }
 interface Exception {
     exception: string;
@@ -145,18 +70,18 @@ interface Exception {
 }
 interface ShellService {
     eval(msg: EvalRequest): Promise<EvalReply>;
-    refresh(msg: Pick<ShellMessage, 'info'>): Promise<{}>;
+    refresh(msg: UpdateRequest): Promise<{}>;
 }
 interface ExplorerService {
-    update(msg: { info: UpdateRequest }): Promise<{}>;
+    update(msg: UpdateRequest): Promise<{}>;
 }
 
 interface TerminalService {
     prompt(msg: { prompt: string; language: string }): Promise<{}>;
 
-    print: Method<{ text: string; stream: string }>;
+    print: Method<{ text: string; stream: string }, {}>;
 
-    display: Method<{ data: DisplayData; stream: string }>;
+    display: Method<{ data: DisplayData; stream: string }, {}>;
 
     read_request: Method<
         {
@@ -180,36 +105,123 @@ interface TerminalService {
     }): Promise<{ text: string }>;
 }
 */
-export type EvalRequest = Pick<ShellMessage, 'code' | 'ref' | 'opts'>;
-export type EvalReply = Pick<
-    ShellMessage,
-    | 'ref'
-    | 'value'
-    | 'snipkind'
-    | 'snipid'
-    | 'code'
-    | 'def'
-    | 'sym'
-    | 'multi'
-    | 'diag'
-    | 'exception'
-    | 'complete'
-    | 'name'
-    | 'type'
-    | 'display'
->;
-type UpdateRequest = Pick<
-    ShellMessage,
-    | 'snipkind'
-    | 'snipid'
-    | 'snipns'
-    | 'verb'
-    | 'category'
-    | 'sym'
-    | 'signature'
-    | 'persistent'
-    | 'type'
->;
+
+export interface EvalRequest extends Payload {
+    /**
+     * Request/(Reply): Code to be executed. In a reply, this is the code that was
+     * actually executed, which may be different (e.g, minor syntax corrections,
+     * such as missing semicolon)
+     */
+    code: string;
+    /**
+     * Request/Reply: A numeric reference provided by the caller
+     */
+    ref: number;
+    /**
+     * Request: Additional options to the evaluator
+     */
+    opts?: Payload;
+}
+
+const defaultEvalRequest: Optionals<EvalRequest> = {
+    opts: {},
+};
+
+export interface SnipInfo {
+    /**
+     * Reply: The kind of snippet that was evaluated.
+     *
+     * One of error, expression, import, method, statement, type or var; with
+     * optional subtypes provided after a dot. (E.g., <code>var.decl.init</code>)
+     */
+    snipkind: string;
+    /**
+     * Reply: Identifier for an evaluated snippet; this will match the id sent in
+     * any Explorer updates
+     */
+    snipid: string;
+    snipns: string;
+}
+export interface EvalResult {
+    snippet?: SnipInfo;
+    /**
+     * Reply: An exception, if one was thrown.
+     *
+     * Includes "exception" (exception class name), "message" (the message), "trace"
+     * (array with stack trace), and optional "cause" (another exception)
+     */
+    exception?: Exception;
+    /**
+     * Reply: An array of error/diagnostic messages.
+     *
+     * Message fields include "msg", "start", "end", "pos"
+     */
+    diag: Diag[];
+    /**
+     * Request/(Reply): Code to be executed. In a reply, this is the code that was
+     * actually executed, which may be different (e.g, minor syntax corrections,
+     * such as missing semicolon)
+     */
+    code: string;
+    /**
+     * Request/Reply: The code location
+     */
+    loc?: string;
+    /**
+     * Reply: True if evaluation involved executing code (i.e., not just declaring
+     * something)
+     */
+    exec?: boolean;
+    /**
+     * Reply: True if evaluation involved defining/declaring something
+     *
+     * @see #SYMBOL
+     */
+    def?: boolean;
+    /**
+     * Reply: The symbol that was (re)declared/defined, if any.
+     *
+     * @see #DEF
+     */
+    name?: string;
+    signature?: string;
+    /**
+     * Reply:
+     */
+    value?: unknown;
+    /**
+     * Reply: The type of the result, if any.
+     *
+     * @see #VALUE
+     */
+    type?: string;
+
+    /**
+     * Icon for the result type, if any
+     */
+    icon?: string;
+    display?: DisplayData;
+}
+
+export interface EvalReply {
+    /**
+     * Request/Reply: A numeric reference provided by the caller
+     */
+    ref: number;
+    status: 'ok' | 'error' | 'incomplete';
+    results: EvalResult[];
+}
+
+export interface UpdateRequest {
+    info: {
+        sym: string;
+        signature: string;
+        type?: string;
+        category: 'method' | 'import' | 'type' | 'var';
+        verb: 'created' | 'deleted' | 'updated';
+        snippet?: SnipInfo;
+    };
+}
 export class ShellConnection extends BaseConnection {
     constructor(
         router: typeof Messaging,
@@ -232,6 +244,7 @@ export class ShellConnection extends BaseConnection {
         }
     }
 }
+
 export class Shell implements ShellService, TerminalService, ExplorerService {
     id: string;
     terminal: BorbTerminal;
@@ -239,7 +252,6 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
     conn: Connection;
     languageName: string;
     shellName: string;
-    history: History;
     lineEditor: LineEditor;
 
     constructor(language: Language) {
@@ -300,7 +312,8 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
             'eval_request',
             this.language.connectionId,
         );
-        if (processResult(result as EvalReply, this.terminal, false)) return {};
+        if (processResult(result as unknown as EvalReply, this.terminal, false))
+            return {};
         else return { more: line };
     };
     async prompt(msg: { prompt: string; language: string }): Promise<{}> {
@@ -330,28 +343,32 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
     eval = async ({ code, ref, opts }: EvalRequest): Promise<EvalReply> => {
         throw new Error('Method eval_request not implemented.');
     };
-    refresh = async ({ info }: Pick<ShellMessage, 'info'>): Promise<{}> => {
+    refresh = async ({ info }): Promise<{}> => {
         throw new Error('Method refresh not implemented.');
     };
 
-    update = async ({ info }): Promise<{}> => {
+    update = async ({ info }: UpdateRequest): Promise<{}> => {
         try {
-            const {
-                persistent,
-                snipid,
-                snipns,
-                sym,
-                verb,
-                type,
-                signature,
-                category,
-            } = info;
+            const defaults: Optionals<typeof info> = {
+                type: '',
+                snippet: {
+                    snipid: info.sym,
+                    snipns: 'main',
+                    snipkind: info.category,
+                },
+            };
+            const { snippet, sym, verb, type, signature, category } =
+                defaultsDeep(info, defaults);
             // if (persistent !== undefined && !persistent) return;
             const sig = signature;
             if (sig && !sig.includes('$')) {
-                if ((snipns || 'main') === 'main') {
+                if (snippet.snipns === 'main') {
                     const s = `${sym} ${verb}`;
-                    const div = html.node`<div><a class="prompt">[${snipid}]</a> ${sym} ${verb} <span class="cmt-keyword">${category}</span> <span class="cmt-variableName" data-snipid=${snipid}>${sig}</span> ${
+                    const div = html.node`<div><a class="prompt">[${
+                        snippet.snipid
+                    }]</a> ${sym} ${verb} <span class="cmt-keyword">${category}</span> <span class="cmt-variableName" data-snipid=${
+                        snippet.snipid
+                    }>${sig}</span> ${
                         type
                             ? html`: <span class="cmt-typeName">${type}</span>`
                             : ''
@@ -362,20 +379,9 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
         } catch (e) {}
         return {};
     };
-
-    terminalTransition() {
-        const elt = html.node`${this.language.icon}`;
-        elt.animate(
-            [
-                { transform: 'scale(0)', opacity: '0%' },
-                { transform: 'scale(8)', opacity: '100%' },
-            ],
-            { duration: 3000, iterations: 1 },
-        );
-    }
 }
 
-function printExceptions(msg: EvalReply) {
+function printExceptions(msg: EvalResult) {
     const ex = msg.exception;
     if (ex) {
         const ename = ex.ename || 'Error';
@@ -395,8 +401,52 @@ function printExceptions(msg: EvalReply) {
         return '';
     }
 }
-function printDiags(msg: EvalReply) {
-    /*
+
+export const DIAG_LEVELS = ['error', 'warning', 'info', 'debug'];
+export function levelOf(name: string) {
+    if (DIAG_LEVELS.includes(name)) return name;
+    else return 'error';
+}
+export function worstOf(lvl1: string, lvl2: string) {
+    const l1 = DIAG_LEVELS.indexOf(lvl1);
+    const l2 = DIAG_LEVELS.indexOf(lvl2);
+    if (l1 < 0) return lvl2;
+    else if (l2 < 0) return lvl1;
+    else if (l1 >= l2) return lvl1;
+    else return lvl2;
+}
+function printDiags(msg: EvalResult) {
+    let worstLevel = 'none';
+    return (msg.diag || []).map((diag) => {
+        const name = diag.ename;
+        const level = levelOf(name);
+        worstLevel = worstOf(worstLevel, level);
+        const loc = Location.fromString(diag.loc);
+        let codefrag: Hole;
+        let locfrag: Hole;
+        const code = msg.code;
+        if (loc && code) {
+            const [before, err, after] = loc.splitLine(code, diag.line);
+            if (err.length > 0) {
+                codefrag = html`<span class="diag-before">${before}</span
+                    ><span class=${'diag-' + level}>${err}</span
+                    ><span> class="diag-after"${after}</span>`;
+            } else {
+                codefrag = html`<span class="diag-before">${before}</span
+                    ><span class=${'diag-between diag-' + level}></span
+                    ><span class="diag-after">${after}</span>`;
+            }
+            locfrag = html`<a href=${loc.toString()}>${loc.toString()}</a>`;
+        }
+        const elt = html`<div class=${'diag diag-' + level}>
+            <p class="diag-header">${name} at ${locfrag || ''}:</p>
+            <p class="diag-code">${codefrag || ''}</p>
+            <p class="diag-message">${diag.evalue}</p>
+        </div>`;
+        return elt;
+    });
+}
+/*
     public Array printDiags(Dict msg, LanguageConsole console) {
         Array diags = msg.get(ShellService.DIAG);
         String worstLevel = "none";
@@ -452,14 +502,14 @@ function printDiags(msg: EvalReply) {
     }
 
 */
-}
+
 function processResult(
     msg: EvalReply,
     terminal: BorbTerminal,
     processIncomplete = false,
 ) {
-    if (msg.complete || processIncomplete) {
-        (msg.multi || [msg]).forEach((result, index) => {
+    if (msg.status === 'ok' || msg['complete'] || processIncomplete) {
+        (msg.results || []).forEach((result, index) => {
             const diags = printDiags(result);
             const ex = printExceptions(result);
             const value = result.value;
@@ -471,11 +521,11 @@ function processResult(
                 : '';
             const display = result.display;
             console.log('result', value, name, type);
-            if (value) {
-                terminal.printElement(
-                    html.node`${diags}${ex}<span class="eval-result">${type}${name}<span class="cmt-literal">${result.value}</span>`,
-                );
-            }
+            // if (value) {
+            terminal.printElement(
+                html.node`${diags}${ex}<span class="eval-result">${type}${name}<span class="cmt-literal">${result.value}</span>`,
+            );
+            // }
         });
         // TODO turtleduck.showHeap(msg);
         turtleduck.userlog('Eval: done');

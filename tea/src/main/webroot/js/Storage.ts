@@ -3,11 +3,11 @@ import path from '@isomorphic-git/lightning-fs/src/path';
 import MagicPortal from 'magic-portal';
 import { turtleduck } from './TurtleDuck';
 import { Printer, Terminal } from './Terminal';
-import { SubSystem } from '../borb/SubSystem';
+import { Systems } from '../borb/SubSystem';
 import Settings from '../../../../../borb/src/Settings';
 import FS from '@isomorphic-git/lightning-fs';
 
-class StorageContext {
+export class StorageContext {
     fs: FS.PromisifiedFS;
     private _path: any;
     public cwd: string;
@@ -100,7 +100,9 @@ class StorageContext {
         return this.fs.du(this.realpath(filepath));
     }
 }
-class Storage {
+export class StorageImpl {
+    public static readonly _id = 'storage';
+    public static readonly _revision = 0;
     fs: any;
     _MagicPortal: any;
     _initialized: boolean;
@@ -120,7 +122,7 @@ class Storage {
     context() {
         return new StorageContext(this.fs, '/');
     }
-    async init(fsConfig = { fsName: 'lfs' }) {
+    async init(fsConfig = { fsName: 'lfs' }): Promise<StorageImpl> {
         console.warn('Storage init', fsConfig);
         this.worker = new Worker(
             new URL('./StorageWorker.js', import.meta.url),
@@ -264,14 +266,10 @@ class Storage {
     }
 }
 
-export { Storage, StorageContext };
+export const Storage = Systems.declare(StorageImpl)
+    .depends(Settings)
+    .start(() => new StorageImpl().init())
+    .reloadable(false)
+    .register();
 
-const systemSpec = {
-    depends: ['borb/settings'],
-    name: 'storage',
-    start: (sys) => sys.api.init(),
-    api: new Storage(),
-    revision: 0,
-};
-
-SubSystem.register(systemSpec);
+export default Storage;

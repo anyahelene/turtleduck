@@ -64,7 +64,6 @@ VERB = Key('verb')
 FULL_NAME = Key('fullname')
 TYPE = Key('type')
 ICON = Key('icon')
-MULTI = Key('multi', [])
 DIAG = Key('diag', [])
 EXCEPTION = Key('exception')
 TEXT = Key('text')
@@ -248,6 +247,7 @@ class Evaluation:
         if code is None or code == "":
             SNIP_KIND.putInto(self.evalResult, 'empty')
 
+        self.evalResult['status'] = 'ok'
         COMPLETE.putInto(self.evalResult, True)
         SNIP_KIND.putInto(self.evalResult, 'py')
         d = {}
@@ -314,15 +314,29 @@ class Evaluation:
                     debug("onValueHandler failed: ", sys.exc_info())
     def encode_except(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
+        debug("exception:", sys.exc_info())
         tb = traceback.format_tb(exc_traceback)
         tb.reverse()
         ex = {'ename': exc_type.__name__, 
               'evalue': "".join(traceback.format_exception_only(exc_type, exc_value)),
-              'traceback': tb}
-        EXCEPTION.putInto(self.resultData, ex)
+              'traceback': tb,
+              'eargs':getattr(exc_value, 'args', ())
+              }
+        if exc_type == SyntaxError:
+            ex['level'] = 'error'
+            ex['evalue'] = exc_value.msg
+            ex['line'] = exc_value.text
+            ex['lineno'] = exc_value.lineno
+            ex['offset'] = exc_value.offset
+            ex['end_lineno'] = getattr(exc_value, 'end_lineno', None)
+            ex['end_offset'] = getattr(exc_value, 'end_offset', None)
+            ex['loc'] = f'{exc_value.filename}#L{ex["lineno"]}C{ex["offset"]}'
+            DIAG.putInto(self.resultData, [ex])
+        else:
+            EXCEPTION.putInto(self.resultData, ex)
 
     def finish(self):
-        MULTI.putInto(self.evalResult, [self.resultData])
+        self.evalResult['results'] = [self.resultData]
         deleted, changed = diffContext(self.oldcontext, context, self.code)
         self.evalResult['deleted'] = deleted
         self.evalResult['changed'] = changed

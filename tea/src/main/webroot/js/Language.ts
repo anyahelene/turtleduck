@@ -112,7 +112,7 @@ export class Language {
         this._mainTerminal = this._mainShell.terminal;
         this._mainShell.mountTerminal();
         this._mainTerminal.select();
-        Messaging.route(`${this._name}_status`, (msg) => {
+        Messaging.route(`${this._name}_status`, (msg:{wait?:boolean, status?:string}) => {
             const wait = !!msg.wait;
             if (typeof msg.status === 'string') {
                 turtleduck.userlog(msg.status, wait);

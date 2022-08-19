@@ -288,8 +288,9 @@ turtleduck.hints = {
     random: () => hintList[Math.floor(Math.random() * hintList.length)],
 };
 
-SubSystem.waitFor('borb/history').then(async () => {
-    const ss = await turtleduck.history.sessions();
+SubSystem.waitFor(LineHistory).then(async () => {
+    console.warn('waited for history');
+    const ss = await LineHistory.sessions();
 
     if (!turtleduck.settings.getConfig('session.name')) {
         const name =
@@ -649,6 +650,7 @@ import './css/buttons.scss';
 import './css/common.scss';
 import './css/markdown.scss';
 import './css/terminal.scss';
+import LineHistory from './borb/LineHistory';
 
 if (import.meta.webpackHot) {
     console.warn('WebpackHot enabled');
