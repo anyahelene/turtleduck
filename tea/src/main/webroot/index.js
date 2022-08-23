@@ -8,15 +8,7 @@ import { fileSystem, FileSystem } from './js/FileSystem';
 import { Component } from './js/Component';
 import { TilingWM, TilingWindow } from './js/TilingWM';
 import { WorkerController } from './js/WorkerController';
-import {
-    MDRender,
-    SubSystem,
-    Borb,
-    Buttons,
-    Frames,
-    Settings,
-    History,
-} from './borb';
+import { MDRender, SubSystem, Borb, Buttons, Frames, Settings, History } from './borb';
 import { Shell, ShellConnection } from './js/Shell';
 import { Messaging } from './borb/Messaging';
 import { Camera } from './js/Media';
@@ -75,36 +67,17 @@ turtleduck.handleKey = handleKey;
 Borb.setKeyHandler(handleKey);
 turtleduck.mdRender = MDRender;
 turtleduck.Camera = Camera;
-turtleduck.Camera.addSubscription(
-    'copy',
-    'builtin',
-    'qr',
-    'Copy',
-    '📋',
-    'Copy to clipboard',
-);
-turtleduck.Camera.addSubscription(
-    'copy',
-    'builtin',
-    'camera',
-    'Copy',
-    '📋',
-    'Copy to clipboard',
-);
+turtleduck.Camera.addSubscription('copy', 'builtin', 'qr', 'Copy', '📋', 'Copy to clipboard');
+turtleduck.Camera.addSubscription('copy', 'builtin', 'camera', 'Copy', '📋', 'Copy to clipboard');
 turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
 turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.defaultConfig = defaultConfig;
-import { TDEditor, createEditor } from './borb/Editor';
-import { createLineEditor } from './borb/LineEditor';
-turtleduck.createEditor = createEditor;
-turtleduck.createLineEditor = createLineEditor;
-turtleduck.TDEditor = TDEditor;
+
 Object.defineProperty(turtleduck, 'cwd', { get: () => turtleduck.storage.cwd });
 turtleduck.getConfig = (...args) => turtleduck.borb.settings.getConfig(...args);
 turtleduck.setConfig = (...args) => turtleduck.borb.settings.setConfig(...args);
-turtleduck.saveConfig = (...args) =>
-    turtleduck.borb.settings.saveConfig(...args);
+turtleduck.saveConfig = (...args) => turtleduck.borb.settings.saveConfig(...args);
 turtleduck.SubSystem = SubSystem;
 SubSystem.setup(turtleduck, {
     proxy: true,
@@ -264,10 +237,8 @@ turtleduck.animals = {
     }),
 
     random: function () {
-        const a =
-            this.pranimals[Math.floor(Math.random() * this.pranimals.length)];
-        const b =
-            this.postimals[Math.floor(Math.random() * this.postimals.length)];
+        const a = this.pranimals[Math.floor(Math.random() * this.pranimals.length)];
+        const b = this.postimals[Math.floor(Math.random() * this.postimals.length)];
         return (a + ' ' + b).replaceAll(/(:|- -?| -)/g, '');
     },
 };
@@ -293,8 +264,7 @@ SubSystem.waitFor(LineHistory).then(async () => {
     const ss = await LineHistory.sessions();
 
     if (!turtleduck.settings.getConfig('session.name')) {
-        const name =
-            ss.length > 0 ? ss[0].session : turtleduck.animals.random();
+        const name = ss.length > 0 ? ss[0].session : turtleduck.animals.random();
         const cfg = { session: { name: name } };
         turtleduck.settings.setConfig(cfg, 'session');
         turtleduck.settings.saveConfig('session');
@@ -346,12 +316,7 @@ function meta(key) {
     return ['alt+' + key, 'meta+' + key];
 }
 
-turtleduck.activateToggle = function (
-    element,
-    toggleClass,
-    target,
-    ...targets
-) {
+turtleduck.activateToggle = function (element, toggleClass, target, ...targets) {
     element.addEventListener('click', (e) => {
         console.log('activateToggle', target, targets);
         let active = target.classList.contains(toggleClass);
@@ -375,16 +340,9 @@ turtleduck.activateDrag = function (element, type, value) {
     });
 };
 
-turtleduck.createComponent = (name, element) =>
-    new Component(name, element, turtleduck);
+turtleduck.createComponent = (name, element) => new Component(name, element, turtleduck);
 
-turtleduck.activatePaste = function (
-    element,
-    target,
-    text,
-    cursorAdj = 0,
-    then = null,
-) {
+turtleduck.activatePaste = function (element, target, text, cursorAdj = 0, then = null) {
     element.addEventListener(
         'click',
         (e) => {
@@ -437,8 +395,7 @@ turtleduck.trackMouse = function (element, coordElement) {
         var p = new DOMPoint(e.clientX, e.clientY);
         var m = element.getScreenCTM().inverse();
         p = p.matrixTransform(m);
-        coordElement.textContent =
-            '(' + Math.round(p.x) + ',' + Math.round(p.y) + ')';
+        coordElement.textContent = '(' + Math.round(p.x) + ',' + Math.round(p.y) + ')';
     });
 };
 
@@ -459,13 +416,15 @@ turtleduck.dismissElements = (e) => {
     });
 };
 
-window.addEventListener('DOMContentLoaded', (loadedEvent) => {
+window.addEventListener('DOMContentLoaded', async (loadedEvent) => {
     Mousetrap.bindGlobal('esc', (e) => handleKey('esc', null, e));
 
-    document.documentElement.addEventListener(
-        'click',
-        turtleduck.dismissElements,
-    );
+    globalThis.ed = document.getElementById('main-editor');
+    globalThis.edFrame = document.getElementById('editor');
+    globalThis.shFrame = document.getElementById('shell');
+    globalThis.scrFrame = document.getElementById('screen');
+
+    document.documentElement.addEventListener('click', turtleduck.dismissElements);
 
     document.querySelectorAll('[data-tab-define]').forEach((elt) => {
         const key = elt.dataset.tabKey;
@@ -481,16 +440,11 @@ window.addEventListener('DOMContentLoaded', (loadedEvent) => {
     document.querySelectorAll('[data-toggle]').forEach((button) => {
         const toggleType = button.dataset.toggle;
         const ref = button.getAttribute('href') || button.dataset.target;
-        turtleduck.activateToggle(
-            button,
-            toggleType,
-            document.querySelector(ref),
-        );
+        turtleduck.activateToggle(button, toggleType, document.querySelector(ref));
     });
 
     document.querySelectorAll('[data-paste]').forEach((link) => {
-        const ref =
-            link.getAttribute('href').replace('#', '') || link.dataset.target;
+        const ref = link.getAttribute('href').replace('#', '') || link.dataset.target;
         turtleduck.activatePaste(link, ref, link.dataset.paste);
     });
 
@@ -588,7 +542,7 @@ window.addEventListener('DOMContentLoaded', (loadedEvent) => {
     resizeObserver.observe(document.getElementById('shell'));
 });
 
-turtleduck._initializationComplete = function (err) {
+turtleduck._initializationComplete = async function (err) {
     if (err) {
         console.error(err);
     }
@@ -628,18 +582,28 @@ turtleduck._initializationComplete = function (err) {
                 });
             });
     });
-    turtleduck.client.route('grid-create', (msg) =>
-        turtleduck.gridDisplay.create(msg),
-    );
-    turtleduck.client.route('grid-update', (msg) =>
-        turtleduck.gridDisplay.update(msg),
-    );
-    turtleduck.client.route('grid-style', (msg) =>
-        turtleduck.gridDisplay.style(msg),
-    );
-    turtleduck.client.route('grid-dispose', (msg) =>
-        turtleduck.gridDisplay.dispose(msg),
-    );
+    turtleduck.client.route('grid-create', (msg) => turtleduck.gridDisplay.create(msg));
+    turtleduck.client.route('grid-update', (msg) => turtleduck.gridDisplay.update(msg));
+    turtleduck.client.route('grid-style', (msg) => turtleduck.gridDisplay.style(msg));
+    turtleduck.client.route('grid-dispose', (msg) => turtleduck.gridDisplay.dispose(msg));
+    globalThis.py = await Languages.create('python');
+    globalThis.sh = await Languages.create('tshell', new imports.TShell());
+    globalThis.edFrame.addEventListener('beforeSave', (ev) => {
+        if (!ev.detail.autoSave) {
+            turtleduck.userlog(`Saving ${ev.detail.path}…`);
+        }
+    });
+    globalThis.edFrame.addEventListener('afterSave', (ev) => {
+        if (!ev.detail.autoSave) {
+            turtleduck.userlog(`Saved ${ev.detail.path}…`);
+        }
+    });
+    globalThis.edFrame.addEventListener('beforeLoad', (ev) => {
+        turtleduck.userlog(`Loading ${ev.detail.path}…`);
+    });
+    globalThis.edFrame.addEventListener('afterLoad', (ev) => {
+        turtleduck.userlog(`Loaded ${ev.detail.path}…`);
+    });
 };
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;
@@ -650,6 +614,7 @@ import './css/buttons.scss';
 import './css/common.scss';
 import './css/markdown.scss';
 import './css/terminal.scss';
+import './css/editor.scss';
 import LineHistory from './borb/LineHistory';
 
 if (import.meta.webpackHot) {
@@ -663,12 +628,11 @@ if (import.meta.webpackHot) {
             './css/common.scss',
             './css/markdown.scss',
             './css/terminal.scss',
+            './css/editor.scss',
         ],
         function (outdated) {
             outdated.forEach((dep) => {
-                turtleduck.styles.update(
-                    dep.replace('./', '').replace('.scss', '.css'),
-                );
+                turtleduck.styles.update(dep.replace('./', '').replace('.scss', '.css'));
             });
         },
         (err, context) => {

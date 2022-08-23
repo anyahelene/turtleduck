@@ -8,6 +8,7 @@ import { Connection, Messaging, Payload } from '../borb/Messaging';
 import { SubSystem } from '../borb';
 import { Shell } from './Shell';
 import { turtleduck } from './TurtleDuck';
+import path from 'path';
 export interface LanguageConfig extends ConfigDict {
     icon: string;
     extensions: string[];
@@ -43,14 +44,9 @@ export class Language {
         if (!name || !name.match(/^[a-zA-Z][a-zA-Z0-9_]*$/)) {
             throw new Error(`Illegal language name '${name}'`);
         }
-        if (!config)
-            config = Settings.getConfig<LanguageConfig>(
-                'languages.' + name,
-                null,
-            );
+        if (!config) config = Settings.getConfig<LanguageConfig>('languages.' + name, null);
 
-        if (!config)
-            throw new Error(`No language configuration found for ${name}`);
+        if (!config) throw new Error(`No language configuration found for ${name}`);
 
         this._name = name;
         this._config = cloneDeep(config);
@@ -75,11 +71,7 @@ export class Language {
         return this._config.editMode || this._name;
     }
     get shellTitle() {
-        return (
-            this._config.shellTitle ||
-            this._config.shellName ||
-            this._name + 'Shell'
-        );
+        return this._config.shellTitle || this._config.shellName || this._name + 'Shell';
     }
     get title() {
         return this._config.title || this._name;
@@ -98,13 +90,14 @@ export class Language {
         return Settings.toBoolean(this._config.worker);
     }
 
+    get isLoaded() {
+        return !!this._mainShell;
+    }
     async load(connection?: LanguageConnection): Promise<Payload> {
         if (this._mainShell) return;
         if (connection) this._connection = connection;
         if (!this._connection && !this.useWorker) {
-            return Promise.reject(
-                new Error(`Don't know how to load language ${this.name}`),
-            );
+            return Promise.reject(new Error(`Don't know how to load language ${this.name}`));
         }
 
         this._mainShell = new Shell(this);
@@ -112,7 +105,7 @@ export class Language {
         this._mainTerminal = this._mainShell.terminal;
         this._mainShell.mountTerminal();
         this._mainTerminal.select();
-        Messaging.route(`${this._name}_status`, (msg:{wait?:boolean, status?:string}) => {
+        Messaging.route(`${this._name}_status`, (msg: { wait?: boolean; status?: string }) => {
             const wait = !!msg.wait;
             if (typeof msg.status === 'string') {
                 turtleduck.userlog(msg.status, wait);
@@ -128,11 +121,7 @@ export class Language {
                 this.name,
             );
             const evalId = `${this.shellName}_worker`;
-            this._connection = new WorkerConnection(
-                evalId,
-                Messaging,
-                this._controller,
-            );
+            this._connection = new WorkerConnection(evalId, Messaging, this._controller);
         }
         await this._connection.connect();
 
@@ -157,17 +146,55 @@ export class Language {
     send(msg: Payload, msgType: string): Promise<Payload> {
         return Messaging.send(msg, msgType, this.shellName);
     }
+
+    addFileExt(pathName: string) {
+        if (!path.extname(pathName) && this.extensions[0]) {
+            return `${pathName}.${this.extensions[0]}`;
+        } else {
+            return pathName;
+        }
+    }
+
+    toString() {
+        return this.name;
+    }
 }
 export const Languages = {
     _id: 'Language',
     _revision: 0,
-    langs: new Map<string, Language>(),
+    languages: new Map<string, Language>(),
     byExtension(ext: string): Language {
-        for (const [k, v] of Languages.langs) {
+        for (const [k, v] of Languages.languages) {
             if (v.extensions.indexOf(ext) >= 0) return v;
         }
     },
     Language,
+    get(name: string) {
+        let l = Languages.languages.get(name);
+        if (!l) {
+            l = new Language(name);
+            Languages.languages.set(name, l);
+        }
+        return l;
+    },
+    async create(name: string, conn?: LanguageConnection) {
+        const l = Languages.get(name);
+        if (!l.isLoaded) {
+            await l.load(conn);
+        }
+        return l;
+    },
+    detect(
+        pathOrText: { path: string; text?: string } | { text: string; path?: string },
+    ): Language {
+        console.log('detect:', pathOrText);
+        if (pathOrText.path) {
+            const ext = path.extname(pathOrText.path).substring(1);
+            console.log('ext', ext);
+            if (ext) return Languages.byExtension(ext);
+        }
+        return undefined;
+    },
 };
 
 SubSystem.declare(Languages).depends('dom', Settings, Messaging).register();

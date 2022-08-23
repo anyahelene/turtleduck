@@ -11,9 +11,12 @@ import {
     MDRender,
     Frames,
     History,
+    Editors,
+    LineEditors,
 } from '../borb';
 import { BorbFrame, BorbPanelBuilder } from '../borb/Frames';
-import type { TDEditor } from '../borb/Editor';
+import Systems from '../borb/SubSystem';
+import { Language, Languages } from './Language';
 Borb.tagName('foo ');
 // export { History, HistorySession };
 declare global {
@@ -39,9 +42,7 @@ function proxy<Name extends keyof TurtleDuck, Type extends TurtleDuck[Name]>(
                     if (api) {
                         const fn = api[p];
                         if (typeof fn === 'function' && !fn.proxy) {
-                            console.trace(
-                                `calling proxy for ${name}.${String(p)}`,
-                            );
+                            console.trace(`calling proxy for ${name}.${String(p)}`);
                             return await fn(args);
                         }
                     }
@@ -61,7 +62,7 @@ interface EditorOrShell {
     iconified(i: boolean): boolean;
     focus(): void;
     paste_to_file(filename: string, text: string, language: string): void;
-    current(): TDEditor;
+    getText(): string;
 }
 interface TurtleDuck {
     openCamera(config: ConfigDict);
@@ -114,7 +115,18 @@ export const turtleduck: TurtleDuck = {
     },
 } as TurtleDuck;
 
-turtleduck['phistory'] = proxy('history');
+Systems.waitForAll(Editors, Storage).then(() => {
+    Editors.BorbEditor.io = {
+        readtextfile: (path) => turtleduck.cwd.readtextfile(path),
+        rename: (oldPath, newPath) => turtleduck.cwd.rename(oldPath, newPath),
+        requestfile: (mode, lang, currentPath) => Promise.resolve(''),
+        resolve: (path) => turtleduck.cwd.realpath(path),
+        unlink: (path) => turtleduck.cwd.unlink(path),
+        writetextfile: (path, text) => turtleduck.cwd.writetextfile(path, text),
+
+        detectLanguage: (pathOrText) => Languages.detect(pathOrText),
+    };
+});
 /*
 declare global {
 	interface ImportMeta {

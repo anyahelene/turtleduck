@@ -9,6 +9,7 @@ import FS from '@isomorphic-git/lightning-fs';
 
 export class StorageContext {
     fs: FS.PromisifiedFS;
+    umask = 0o022;
     private _path: any;
     public cwd: string;
     constructor(fs: any, cwd: string) {
@@ -18,6 +19,10 @@ export class StorageContext {
     }
     realpath(filepath: string): string {
         return this._path.resolve(this.cwd, filepath);
+    }
+    resolve(dirpath: string, filepath: string): string {
+        console.log('resolve', dirpath, filepath);
+        return this._path.resolve(this.cwd, dirpath || '', filepath);
     }
     async withCwd(filepath: string = ''): Promise<StorageContext> {
         const ctx = new StorageContext(this.fs, this.cwd);
@@ -31,8 +36,10 @@ export class StorageContext {
             return this;
         });
     }
-    async mkdir(filepath: string, opts?: FS.MKDirOptions): Promise<void> {
-        return this.fs.mkdir(this.realpath(filepath), opts);
+    async mkdir(filepath: string, mode = 0o777): Promise<void> {
+        return this.fs.mkdir(this.realpath(filepath), {
+            mode: mode & ~this.umask,
+        });
     }
     async rmdir(filepath: string): Promise<void> {
         return this.fs.rmdir(this.realpath(filepath));
@@ -43,23 +50,23 @@ export class StorageContext {
     async writetextfile(
         filepath: string,
         data: string | any,
-        mode: number = 0o777,
+        mode: number = 0o666,
     ): Promise<void> {
         return this.fs.writeFile(
             this.realpath(filepath),
             typeof data === 'string' ? data : `{data}`,
-            { encoding: 'utf8', mode: mode },
+            { encoding: 'utf8', mode: mode & ~this.umask },
         );
     }
     async writebinfile(
         filepath: string,
         data: Uint8Array | Iterable<number>,
-        mode = 0o777,
+        mode = 0o666,
     ): Promise<void> {
         return this.fs.writeFile(
             this.realpath(filepath),
             data instanceof Uint8Array ? data : Uint8Array.from(data),
-            { encoding: undefined, mode: mode },
+            { encoding: undefined, mode: mode & ~this.umask },
         );
     }
     async readtextfile(filepath: string): Promise<string> {
@@ -128,7 +135,9 @@ export class StorageImpl {
             new URL('./StorageWorker.js', import.meta.url),
         );
         this.portal = new MagicPortal(this.worker);
-        //this.worker.addEventListener("message", ({ data }) => console.log("from storage worker:", data));
+        this.worker.addEventListener('message', ({ data }) =>
+            console.log('from storage worker:', data),
+        );
         const storage = this;
 
         this.ui = {

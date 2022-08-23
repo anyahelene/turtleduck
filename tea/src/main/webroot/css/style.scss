@@ -92,14 +92,21 @@ pre {
 }
 
 .flashtext {
-    background-image: linear-gradient(25deg, #0000 40%, #fff 50%, #0000 60%);
-    background-size: 100% 200%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    background-repeat: no-repeat;
-    color: transparent;
-    animation: ScrollBackground 5s linear infinite;
+    color: black;
     background-color: $terminal;
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+    .flashtext {
+        background-image: linear-gradient(25deg, #0000 40%, #fff 50%, #0000 60%);
+        background-size: 100% 200%;
+        background-clip: text;
+        -webkit-background-clip: text;
+        background-repeat: no-repeat;
+        color: transparent;
+        animation: ScrollBackground 5s linear infinite;
+        background-color: $terminal;
+    }
 }
 
 #page {
@@ -210,8 +217,6 @@ sub {
     cursor: ns-resize;
 }
 
-
-
 button {
     @include lores-font;
     font-family: inherit;
@@ -261,7 +266,8 @@ button {
     max-width: 100%;
     //	height: max-content;
     margin: 1rem auto;
-    border: 0.1rem solid inherit;
+    border: 0.1rem solid;
+    border-color: inherit;
     padding: 0.25rem;
     box-sizing: border-box;
     overflow: visible;
@@ -1225,15 +1231,6 @@ nav li {
 }
 
 
-.editor.wrapper,
-.cm-editor {
-    width: 100%;
-    font-size: 1.4rem;
-}
-
-.editor.wrapper .cm-editor {
-    @include fill-container-height;
-}
 
 #jvm {
     flex-direction: row;
@@ -1442,7 +1439,7 @@ label::after {
 
 method h6 {
     font-size: 1rem;
-    font-weight: medium;
+    font-weight: normal;
     font-style: italic;
 }
 
@@ -1804,30 +1801,6 @@ ul.shell-sample {
     text-align: right;
 }
 
-
-div#excavator {
-    background-size: 51px 26px;
-    position: absolute;
-    left: -200px;
-    top: 500px;
-    width: 51px;
-    height: 26px;
-    rotate: -20deg;
-    transition: left 20s, top 20s, rotate 7s 12s;
-    background-image: url(../images/excavator-still.gif);
-}
-
-div#excavator.working {
-    left: 290px;
-    top: 480px;
-    //	left: 395px;
-    //	top: 575px;
-    rotate: 5deg;
-}
-
-div#excavator.digging {
-    background-image: url(../images/excavator.gif);
-}
 
 article,
 aside,

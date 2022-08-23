@@ -327,6 +327,13 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
         this.terminal.print(text);
         return {};
     };
+    printElement: Method<{ elt: HTMLElement; stream: string }, {}> = async ({
+        elt,
+        stream,
+    }) => {
+        this.terminal.printElement(elt);
+        return {};
+    };
     display: Method<{ data: DisplayData; stream: string }, {}> = async ({
         data,
         stream,

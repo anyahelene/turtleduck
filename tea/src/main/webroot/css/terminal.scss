@@ -126,3 +126,20 @@
     margin: .1em .2rem;
     vertical-align: middle;
 }
+
+.file-list td {
+    padding: 0 .5rem;
+}
+
+.file-list td.file-mode {
+    padding-left: 0;
+}
+
+.file-list td.file-size {
+    text-align: right;
+    min-width: 4rem;
+}
+
+.file-list td.file-name {
+    text-align: left
+}

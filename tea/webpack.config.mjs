@@ -18,7 +18,7 @@ export default {
     loggingDebug: ["sass-loader"],
   },
   entry: {
-    bundle: { import: ['./index.js', './css/style.scss', './css/common.scss', './css/buttons.scss', './css/frames.scss', './css/markdown.scss', './css/terminal.scss', './terms-no.md'], filename: 'js/bundle.js' },
+    bundle: { import: ['./index.js', './css/style.scss', './css/common.scss', './css/editor.scss', './css/buttons.scss', './css/frames.scss', './css/markdown.scss', './css/terminal.scss', './terms-no.md'], filename: 'js/bundle.js' },
     // path.join(__dirname, 'src', 'main', 'webroot','css', 'style.scss'),
     //html: ['./webroot/terms-no.md'],
   },
@@ -50,7 +50,8 @@ export default {
   //        'borb': path.resolve(__dirname, 'src/main/webroot/borb'),
   //        '../../../../borb/src/Styles.ts$': path.resolve(__dirname, '../borb/src/Styles.ts'),
     //      '../../../../borb/src': path.resolve(__dirname, '../borb/src')
-      }
+      },
+      fallback: { "path": "path-browserify" }
   //  fallback: { 
   //      "querystring": require.resolve("querystring-es3/"),
   //      "buffer": require.resolve("buffer/")

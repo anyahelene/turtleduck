@@ -7,15 +7,11 @@ import { turtleduck } from './TurtleDuck';
 import { StorageContext } from './Storage';
 import type { HistorySession } from '../borb/LineHistory';
 import { LangInit, LanguageConnection } from './Language';
-import {
-    BaseConnection,
-    Message,
-    Messaging,
-    MessagingError,
-    Payload,
-} from '../borb/Messaging';
+import { BaseConnection, Message, Messaging, MessagingError, Payload } from '../borb/Messaging';
 import { EvalReply, EvalRequest } from './Shell';
 import { eq } from 'lodash-es';
+import { html } from 'uhtml';
+import FS from '@isomorphic-git/lightning-fs';
 //import getopts = require('getopts');
 const homeDir = '/home';
 const options = {};
@@ -95,9 +91,7 @@ export class TShell extends BaseConnection implements LanguageConnection {
             );
             return;
         }
-        const m = this[msg.header.msg_type] as (
-            msg: Payload,
-        ) => Promise<Payload>;
+        const m = this[msg.header.msg_type] as (msg: Payload) => Promise<Payload>;
         console.log('got request', msg, transfers, m);
         if (typeof m === 'function') {
             m.bind(this)(msg.content).then((reply) => {
@@ -109,20 +103,13 @@ export class TShell extends BaseConnection implements LanguageConnection {
     }
     deliverHost: (msg: Message) => Promise<void>;
 
-    async langInit({
-        config,
-        terminal,
-        explorer,
-        session,
-    }: LangInit): Promise<Payload> {
+    async langInit({ config, terminal, explorer, session }: LangInit): Promise<Payload> {
         this._terminal = terminal;
         this._explorer = explorer;
         this.setenv('SESSION', session);
         this._printer = {
             print: (text: string) =>
-                Messaging.send({ text }, 'print', this._terminal).then(() =>
-                    Promise.resolve(),
-                ),
+                Messaging.send({ text }, 'print', this._terminal).then(() => Promise.resolve()),
         };
         return {};
     }
@@ -133,7 +120,11 @@ export class TShell extends BaseConnection implements LanguageConnection {
     set printer(p: Printer) {
         this._printer = p;
     }
-
+    async printElement(elt: HTMLElement): Promise<void> {
+        if (this._terminal) {
+            await Messaging.send({ elt }, 'printElement', this._terminal);
+        }
+    }
     get currentCommand(): string {
         return this._currentCommand || '/bin/tsh';
     }
@@ -223,9 +214,7 @@ export class TShell extends BaseConnection implements LanguageConnection {
     }
 
     async evalCommand(prog: string, args: string[]): Promise<number> {
-        args = args.map((arg) =>
-            arg.startsWith('$') ? this.getenv(arg.substring(1)) : arg,
-        );
+        args = args.map((arg) => (arg.startsWith('$') ? this.getenv(arg.substring(1)) : arg));
         const { params, fun } = this.findProgram(prog);
 
         const pArgs = getopts(args, params);
@@ -280,17 +269,103 @@ export class TShell extends BaseConnection implements LanguageConnection {
         }
     }
 }
-
+const inode_types = {
+    file: '-',
+    dir: 'd',
+    symlink: 'l',
+};
+const modes = ['---', '--x', '-w-', '-wx', 'r--', 'r-x', 'rw-', 'rwx'];
+export function fileModes(stat: { mode: number; type: 'file' | 'dir' | 'symlink' }) {
+    let result = inode_types[stat.type];
+    result += '-r'[(stat.mode >>> 8) & 1];
+    result += '-w'[(stat.mode >>> 7) & 1];
+    result += '-xSs'[((stat.mode >>> 6) & 1) | ((stat.mode >>> 10) & 2)];
+    result += '-r'[(stat.mode >>> 5) & 1];
+    result += '-w'[(stat.mode >>> 4) & 1];
+    result += '-xSs'[((stat.mode >>> 3) & 1) | ((stat.mode >>> 9) & 2)];
+    result += '-r'[(stat.mode >>> 2) & 1];
+    result += '-w'[(stat.mode >>> 1) & 1];
+    result += '-xTt'[((stat.mode >>> 0) & 1) | ((stat.mode >>> 8) & 2)];
+    return result;
+}
 programs.set('ls', {
     params: {
         boolean: ['all', 'long', 'time'],
         alias: { all: ['a'], long: ['l'], time: '' },
     },
+    fun: async (args, sh, ctx) => {
+        const arg = args['_'][0];
+        function toLink(file: string) {
+            const path = ctx.resolve(arg, file);
+            return `fs://${path}`;
+        }
+        function clickAction(ev: MouseEvent) {
+            console.log('File open:', ev.currentTarget);
+            ev.preventDefault();
+        }
+        let res = await ctx.readdir(args['_'][0]);
+        if (!args['all']) res = res.filter((entry) => !entry.startsWith('.'));
+        if (args['long']) {
+            const entries = res.map((entry) => ctx.resolve(arg, entry));
+            const stats = [];
+            function stat(idx: number): Promise<void> {
+                if (idx >= entries.length) {
+                    return Promise.resolve();
+                } else {
+                    return ctx.stat(entries[idx]).then((s) => {
+                        stats[idx] = s;
+                        return stat(idx + 1);
+                    });
+                }
+            }
+            await stat(0);
+            console.log(stats);
+            const user = sh.getenv('USER');
+            sh.printElement(
+                html.node`<table class="file-list">${
+                    stats.map(
+                        (stat, idx) =>
+                            html`<tr
+                                ><td class="file-mode">${fileModes(stat)}</td
+                                ><td class="file-user">${user}</td
+                                ><td class="file-group">${user}</td
+                                ><td class="file-size">${stat.size}</td
+                                ><td class="file-date"
+                                    >${new Date(stat.mtimeMs).toLocaleString()}</td
+                                ><td class="file-name"
+                                    ><a onclick=${clickAction} href=${toLink(res[idx])}
+                                        >${res[idx]}${stat.type === 'dir' ? '/' : ''}</a
+                                    ></td
+                                ></tr
+                            >`,
+                    )
+                    // sh.println(
+                    //     `${inode_types[stat.type] || ' '}${
+                    //         modes[(stat.mode >> 6) & 7]
+                    //     }${modes[(stat.mode >> 3) & 7]}${modes[stat.mode & 7]}`,
+                    //     `${stat.size}`,
+                    //     `${new Date(stat.mtimeMs).toLocaleString()}`,
+                    //     res[idx],
+                    // );
+                }</table>`,
+            );
+        } else {
+            const longest = res.reduce((prev, cur) => Math.max(prev, cur.length + 1), 0);
+            const perLine = Math.floor(80 / (longest || 1));
+            const len = 80 / perLine;
+            console.log('ls formatting: longest=%d, perLine=%d, len=%d', longest, perLine, len);
+            res.forEach((entry, idx) => {
+                sh.print(entry.padEnd(len));
+                if (idx > 0 && idx % perLine === 0) sh.println();
+            });
+        }
+        return 0;
+    },
+});
+programs.set('show_mode', {
+    params: {},
     fun: (args, sh, ctx) =>
-        ctx
-            .readdir(args['_'][0])
-            .then((res: string[]) => sh.println(res.join(' ')))
-            .then(() => 0),
+        sh.println(fileModes({ mode: parseInt(args['_'][0], 8), type: 'file' })),
 });
 programs.set('echo', {
     params: { boolean: ['n', 'e', 'E'] },
@@ -299,6 +374,10 @@ programs.set('echo', {
 programs.set('cd', {
     params: { boolean: ['L', 'P', 'e', '@'] },
     fun: (args, sh, ctx) => ctx.chdir(args['_'][0]).then(() => 0),
+});
+programs.set('mkdir', {
+    params: { boolean: ['p'] },
+    fun: (args, sh, ctx) => ctx.mkdir(args['_'][0]).then(() => 0),
 });
 programs.set('true', {
     params: {},
@@ -314,9 +393,7 @@ programs.set('history', {
         if (sh.history) {
             const entries = await sh.history.list();
             const l = Math.max(...entries.map((e) => e.id)).toString().length;
-            entries.forEach((e) =>
-                sh.println(`[${e.id.toString().padStart(l)}] ${e.data}`),
-            );
+            entries.forEach((e) => sh.println(`[${e.id.toString().padStart(l)}] ${e.data}`));
             return 0;
         } else {
             return 1;

@@ -60,7 +60,7 @@ export async function handleKey(
         case 'projects':
             break;
         case 'quality':
-            let code = turtleduck.editor.current().state().sliceDoc(0);
+            let code = turtleduck.editor.getText();
             fetch(
                 'https://master-thesis-web-backend-prod.herokuapp.com/analyse',
                 {

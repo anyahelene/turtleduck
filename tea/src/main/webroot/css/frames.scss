@@ -291,4 +291,12 @@ button {
         //cursor:move;
     }
 
+    &.modified {
+        font-style: italic;
+    }
+
+    &.readonly {
+        color: color-lookup(pen, faded);
+    }
+
 }

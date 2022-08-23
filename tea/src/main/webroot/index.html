@@ -15,8 +15,8 @@
 	<meta property="og:image:height" content="${og.image.height}" />
 	<link rel="icon" href="images/turtleduck-icon.png" type="image/png" />
 	<link rel="manifest" href="manifest.json" />
-	<script type="text/javascript" charset="utf-8" src="js/bundle.js"></script>
-	<script type="text/javascript" charset="utf-8" src="js/classes.js"></script>
+	<script src="js/bundle.js"></script>
+	<script src="js/classes.js"></script>
 
 	<link rel="stylesheet" href="css/style.css" />
 </head>
@@ -29,7 +29,7 @@
 		<header id="top">
 			<nav id="top-left">
 				<button type="button" id="logoimg" data-shortcut="">
-					<img src="images/turtleduck.svg" />
+					<img alt="" src="images/turtleduck.svg" />
 				</button>
 				<button type="button" id="logotext" data-shortcut="">
 					TurtleDuck <span id="logo-experimental" style="background:#0f0">UNCOILED!</span> <span
@@ -90,7 +90,7 @@
 				<borb-button id="misc3" data-shortcut="" class="rows"></borb-button>
 				<borb-button id="misc4" data-shortcut="" class="rows"></borb-button>
 				<div id="user">
-					<a href="command://profile"><img id="user-picture" style="height: 2.1rem; visibility: hidden" /></a>
+					<a href="command://profile"><img alt="User profile" id="user-picture" src="images/turtleduck-icon.png" style="height: 2.1rem; visibility: hidden" /></a>
 				</div>
 			</nav>
 		</header>
@@ -137,7 +137,7 @@
 			</borb-frame>
 
 			<borb-frame id="editor" tab-title="Editor" frame-title="${tab-title{ : }}editor" class="focusable">
-				<main class="editor wrapper" tab-title="Editor"></main>
+                <borb-editor id="main-editor"></borb-editor>
 				<header id="editor-head">
 					<nav id="editor-tabs" class="tabs"></nav>
 					<nav id="editor-tools" class="window-tools"></nav>
@@ -171,8 +171,8 @@ It's a place where you can <i>view</i>documents.
 </p>
 				</borb-document>
                 <borb-settings tab-title="Settings"></borb-settings>
-				<main id="docs" tab-title="DOC" data-tab="screen-tabs" data-tab-key="doc">
-					<div id=" doc-display" class="text">
+				<main id="docs" data-tab-title="DOC" data-tab="screen-tabs" data-tab-key="doc">
+					<div id="doc-display" class="text">
 					</div>
 				</main>
 				<div data-insert-here="true" hidden></div>
@@ -185,7 +185,7 @@ It's a place where you can <i>view</i>documents.
 						<li><a href="#shellEditor" data-paste="turtle.draw(50);">turtle.draw(50);</a>
 						<li><a href="#shellEditor"
 								data-paste="for(int i = 0; i &lt; 360; i++) turtle.draw(2).turn(1);">for(int
-								i = 0; i &lt; 360; i++) <br>&#x2000;&#x2000;
+								i = 0; i &lt; 360; i++) <br>&#x2002;&#x2002;
 								turtle.draw(2).turn(1);
 							</a>
 					</ul>
@@ -215,8 +215,8 @@ It's a place where you can <i>view</i>documents.
 					<figcaption>— Yoda</figcaption>
 				</figure>
 			</aside>
-			<aside id="dialog role=" dialog" class="popup">
-				<h1></h1>
+			<aside id="dialog" role="dialog" class="popup">
+				<h1>–</h1>
 				<figure class="card">
 				</figure>
 			</aside>
@@ -243,11 +243,11 @@ It's a place where you can <i>view</i>documents.
 				<div id="status" class="active">
 					<span>@<span id="user-name"></span></span>
 					<ul id="status-pop" class="popup"></ul>
-					<span id="status-button" type="button">OFFLINE</span>
+					<span id="status-button">OFFLINE</span>
 				</div>
 				<div id="error">
 					<ul id="error-pop" class="popup"></ul>
-					<button id="error-button" type="button">ERR!</button>
+					<button id="error-button">ERR!</button>
 				</div>
 			</div>
 		</footer>
