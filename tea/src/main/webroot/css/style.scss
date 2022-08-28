@@ -138,8 +138,6 @@ pre {
     @include hires-font;
 }
 
-.explorer {}
-
 html {
     font-size: 14px;
 
@@ -188,12 +186,6 @@ pre {
 
 sub {
     font-size: 50%;
-}
-
-.ew-resizer,
-.ns-resizer {
-    //	position: absolute;	
-    //	background:  #3336;
 }
 
 .ew-resizer:hover,
@@ -573,43 +565,6 @@ aside.right pre nav.toolbar {
     display: none
 }
 
-/*
-pre nav.toolbar button {
-	position:absolute;
-	left:0;
-}
-.is-very-wide pre nav.toolbar button {
-	position:absolute;
-	right:0;
-}
-*/
-.iconbox:empty {
-    display: none;
-}
-
-.iconbox {}
-
-.iconbox button {
-    margin: .2rem;
-    margin-bottom: .5rem;
-    box-shadow: .2rem .2rem .5rem $bgdark;
-    padding: 0.1rem;
-    font-size: .8rem;
-    display: none;
-}
-
-.iconbox button.iconified {
-    display: inline;
-}
-
-.iconbox button.iconified::before {
-    content: "🗖";
-}
-
-.iconbox button:active {
-    margin: .2rem;
-    box-shadow: none;
-}
 
 .box .box-foot {
     position: absolute;
@@ -738,10 +693,6 @@ pre nav.toolbar button {
 .explorer .open>h2 a::before {
     //content: "▾ ";
     transform: rotate(90deg);
-}
-
-.explorer .open>h2 a.empty::before {
-    //	content: "▿ ";
 }
 
 details.summary-only summary {
@@ -1822,7 +1773,9 @@ section {
     color: #cc0;
 }
 
-.cmt-literal {}
+.cmt-literal {
+    color: #a8e389;
+}
 
 .cmt-string,
 .hljs-string,
@@ -1852,17 +1805,27 @@ section {
     color: #56b6c2;
 }
 
-.cmt-punctuation {}
+.cmt-punctuation {
+    color: inherit
+}
 
 .cmt-meta {
     color: #880;
 }
 
 .cmt-variableName,
+.cmt-variableName .cmt-definition,
+.cmt-variableName .cmt-local,
 .hljs-variable,
 .hljs-name,
 .hljs-params {
     color: #3f3;
+}
+
+.cmt-variableName2,
+.hljs-attribute,
+.hljs-attr {
+    color: #d19a66;
 }
 
 .cmt-propertyName {
@@ -1922,15 +1885,6 @@ section {
     color: #ffffff;
 }
 
-.cmt-variableName .cmt-definition {}
-
-.cmt-variableName .cmt-local {}
-
-.cmt-variableName2,
-.hljs-attribute,
-.hljs-attr {
-    color: #d19a66;
-}
 
 /*
   xt256.css

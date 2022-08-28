@@ -1,55 +1,76 @@
-import { Settings } from '../borb';
-import { Messaging, BaseConnection, Message } from '../borb/Messaging';
-import { WorkerController } from './WorkerController';
+// based on https://pyodide.org/en/stable/usage/webworker.html
 
-export class WorkerConnection extends BaseConnection {
-    _connected = '';
-    private _onterminate: () => void;
+import { Messaging } from '../borb/Messaging';
+import { LanguageConnection } from './Language';
+import { MessagingConnection } from './MessagingConnection';
 
+export class WorkerConnection extends MessagingConnection implements LanguageConnection {
+    worker: SharedWorker | Worker;
+    port: MessagePort | Worker;
+    shared: boolean;
+    scriptPath: string;
     constructor(
-        id: string,
         router: typeof Messaging,
-        public worker: WorkerController,
+        id: string,
+        scriptName: string,
+        shared?: boolean,
+        name?: string,
     ) {
-        super(router, id);
-        worker.onmessage((msg) => {
-            msg = Messaging.fromMap(msg);
-            console.log(
-                'received from worker:',
-                JSON.stringify(msg.header),
-                msg.content,
-            );
-            return this.deliverHost(msg);
-        });
-        worker.onterminate(() => {
-            console.warn('worker terminated');
-            if (this._onterminate) this._onterminate();
-        });
-        worker.onerror((ev) => console.error('received error from worker', ev));
-    }
-    deliverRemote(msg: Message, transfers: Transferable[] = []): void {
-        this.worker.postMessage(msg, transfers);
-    }
-    onterminate(handler: () => void) {
-        this._onterminate = handler;
-    }
-    async connect(): Promise<string> {
-        console.info('connected. sending hello', this);
-        if (this._connected) {
-            return this.id;
+        super(router, id, name || scriptName);
+        if (!scriptName || !scriptName.match(/^[a-zA-Z][a-zA-Z0-9_]*\.js$/)) {
+            this.close();
+            throw new Error(`Illegal worker script name '${scriptName}'`);
         }
-        this._connected = 'connecting';
-        const reply = await this.router.send(
-            {
-                sessionName: Settings.getConfig('session.name', 'unknown'),
-                endpoints: {},
-            },
-            'hello',
-            this.id,
-        );
-        console.info('Received welcome', reply);
-        this.connectHandlers.forEach((handler) => handler(this, reply));
-        this._connected = 'connected';
-        return this.id;
+
+        this.scriptPath = `./workers/${scriptName}`;
+        const q = false ? '?' + name : '';
+        if (shared) {
+            this.worker = new SharedWorker(this.scriptPath, { name });
+            this.port = this.worker.port;
+            this.shared = true;
+        } else {
+            this.worker = new Worker(this.scriptPath, { name });
+            this.port = this.worker;
+            this.shared = false;
+        }
+        this.port.addEventListener('error', this.handleError);
+
+        // engage!
+        this.port.onmessage = this.receiveMessage;
+        if (this.port instanceof MessagePort) this.port.start();
+    }
+
+    protected postMessage(msg: any, transfers: Transferable[] = []) {
+        if (this.debugEnabled) console.log('%s: postmessage: %o', this.name, msg);
+        this.port.postMessage(msg, transfers);
+    }
+
+    protected doClose(terminate = false, fromRemote = false) {
+        super.doClose(terminate, fromRemote);
+        const worker = this.worker;
+        const port = this.port;
+        if (!worker) return;
+        if (!this.shared) terminate = true;
+
+        port.removeEventListener('error', this.handleError);
+        port.onmessage = null;
+        this.worker = null;
+        this.port = null;
+
+        if (worker instanceof Worker) {
+            globalThis.setTimeout(() => {
+                worker.terminate();
+                console.warn('worker terminated');
+            }, 100);
+        } else if (port instanceof MessagePort) {
+            globalThis.setTimeout(() => {
+                port.close();
+                console.warn('message port closed');
+            }, 100);
+        }
+    }
+
+    toString() {
+        return `${this.shared ? 'Shared' : ''}WorkerConnection(${this.id})`;
     }
 }

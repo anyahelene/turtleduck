@@ -40,7 +40,7 @@ export default {
       ],
       hot: 'only',
       liveReload: false,
-      watchFiles: ['../borb/**/*.ts', '../borb/**/*.js']
+      // (use symlink) watchFiles: ['../borb/**/*.ts', '../borb/**/*.js']
   },
   resolve: {
       extensions: [".ts", ".mts", ".tsx", ".js", ".mjs"],

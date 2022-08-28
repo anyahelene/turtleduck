@@ -34,34 +34,9 @@ function msgId() {
 }
 /** Whether any clients are already connected */
 existing = false;
+_msgs = {};
 
 function connect(port) {
-    const pymsg = (e) => {
-        console.log(e);
-        port.postMessage({
-            header: { msg_type: 'python_status', msg_id: msgId() },
-            content: { status: e },
-        });
-    };
-    const pyerr = (e) => {
-        console.error(e);
-        port.postMessage({
-            header: { msg_type: 'python_error', msg_id: msgId() },
-            content: { status: e },
-        });
-    };
-    function send(msg) {
-        if (self.debug) {
-            console.log('posting: ', msg);
-        }
-        port.postMessage(msg);
-    }
-    async function runPython(code) {
-        if (self.debug) console.log('run python:', code);
-        self._send = send;
-        await self.pyodide.loadPackagesFromImports(code);
-        return await self.pyodide.runPythonAsync(code, pymsg, pyerr);
-    }
     const queue = [];
 
     port.onmessage = async function (e) {
@@ -73,12 +48,43 @@ function connect(port) {
         const msg_id = data.header.msg_id;
         const msg_type = data.header.msg_type;
         const content = data.content;
-        console.log('msg_type', msg_type);
+        const LOG = `[${msg_id}: ${msg_type}]  `;
+
+        const pymsg = (e) => {
+            if (self.debug) console.log(LOG, 'MSG:', e);
+            port.postMessage({
+                header: { msg_type: 'python_status', msg_id: msgId() },
+                content: { status: e, whileProcessing: { msg_id, msg_type } },
+            });
+        };
+        const pyerr = (e) => {
+            console.error(LOG, 'ERR:', e);
+            port.postMessage({
+                header: { msg_type: 'python_error', msg_id: msgId() },
+                content: { status: e, whileProcessing: { msg_id, msg_type } },
+            });
+        };
+        self.pymsg = pymsg;
+        self.pyerr = pyerr;
+        async function runPython(code) {
+            if (self.debug) console.log(LOG, 'python<<<', code);
+            self._send = send;
+            const r1 = await self.pyodide.loadPackagesFromImports(code, pymsg, pyerr);
+            const r2 = await self.pyodide.runPythonAsync(code, pymsg, pyerr);
+            if (self.debug) console.log(LOG, 'python>>>', r2);
+        }
+        function send(msg) {
+            if (self.debug) {
+                console.log(LOG, 'posting: ', msg);
+            }
+            port.postMessage(msg);
+        }
 
         try {
+            if (self.debug) console.log(LOG, 'processing', JSON.stringify(content));
             if (!self.loadPyodide.inProgress) {
                 queue.push(e);
-                console.log('loading pyodide');
+                if (self.debug) console.log(LOG, 'loading pyodide');
                 port.postMessage({
                     header: {
                         msg_type: 'python_status',
@@ -113,20 +119,16 @@ function connect(port) {
                 });
                 while (queue.length) {
                     const msg = queue.shift();
-                    console.log('processing queue – message: ', msg.data);
+                    console.log(LOG, 'processing queue – message: ', msg.data);
                     await port.onmessage(msg);
                 }
-                console.log('pyodide ready!', self.pyodide);
-                return;
-            } else if (!self.pyodide) {
-                console.log('pyodide not ready, enqueuing:', data);
-                queue.push(e);
+                if (self.debug) console.log(LOG, 'pyodide ready!', self.pyodide);
                 return;
             }
 
             if (data.header) {
                 if (msg_type === 'hello') {
-                    console.log('hello', content);
+                    if (self.debug) console.log(LOG, 'hello', content);
                     const id = self.clients.push(port);
                     port.postMessage({
                         header: {
@@ -142,7 +144,7 @@ function connect(port) {
                     });
                     self.existing = true;
                 } else if (msg_type === 'echo') {
-                    console.log('echo', content);
+                    if (self.debug) console.log(LOG, 'echo', content);
                     port.postMessage({
                         header: {
                             msg_type: 'echo_reply',
@@ -152,7 +154,7 @@ function connect(port) {
                         content: { status: 'ok', content },
                     });
                 } else if (msg_type === 'ping') {
-                    console.log('ping', content);
+                    if (self.debug) console.log(LOG, 'ping', content);
                     port.postMessage({
                         header: {
                             msg_type: 'pong',
@@ -162,21 +164,32 @@ function connect(port) {
                         content: { status: 'ok' },
                     });
                 } else if (msg_type === 'debug') {
-                    console.log('debug', content);
+                    if (self.debug) console.log(LOG, 'debug', content);
                     self.debug = !!content.enable;
                 } else if (msg_type === 'goodbye') {
-                    console.log('goodbye', content);
+                    if (self.debug) console.log(LOG, 'goodbye', content);
                     const id = self.clients.indexOf(port);
                     if (id >= 0) {
                         self.clients.splice(id, 1);
                     }
                 } else if (msg_type === 'shutdown') {
-                    console.log('shutdown', content);
+                    if (self.debug) console.log(LOG, 'shutdown', content);
                     const id = self.clients.indexOf(port);
                     self.close();
-                } else if (msg_type === 'langInit') {
+                } else if (msg_type === 'python_status_reply') {
+                    //ignore
+                } else if (!self.pyodide) {
+                    if (self.debug)
+                        console.log(
+                            LOG,
+                            'pyodide not ready, enqueuing:',
+                            JSON.stringify(data.header),
+                            data,
+                        );
+                    queue.push(e);
+                    return;
+                } else if ((LOG, msg_type === 'langInit')) {
                     const res = await initPython(content, runPython);
-                    console.log('Python result: ', res);
                     send({
                         header: {
                             msg_type: 'langInit_reply',
@@ -185,23 +198,15 @@ function connect(port) {
                         },
                         content: { status: 'ok' },
                     });
-                    //} else if(msg_type === 'failure' || msg_type === 'error_reply') {
-                    // ignore
                 } else {
+                    self._msgs[msg_id] = data;
                     self._msg = data;
                     self._send = send;
                     self.pyodide
-                        .runPythonAsync(
-                            'ShellService.receive()',
-                            self.pymsg,
-                            self.pyerr,
-                        )
+                        .runPythonAsync(`ShellService.receive('${msg_id}')`, pymsg, pyerr)
                         .then((res) => {
-                            console.log('Python result: ', res);
                             if (res instanceof Map) {
-                                if (
-                                    !(res.has('content') && res.has('header'))
-                                ) {
+                                if (!(res.has('content') && res.has('header'))) {
                                     res = {
                                         header: {
                                             msg_type: msg_type + '_reply',
@@ -224,12 +229,15 @@ function connect(port) {
                                 };
                             }
                             if (res) send(res);
+                        })
+                        .finally(() => {
+                            delete self._msgs[msg_id];
                         });
                 }
             }
         } catch (e) {
             // if you prefer messages with the error
-            console.log(e);
+            console.log(LOG, e);
             port.postMessage({
                 header: {
                     msg_type: 'error_reply',
@@ -255,12 +263,9 @@ async function initPython(content, runPython) {
     const imports = config.import || [];
     const inits = config.init || [];
 
-    await runPython(
-        'import micropip\n' + //
-            'import unthrow\n' + //
-            // + "import PIL\n"//
-            "await micropip.install('../py/turtleduck-0.1.1-py3-none-any.whl')\n",
-    );
+    await runPython('import micropip');
+    await runPython('import unthrow');
+    await runPython("await micropip.install('../py/turtleduck-0.1.1-py3-none-any.whl')");
     for (const name of installs) {
         await runPython(`await micropip.install('${name}')`);
     }
@@ -270,15 +275,9 @@ async function initPython(content, runPython) {
         await runPython(init);
     }
     await runPython(`ShellService.setup_io('${content.terminal || ''}')\n`);
-    await runPython(
-        `ShellService.setup_explorer('${content.explorer || ''}')\n`,
-    );
+    await runPython(`ShellService.setup_explorer('${content.explorer || ''}')\n`);
     await runPython('ShellService.use_msg_io()\n');
-    await runPython(
-        'ShellService.do_imports([' +
-            imports.map((s) => `'${s}'`).join(',') +
-            '])\n',
-    );
+    await runPython('ShellService.do_imports([' + imports.map((s) => `'${s}'`).join(',') + '])\n');
     await runPython('print(ShellService.banner())');
 }
 
@@ -286,8 +285,11 @@ console.warn('Starting worker', self);
 if (self.constructor.name === 'SharedWorkerGlobalScope') {
     console.warn('Starting shared worker!');
     self.onconnect = function (e) {
+        console.warn('onconnect:', e.ports);
         connect(e.ports[0]);
+        e.ports[0].start();
     };
+    self.s;
 } else {
     console.warn('Starting dedicated worker!');
     connect(self);

@@ -1,0 +1,5 @@
+export AUTH_OPTIONS_FILE=$HOME/git/turtleduck/auth/authsecrets.json
+export SERVER_ROOT=$HOME/git/turtleduck/tea/target/classes/webroot
+export VERTXWEB_ENVIRONMENT=dev
+
+java -jar $HOME/git/turtleduck/auth/target/turtleduck-auth*-fat.jar

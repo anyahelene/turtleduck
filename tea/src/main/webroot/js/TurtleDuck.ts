@@ -16,7 +16,7 @@ import {
 } from '../borb';
 import { BorbFrame, BorbPanelBuilder } from '../borb/Frames';
 import Systems from '../borb/SubSystem';
-import { Language, Languages } from './Language';
+import { Language, LanguageConnection, Languages } from './Language';
 Borb.tagName('foo ');
 // export { History, HistorySession };
 declare global {
@@ -56,7 +56,100 @@ function proxy<Name extends keyof TurtleDuck, Type extends TurtleDuck[Name]>(
     });
     return obj;
 }
+let lastMessageIntervalId = 0;
+function userlog(message: string, wait = false) {
+    const log = document.getElementById('last-message');
+    if (log) {
+        if (lastMessageIntervalId != 0) window.clearInterval(lastMessageIntervalId);
+        console.info('userlog(%s)', message);
+        log.innerText = message;
+        log.dataset.wait = `${wait}`;
+        log.hidden = false;
+        if (wait) {
+            let dots = '';
+            lastMessageIntervalId = window.setInterval(() => {
+                dots += '.';
+                log.innerText = message + dots;
+            }, 1000);
+        } else {
+            lastMessageIntervalId = window.setTimeout(() => {
+                log.hidden = true;
+            }, 3000);
+        }
+    }
+}
+let sockConn = { socketConnected: false };
+function updateInfo() {
+    const userName = turtleduck.settings.getConfig(
+        'user.nickname',
+        turtleduck.settings.getConfig('user.username', undefined),
+    );
+    const status = document.getElementById('status');
+    const statusBtn = document.getElementById('status-button');
+    if (status && statusBtn) {
+        if (sockConn) {
+            if (sockConn.socketConnected) {
+                status.className = 'online';
+                statusBtn.textContent = '🖧 ONLINE';
+            } else {
+                status.className = 'offline';
+                statusBtn.textContent = 'OFFLINE';
+            }
+            statusBtn.setAttribute('title', userName + '@' + sockConn.toString());
+        } else {
+            if (turtleduck.settings.getConfig('session.private', false)) {
+                status.className = 'private';
+                statusBtn.textContent = 'PRIVATE';
+            } else if (turtleduck.settings.getConfig('session.offline', false)) {
+                status.className = 'offline';
+                statusBtn.innerText = 'OFFLINE';
+            } else {
+                status.className = '';
+                statusBtn.innerText = 'OFFLINE';
+            }
+            statusBtn.setAttribute('title', userName);
+        }
+    }
 
+    const imgBox = document.getElementById('user-picture');
+    const imgUrl = turtleduck.settings.getConfig('user.picture', null);
+    if (imgBox && imgUrl) {
+        imgBox.setAttribute('src', imgUrl);
+        imgBox.style.visibility = 'visible';
+    }
+    const nameBox = document.getElementById('user-name');
+    if (nameBox) {
+        nameBox.innerText = userName; // TODO: escapes
+    }
+
+    document.querySelectorAll('[data-from]').forEach((elt: HTMLElement) => {
+        const froms = (elt.dataset.from || '').split('||');
+        for (var i = 0; i < froms.length; i++) {
+            const from = froms[i].trim();
+            if (from) {
+                const val = turtleduck.settings.getConfig(from, '');
+                if (val) {
+                    elt.innerText = val;
+                    return;
+                }
+            }
+        }
+        elt.innerText = '';
+    });
+}
+function showHeap({ heapUse, heapTotal }: { heapUse?: number; heapTotal?: number }) {
+    const elt = document.getElementById('heapStatus');
+
+    if (heapUse && heapTotal && elt) {
+        let unit = 'k';
+        if (heapTotal > 9999) {
+            heapUse /= 1024;
+            heapTotal /= 1024;
+            unit = 'M';
+        }
+        elt.innerText = `${heapUse}${unit} / ${heapTotal}/${unit}`;
+    }
+}
 interface EditorOrShell {
     paste(txt: string): void;
     iconified(i: boolean): boolean;
@@ -72,6 +165,8 @@ interface TurtleDuck {
     handleKey(key: string, button?: HTMLElement, event?: Event): Promise<any>;
     client: any;
     userlog(msg: string, wait?: boolean): void;
+    updateInfo: typeof updateInfo;
+    showHeap: typeof showHeap;
     cwd: StorageContext;
     storage: Storage;
     history: typeof history;
@@ -79,6 +174,7 @@ interface TurtleDuck {
     makeProxy: typeof proxy;
     pyshell: EditorOrShell;
     editor: EditorOrShell;
+    builtinLanguages: Record<string, LanguageConnection>;
     wm: any;
     mdRender: typeof MDRender;
     styles: typeof Styles;
@@ -102,10 +198,10 @@ export const turtleduck: TurtleDuck = {
     async handleKey(key, button, event) {
         return Promise.resolve();
     },
-    userlog(msg) {
-        turtleduck.client.userlog(msg);
-    },
+    userlog,
     history,
+    updateInfo,
+    showHeap,
     cwd: proxy('cwd', 'storage'),
     storage: proxy('storage'),
     makeProxy: proxy,

@@ -108,7 +108,8 @@
             "icon": "🦜",
             "editable": false,
             "extensions": [],
-            "services": {}
+            "services": {},
+            "builtin": "chat"
         },
         "java": {
             "title": "Java",
@@ -121,7 +122,8 @@
             "shellExtensions": ["jsh", "jshell"],
             "services": {
                 "jshell": "ShellService"
-            }
+            },
+            "remote": "socket"
         },
         "cpp": {
             "title": "C/C++",
@@ -143,7 +145,8 @@
             "extensions": ["md", "markdown"],
             "services": {
                 "mdshell": "ShellService"
-            }
+            },
+            "builtin": "markdown"
         },
         "z80": {
             "title": "Z80",
@@ -169,8 +172,7 @@
             "init": ["ShellService.cwd = '/examples'"],
             "install": ["Pillow", "lark"],
             "import": [],
-            "worker": "shared",
-            "scriptName": "pywebworker.js"
+            "worker": "pywebworker.js"
         },
         "plain": {
             "title": "plain",
@@ -192,7 +194,8 @@
             "extensions": ["sh", "tsh"],
             "services": {
                 "tshell": "ShellService"
-            }
+            },
+            "builtin": "tshell"
         }
     },
     "terminal": {

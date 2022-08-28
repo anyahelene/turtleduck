@@ -7,7 +7,6 @@ import { turtleduck } from './js/TurtleDuck';
 import { fileSystem, FileSystem } from './js/FileSystem';
 import { Component } from './js/Component';
 import { TilingWM, TilingWindow } from './js/TilingWM';
-import { WorkerController } from './js/WorkerController';
 import { MDRender, SubSystem, Borb, Buttons, Frames, Settings, History } from './borb';
 import { Shell, ShellConnection } from './js/Shell';
 import { Messaging } from './borb/Messaging';
@@ -21,9 +20,11 @@ import * as lodash from 'lodash-es';
 import i18next from 'i18next';
 import getopts from 'getopts';
 import defaultConfig from './config.json';
-import { WorkerConnection } from './js/WorkerConnection';
 import { Languages } from './js/Language';
 import { handleKey } from './js/Commands';
+import { Chatter } from './js/Chatter';
+import { WorkerConnection } from './js/WorkerConnection';
+import { SockJSConnection } from './js/SockJSConnection';
 var imports = {
     SockJS,
     Mousetrap,
@@ -34,7 +35,6 @@ var imports = {
     Component,
     TilingWM,
     TilingWindow,
-    WorkerController,
     MDRender,
     Camera,
     GridDisplayServer,
@@ -53,8 +53,9 @@ var imports = {
     Frames,
     Shell,
     ShellConnection,
-    Messaging,
     WorkerConnection,
+    SockJSConnection,
+    Messaging,
     Languages,
 };
 
@@ -292,23 +293,6 @@ turtleduck.tabSelect = function (tabsId, key) {
     return previous;
 };
 
-turtleduck.updateInfo = function () {
-    document.querySelectorAll('[data-from]').forEach((elt) => {
-        const froms = (elt.dataset.from || '').split('||');
-        for (var i = 0; i < froms.length; i++) {
-            const from = froms[i].trim();
-            if (from) {
-                const val = turtleduck.getConfig(from);
-                if (val) {
-                    elt.innerText = val;
-                    return;
-                }
-            }
-        }
-        elt.innerText = '';
-    });
-};
-
 function ctrl(key) {
     return ['ctrl+' + key, 'command+' + key];
 }
@@ -540,6 +524,10 @@ window.addEventListener('DOMContentLoaded', (loadedEvent) => {
         console.log('Console size changed');
     });
     resizeObserver.observe(document.getElementById('shell'));
+    if (!document.querySelector('script[src="js/classes.js"]')) {
+        console.warn('Running without TeaVM code');
+        turtleduck._initializationComplete();
+    }
 });
 
 turtleduck._initializationComplete = async function (err) {
@@ -552,42 +540,48 @@ turtleduck._initializationComplete = async function (err) {
         //turtleduck.setConfig({"prefs":{"layout":sizes}}, "session");
         //autoSaveConfig('session');
     });
-    turtleduck.client.route('qrscan', (msg) => {
-        console.log('routing qrscan', msg);
-        const config = { mode: 'qr', once: true, params: msg, mirror: false };
-        return turtleduck
-            .openCamera(config)
-            .then((qrcode) => {
-                console.log('got qrcode', qrcode);
-                return Promise.resolve({
-                    header: {
-                        to: msg.header.from,
-                        msg_type: 'qrscan_reply',
-                        ref_id: msg.header.msg_id,
-                        msg_id: 'r' + msg.header.msg_id,
-                    },
-                    content: { text: qrcode, status: 'ok' },
+    if (turtleduck.client) {
+        turtleduck.client.route('qrscan', (msg) => {
+            console.log('routing qrscan', msg);
+            const config = { mode: 'qr', once: true, params: msg, mirror: false };
+            return turtleduck
+                .openCamera(config)
+                .then((qrcode) => {
+                    console.log('got qrcode', qrcode);
+                    return Promise.resolve({
+                        header: {
+                            to: msg.header.from,
+                            msg_type: 'qrscan_reply',
+                            ref_id: msg.header.msg_id,
+                            msg_id: 'r' + msg.header.msg_id,
+                        },
+                        content: { text: qrcode, status: 'ok' },
+                    });
+                })
+                .catch((err) => {
+                    console.warn('got error instead of qrcode', err);
+                    return Promise.resolve({
+                        header: {
+                            to: msg.header.from,
+                            msg_type: 'qrscan_reply',
+                            ref_id: msg.header.msg_id,
+                            msg_id: 'r' + msg.header.msg_id,
+                        },
+                        content: { error: err, status: 'error' },
+                    });
                 });
-            })
-            .catch((err) => {
-                console.warn('got error instead of qrcode', err);
-                return Promise.resolve({
-                    header: {
-                        to: msg.header.from,
-                        msg_type: 'qrscan_reply',
-                        ref_id: msg.header.msg_id,
-                        msg_id: 'r' + msg.header.msg_id,
-                    },
-                    content: { error: err, status: 'error' },
-                });
-            });
-    });
-    turtleduck.client.route('grid-create', (msg) => turtleduck.gridDisplay.create(msg));
-    turtleduck.client.route('grid-update', (msg) => turtleduck.gridDisplay.update(msg));
-    turtleduck.client.route('grid-style', (msg) => turtleduck.gridDisplay.style(msg));
-    turtleduck.client.route('grid-dispose', (msg) => turtleduck.gridDisplay.dispose(msg));
+        });
+        turtleduck.client.route('grid-create', (msg) => turtleduck.gridDisplay.create(msg));
+        turtleduck.client.route('grid-update', (msg) => turtleduck.gridDisplay.update(msg));
+        turtleduck.client.route('grid-style', (msg) => turtleduck.gridDisplay.style(msg));
+        turtleduck.client.route('grid-dispose', (msg) => turtleduck.gridDisplay.dispose(msg));
+    }
+    turtleduck.tshell = new TShell();
+    turtleduck.chatter = new Chatter();
+    turtleduck.builtinLanguages = { tshell: turtleduck.tshell, chat: turtleduck.chatter };
     globalThis.py = await Languages.create('python');
-    globalThis.sh = await Languages.create('tshell', new imports.TShell());
+    globalThis.sh = await Languages.create('tshell');
+    globalThis.sh = await Languages.create('chat');
     globalThis.edFrame.addEventListener('beforeSave', (ev) => {
         if (!ev.detail.autoSave) {
             turtleduck.userlog(`Saving ${ev.detail.path}…`);
@@ -604,6 +598,21 @@ turtleduck._initializationComplete = async function (err) {
     globalThis.edFrame.addEventListener('afterLoad', (ev) => {
         turtleduck.userlog(`Loaded ${ev.detail.path}…`);
     });
+    document.addEventListener(
+        'visibilitychange',
+        (e) => {
+            console.info('Document visibility: ' + document.visibilityState);
+        },
+        false,
+    );
+
+    document.addEventListener(
+        'pagehide',
+        (e) => {
+            console.info('Window hidden: {}', e);
+        },
+        false,
+    );
 };
 window.SockJS = SockJS;
 window.Mousetrap = Mousetrap;

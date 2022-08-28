@@ -1,7 +1,5 @@
 import Settings, { ConfigDict } from '../borb/Settings';
 import { cloneDeep } from 'lodash-es';
-import { LanguageSupport } from '@codemirror/language';
-import { WorkerController } from './WorkerController';
 import { WorkerConnection } from './WorkerConnection';
 import { BorbTerminal } from '../borb/Terminal';
 import { Connection, Messaging, Payload } from '../borb/Messaging';
@@ -9,6 +7,8 @@ import { SubSystem } from '../borb';
 import { Shell } from './Shell';
 import { turtleduck } from './TurtleDuck';
 import path from 'path';
+import { SockJSConnection } from './SockJSConnection';
+
 export interface LanguageConfig extends ConfigDict {
     icon: string;
     extensions: string[];
@@ -17,9 +17,11 @@ export interface LanguageConfig extends ConfigDict {
     services: Record<string, string>;
     title: string;
     enabled: string;
-    worker: boolean | string;
-    scriptName: string;
     editMode: string;
+    worker?: string;
+    builtin?: string;
+    remote?: string;
+    shared?: boolean;
 }
 export interface LanguageConnection extends Connection {
     connect(): Promise<string>;
@@ -31,12 +33,11 @@ export interface LangInit {
     explorer: string;
     session: string;
 }
+
 export class Language {
     private _name: string;
     private _config: LanguageConfig;
-    private _sharedWorker: boolean;
     private _mainTerminal: BorbTerminal;
-    private _controller: WorkerController;
     private _connection: LanguageConnection;
     private _mainShell: Shell;
 
@@ -51,7 +52,6 @@ export class Language {
         this._name = name;
         this._config = cloneDeep(config);
         this._config.enabled = Settings.toLowerCase(config.enabled);
-        this._sharedWorker = Settings.toLowerCase(config.worker) === 'shared';
     }
 
     get name() {
@@ -83,20 +83,19 @@ export class Language {
     get enabled() {
         return this._config.enabled || 'optional';
     }
-    get worker() {
-        return this._config.worker || false;
+    get shared() {
+        return !!this._config.shared;
     }
-    get useWorker() {
-        return Settings.toBoolean(this._config.worker);
-    }
-
     get isLoaded() {
         return !!this._mainShell;
     }
     async load(connection?: LanguageConnection): Promise<Payload> {
         if (this._mainShell) return;
         if (connection) this._connection = connection;
-        if (!this._connection && !this.useWorker) {
+        if (
+            !this._connection &&
+            !(this._config.worker || this._config.builtin || this._config.remote)
+        ) {
             return Promise.reject(new Error(`Don't know how to load language ${this.name}`));
         }
 
@@ -108,20 +107,39 @@ export class Language {
         Messaging.route(`${this._name}_status`, (msg: { wait?: boolean; status?: string }) => {
             const wait = !!msg.wait;
             if (typeof msg.status === 'string') {
+                console.log(msg);
                 turtleduck.userlog(msg.status, wait);
                 this._mainTerminal.println(msg.status);
             }
             return Promise.resolve({});
         });
-
-        if (this.useWorker) {
-            this._controller = new WorkerController(
-                this._config.scriptName,
-                this._sharedWorker,
+        Messaging.route(`${this._name}_error`, (msg: { status?: string }) => {
+            if (typeof msg.status === 'string') {
+                console.error(msg);
+                turtleduck.userlog(msg.status);
+                this._mainTerminal.println(msg.status);
+            }
+            return Promise.resolve({});
+        });
+        if (this._config.builtin) {
+            this._connection = turtleduck.builtinLanguages[this._config.builtin];
+        } else if (this._config.worker) {
+            const evalId = `${this.shellName}_worker`;
+            this._connection = new WorkerConnection(
+                Messaging,
+                evalId,
+                this._config.worker,
+                this._config.shared,
                 this.name,
             );
-            const evalId = `${this.shellName}_worker`;
-            this._connection = new WorkerConnection(evalId, Messaging, this._controller);
+        } else if (this._config.remote) {
+            const evalId = `${this.shellName}_socket`;
+            this._connection = new SockJSConnection(
+                Messaging,
+                evalId,
+                this._config.remote,
+                this.name,
+            );
         }
         await this._connection.connect();
 

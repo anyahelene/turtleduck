@@ -16,13 +16,13 @@
 	<link rel="icon" href="images/turtleduck-icon.png" type="image/png" />
 	<link rel="manifest" href="manifest.json" />
 	<script src="js/bundle.js"></script>
-	<script src="js/classes.js"></script>
+	<!--script src="js/classes.js"></script -->
 
 	<link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body
-	onload="if(opener && opener.turtleduck.checkLogin_callback) opener.turtleduck.checkLogin_callback(); else main();">
+	onload="if(opener && opener.turtleduck.checkLogin_callback) opener.turtleduck.checkLogin_callback(); /*else main();*/">
 
 	<div id="page" class="dark main-and-figure"
 		data-layouts="main-and-figure mainly-coding mainly-figure main-alone figure-alone">
@@ -104,7 +104,6 @@
 					<nav id="explorer-tools" class="toolbar"></nav>
 				</header>
 				<section class="body">
-					<div id="iconbox" class="iconbox"></div>
 					<div id="explorer-var-section" class="open">
 						<h2>
 							<a id="explorer-head-var" href="#explorer-var-section" class="empty"

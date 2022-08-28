@@ -75,22 +75,6 @@ export class TShell extends BaseConnection implements LanguageConnection {
         return Promise.resolve(this.id);
     }
     deliverRemote(msg: Message, transfers: Transferable[] = []): void {
-        if (msg.header.msg_type === 'eval_request') {
-            const req = msg.content as EvalRequest;
-            this.eval(req.code).then((n) =>
-                this.deliverHost(
-                    Messaging.reply(msg, {
-                        code: req.code,
-                        ref: req.ref,
-                        diag: [],
-                        complete: true,
-                        value: n,
-                        multi: [],
-                    }),
-                ),
-            );
-            return;
-        }
         const m = this[msg.header.msg_type] as (msg: Payload) => Promise<Payload>;
         console.log('got request', msg, transfers, m);
         if (typeof m === 'function') {
@@ -102,6 +86,17 @@ export class TShell extends BaseConnection implements LanguageConnection {
         throw new MessagingError('Method not implemented', msg);
     }
     deliverHost: (msg: Message) => Promise<void>;
+
+    async eval_request({ content, code, ref }: EvalRequest) {
+        return this.eval(code).then((n) => ({
+            code,
+            ref,
+            diag: [],
+            complete: true,
+            value: n,
+            multi: [],
+        }));
+    }
 
     async langInit({ config, terminal, explorer, session }: LangInit): Promise<Payload> {
         this._terminal = terminal;

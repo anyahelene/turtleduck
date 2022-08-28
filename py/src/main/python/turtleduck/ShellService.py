@@ -115,10 +115,8 @@ async def run_tasks():
         tasks = [t for t in tasks if await t.run()]
     return len(tasks) == 0
 
-async def receive():
-    msg = js._msg.to_py()
-    js._msg = None
-    #debug(msg)
+async def receive(in_msg_id):
+    msg = js._msgs.to_py()[in_msg_id]
     header = msg['header']
     content = msg['content']
     msg_type = header['msg_type']

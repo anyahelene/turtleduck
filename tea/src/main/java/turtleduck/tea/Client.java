@@ -32,7 +32,6 @@ import turtleduck.tea.generated.FileServiceDispatch;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Logging;
-import static turtleduck.tea.HTMLUtil.*;
 
 public class Client implements JSObject, ClientObject {
     public static final Logger logger = Logging.getLogger(Client.class);
@@ -44,18 +43,13 @@ public class Client implements JSObject, ClientObject {
     protected SockJSConnection sockConn;
     public InputService inputService;
 
-    // protected TDEditor editor;
     private int nextChannelId = 2;
     protected String sessionName;
     protected CanvasServer canvas;
-    protected EditorServer editorImpl;
     protected FileServer fileServer;
     private int lastMessageIntervalId;
 
-    // public TextCursor cursor;
-
     protected FileSystem fileSystem;
-    protected History history;
 
     public void initialize() {
         try {
@@ -67,8 +61,6 @@ public class Client implements JSObject, ClientObject {
                 map = JSObjects.create().cast();
                 logger.info("Created turtleduck map: {}", map);
             }
-            map.set("actions", (KeyCallback) this::action);
-            history = new History(map.get("history").cast());
             router = new Router();
 
             fileSystem = new FileSystem();
@@ -83,41 +75,12 @@ public class Client implements JSObject, ClientObject {
             Dict langs = getConfigDict("languages", Dict.create());
             logger.info("Languages: {}", langs);
 
-            Storage localStorage = Storage.getLocalStorage();
-
-            Browser.document.addEventListener("visibilitychange", e -> {
-                logger.info("Document visibility: " + Browser.visibilityState());
-            }, false);
-
-            Browser.window.addEventListener("pagehide", e -> {
-                logger.info("Window hidden: {}", e);
-            }, false);
-
-            Component wm = map.get("wm").cast();
-
             sessionName = getConfig("session.name", "?");
 
-            // editorImpl = new EditorServer(Browser.document.getElementById("editor"));
-            // editorImpl.initialize();
-            // router.route(new EditorDispatch(editorImpl));
-            // map.set("editor", editorImpl.editor);
-
-            /*
-             * JSUtil.declare("loadJava", this::loadJava); JSUtil.declare("loadPython",
-             * this::loadPython); JSUtil.declare("goOnline", this::goOnline);
-             * JSUtil.declare("userlog", (JSStringConsumer) this::userlog);
-             */ map.set("client", (ClientObject) this);
-
-            // canvas = new CanvasServer(screenComponent);
-            // router.route(new CanvasDispatch(canvas));
-
-            updateInfo();
+            map.set("client", (ClientObject) this);
 
             WINDOW_MAP.set("turtleduck", map);
 
-            // ws.setOnClose(() -> NativeTScreen.consoleLog("NO CARRIER"));
-            // ws.setOnData((data) -> terminal.write(data));
-            updateInfo();
             JSUtil.initializationComplete(null);
         } catch (Throwable ex) {
             JSUtil.initializationComplete("Startup failed: " + ex.getMessage());
@@ -255,49 +218,6 @@ public class Client implements JSObject, ClientObject {
         }
     }
 
-    protected void updateInfo() {
-        String userName = getConfig("user.nickname", getConfig("user.username", null));
-        HTMLElement status = Browser.document.getElementById("status");
-        HTMLElement statusBtn = Browser.document.getElementById("status-button");
-        if (status != null && statusBtn != null) {
-            if (sockConn != null) {
-                if (sockConn.socketConnected) {
-                    status.setClassName("online");
-                    statusBtn.withText("🖧 ONLINE");
-                } else {
-                    status.setClassName("offline");
-                    statusBtn.withText("OFFLINE");
-                }
-                statusBtn.setAttribute("title", userName + "@" + sockConn.toString());
-            } else {
-                if (getConfig("session.private", false)) {
-                    status.setClassName("private");
-                    statusBtn.withText("PRIVATE");
-                } else if (getConfig("session.offline", false)) {
-                    status.setClassName("offline");
-                    statusBtn.withText("OFFLINE");
-                } else {
-                    status.setClassName("");
-                    statusBtn.withText("OFFLINE");
-                }
-                statusBtn.setAttribute("title", userName);
-            }
-        }
-
-        HTMLElement imgBox = Browser.document.getElementById("user-picture");
-        String imgUrl = getConfig("user.picture", null);
-        if (imgBox != null && imgUrl != null) {
-            imgBox.setAttribute("src", imgUrl);
-            imgBox.getStyle().setProperty("visibility", "visible");
-        }
-        HTMLElement nameBox = Browser.document.getElementById("user-name");
-        if (nameBox != null) {
-            nameBox.withText(userName); // TODO: escapes
-        }
-
-        JSUtil.updateInfo();
-    }
-
     protected void disconnected(Connection conn) {
         HTMLElement status = Browser.document.getElementById("status");
         if (status != null) {
@@ -348,60 +268,10 @@ public class Client implements JSObject, ClientObject {
             fun.accept(s);
     }
 
-    Promise<JSObject> action(String key, JSMapLike<JSObject> data, Event ev) {
-        logger.info("action: {}, {}", key, ev);
-        if (key.equals("save-and-run")) {
-            Async<Dict> async = editorImpl.save(ev);
-            Promise<JSObject> p;
-            if (async != null) {
-                logger.info("making promise: {}", async);
-                p = Promise.Util.promise((resolve, reject) -> {
-                    async.onComplete(dict -> resolve.accept(JSUtil.encode(dict)),
-                            dict -> reject.accept(JSUtil.encode(dict)));
-                });
-            } else {
-                p = Promise.Util.resolve(JSString.valueOf("no result"));
-            }
-            logger.info("promise {}", p);
-            return p;
-        } else if (key.equals("run")) {
-        }
-
-        return Promise.Util.resolve(JSString.valueOf("unknown key:" + key));
-    }
-
-    // <T> T withStorage(Function<Storage, T> fun) {
-    // Storage s = map.get("localStorage").cast();
-    // if (s != null)
-    // return fun.apply(s);
-    // else
-    // return null;
-    // }
-
     protected int nextChannelId() {
         int id = nextChannelId;
         nextChannelId += 2;
         return id;
-    }
-
-    // Async<Dict> sendToServer(Message msg) {
-    // return router.send(sockConn.id(), msg);
-    // }
-
-    void showHeap(Dict msg) {
-        int heapUse = msg.get(ShellService.HEAP_USE, 0);
-        int heapTot = msg.get(ShellService.HEAP_TOTAL, 0);
-        if (heapUse > 0 && heapTot > 0) {
-            String unit = "k";
-            if (heapTot > 9999) {
-                heapUse /= 1024;
-                heapTot /= 1024;
-                unit = "M";
-            }
-            HTMLElement elt = Window.current().getDocument().getElementById("heapStatus");
-            if (elt != null)
-                elt.withText(String.format("%d%s / %d%s", heapUse, unit, heapTot, unit));
-        }
     }
 
     public void route(String msgType, MessageHandler handler) {

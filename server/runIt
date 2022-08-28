@@ -1,0 +1,5 @@
+export EXTERNAL_URL=http://localhost/td
+export SERVER_ROOT=$HOME/git/turtleduck/tea/target/classes/webroot
+export VERTXWEB_ENVIRONMENT=dev
+
+java -jar $HOME/git/turtleduck/server/target/turtleduck-server*-fat.jar
