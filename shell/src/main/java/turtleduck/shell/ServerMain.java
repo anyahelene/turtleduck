@@ -31,7 +31,7 @@ public class ServerMain implements WebSocketListener {
     }
 
     private Session session;
-    static Logger log = Logging.getLogger(EndPoint.class.getName());
+    static Logger log = Logging.getLogger(ServerMain.class.getName());
 
     @Override
     public void onWebSocketConnect(Session session) {
@@ -101,7 +101,7 @@ public class ServerMain implements WebSocketListener {
             container.setMaxTextMessageSize(8 * 1024);
 
             // Simple registration of your WebSocket endpoints.
-            container.addMapping("/server", EndPoint.class);
+            container.addMapping("/server", ServerMain.class);
         }
     }
 

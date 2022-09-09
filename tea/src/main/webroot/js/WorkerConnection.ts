@@ -41,7 +41,7 @@ export class WorkerConnection extends MessagingConnection implements LanguageCon
     }
 
     protected postMessage(msg: any, transfers: Transferable[] = []) {
-        if (this.debugEnabled) console.log('%s: postmessage: %o', this.name, msg);
+        if (this.debugEnabled) console.log('%s: postmessage: %o', this.name, msg, this);
         this.port.postMessage(msg, transfers);
     }
 

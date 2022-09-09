@@ -27,3 +27,7 @@ py/pyodide-*
 tmp
 deploy-*
 dist
+wasm-bin
+tea/webpack.config.mjs.bak
+fonts.zip
+deploy

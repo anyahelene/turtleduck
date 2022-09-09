@@ -2,6 +2,7 @@
 <html style="height: 100vh">
 
 <head>
+    <base href="/">
 	<title>${html.title}</title>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -24,8 +25,7 @@
 <body
 	onload="if(opener && opener.turtleduck.checkLogin_callback) opener.turtleduck.checkLogin_callback(); /*else main();*/">
 
-	<div id="page" class="dark main-and-figure"
-		data-layouts="main-and-figure mainly-coding mainly-figure main-alone figure-alone">
+	<div id="page">
 		<header id="top">
 			<nav id="top-left">
 				<button type="button" id="logoimg" data-shortcut="">

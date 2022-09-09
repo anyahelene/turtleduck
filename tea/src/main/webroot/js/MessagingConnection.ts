@@ -12,7 +12,7 @@ export abstract class MessagingConnection extends BaseConnection implements Lang
         console.error('received error from worker', ev);
     private _onmessage: (msg: Message, ev: MessageEvent<any>) => any;
     name: string;
-    debugEnabled: boolean = false;
+    debugEnabled: boolean = true;
     protected _openPromise: Promise<void> = Promise.resolve();
     constructor(router: typeof Messaging, id: string, name: string) {
         super(router, id);

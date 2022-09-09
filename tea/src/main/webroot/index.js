@@ -579,9 +579,9 @@ turtleduck._initializationComplete = async function (err) {
     turtleduck.tshell = new TShell();
     turtleduck.chatter = new Chatter();
     turtleduck.builtinLanguages = { tshell: turtleduck.tshell, chat: turtleduck.chatter };
-    globalThis.py = await Languages.create('python');
-    globalThis.sh = await Languages.create('tshell');
-    globalThis.sh = await Languages.create('chat');
+    //  globalThis.py = await Languages.create('python');
+    //  globalThis.sh = await Languages.create('tshell');
+    //  globalThis.sh = await Languages.create('chat');
     globalThis.edFrame.addEventListener('beforeSave', (ev) => {
         if (!ev.detail.autoSave) {
             turtleduck.userlog(`Saving ${ev.detail.path}…`);

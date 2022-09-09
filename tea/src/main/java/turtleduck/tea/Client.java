@@ -1,9 +1,7 @@
 package turtleduck.tea;
 
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.teavm.jso.JSFunctor;
@@ -15,7 +13,6 @@ import org.teavm.jso.core.JSBoolean;
 import org.teavm.jso.core.JSMapLike;
 import org.teavm.jso.core.JSObjects;
 import org.teavm.jso.core.JSString;
-import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.html.HTMLElement;
 
 import turtleduck.async.Async;
@@ -25,10 +22,8 @@ import turtleduck.messaging.HelloService;
 import turtleduck.messaging.InputService;
 import turtleduck.messaging.Message;
 import turtleduck.messaging.Router;
-import turtleduck.messaging.ShellService;
 import turtleduck.messaging.generated.InputServiceProxy;
 
-import turtleduck.tea.generated.FileServiceDispatch;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Logging;
@@ -46,10 +41,7 @@ public class Client implements JSObject, ClientObject {
     private int nextChannelId = 2;
     protected String sessionName;
     protected CanvasServer canvas;
-    protected FileServer fileServer;
     private int lastMessageIntervalId;
-
-    protected FileSystem fileSystem;
 
     public void initialize() {
         try {
@@ -62,10 +54,6 @@ public class Client implements JSObject, ClientObject {
                 logger.info("Created turtleduck map: {}", map);
             }
             router = new Router();
-
-            fileSystem = new FileSystem();
-            fileServer = new FileServer(fileSystem);
-            router.route(new FileServiceDispatch(fileServer));
 
             if (getConfig("connections.remote-turtleduck.enabled", "").equals("always")) {
                 goOnline();
