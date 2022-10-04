@@ -7,16 +7,18 @@ import {
     Method,
     Message,
     Connection,
+    ExceptionData,
 } from '../borb/Messaging';
 import { Language } from './Language';
 import Settings from '../borb/Settings';
 import { LineEditor } from '../borb/LineEditor';
 import { turtleduck } from './TurtleDuck';
-import { uniqueId } from '../borb/Common';
+import { uniqueId, uniqueIdNumber } from '../borb/Common';
 import { Optionals } from './Util';
-import { defaultsDeep } from 'lodash-es';
+import { defaultsDeep, result } from 'lodash-es';
 import { Location } from './Location';
-interface ShellMessage {
+import { GenericException } from './Errors';
+interface __unused__ShellMessage {
     prompt?: string;
 
     doc?: string;
@@ -51,23 +53,17 @@ interface ShellMessage {
     heapMax?: number;
     cpuTime?: number; // = 0.0
 }
-interface Diag {
+export interface Diag {
     msg: string;
     line?: string;
     start: number;
     end: number;
-    pos: number;
+    pos?: number;
     ename: string;
     evalue: string;
     loc: string;
 }
-interface Exception {
-    exception: string;
-    ename: string;
-    evalue: string;
-    traceback: string[];
-    cause: Exception;
-}
+
 interface ShellService {
     eval(msg: EvalRequest): Promise<EvalReply>;
     refresh(msg: UpdateRequest): Promise<{}>;
@@ -150,7 +146,7 @@ export interface EvalResult {
      * Includes "exception" (exception class name), "message" (the message), "trace"
      * (array with stack trace), and optional "cause" (another exception)
      */
-    exception?: Exception;
+    exception?: ExceptionData;
     /**
      * Reply: An array of error/diagnostic messages.
      *
@@ -202,7 +198,15 @@ export interface EvalResult {
     icon?: string;
     display?: DisplayData;
 }
-
+export function valueResult(res: EvalResult, value: unknown) {
+    res.value = value;
+    return res;
+}
+export async function errorResult(res: EvalResult, err: Error) {
+    if (err instanceof GenericException) err.toResult(res);
+    else res.exception = await Messaging.errorData(err);
+    return res;
+}
 export interface EvalReply {
     /**
      * Request/Reply: A numeric reference provided by the caller
@@ -210,6 +214,8 @@ export interface EvalReply {
     ref: number;
     status: 'ok' | 'error' | 'incomplete';
     results: EvalResult[];
+    complete?: boolean;
+    value?: unknown;
 }
 
 export interface UpdateRequest {
@@ -223,19 +229,12 @@ export interface UpdateRequest {
     };
 }
 export class ShellConnection extends BaseConnection {
-    constructor(
-        router: typeof Messaging,
-        public shell: Shell,
-        id: string,
-        exId: string,
-    ) {
+    constructor(router: typeof Messaging, public shell: Shell, id: string, exId: string) {
         super(router, id, exId);
     }
 
     deliverRemote(msg: Message, transfers: Transferable[]): void {
-        const m = this.shell[msg.header.msg_type] as (
-            msg: Payload,
-        ) => Promise<Payload>;
+        const m = this.shell[msg.header.msg_type] as (msg: Payload) => Promise<Payload>;
         console.log('got request', msg, transfers, m);
         if (typeof m === 'function') {
             m(msg.content).then((reply) => {
@@ -253,6 +252,7 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
     languageName: string;
     shellName: string;
     lineEditor: LineEditor;
+    lastLineId = 0;
 
     constructor(language: Language) {
         this.language = language;
@@ -269,12 +269,7 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
         this.languageName = language.name;
         this.shellName = language.name;
         if (!this.terminal.id) this.terminal.id = `${id}_terminal`;
-        this.conn = new ShellConnection(
-            Messaging,
-            this,
-            this.id,
-            `${id}_explorer`,
-        );
+        this.conn = new ShellConnection(Messaging, this, this.id, `${id}_explorer`);
         this.lineEditor = new LineEditor(this.terminal, this.language);
         this.lineEditor.onEnter = this.onEnter;
         console.log('waiting for line editor...');
@@ -292,9 +287,7 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
             defaultFrame.appendChild(this.terminal);
             return;
         }
-        const existingTerminal = document.querySelector(
-            'borb-terminal',
-        ) as HTMLElement;
+        const existingTerminal = document.querySelector('borb-terminal') as HTMLElement;
         if (existingTerminal) {
             existingTerminal.insertAdjacentElement('afterend', this.terminal);
             return;
@@ -306,49 +299,50 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
         outputElement: HTMLElement,
         lineEditor: LineEditor,
     ) => {
+        if (lineId < 0) {
+            lineId = ++this.lastLineId;
+        }
+        this.lastLineId = lineId;
         const payload = { code: line, ref: `${lineId}`, opts: {} };
-        const result = await Messaging.send(
-            payload,
-            'eval_request',
-            this.language.connectionId,
-        );
-        if (processResult(result as unknown as EvalReply, this.terminal, false))
-            return {};
+        const result = await Messaging.send(payload, 'eval_request', this.language.connectionId);
+        if (processResult(result as unknown as EvalReply, this.terminal, false)) return {};
         else return { more: line };
     };
     async prompt(msg: { prompt: string; language: string }): Promise<{}> {
         console.error('Method not implemented.');
         return {};
     }
-    print: Method<{ text: string; stream: string }, {}> = async ({
-        text,
-        stream,
-    }) => {
+    print: Method<{ text: string; stream: string }, {}> = async ({ text, stream }) => {
         this.terminal.print(text);
         return {};
     };
-    printElement: Method<{ elt: HTMLElement; stream: string }, {}> = async ({
-        elt,
-        stream,
-    }) => {
+    printElement: Method<{ elt: HTMLElement; stream: string }, {}> = async ({ elt, stream }) => {
         this.terminal.printElement(elt);
         return {};
     };
-    display: Method<{ data: DisplayData; stream: string }, {}> = async ({
-        data,
-        stream,
-    }) => {
+    display: Method<{ data: DisplayData; stream: string }, {}> = async ({ data, stream }) => {
         this.terminal.display(data);
         return {};
     };
-    read_request: Method<
-        { prompt: string; language?: string },
-        { text: string }
-    > = async ({ prompt, language = '' }) => {
+    read_request: Method<{ prompt: string; language?: string }, { text: string }> = async ({
+        prompt,
+        language = '',
+    }) => {
         return { text: 'not implemented' };
     };
-    eval = async ({ code, ref, opts }: EvalRequest): Promise<EvalReply> => {
-        throw new Error('Method eval_request not implemented.');
+    eval = async (req: EvalRequest): Promise<any> => {
+        if (!req.ref) {
+            req.ref = uniqueIdNumber();
+        }
+        if (!req.opts) {
+            req.opts = {};
+        }
+        const result = (await Messaging.send(
+            req,
+            'eval_request',
+            this.language.connectionId,
+        )) as unknown as EvalReply;
+        return resultValue(result);
     };
     refresh = async ({ info }): Promise<{}> => {
         throw new Error('Method refresh not implemented.');
@@ -364,8 +358,7 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
                     snipkind: info.category,
                 },
             };
-            const { snippet, sym, verb, type, signature, category } =
-                defaultsDeep(info, defaults);
+            const { snippet, sym, verb, type, signature, category } = defaultsDeep(info, defaults);
             // if (persistent !== undefined && !persistent) return;
             const sig = signature;
             if (sig && !sig.includes('$')) {
@@ -376,9 +369,7 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
                     }]</a> ${sym} ${verb} <span class="cmt-keyword">${category}</span> <span class="cmt-variableName" data-snipid=${
                         snippet.snipid
                     }>${sig}</span> ${
-                        type
-                            ? html`: <span class="cmt-typeName">${type}</span>`
-                            : ''
+                        type ? html`: <span class="cmt-typeName">${type}</span>` : ''
                     }</div>`;
                     this.terminal.printElement(div);
                 }
@@ -406,6 +397,19 @@ function printExceptions(msg: EvalResult) {
         </div>`;
     } else {
         return '';
+    }
+}
+
+function decodeException(msg: EvalResult) {
+    const ex = msg.exception;
+    if (ex) {
+        const ename = ex.ename || 'Error';
+        const evalue = ex.evalue || '';
+        const trace = ex.traceback || [];
+        const err = new GenericException(evalue);
+        err.name = ename;
+        err.stack = trace.map((s) => `${s}\n`).join('');
+        return err;
     }
 }
 
@@ -437,7 +441,7 @@ function printDiags(msg: EvalResult) {
             if (err.length > 0) {
                 codefrag = html`<span class="diag-before">${before}</span
                     ><span class=${'diag-' + level}>${err}</span
-                    ><span> class="diag-after"${after}</span>`;
+                    ><span class="diag-after"${after}</span>`;
             } else {
                 codefrag = html`<span class="diag-before">${before}</span
                     ><span class=${'diag-between diag-' + level}></span
@@ -510,12 +514,8 @@ function printDiags(msg: EvalResult) {
 
 */
 
-function processResult(
-    msg: EvalReply,
-    terminal: BorbTerminal,
-    processIncomplete = false,
-) {
-    if (msg.status === 'ok' || msg['complete'] || processIncomplete) {
+function processResult(msg: EvalReply, terminal: BorbTerminal, processIncomplete = false) {
+    if (msg.status === 'ok' || msg.complete || processIncomplete) {
         (msg.results || []).forEach((result, index) => {
             const diags = printDiags(result);
             const ex = printExceptions(result);
@@ -523,9 +523,7 @@ function processResult(
             const name = result.name
                 ? html`<span class="cmt-variableName">${result.name}</span> = `
                 : '';
-            const type = result.type
-                ? html`<span class="cmt-typeName">${result.type} </span>`
-                : '';
+            const type = result.type ? html`<span class="cmt-typeName">${result.type} </span>` : '';
             const display = result.display;
             console.log('result', value, name, type);
             // if (value) {
@@ -541,5 +539,24 @@ function processResult(
         turtleduck.userlog('Eval: incomplete input');
         terminal.printElement(html.node`<span class="diag-error">…</span>`);
         return false;
+    }
+}
+
+function resultValue(msg: EvalReply) {
+    if (!msg.complete) throw new Error('Eval: incomplete input');
+    if (msg.status !== 'ok') {
+        (msg.results || []).forEach((result) => {
+            const ex = decodeException(result);
+            if (ex) throw ex;
+        });
+        throw new Error('Eval: unknown error');
+    }
+    if (msg.value !== undefined) {
+        return msg.value;
+    } else {
+        const values = (msg.results || []).map((r) => r.value);
+        if (values.length === 0) return undefined;
+        else if (values.length === 1) return values[0];
+        else return values;
     }
 }

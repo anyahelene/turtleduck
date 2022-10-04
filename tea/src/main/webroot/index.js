@@ -7,7 +7,7 @@ import { turtleduck } from './js/TurtleDuck';
 import { fileSystem, FileSystem } from './js/FileSystem';
 import { Component } from './js/Component';
 import { TilingWM, TilingWindow } from './js/TilingWM';
-import { MDRender, SubSystem, Borb, Buttons, Frames, Settings, History } from './borb';
+import { MDRender, SubSystem, Borb, Buttons, Frames, Settings, History, Terminals } from './borb';
 import { Shell, ShellConnection } from './js/Shell';
 import { Messaging } from './borb/Messaging';
 import { Camera } from './js/Media';
@@ -25,6 +25,10 @@ import { handleKey } from './js/Commands';
 import { Chatter } from './js/Chatter';
 import { WorkerConnection } from './js/WorkerConnection';
 import { SockJSConnection } from './js/SockJSConnection';
+import { ShellParser } from './js/ShellParser';
+import { shell } from './js/ShellLanguage';
+import { defineLang } from './borb/CodeMirror';
+import './js/Startup';
 var imports = {
     SockJS,
     Mousetrap,
@@ -576,12 +580,8 @@ turtleduck._initializationComplete = async function (err) {
         turtleduck.client.route('grid-style', (msg) => turtleduck.gridDisplay.style(msg));
         turtleduck.client.route('grid-dispose', (msg) => turtleduck.gridDisplay.dispose(msg));
     }
-    turtleduck.tshell = new TShell();
-    turtleduck.chatter = new Chatter();
-    turtleduck.builtinLanguages = { tshell: turtleduck.tshell, chat: turtleduck.chatter };
-    //  globalThis.py = await Languages.create('python');
-    //  globalThis.sh = await Languages.create('tshell');
-    //  globalThis.sh = await Languages.create('chat');
+
+
     globalThis.edFrame.addEventListener('beforeSave', (ev) => {
         if (!ev.detail.autoSave) {
             turtleduck.userlog(`Saving ${ev.detail.path}…`);
@@ -625,6 +625,7 @@ import './css/markdown.scss';
 import './css/terminal.scss';
 import './css/editor.scss';
 import LineHistory from './borb/LineHistory';
+import Systems from './borb/SubSystem';
 
 if (import.meta.webpackHot) {
     console.warn('WebpackHot enabled');
@@ -648,6 +649,7 @@ if (import.meta.webpackHot) {
             console.error('HMR failed:', err, context);
         },
     );
+
     //  import.meta.webpackHot.accept('./css/frames.scss?raw', function (...args) {
     //		console.warn("frames", args);
     //	});

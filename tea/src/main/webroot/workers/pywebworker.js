@@ -190,6 +190,7 @@ function connect(port) {
                     return;
                 } else if ((LOG, msg_type === 'langInit')) {
                     const res = await initPython(content, runPython);
+                    pymsg('Python environment ready!');
                     send({
                         header: {
                             msg_type: 'langInit_reply',

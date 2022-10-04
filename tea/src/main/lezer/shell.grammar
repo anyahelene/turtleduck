@@ -1,0 +1,69 @@
+@detectDelim
+//@skip { blank }
+
+@precedence {pipe @left, andOr @left, seqBg @left,var @cut}
+@top topCommandList {
+    blank* (list Separator blank*)+
+}
+CommandList {
+    (list Separator blank*)*
+}
+
+list { pipe | List { pipe (LogicOp blank* list ) }}
+pipe { command | Pipe { command ( PipeOp blank* pipe)}}
+
+command {
+      Command { (CommandWord | Redirect) (blank+ (Word | Redirect))* blank*}
+    | Subshell { "(" command ")" }
+    // | EvalExpr { "((" expression "))" }
+//    | CondExpr { "[[" expression "]]" }
+    | If { kw<"if"> blank* CommandList kw<"then"> blank* CommandList Elif* Else? kw<"fi"> }
+}
+Else { kw<"else"> blank* CommandList }
+Elif { kw<"elif"> blank* CommandList kw<"then"> blank* CommandList }
+CommandWord { Word }
+expression { name* }
+Redirect { RedirectOp blank* Word }
+
+@skip {} {
+    Word { outerWordPart+ }
+    wordPart {
+        Plain { wordChars }
+    |   Variable { dollar name }
+    }
+    escaped { bSlash Escaped }
+    outerWordPart {
+        wordPart | escaped
+    |   SQuoted { sQuote (SQuoteChars | EscapedSQuote)* sQuote }
+    |   DQuoted { dQuote (DQuotedChar | EscapedDQuote | wordPart)* dQuote }
+    }
+}
+// ! case  coproc  do done elif else esac fi for function if in select then until while { } time [[ ]]
+kw<term> { @specialize[@name={term}]<wordChars, term> }
+
+@tokens {
+    dQuote{ '"'}
+    sQuote {"'"}
+    bSlash {"\\"}
+    dollar {"$"}
+    PipeOp { "|" | "|&"}
+    LogicOp { "||" | "&&" }
+    RedirectOp { Number? (">"|"<"|">>") }
+    Separator { "&" | ";" | "\n" | @eof }
+    "&" "&&"
+    "|" "|&" "||"
+    ">>" "<" ">"
+    "(" ")" "((" "))" "{" "}" "[[" "]]"
+    wordChar { ![|&$;()<> \t\n\\"'] }
+    wordChars { wordChar+ }
+    SQuoteChars { (![\\'] | "\\" !['\\])+ }
+    EscapedSQuote { "\\'" | "\\\\"}
+    EscapedDQuote { '\\"' | "\\\\"}
+    DQuotedChar { $[ '] | "\\" !["$\\]  }
+    Escaped { ![] }
+    name { $[a-zA-Z_$?] $[a-zA-Z_0-9]* }
+    Number { $[0-9]+ }
+    blank { $[ \t] | "\\\n" }
+    @precedence { LogicOp, PipeOp, Separator}
+    @precedence { RedirectOp, wordChars }
+}

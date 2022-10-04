@@ -40,7 +40,9 @@ export class Language {
     private _mainTerminal: BorbTerminal;
     private _connection: LanguageConnection;
     private _mainShell: Shell;
-
+    private _initPromise: Promise<Language>;
+    private _initRes: [(value: Language | PromiseLike<Language>) => void, (reason?: Error) => void];
+    private _loading = false;
     constructor(name: string, config?: LanguageConfig) {
         if (!name || !name.match(/^[a-zA-Z][a-zA-Z0-9_]*$/)) {
             throw new Error(`Illegal language name '${name}'`);
@@ -52,6 +54,9 @@ export class Language {
         this._name = name;
         this._config = cloneDeep(config);
         this._config.enabled = Settings.toLowerCase(config.enabled);
+        this._initPromise = new Promise((resolve, reject) => {
+            this._initRes = [resolve, reject];
+        });
     }
 
     get name() {
@@ -89,70 +94,82 @@ export class Language {
     get isLoaded() {
         return !!this._mainShell;
     }
-    async load(connection?: LanguageConnection): Promise<Payload> {
-        if (this._mainShell) return;
+    get promise() {
+        return this._initPromise;
+    }
+    async load(connection?: LanguageConnection, background = false): Promise<Language> {
+        if (this._loading) return this.promise;
+        if (this._mainShell) return this.promise;
+        this._loading = true;
         if (connection) this._connection = connection;
         if (
             !this._connection &&
             !(this._config.worker || this._config.builtin || this._config.remote)
         ) {
-            return Promise.reject(new Error(`Don't know how to load language ${this.name}`));
+            const err = new Error(`Don't know how to load language ${this.name}`);
+            this._initRes[1](err);
+            return Promise.reject(err);
         }
+        try {
+            this._mainShell = new Shell(this);
+            await this._mainShell.init(this, this.shellName);
+            this._mainTerminal = this._mainShell.terminal;
+            this._mainShell.mountTerminal();
+            if (!background) this._mainTerminal.select();
+            Messaging.route(`${this._name}_status`, (msg: { wait?: boolean; status?: string }) => {
+                const wait = !!msg.wait;
+                if (typeof msg.status === 'string') {
+                    console.log(msg);
+                    turtleduck.userlog(msg.status, wait);
+                    this._mainTerminal.println(msg.status);
+                }
+                return Promise.resolve({});
+            });
+            Messaging.route(`${this._name}_error`, (msg: { status?: string }) => {
+                if (typeof msg.status === 'string') {
+                    console.error(msg);
+                    turtleduck.userlog(msg.status);
+                    this._mainTerminal.println(msg.status);
+                }
+                return Promise.resolve({});
+            });
+            if (this._config.builtin) {
+                this._connection = turtleduck.builtinLanguages[this._config.builtin];
+            } else if (this._config.worker) {
+                const evalId = `${this.shellName}_worker`;
+                this._connection = new WorkerConnection(
+                    Messaging,
+                    evalId,
+                    this._config.worker,
+                    this._config.shared,
+                    this.name,
+                );
+            } else if (this._config.remote) {
+                const evalId = `${this.shellName}_socket`;
+                this._connection = new SockJSConnection(
+                    Messaging,
+                    evalId,
+                    this._config.remote,
+                    this.name,
+                );
+            }
+            await this._connection.connect();
 
-        this._mainShell = new Shell(this);
-        await this._mainShell.init(this, this.shellName);
-        this._mainTerminal = this._mainShell.terminal;
-        this._mainShell.mountTerminal();
-        this._mainTerminal.select();
-        Messaging.route(`${this._name}_status`, (msg: { wait?: boolean; status?: string }) => {
-            const wait = !!msg.wait;
-            if (typeof msg.status === 'string') {
-                console.log(msg);
-                turtleduck.userlog(msg.status, wait);
-                this._mainTerminal.println(msg.status);
-            }
-            return Promise.resolve({});
-        });
-        Messaging.route(`${this._name}_error`, (msg: { status?: string }) => {
-            if (typeof msg.status === 'string') {
-                console.error(msg);
-                turtleduck.userlog(msg.status);
-                this._mainTerminal.println(msg.status);
-            }
-            return Promise.resolve({});
-        });
-        if (this._config.builtin) {
-            this._connection = turtleduck.builtinLanguages[this._config.builtin];
-        } else if (this._config.worker) {
-            const evalId = `${this.shellName}_worker`;
-            this._connection = new WorkerConnection(
-                Messaging,
-                evalId,
-                this._config.worker,
-                this._config.shared,
-                this.name,
+            await Messaging.send(
+                {
+                    config: this._config,
+                    terminal: this._mainShell.id,
+                    explorer: `${this.shellName}_explorer`,
+                    session: Settings.getConfig('session.name', ''),
+                },
+                'langInit',
+                this._connection.id,
             );
-        } else if (this._config.remote) {
-            const evalId = `${this.shellName}_socket`;
-            this._connection = new SockJSConnection(
-                Messaging,
-                evalId,
-                this._config.remote,
-                this.name,
-            );
+            this._initRes[0](this);
+        } catch (e) {
+            this._initRes[1](e);
         }
-        await this._connection.connect();
-
-        return await Messaging.send(
-            {
-                config: this._config,
-                terminal: this._mainShell.id,
-                explorer: `${this.shellName}_explorer`,
-                session: Settings.getConfig('session.name', ''),
-            },
-            'langInit',
-            this._connection.id,
-        );
+        return this.promise;
     }
 
     get connectionId() {
@@ -176,6 +193,14 @@ export class Language {
     toString() {
         return this.name;
     }
+
+    get mainShell() {
+        return this._mainShell;
+    }
+
+    get mainTerminal() {
+        return this._mainTerminal;
+    }
 }
 export const Languages = {
     _id: 'Language',
@@ -195,10 +220,10 @@ export const Languages = {
         }
         return l;
     },
-    async create(name: string, conn?: LanguageConnection) {
+    async create(name: string, conn?: LanguageConnection, background = false) {
         const l = Languages.get(name);
         if (!l.isLoaded) {
-            await l.load(conn);
+            await l.load(conn, background);
         }
         return l;
     },

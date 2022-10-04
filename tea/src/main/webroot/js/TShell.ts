@@ -4,14 +4,19 @@ import { Printer, Terminal } from './Terminal';
 import type { Options, ParsedOptions } from 'getopts/.';
 import Systems from '../borb/SubSystem';
 import { turtleduck } from './TurtleDuck';
-import { StorageContext } from './Storage';
+import { StorageContext, Storage } from './Storage';
 import type { HistorySession } from '../borb/LineHistory';
-import { LangInit, LanguageConnection } from './Language';
+import { LangInit, LanguageConnection, Languages } from './Language';
 import { BaseConnection, Message, Messaging, MessagingError, Payload } from '../borb/Messaging';
-import { EvalReply, EvalRequest } from './Shell';
+import { errorResult, EvalReply, EvalRequest, EvalResult, Shell, valueResult } from './Shell';
 import { eq } from 'lodash-es';
 import { html } from 'uhtml';
 import FS from '@isomorphic-git/lightning-fs';
+import { Call, Command, ShellParser } from './ShellParser';
+import { GenericException } from './Errors';
+import { StateCommand } from '@codemirror/state';
+import { WorkerConnection } from './WorkerConnection';
+import { displayStack } from './Stack';
 //import getopts = require('getopts');
 const homeDir = '/home';
 const options = {};
@@ -47,7 +52,6 @@ type Program = {
 const programs: Map<string, Program> = new Map();
 
 export class TShell extends BaseConnection implements LanguageConnection {
-    public readonly id: string;
     private env: Map<string, EnvValue>;
     private _returnCode: number = 0;
     private _programs = programs;
@@ -60,18 +64,25 @@ export class TShell extends BaseConnection implements LanguageConnection {
     history?: HistorySession;
     private _terminal: string;
     private _explorer: string;
+    _ref: number;
+    _execConnection: WorkerConnection;
+    private _config: import('/home/anya/git/turtleduck/tea/src/main/webroot/js/Language').LanguageConfig;
     constructor(cwd?: StorageContext, parent?: TShell) {
         super(Messaging, `tshell:${seq++}`);
         this._parent = parent;
         this.env = createEnvironment();
-        this._cwd = cwd ?? turtleduck.cwd;
+        if (cwd) this._cwd = cwd;
+        else
+            Systems.waitFor(Storage).then((st) => {
+                this._cwd = st.context();
+            });
         defaultEnvironment.forEach((v, k) => {
             if (!this.env.has(k)) {
                 this.env.set(k, v);
             }
         });
     }
-    connect(): Promise<string> {
+    async connect(): Promise<string> {
         return Promise.resolve(this.id);
     }
     deliverRemote(msg: Message, transfers: Transferable[] = []): void {
@@ -87,25 +98,33 @@ export class TShell extends BaseConnection implements LanguageConnection {
     }
     deliverHost: (msg: Message) => Promise<void>;
 
-    async eval_request({ content, code, ref }: EvalRequest) {
-        return this.eval(code).then((n) => ({
+    async eval_request({ content, code, ref }: EvalRequest): Promise<EvalReply> {
+        const res: EvalResult = {
             code,
-            ref,
             diag: [],
-            complete: true,
-            value: n,
-            multi: [],
-        }));
+        };
+        try {
+            const value = await this.eval(code, ref);
+            const r = valueResult(res, undefined);
+            console.log('eval_request: got value', value, r);
+            return { ref, status: 'ok', results: [r], complete: true };
+        } catch (err) {
+            const r = await errorResult(res, err);
+            console.log('eval_request: got error', err, r);
+            return { ref, status: 'error', results: [r], complete: true };
+        }
     }
 
     async langInit({ config, terminal, explorer, session }: LangInit): Promise<Payload> {
         this._terminal = terminal;
         this._explorer = explorer;
+        this._config = config;
         this.setenv('SESSION', session);
         this._printer = {
             print: (text: string) =>
                 Messaging.send({ text }, 'print', this._terminal).then(() => Promise.resolve()),
         };
+        await this.initExecutor();
         return {};
     }
     get printer(): Printer {
@@ -167,9 +186,19 @@ export class TShell extends BaseConnection implements LanguageConnection {
         return commands.map((c) => c.trim().split(' '));
     }
 
-    async eval(line: string, outputElement?: HTMLElement): Promise<number> {
+    async eval(line: string, ref: number, outputElement?: HTMLElement): Promise<number> {
         console.log('eval', line, outputElement);
-        const commands = this.parseCommand(line);
+        const sp = globalThis.ShellParser;
+        const parser: ShellParser = new sp(line);
+        const cmds = parser.buildCommands();
+        //console.log(JSON.stringify(cmds, null, '    '));
+        // const tree = html.node`<span>${cmds.map((c) => c.toHTML())}</span>`;
+        // console.log(tree);
+        // if (outputElement) {
+        //     outputElement.appendChild(tree);
+        // } else {
+        //     await Messaging.send({ elt: tree }, 'printElement', this._terminal);
+        // }
 
         const oldOutput = this._outputElement;
         const oldPrinter = this._printer;
@@ -179,67 +208,61 @@ export class TShell extends BaseConnection implements LanguageConnection {
             this._printer = Terminal.elementPrinter(outputElement, 'shell');
             console.log(this._printer);
         }
-        const evalStep = async (i: number): Promise<number> => {
-            if (i >= 0 && i < commands.length) {
-                if (commands[i + 1] && commands[i + 1][0] === '|') {
-                    // set up pipe
-                }
-                const cmd = commands[i];
-                const prog = cmd[0];
-                if (prog === ';' || prog === '&') {
-                    return evalStep(i + 1);
-                } else if (prog === '||' && this._returnCode !== 0) {
-                    return evalStep(i + 1);
-                } else if (prog === '&&' && this._returnCode === 0) {
-                    return evalStep(i + 1);
-                } else {
-                    const args = cmd.splice(1);
-                    await this.evalCommand(prog, args);
-                    return evalStep(i + 1);
-                }
+        try {
+            this._ref = ref;
+            while (cmds.length > 0) {
+                const cmd = cmds.shift();
+                console.log(cmd);
+                this._returnCode = await cmd.evaluate(this);
             }
-
+        } finally {
             // reached the end of all steps
+            this._ref = 0;
             this._outputElement = oldOutput;
             this._printer = oldPrinter;
-            return Promise.resolve(0);
-        };
-
-        return evalStep(0);
+        }
+        return this._returnCode;
     }
 
-    async evalCommand(prog: string, args: string[]): Promise<number> {
-        args = args.map((arg) => (arg.startsWith('$') ? this.getenv(arg.substring(1)) : arg));
-        const { params, fun } = this.findProgram(prog);
-
-        const pArgs = getopts(args, params);
-
-        pArgs.__shell__ = this;
-        const prevCommand = this._currentCommand;
-        const prevArguments = this._currentArguments;
-        try {
-            this._currentCommand = prog;
+    async evalCommand(cmdName: string, args: string[], cmd: Command): Promise<number> {
+        console.log('eval command: ', this, cmdName, ...args);
+        const prog = this.findProgram(cmdName);
+        if (prog) {
+            const pArgs = prog.params ? getopts(args, prog.params) : { _: args };
+            pArgs.__shell__ = this;
+            pArgs.__command__ = cmd;
+            pArgs.__background__ = cmd.background;
+            const prevCommand = this._currentCommand;
+            const prevArguments = this._currentArguments;
+            this._currentCommand = cmdName;
             this._currentArguments = args;
-            if (fun) {
-                const ret = await fun(pArgs, this, this._cwd);
-                this._returnCode = Number(ret) || 0;
-
-                if (typeof ret === 'string') this.println(ret);
-            } else {
-                throw `Command not found: ${prog}`;
+            try {
+                if (prog.fun) {
+                    const ret = await prog.fun(pArgs, this, this._cwd);
+                    this._returnCode = Number(ret) || 0;
+                    if (typeof ret === 'string') {
+                        this.println('Returned string: ', ret);
+                        this._returnCode = 0;
+                    }
+                } else {
+                    throw new Error(`Command not found: ${cmdName}`);
+                }
+            } catch (e) {
+                this._returnCode = 255;
+                throw e;
+            } finally {
+                this._currentCommand = prevCommand;
+                this._currentArguments = prevArguments;
             }
-        } catch (e) {
+            return Promise.resolve(this._returnCode);
+        } else {
             this._returnCode = 255;
-            console.error(e);
-        } finally {
-            this._currentCommand = prevCommand;
-            this._currentArguments = prevArguments;
+            throw new Error(`Command not found: ${cmdName}`);
         }
-        return Promise.resolve(this._returnCode);
     }
 
     findProgram(prog: string): Program {
-        return programs.get(prog) || { fun: undefined, params: {} };
+        return programs.get(prog) || { fun: undefined, params: null };
     }
 
     get context() {
@@ -261,6 +284,65 @@ export class TShell extends BaseConnection implements LanguageConnection {
             this._printer.print(text);
         } else {
             console.log(text);
+        }
+    }
+
+    async initExecutor() {
+        const evalId = `${this.id}_worker`;
+        Messaging.route(`shellworker_status`, (msg: { wait?: boolean; status?: string }) => {
+            const wait = !!msg.wait;
+            if (typeof msg.status === 'string') {
+                console.log(msg);
+                turtleduck.userlog(msg.status, wait);
+                this.println(msg.status);
+            }
+            return Promise.resolve({});
+        });
+        Messaging.route(`shellworker_error`, (msg: { status?: string }) => {
+            if (typeof msg.status === 'string') {
+                console.error(msg);
+                turtleduck.userlog(msg.status);
+                this.println(msg.status);
+            }
+            return Promise.resolve({});
+        });
+        this._execConnection = new WorkerConnection(
+            Messaging,
+            evalId,
+            'shellworker.js',
+            false,
+            'shellworker',
+        );
+        await this._execConnection.connect();
+
+        await Messaging.send(
+            {
+                config: this._config,
+                terminal: this._terminal,
+                explorer: this._explorer,
+                session: this.getenv('SESSION'),
+            },
+            'langInit',
+            this._execConnection.id,
+        );
+
+        const files = await this._cwd.readdir();
+        for (let file of files) {
+            const data = await this._cwd.readbinfile(file);
+            console.log('uploading to executor:', file);
+            try {
+                await Messaging.send(
+                    {
+                        filename: file,
+                        data,
+                    },
+                    'upload',
+                    this._execConnection.id,
+                );
+                console.log('uploading ok:', file);
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
 }
@@ -345,18 +427,28 @@ programs.set('ls', {
                 }</table>`,
             );
         } else {
-            const longest = res.reduce((prev, cur) => Math.max(prev, cur.length + 1), 0);
-            const perLine = Math.floor(80 / (longest || 1));
-            const len = 80 / perLine;
-            console.log('ls formatting: longest=%d, perLine=%d, len=%d', longest, perLine, len);
-            res.forEach((entry, idx) => {
-                sh.print(entry.padEnd(len));
-                if (idx > 0 && idx % perLine === 0) sh.println();
-            });
+            formatColumns(res, sh);
         }
         return 0;
     },
 });
+function formatColumns(entries: string[], sh: TShell) {
+    const longest = entries.reduce((prev, cur) => Math.max(prev, cur.length + 1), 0);
+    const perLine = Math.floor(80 / (longest || 1));
+    const len = 80 / perLine;
+    let newline = true;
+    console.log('ls formatting: longest=%d, perLine=%d, len=%d', longest, perLine, len);
+    entries.forEach((entry, idx) => {
+        sh.print(entry.padEnd(len));
+        if (!newline && idx % perLine === 0) {
+            sh.println();
+            newline = true;
+        } else {
+            newline = false;
+        }
+    });
+    if (!newline) sh.println();
+}
 programs.set('show_mode', {
     params: {},
     fun: (args, sh, ctx) =>
@@ -366,9 +458,18 @@ programs.set('echo', {
     params: { boolean: ['n', 'e', 'E'] },
     fun: (args, sh, ctx) => sh.println(args['_'].join(' ')),
 });
+programs.set('pwd', {
+    params: {},
+    fun: (args, sh, ctx) => sh.println(ctx.cwd),
+});
 programs.set('cd', {
     params: { boolean: ['L', 'P', 'e', '@'] },
-    fun: (args, sh, ctx) => ctx.chdir(args['_'][0]).then(() => 0),
+    fun: async (args, sh, ctx) => {
+        const oldwd = ctx.cwd;
+        await ctx.chdir(args['_'][0]);
+        sh.setenv('OLDPWD', oldwd);
+        return 0;
+    },
 });
 programs.set('mkdir', {
     params: { boolean: ['p'] },
@@ -389,6 +490,137 @@ programs.set('history', {
             const entries = await sh.history.list();
             const l = Math.max(...entries.map((e) => e.id)).toString().length;
             entries.forEach((e) => sh.println(`[${e.id.toString().padStart(l)}] ${e.data}`));
+            return 0;
+        } else {
+            return 1;
+        }
+    },
+});
+programs.set('help', {
+    params: {},
+    fun: async (args, sh, ctx) => {
+        formatColumns([...programs.keys()].sort(), sh);
+        return 0;
+    },
+});
+programs.set('python', {
+    params: {},
+    fun: async (args, sh, ctx) => {
+        let py = Languages.get('python');
+        console.log(py, py.isLoaded);
+        if (!py.isLoaded) await py.load(undefined, args['__background__']);
+        console.log(py);
+        const term = py.mainTerminal;
+        console.log(term);
+        if (term && !args['__background__']) term.select();
+        return 0;
+    },
+});
+programs.set('frames', {
+    params: {},
+    fun: async (args, sh, ctx) => {
+        const arg = args['_'][0];
+        if (!arg) {
+            sh.println('usage: frames FILENAME');
+            return 1;
+        }
+        const ref = sh._ref;
+        let py = Languages.get('python');
+        console.log(py, py.isLoaded);
+        if (!py.isLoaded) {
+            sh.println('loading Python...');
+            await py.load(undefined, true);
+        }
+        const path = ctx.realpath(arg);
+        turtleduck.userlog('loading ELF file', true);
+        try {
+            const result = await py.mainShell.eval({
+                code: 'from turtleduck import stack_frames\nwith open(__filename, "rb") as __f:\n    __r = stack_frames.process_stream(__f,__filename)\n__r',
+                opts: { localVars: { __filename: path }, raw: true },
+                ref,
+            });
+            turtleduck.userlog('preparing display...');
+
+            const ds = displayStack(result).display();
+            const panel = (globalThis.stackFramePanel = turtleduck
+                .createPanel()
+                .frame('screen')
+                .panel('div', 'tshell_stackFramePanel')
+                .title('Stack Frame Layout')
+                .select()
+                .done());
+            panel.replaceChildren(ds);
+            return 0;
+        } finally {
+            turtleduck.userlog('ok');
+        }
+    },
+});
+function external(cmd: string) {
+    programs.set(cmd, {
+        params: null,
+        fun: async (args, sh, ctx) => execve(cmd, args, sh, ctx),
+    });
+}
+['addr2line', 'bfdtest1', 'bfdtest2', 'elfedit', 'nm-new', 'objdump', 'size', 'strings'].forEach(
+    (cmd) => external(cmd),
+);
+async function execve(
+    command: string,
+    args: getopts.ParsedOptions,
+    sh: TShell,
+    ctx: StorageContext,
+) {
+    const reply = (await Messaging.send(
+        {
+            command,
+            args: args['_'],
+        },
+        'execve',
+        sh._execConnection.id,
+    )) as unknown as EvalReply;
+    return (reply.value as number) || 0;
+}
+programs.set('chat', {
+    params: {},
+    fun: async (args, sh, ctx) => {
+        let chat = Languages.get('chat');
+        if (!chat) chat = globalThis.chat = await Languages.create('chat');
+        const term = chat.mainTerminal;
+        if (term && !args['__background__']) term.select();
+        return 0;
+    },
+});
+programs.set('upload', {
+    params: {},
+    fun: async (args, sh, ctx) => {
+        const input = document.getElementById('file-input') as HTMLInputElement;
+        if (input) {
+            input.onchange = async (ev) => {
+                input.onchange = null;
+                const files = input.files || ([] as File[]);
+                for (const file of files) {
+                    console.log(file);
+                    sh.println(`received file '${file.name}' (${file.size} bytes)`);
+                    const data = new Uint8Array(await file.arrayBuffer());
+                    console.log(data);
+                    await ctx.writebinfile(file.name, data);
+                    sh.println(`saved file '${file.name}' (${file.size} bytes)`);
+                    try {
+                        await Messaging.send(
+                            {
+                                filename: file.name,
+                                data,
+                            },
+                            'upload',
+                            sh._execConnection.id,
+                        );
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+            };
+            input.click();
             return 0;
         } else {
             return 1;

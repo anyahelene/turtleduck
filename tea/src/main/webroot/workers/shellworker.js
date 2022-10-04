@@ -1,33 +1,10 @@
 importScripts('./shellcommand.js');
 
-console.warn('Objdump init', self, initModule);
+console.warn('ShellWorker init', self, initModule);
 const PRELOAD_FILE = '../bin/pwnexercise';
 const PATH = '../bin/';
 
-const routes = {
-    init_objdump: '',
-    eval_request: 'ShellService',
-};
-
-util = {
-    id: function (arg) {
-        return arg;
-    },
-    log: function (arg) {
-        console.log(arg);
-    },
-};
-
-isMessage = function (msg) {
-    if (msg instanceof Map) {
-        return msg.has('content') && msg.has('header');
-    } else {
-        return 'content' in msg && 'header' in msg;
-    }
-};
 debug = false;
-
-waiting_for = null;
 
 clients = [];
 seq = 0;
@@ -39,7 +16,7 @@ existing = false;
 _msgs = {};
 moduleStatus = 0;
 wasmBinaries = new Map();
-
+dataFiles = new Map();
 function connect(port) {
     const queue = [];
 
@@ -57,14 +34,14 @@ function connect(port) {
         const pymsg = (e) => {
             if (self.debug) console.log(LOG, 'MSG:', e);
             port.postMessage({
-                header: { msg_type: 'objdump_status', msg_id: msgId() },
+                header: { msg_type: 'shellworker_status', msg_id: msgId() },
                 content: { status: e, whileProcessing: { msg_id, msg_type } },
             });
         };
         const pyerr = (e) => {
             console.error(LOG, 'ERR:', e);
             port.postMessage({
-                header: { msg_type: 'objdump_error', msg_id: msgId() },
+                header: { msg_type: 'shellworker_error', msg_id: msgId() },
                 content: { status: e, whileProcessing: { msg_id, msg_type } },
             });
         };
@@ -145,29 +122,30 @@ function connect(port) {
                         },
                         content: { status: 'ok' },
                     });
-                } else if (msg_type === 'eval_request') {
-                    const { code, ref, opts } = content;
-                    const args = code.trim().split(/\s+/);
-                    const cmd = args.shift();
-                    if (!cmd || !cmd.match(/^[a-zA-z0-9_-]+$/)) {
-                        throw new Error(`Illegal command '${cmd}'`);
+                } else if (msg_type === 'upload') {
+                    const { filename, data } = content;
+                    dataFiles.set(filename, data);
+                    send({
+                        header: { msg_type: 'upload_reply', ref_id: msg_id, msg_id: msgId() },
+                        content: { status: 'ok' },
+                    });
+                } else if (msg_type === 'execve') {
+                    const { command, args } = content;
+                    if (!command || !command.match(/^[a-zA-z0-9_-]+$/)) {
+                        throw new Error(`Illegal command '${command}'`);
                     }
-                    await self.load(cmd);
-                    const CmdModule = await self.init(port, cmd);
+                    await self.load(command);
+                    const CmdModule = await self.init(port, command);
                     const result = CmdModule.callMain(args);
                     send({
                         header: {
-                            msg_type: 'eval_reply',
+                            msg_type: 'execve_reply',
                             ref_id: msg_id,
                             msg_id: msgId(),
                         },
                         content: {
-                            code,
-                            ref,
-                            diag: [],
-                            complete: true,
+                            command,
                             value: result,
-                            multi: [],
                             status: 'ok',
                         },
                     });
@@ -200,8 +178,8 @@ async function load(cmd) {
         console.log('loading data');
         const pwnresponse = await fetch(PRELOAD_FILE);
         console.log(pwnresponse);
-        self.pwnData = new Uint8Array(await pwnresponse.arrayBuffer());
-        console.debug(pwnData);
+        dataFiles.set('pwnexercise', new Uint8Array(await pwnresponse.arrayBuffer()));
+        console.debug(dataFiles);
     }
     if (cmd && !wasmBinaries.has(cmd)) {
         console.log(`loading ${PATH}${cmd}.wasm`);
@@ -223,9 +201,11 @@ async function init(port, cmd) {
         postRun: [],
         preInit: async () => {
             //console.debug(data.getUint8(0),data.getUint8(1),data.getUint8(2),data.getUint8(3))
-            Module.FS.writeFile('/tmp/pwnexercise', pwnData); //,{encoding:'binary'});
-            console.debug(Module.FS.readdir('/tmp'));
-            console.debug(Module.FS.readFile('/tmp/pwnexercise'));
+            Module.FS.mkdir('/work');
+            Module.FS.chdir('/work');
+            dataFiles.forEach((data, filename) => Module.FS.writeFile(filename, data)); //,{encoding:'binary'});
+            console.debug(Module.FS.readdir('/work'));
+            console.debug(Module.FS.readFile('/work/pwnexercise'));
             //   FS.init();
             //  FS.mkdir('/');
         },
@@ -249,7 +229,7 @@ async function init(port, cmd) {
         setStatus: (text) => {
             if (self.debug) console.log(self.LOG, 'MSG:', text);
             port.postMessage({
-                header: { msg_type: 'objdump_status', msg_id: msgId() },
+                header: { msg_type: 'shellworker_status', msg_id: msgId() },
                 content: { status: text },
             });
         },

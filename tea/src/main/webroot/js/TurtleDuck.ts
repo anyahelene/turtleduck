@@ -17,6 +17,9 @@ import {
 import { BorbFrame, BorbPanelBuilder } from '../borb/Frames';
 import Systems from '../borb/SubSystem';
 import { Language, LanguageConnection, Languages } from './Language';
+import { TShell } from './TShell';
+import { Chatter } from './Chatter';
+
 Borb.tagName('foo ');
 // export { History, HistorySession };
 declare global {
@@ -168,7 +171,7 @@ interface TurtleDuck {
     updateInfo: typeof updateInfo;
     showHeap: typeof showHeap;
     cwd: StorageContext;
-    storage: Storage;
+    storage: typeof Storage;
     history: typeof history;
     settings: typeof Settings;
     makeProxy: typeof proxy;
@@ -181,6 +184,8 @@ interface TurtleDuck {
     borb: { dragndrop: typeof DragNDrop };
     createPanel(): BorbPanelBuilder;
     openFiles(): Promise<void>;
+    tshell: TShell;
+    chatter: Chatter;
 }
 
 export const turtleduck: TurtleDuck = {

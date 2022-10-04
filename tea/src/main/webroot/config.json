@@ -170,15 +170,24 @@
                 "pyshell": "ShellService"
             },
             "init": ["ShellService.cwd = '/examples'"],
-            "install": ["Pillow", "lark"],
+            "install": [
+                "Pillow",
+                "lark",
+                "pyelftools",
+                "sortedcontainers",
+                "intervaltree",
+                "six",
+                "pysocks",
+                "../py/pwntubes-4.10.0.dev0-py3-none-any.whl"
+            ],
             "import": [],
             "worker": "pywebworker.js"
         },
-        "objdump": {
-            "title": "Objdump",
+        "exec": {
+            "title": "Exec",
             "enabled": "optional",
-            "shellName": "objdump",
-            "shellTitle": "Objdump",
+            "shellName": "exec",
+            "shellTitle": "Exec",
             "editMode": "shell",
             "icon": "🐢",
             "extensions": ["sh"],

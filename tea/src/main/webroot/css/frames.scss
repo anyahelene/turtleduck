@@ -90,6 +90,13 @@
     box-shadow: #0003 0px 0px 2px;
 }
 
+::slotted(div) {
+    padding: .25rem;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
 header {
     &:not(.no-title) {
         background-color: color-lookup(frame, fade-50);
