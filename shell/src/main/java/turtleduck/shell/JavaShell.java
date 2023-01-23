@@ -1,13 +1,8 @@
 package turtleduck.shell;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,16 +12,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import jdk.jshell.Diag;
 import jdk.jshell.EvalException;
@@ -63,10 +53,9 @@ import turtleduck.messaging.ExplorerService;
 import turtleduck.messaging.Reply;
 import turtleduck.messaging.Router;
 import turtleduck.messaging.ShellService;
-import turtleduck.messaging.generated.EditorServiceProxy;
-import turtleduck.messaging.generated.ExplorerServiceProxy;
 import turtleduck.shell.control.TShellLocalExecutionControl;
 import turtleduck.shell.generated.TShellDispatch;
+import turtleduck.shell.loader.FileManager;
 import turtleduck.terminal.TerminalPrintStream;
 import turtleduck.text.Attribute;
 import turtleduck.text.FontStyle;
@@ -76,12 +65,23 @@ import turtleduck.text.TextWindow;
 import turtleduck.util.Array;
 import turtleduck.util.Dict;
 import turtleduck.util.Logging;
+import turtleduck.util.Logger;
 import turtleduck.util.Strings;
 
+/**
+ * TurtleDuck wrapper for JShell
+ * 
+ * @author anya
+ *
+ */
 @MessageDispatch("turtleduck.shell.generated.TShellDispatch")
-public class TShell implements ShellService {
+public class JavaShell implements ShellService {
+    public static final String PROJECT_NAME = JavaShell.class.getPackage().getImplementationTitle();
+    public static final String PROJECT_VERSION = JavaShell.class.getPackage().getImplementationVersion();
+    public static final String PROJECT_VENDOR = JavaShell.class.getPackage().getImplementationVendor();
+    public static final int DEFAULT_LINE_WIDTH = 80;
     private final TShellDispatch dispatch;
-    protected final Logger logger = Logging.getLogger(TShell.class);
+    protected final Logger logger = Logging.getLogger(JavaShell.class);
     private final SnippetNS startupNS = new SnippetNS("Startup", "s");
     private final SnippetNS errorNS = new SnippetNS("Error", "e");
     private final SnippetNS mainNS = new SnippetNS("Main", "");
@@ -102,21 +102,22 @@ public class TShell implements ShellService {
     private final TShellLocalExecutionControl control;
     private LocalLoaderDelegate delegate;
     private String startupCode;
-    // private final Router router;
     private ExplorerService explorerService;
     private Function<Supplier<Dict>, Async<Dict>> enqueuer;
+    private Runnable exitHandler;
 
-    public TShell(Screen screen, TextWindow window, TextCursor printer2, Router router) {
+    public JavaShell(Screen screen, TextWindow window, TextCursor printer2, ExplorerService explorer) {
         this.dispatch = new TShellDispatch(this);
         this.window = window;
         this.screen = screen;
         this.printer = printer2;
+        this.explorerService = explorer;
         // this.router = router;
 
         printer2.autoScroll(true);
-        delegate = new LocalLoaderDelegate(TShell.class.getClassLoader());
+        delegate = new LocalLoaderDelegate(JavaShell.class.getClassLoader());
         try {
-            delegate.findClass("turtleduck.shell.TShell");
+            delegate.findClass("turtleduck.shell.JavaShell");
         } catch (ClassNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -124,10 +125,9 @@ public class TShell implements ShellService {
         Builder builder = JShell.builder();
         control = new TShellLocalExecutionControl(delegate);
         builder.executionEngine(new ExecutionControlProvider() {
-
             @Override
             public String name() {
-                return "tshell";
+                return "td_javashell";
             }
 
             @Override
@@ -136,7 +136,12 @@ public class TShell implements ShellService {
                 return control;
             }
         }, null);
+
         // builder.fileManager(fm -> new FileManager(fm));
+//        System.setProperty("jdk.module.path", "/home/anya/git/turtleduck/shell/src/main/java:" + System.getProperty("jdk.module.path"));
+//        System.setProperty("java.class.path", "/home/anya/git/turtleduck/shell/src/main/java:" + System.getProperty("java.class.path"));
+//        System.out.println("CLASSPATH: " + System.getProperty("java.class.path", ""));
+//        System.out.println("MODULEPATH: " + System.getProperty("jdk.module.path", ""));
         if (getClass().getModule().isNamed()) {
             builder.compilerOptions("-g", "-Xlint:all", "--module-path", System.getProperty("jdk.module.path", ""),
                     "--add-modules", getClass().getModule().getName());
@@ -146,28 +151,29 @@ public class TShell implements ShellService {
             System.out.println("no module");
         }
         System.out.println("builder: " + builder);
+        System.out.println(banner());
         builder.idGenerator((sn, i) -> currentNS.getId(sn, i));
         builder.out(new TerminalPrintStream(printer2, true));
         builder.err(new TerminalPrintStream(printer2, true));
+        // builder.fileManager(fm -> new FileManager(fm));
         shell = builder.build();
         shell.onShutdown(this::shutdownListener);
         // shell.onSnippetEvent(this::snippetEventListener);
         sca = shell.sourceCodeAnalysis();
-        Screen findObject = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, screen.id());
-        System.out.println("" + Screen.class.getClassLoader() + ", " + findObject);
-        System.out.println(getClass().getClassLoader());
+        editorService = null; // new EditorServiceProxy("turtleduck.editor", router);
 
-        explorerService = new ExplorerServiceProxy("turtleduck.explorer", router);
-        editorService = new EditorServiceProxy("turtleduck.editor", router);
-        meta("String $SCREEN_ID = \"" + screen.id() + "\";");
-        meta("String $CURSOR_ID = \"" + printer2.id() + "\";");
+        if (screen != null)
+            meta("String $SCREEN_ID = \"" + screen.id() + "\";");
+        if (printer2 != null)
+            meta("String $CURSOR_ID = \"" + printer2.id() + "\";");
 
-        startup("/prelude/TurtlePrelude.jsh");
+        // startup("/prelude/TurtlePrelude.jsh");
         currentNS = mainNS;
 
         if (enqueuer == null)
             enqueuer = (code) -> Async.succeeded(code.get());
         // prompt();
+        printer.println(banner());
     }
 
     public void enqueueWith(Function<Supplier<Dict>, Async<Dict>> enqueuer) {
@@ -176,9 +182,40 @@ public class TShell implements ShellService {
 
     void shutdownListener(JShell shell) {
         System.out.println("JShell exited: " + shell);
+        shell = null;
+        shutdown();
+    }
+
+    public void shutdown() {
+        // may end up being called again through the shutdownListener, so we must make
+        // sure we stop the recursion
+
+        if (shell != null) {
+            shell.close();
+            shell = null;
+        }
+        if (exitHandler != null) {
+            Runnable handler = exitHandler;
+            exitHandler = null;
+            handler.run();
+        }
+    }
+
+    public void onExit(Runnable exitHandler) {
+        this.exitHandler = exitHandler;
+    }
+
+    String banner() {
+        return String.format("Java %s jshell (%s %s on %s), %s %s", //
+                System.getProperty("java.specification.version", ""), //
+                System.getProperty("java.runtime.name", ""), //
+                System.getProperty("java.runtime.version", ""), //
+                System.getProperty("os.name", ""), //
+                PROJECT_NAME, PROJECT_VERSION);
     }
 
     public void reconnect() {
+        printer.println(banner());
         if (explorerService != null) {
             for (SnippetData data : snippets.values()) {
                 Dict info = data.reconnect();
@@ -191,7 +228,7 @@ public class TShell implements ShellService {
     Dict handleSnippetEvent(SnippetEvent ev, String code, Location loc) {
         Snippet snip = ev.snippet();
         if (snip.id().startsWith("m")) {
-            logger.info("Ignoring meta-snippet event: " + ev.status() + ", " + System.identityHashCode(snip) + " "
+            logger.debug("Ignoring meta-snippet event: " + ev.status() + ", " + System.identityHashCode(snip) + " "
                     + snip.id());
             return null;
         }
@@ -233,7 +270,7 @@ public class TShell implements ShellService {
         String args = split.length == 2 ? split[1] : "";
         Dict dict = Dict.create();
         if (cmd.equals("/list")) {
-            logger.info("/list");
+            logger.debug("/list");
             List<Snippet> collect = shell.snippets().collect(Collectors.toList());
             for (Snippet snip : collect) {
                 System.out.println(snip.id());
@@ -246,7 +283,7 @@ public class TShell implements ShellService {
             snippets.entrySet().stream().forEach(e -> {
                 Snippet snip = e.getValue().snippet;
                 if (!isStartupSnippet(snip) || args.contains("-all")) {
-                    logger.info("    " + e.getValue().toColorString());
+                    logger.debug("    " + e.getValue().toColorString());
                     String s = e.getValue().toColorString();
                     list.add(s);
                     txt.append(s);
@@ -258,7 +295,7 @@ public class TShell implements ShellService {
             dict.put(VALUE, txt.toString());
         } else if (cmd.equals("/edit")) {
             edit(args);
-        } else if (cmd.equals("/open")) {
+        } else if (cmd.equals("/open") && editorService != null) {
             editorService.open(args, null, "Java");
         } else if (cmd.equals("/restart")) {
             startup("/prelude/TurtlePrelude.jsh");
@@ -276,9 +313,9 @@ public class TShell implements ShellService {
     }
 
     public Dict eval(String code, Location loc) {
-        // logger.info("EVAL BEGIN: {}", code);
+        // logger.debug("EVAL BEGIN: {}", code);
 
-        if (code.startsWith("/")) {
+        if (code.startsWith("/") && !code.startsWith("//") && !code.startsWith("/*")) {
             return command(code, loc);
         }
         System.out.println("old result: " + control.lastResult());
@@ -301,7 +338,7 @@ public class TShell implements ShellService {
                 }
             }
         }
-        // logger.info("Number of events: " + events.size());
+        // logger.debug("Number of events: " + events.size());
         if (dict != null)
             logger.info("Eval end: " + dict.toJson());
         else
@@ -389,7 +426,7 @@ public class TShell implements ShellService {
 
     }
 
-    public Dispatch<TShell> dispatch() {
+    public Dispatch<JavaShell> dispatch() {
         return dispatch;
     }
 
@@ -408,8 +445,8 @@ public class TShell implements ShellService {
                 code.strip();
                 if (code.code.startsWith("/"))
                     code.completeness = Completeness.COMPLETE;
-                // logger.info("Analyzed @{} '{}':", loc, Strings.termEscape(source.strip()));
-                // logger.info("Source: @{} '{}' ({}) {}", code.location,
+                // logger.debug("Analyzed @{} '{}':", loc, Strings.termEscape(source.strip()));
+                // logger.debug("Source: @{} '{}' ({}) {}", code.location,
                 // Strings.termEscape(code.code),
                 // Strings.termEscape(code.location.substring(origSource)), code.completeness);
                 String test = code.location.substring(origSource);
@@ -425,16 +462,16 @@ public class TShell implements ShellService {
                 }
                 source = code.completeness == Completeness.CONSIDERED_INCOMPLETE ? "" : info.remaining();
                 loc = loc.keep(source.length());
-                logger.info("Remaining: @{} '{}'  ({})", loc, Strings.termEscape(source),
+                logger.debug("Remaining: @{} '{}'  ({})", loc, Strings.termEscape(source),
                         Strings.termEscape(loc.substring(origSource)));
             } else {
                 code.code = info.remaining();
                 code.location = loc.length(code.code.length());
                 code.completeness = info.completeness();
                 code.strip();
-                // logger.info("Analyzed @{} '{}':", loc, Strings.termEscape(source.strip()));
+                // logger.debug("Analyzed @{} '{}':", loc, Strings.termEscape(source.strip()));
                 source = "";
-                logger.info("Incomplete, remaining: @{} '{}'  ({}) {}", loc, Strings.termEscape(code.code),
+                logger.debug("Incomplete, remaining: @{} '{}'  ({}) {}", loc, Strings.termEscape(code.code),
                         Strings.termEscape(loc.substring(origSource)), code.completeness);
             }
             list.add(code);
@@ -460,6 +497,7 @@ public class TShell implements ShellService {
         return null;
     }
 
+    /** Evaluate Java code */
     @Override
     public Async<Dict> eval(String code, int ref, Dict opts) {
         Async<Dict> result = null;
@@ -486,7 +524,7 @@ public class TShell implements ShellService {
 
                     Array multiResult = Array.of(Dict.class);
                     for (SourceCode c : codes) {
-                        logger.info("EVAL: complete={}: «{}»", c.isComplete(), c.code);
+                        logger.debug("EVAL: complete={}: «{}»", c.isComplete(), c.code);
                         Dict dict;
                         if (complete || consideredComplete) {
                             long tk = System.currentTimeMillis();
@@ -500,32 +538,34 @@ public class TShell implements ShellService {
                         dict.put(COMPLETE, c.isComplete());
                         dict.put(LOC, c.location.toString());
                         dict.put(REF, ref);
-                        if (dict.has(VALUE)) {
-                            evalResult.put(VALUE, dict.get(VALUE));
-                            evalResult.put(TYPE, dict.get(TYPE));
-                            evalResult.put(SNIP_KIND, dict.get(SNIP_KIND));
-                        }
+//                        if (dict.has(VALUE)) {
+//                            evalResult.put(VALUE, dict.get(VALUE));
+//                            evalResult.put(TYPE, dict.get(TYPE));
+//                            evalResult.put(SNIP_KIND, dict.get(SNIP_KIND));
+//                        }
                         multiResult.add(dict);
                     }
-                    evalResult.put(MULTI, multiResult);
-                    screen.flush();
+                    evalResult.put("results", multiResult);
+                    if (screen != null)
+                        screen.flush();
 
                     long dt = System.currentTimeMillis() - t0;
-                    evalResult.put(CPU_TIME, dt / 1000.0);
+                    Dict vmInfo = Dict.create();
+                    vmInfo.put(CPU_TIME, dt / 1000.0);
                     Runtime runtime = Runtime.getRuntime();
                     runtime.gc();
                     int total = (int) (runtime.totalMemory() / 1024);
                     int use = (int) (total - runtime.freeMemory() / 1024);
-                    evalResult.put(HEAP_TOTAL, total);
-                    evalResult.put(HEAP_USE, use);
+                    vmInfo.put(HEAP_TOTAL, total);
+                    vmInfo.put(HEAP_USE, use);
 
                     return evalResult;
                 } else {
-                    return Dict.create().put(REF, ref).put(SNIP_KIND, "empty");
+                    return Dict.create().put(REF, ref).put("results", Array.create());
                 }
             });
         } else {
-            result = Async.succeeded(Dict.create().put(REF, ref).put(SNIP_KIND, "empty"));
+            result = Async.succeeded(Dict.create().put(REF, ref).put("results", Array.create()));
         }
         return result;
     }
@@ -604,7 +644,8 @@ public class TShell implements ShellService {
             filename = "*scratch*";
         filename += ".java";
         String source = snips.stream().map((s) -> s.source()).collect(Collectors.joining("\n\n"));
-        editorService.open(filename, source, "Java");
+        if (editorService != null)
+            editorService.open(filename, source, "Java");
     }
 
     /*
@@ -643,7 +684,7 @@ public class TShell implements ShellService {
             maxLen[0] = Math.max(maxLen[0], s.continuation().length());
             possibilities.put(s.continuation(), new CodeSuggestion(input, anchor[0], s, sca));
         });
-        int perLine = Math.max(1, window.pageWidth() / (maxLen[0] + 2));
+        int perLine = Math.max(1, (window != null ? window.pageWidth() : DEFAULT_LINE_WIDTH) / (maxLen[0] + 2));
         int n = 0;
         printer.println();
         if (possibilities.values().size() == 1) {
@@ -694,19 +735,20 @@ public class TShell implements ShellService {
 
     @Override
     public Async<Dict> inspect(String code, int cursorPos, int detailLevel) {
+        int pos = (cursorPos > code.length() || cursorPos == -1) ? code.length() : cursorPos;
         Async<Dict> result = (Async<Dict>) enqueuer.apply(() -> {
             Dict dict = Dict.create();
-            String type = sca.analyzeType(code, cursorPos);
+            String type = sca.analyzeType(code, pos);
             if (type != null) {
                 dict.put(TYPE, type);
                 dict.put(ICON, iconOf(type));
             }
-            QualifiedNames names = sca.listQualifiedNames(code, cursorPos);
+            QualifiedNames names = sca.listQualifiedNames(code, pos);
             if (names != null) {
                 dict.put(NAMES, Array.from(names.getNames(), String.class));
             }
 
-            List<Dict> docs = sca.documentation(code, cursorPos, true).stream()
+            List<Dict> docs = sca.documentation(code, pos, true).stream()
                     .map(doc -> Dict.create().put(SIGNATURE, doc.signature()).put(DOC, doc.javadoc()))
                     .collect(Collectors.toList());
             dict.put(DOCS, Array.from(docs, Dict.class));
@@ -813,12 +855,16 @@ public class TShell implements ShellService {
             if (typeName.contains("[") || typeName.contains("$"))
                 return null;
             String code = String.format("String $ICON = $META.iconOf(%s.class);", typeName);
-            logger.info("META: {}", code);
+            logger.debug("META: {}", code);
             String icon = meta(code);
-            logger.info("   => {}", icon);
+            logger.debug("   => {}", icon);
             icons.put(typeName, icon);
             return icon;
         }
+    }
+
+    public void debugEnabled(boolean enable) {
+        logger.debugEnabled(enable);
     }
 
     class SnippetData {
@@ -876,14 +922,15 @@ public class TShell implements ShellService {
                 case DROPPED:
                     status = "del";
                     Dict data = Dict.create();
-                    data.put("kind", "snippet");
-                    data.put("event", previous + "→del");
-                    data.put(SNIP_ID, snippet.id());
-                    data.put("sym", "🗑️");
-                    data.put(SNIP_KIND, kind);
+                    Dict snipInfo = Dict.create();
+                    data.put("snippet", snipInfo);
+                    snipInfo.put("event", previous + "→del");
+                    snipInfo.put(SNIP_ID, snippet.id());
+                    snipInfo.put("sym", "🗑️");
+                    snipInfo.put(SNIP_KIND, kind);
                     data.put(NAME, name);
                     data.put("signature", signature);
-                    data.put("category", title);
+                    snipInfo.put("category", title);
                     active = false;
                     return data;
                 case NONEXISTENT:
@@ -929,16 +976,17 @@ public class TShell implements ShellService {
                 verb = "updated";
 
             Dict data = Dict.create();
-            data.put("kind", "snippet");
-            data.put("event", previous + "→" + status);
-            data.put("verb", verb);
-            data.put("sym", sym);
-            data.put(SNIP_ID, snippet.id());
-            data.put(SNIP_NS, mainNS.hasId(snippet.id()) ? "main" : "startup");
-            data.put("new", Boolean.toString(ev.previousStatus() == Status.NONEXISTENT));
-            data.put(ACTIVE, ev.status().isActive());
+            Dict snipInfo = Dict.create();
+            data.put("snippet", snipInfo);
+            snipInfo.put("event", previous + "→" + status);
+            snipInfo.put("verb", verb);
+            snipInfo.put("sym", sym);
+            snipInfo.put(SNIP_ID, snippet.id());
+            snipInfo.put(SNIP_NS, mainNS.hasId(snippet.id()) ? "main" : "startup");
+            snipInfo.put("new", Boolean.toString(ev.previousStatus() == Status.NONEXISTENT));
+            snipInfo.put(ACTIVE, ev.status().isActive());
+            snipInfo.put(PERSISTENT, snippet.kind().isPersistent());
             data.put(DEF, ev.status().isDefined());
-            data.put(PERSISTENT, snippet.kind().isPersistent());
             data.put(EXEC, snippet.subKind().isExecutable());
             active = ev.status().isActive();
             kind(snippet.kind(), snippet.subKind());
@@ -980,17 +1028,17 @@ public class TShell implements ShellService {
             event += "," + title + "," + signature;
             history.add(event + ": " + toString());
 
-            data.put("snipkind", kind);
+            snipInfo.put("snipkind", kind);
+            snipInfo.put("category", title);
             data.put(NAME, name);
             data.put("signature", signature);
-            data.put("category", title);
 
             JShellException exception = ev.exception();
             if (exception != null)
                 data.put(EXCEPTION, exception(exception));
             Array diags = Array.of(Dict.class);
             shell.diagnostics(snippet).forEach(diag -> {
-                logger.info("diag: {}", diag);
+                // logger.debug("diag: {}", diag);
                 diags.add(diagnose(diag));
             });
             if (!diags.isEmpty())
@@ -1044,6 +1092,9 @@ public class TShell implements ShellService {
             data.put(Reply.EVALUE, diag.getMessage(null));
             data.put(LOC, loc.relativeRegion(start, end - start).toString());
             data.put(CURSOR_POS, pos - start);
+            data.put("start", start);
+            data.put("end", end);
+            data.put("pos", pos);
             return data;
         }
 
@@ -1202,4 +1253,5 @@ public class TShell implements ShellService {
         }
 
     }
+
 }

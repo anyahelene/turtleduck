@@ -28,6 +28,7 @@ export default {
                 './css/frames.scss',
                 './css/markdown.scss',
                 './css/terminal.scss',
+                './css/grid-display.scss',
                 './terms-no.md',
             ],
             filename: 'js/bundle.js',
@@ -76,7 +77,7 @@ export default {
         },
         proxy: {
             '/socket': {
-                target: 'http://localhost:9090',
+                target: 'http://localhost:8088',
             },
         },
         // (use symlink) watchFiles: ['../borb/**/*.ts', '../borb/**/*.js']

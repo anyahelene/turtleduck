@@ -7,9 +7,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Documented
-@Target({ ElementType.TYPE })
-@Retention(RetentionPolicy.CLASS)
-public @interface MessageDispatch {
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Nullable {
 
-	String value();
 }

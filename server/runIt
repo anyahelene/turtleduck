@@ -1,5 +1,10 @@
-export EXTERNAL_URL=http://localhost/td
+mvn install 
+export EXTERNAL_URL=http://localhost:8088/
+export BIND_PORT=8088
+export BIND_ADDRESS=localhost
 export SERVER_ROOT=$HOME/git/turtleduck/tea/target/classes/webroot
 export VERTXWEB_ENVIRONMENT=dev
+export X_USER_INFO='{"id": 0, "username":"tduck", "name":"Turtle Duck"}'
+export X_USER_ID='tduck'
 
 java -jar $HOME/git/turtleduck/server/target/turtleduck-server*-fat.jar

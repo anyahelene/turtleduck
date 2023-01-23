@@ -31,3 +31,5 @@ wasm-bin
 tea/webpack.config.mjs.bak
 fonts.zip
 deploy
+.classpath
+*.junk

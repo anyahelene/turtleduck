@@ -9,7 +9,7 @@ import turtleduck.paths.Pen;
 import turtleduck.text.TextCursor;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
-import turtleduck.shell.TShell;
+import turtleduck.shell.JavaShell;
 import turtleduck.util.Meta;
 import static turtleduck.geometry.Point.point;
 import static turtleduck.colors.Colors.*;
@@ -17,7 +17,7 @@ import static turtleduck.geometry.Direction.*;
 import turtleduck.turtle.SpriteBuilder;
 import turtleduck.sprites.Sprite;
 
-Class<?>[] $CLASSES = {Screen.class, Canvas.class, Turtle.class, TextCursor.class, Color.class, Colors.class};
+Class<?>[] $CLASSES = {Screen.class, Canvas.class, Turtle.class, TextCursor.class, Color.class, Colors.class, JavaShell.class};
 Meta $META = Meta.create();
 Random $RANDOM = new Random();
 
@@ -26,12 +26,12 @@ String help = "Type /help for help :)";
 /namespace startup
 
 Screen screen = turtleduck.objects.IdentifiedObject.Registry.findObject(Screen.class, $SCREEN_ID);
-Canvas canvas = screen.createCanvas().stroke(Colors.WHITE, 1).fill(Colors.TRANSPARENT).background(Colors.BLACK);
+Canvas canvas = screen != null ? screen.createCanvas().stroke(Colors.WHITE, 1).fill(Colors.TRANSPARENT).background(Colors.BLACK) : null;
 TextCursor cursor = turtleduck.objects.IdentifiedObject.Registry.findObject(TextCursor.class, $CURSOR_ID);
 
-Turtle turtle = canvas.turtle().color(Colors.WHITE).jumpTo(0, 0);
+Turtle turtle = canvas != null ? canvas.turtle().color(Colors.WHITE).jumpTo(0, 0) : null;
 static {
-turtleduck.shell.TShell.testValue = 5;
+turtleduck.shell.JavaShell.testValue = 5;
 }
 
 double sin(double deg) {
@@ -94,13 +94,16 @@ int randInt(int from, int to) {
 /namespace startup
 
 void clear() {
-	screen.clear();
+	if(screen != null)
+		screen.clear();
 }
 
 void reset() {
-	canvas = screen.createCanvas().stroke(Colors.WHITE, 1).fill(Colors.TRANSPARENT).background(Colors.BLACK);
-	turtle = canvas.turtle().color(Colors.WHITE).jumpTo(0, 0).turnTo(0);
-	screen.clear();
+	if(screen != null) {
+		canvas = screen.createCanvas().stroke(Colors.WHITE, 1).fill(Colors.TRANSPARENT).background(Colors.BLACK);
+		turtle = canvas != null ? canvas.turtle().color(Colors.WHITE).jumpTo(0, 0).turnTo(0) : null;
+		screen.clear();
+	}
 }
 
 void head(SpriteBuilder sb) {

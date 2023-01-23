@@ -11,10 +11,4 @@ module turtleduck.shell {
     requires turtleduck.anno;
     requires jdk.javadoc;
     requires java.compiler;
-    // requires org.eclipse.jetty.websocket.jetty.common;
-    // requires org.eclipse.jetty.websocket.jetty.api;
-    requires org.eclipse.jetty.server;
-    requires org.eclipse.jetty.websocket.jetty.server;
-    requires org.eclipse.jetty.websocket.servlet;
-    // requires org.eclipse.jetty.servlet;
-}
+    }
