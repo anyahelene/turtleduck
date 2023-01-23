@@ -54,7 +54,7 @@ interface __unused__ShellMessage {
     cpuTime?: number; // = 0.0
 }
 export interface Diag {
-    msg: string;
+    //   msg: string;
     line?: string;
     start: number;
     end: number;
@@ -62,6 +62,7 @@ export interface Diag {
     ename: string;
     evalue: string;
     loc: string;
+    cursor_pos?: number;
 }
 
 interface ShellService {
@@ -138,6 +139,12 @@ export interface SnipInfo {
     snipid: string;
     snipns: string;
 }
+export interface VMInfo {
+    heapUse?: number;
+    heapTotal?: number;
+    heapMax?: number;
+    cpuTime?: number;
+}
 export interface EvalResult {
     snippet?: SnipInfo;
     /**
@@ -197,6 +204,7 @@ export interface EvalResult {
      */
     icon?: string;
     display?: DisplayData;
+    complete?: boolean;
 }
 export function valueResult(res: EvalResult, value: unknown) {
     res.value = value;
@@ -216,6 +224,7 @@ export interface EvalReply {
     results: EvalResult[];
     complete?: boolean;
     value?: unknown;
+    vm?: VMInfo;
 }
 
 export interface UpdateRequest {
@@ -275,6 +284,12 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
         console.log('waiting for line editor...');
         return Promise.resolve();
     }
+    close() {
+        if (this.conn) {
+            this.conn.close();
+            this.conn = null;
+        }
+    }
     mountTerminal(parent?: HTMLElement) {
         if (parent) {
             parent.appendChild(this.terminal);
@@ -303,7 +318,7 @@ export class Shell implements ShellService, TerminalService, ExplorerService {
             lineId = ++this.lastLineId;
         }
         this.lastLineId = lineId;
-        const payload = { code: line, ref: `${lineId}`, opts: {} };
+        const payload = { code: line, ref: lineId, opts: {} };
         const result = await Messaging.send(payload, 'eval_request', this.language.connectionId);
         if (processResult(result as unknown as EvalReply, this.terminal, false)) return {};
         else return { more: line };

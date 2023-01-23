@@ -19,6 +19,7 @@ import Systems from '../borb/SubSystem';
 import { Language, LanguageConnection, Languages } from './Language';
 import { TShell } from './TShell';
 import { Chatter } from './Chatter';
+import URI from 'urijs';
 
 Borb.tagName('foo ');
 // export { History, HistorySession };
@@ -186,6 +187,7 @@ interface TurtleDuck {
     openFiles(): Promise<void>;
     tshell: TShell;
     chatter: Chatter;
+    URI: typeof URI;
 }
 
 export const turtleduck: TurtleDuck = {
@@ -214,6 +216,7 @@ export const turtleduck: TurtleDuck = {
     createPanel() {
         return new BorbPanelBuilder();
     },
+    URI: URI,
 } as TurtleDuck;
 
 Systems.waitForAll(Editors, Storage).then(() => {

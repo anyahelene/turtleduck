@@ -14,7 +14,6 @@ export class GenericException extends Error {
         if (this.loc) {
             if (!res.diag) res.diag = [];
             res.diag.push({
-                msg: '',
                 start: this.loc.start,
                 end: this.loc.end,
                 ename: this.name,
@@ -32,8 +31,8 @@ export class PosixError extends GenericException {
     public readonly errdesc: string;
     public readonly errmsg: string;
 
-    constructor(message: string|Error, cause?:Error) {
-        if(message instanceof Error) {
+    constructor(message: string | Error, cause?: Error) {
+        if (message instanceof Error) {
             cause = message;
             message = message.message;
         }
@@ -59,7 +58,6 @@ export class ParseError extends GenericException {
     async toResult(res: EvalResult): Promise<EvalResult> {
         if (!res.diag) res.diag = [];
         res.diag.push({
-            msg: '',
             start: this.loc.start,
             end: this.loc.end,
             ename: this.name,
@@ -70,7 +68,6 @@ export class ParseError extends GenericException {
     }
     toDiag(): Diag {
         return {
-            msg: '',
             start: this.loc.start,
             end: this.loc.end,
             pos: 0,

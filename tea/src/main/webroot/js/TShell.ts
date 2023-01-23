@@ -17,6 +17,8 @@ import { GenericException } from './Errors';
 import { StateCommand } from '@codemirror/state';
 import { WorkerConnection } from './WorkerConnection';
 import { displayStack } from './Stack';
+import { borbName } from '../borb/Common';
+import Editor from '../borb/Editor';
 //import getopts = require('getopts');
 const homeDir = '/home';
 const options = {};
@@ -503,16 +505,49 @@ programs.set('help', {
         return 0;
     },
 });
-programs.set('python', {
-    params: {},
-    fun: async (args, sh, ctx) => {
-        let py = Languages.get('python');
-        console.log(py, py.isLoaded);
-        if (!py.isLoaded) await py.load(undefined, args['__background__']);
-        console.log(py);
-        const term = py.mainTerminal;
+function languageLoader(
+    languageName: string,
+): (args: getopts.ParsedOptions, sh: TShell, ctx: StorageContext) => Promise<number> {
+    return async (args, sh, ctx) => {
+        let lang = Languages.get(languageName);
+        console.log(lang, lang.isLoaded);
+        if (!lang.isLoaded) {
+            await lang.load(undefined, args['__background__']);
+            globalThis[languageName] = lang;
+        }
+        console.log(lang);
+        const term = lang.mainTerminal;
         console.log(term);
         if (term && !args['__background__']) term.select();
+        return 0;
+    };
+}
+programs.set('chat', {
+    params: {},
+    fun: languageLoader('chat'),
+});
+programs.set('java', {
+    params: {},
+    fun: languageLoader('java'),
+});
+programs.set('python', {
+    params: {},
+    fun: languageLoader('python'),
+});
+programs.set('open', {
+    params: { boolean: ['c'] },
+    fun: async (args, sh, ctx) => {
+        //        if (!editor) throw new Error('editor unavailable');
+        if (!args['_'][0]) {
+            sh.println('usage: open [-c] file1...fileN');
+        }
+        for (let arg of args['_']) {
+            if (args['c']) {
+                await Editor.openFile(arg).catch((e) => Editor.openText('', arg));
+            } else {
+                await Editor.openFile(arg);
+            }
+        }
         return 0;
     },
 });
@@ -581,16 +616,7 @@ async function execve(
     )) as unknown as EvalReply;
     return (reply.value as number) || 0;
 }
-programs.set('chat', {
-    params: {},
-    fun: async (args, sh, ctx) => {
-        let chat = Languages.get('chat');
-        if (!chat) chat = globalThis.chat = await Languages.create('chat');
-        const term = chat.mainTerminal;
-        if (term && !args['__background__']) term.select();
-        return 0;
-    },
-});
+
 programs.set('upload', {
     params: {},
     fun: async (args, sh, ctx) => {

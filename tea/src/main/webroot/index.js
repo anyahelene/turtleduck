@@ -11,7 +11,6 @@ import { MDRender, SubSystem, Borb, Buttons, Frames, Settings, History, Terminal
 import { Shell, ShellConnection } from './js/Shell';
 import { Messaging } from './borb/Messaging';
 import { Camera } from './js/Media';
-import { GridDisplayServer } from './js/GridDisplay';
 import { html, render } from 'uhtml';
 import { Storage } from './js/Storage';
 import { timeAgo } from './js/TimeAgo';
@@ -28,8 +27,10 @@ import { SockJSConnection } from './js/SockJSConnection';
 import { ShellParser } from './js/ShellParser';
 import { shell } from './js/ShellLanguage';
 import { defineLang } from './borb/CodeMirror';
+import { GridDisplay } from './js/GridDisplay';
 import './js/Startup';
 var imports = {
+    GridDisplay,
     SockJS,
     Mousetrap,
     animals,
@@ -41,7 +42,6 @@ var imports = {
     TilingWindow,
     MDRender,
     Camera,
-    GridDisplayServer,
     html,
     render,
     Storage,
@@ -76,7 +76,6 @@ turtleduck.Camera.addSubscription('copy', 'builtin', 'qr', 'Copy', '📋', 'Copy
 turtleduck.Camera.addSubscription('copy', 'builtin', 'camera', 'Copy', '📋', 'Copy to clipboard');
 turtleduck.md = new MDRender({});
 turtleduck.fileSystem = fileSystem;
-turtleduck.gridDisplay = new GridDisplayServer();
 turtleduck.defaultConfig = defaultConfig;
 
 Object.defineProperty(turtleduck, 'cwd', { get: () => turtleduck.storage.cwd });
@@ -575,12 +574,7 @@ turtleduck._initializationComplete = async function (err) {
                     });
                 });
         });
-        turtleduck.client.route('grid-create', (msg) => turtleduck.gridDisplay.create(msg));
-        turtleduck.client.route('grid-update', (msg) => turtleduck.gridDisplay.update(msg));
-        turtleduck.client.route('grid-style', (msg) => turtleduck.gridDisplay.style(msg));
-        turtleduck.client.route('grid-dispose', (msg) => turtleduck.gridDisplay.dispose(msg));
     }
-
 
     globalThis.edFrame.addEventListener('beforeSave', (ev) => {
         if (!ev.detail.autoSave) {
@@ -638,6 +632,7 @@ if (import.meta.webpackHot) {
             './css/common.scss',
             './css/markdown.scss',
             './css/terminal.scss',
+            './css/grid-display.scss',
             './css/editor.scss',
         ],
         function (outdated) {

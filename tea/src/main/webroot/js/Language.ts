@@ -1,5 +1,5 @@
 import Settings, { ConfigDict } from '../borb/Settings';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, isMatch } from 'lodash-es';
 import { WorkerConnection } from './WorkerConnection';
 import { BorbTerminal } from '../borb/Terminal';
 import { Connection, Messaging, Payload } from '../borb/Messaging';
@@ -8,6 +8,8 @@ import { Shell } from './Shell';
 import { turtleduck } from './TurtleDuck';
 import path from 'path';
 import { SockJSConnection } from './SockJSConnection';
+import { WebSocketConnection } from './WebSocketConnection';
+import URI from 'urijs';
 
 export interface LanguageConfig extends ConfigDict {
     icon: string;
@@ -22,6 +24,7 @@ export interface LanguageConfig extends ConfigDict {
     builtin?: string;
     remote?: string;
     shared?: boolean;
+    transport?: string;
 }
 export interface LanguageConnection extends Connection {
     connect(): Promise<string>;
@@ -54,9 +57,9 @@ export class Language {
         this._name = name;
         this._config = cloneDeep(config);
         this._config.enabled = Settings.toLowerCase(config.enabled);
-        this._initPromise = new Promise((resolve, reject) => {
-            this._initRes = [resolve, reject];
-        });
+        if (this._config.remote) {
+            this._config.transport = Settings.toLowerCase(config.transport) || 'websocket';
+        }
     }
 
     get name() {
@@ -100,6 +103,9 @@ export class Language {
     async load(connection?: LanguageConnection, background = false): Promise<Language> {
         if (this._loading) return this.promise;
         if (this._mainShell) return this.promise;
+        this._initPromise = new Promise((resolve, reject) => {
+            this._initRes = [resolve, reject];
+        });
         this._loading = true;
         if (connection) this._connection = connection;
         if (
@@ -113,9 +119,7 @@ export class Language {
         try {
             this._mainShell = new Shell(this);
             await this._mainShell.init(this, this.shellName);
-            this._mainTerminal = this._mainShell.terminal;
-            this._mainShell.mountTerminal();
-            if (!background) this._mainTerminal.select();
+
             Messaging.route(`${this._name}_status`, (msg: { wait?: boolean; status?: string }) => {
                 const wait = !!msg.wait;
                 if (typeof msg.status === 'string') {
@@ -146,15 +150,42 @@ export class Language {
                 );
             } else if (this._config.remote) {
                 const evalId = `${this.shellName}_socket`;
-                this._connection = new SockJSConnection(
-                    Messaging,
-                    evalId,
-                    this._config.remote,
-                    this.name,
-                );
+                if (this._config.transport === 'sockjs') {
+                    this._connection = new SockJSConnection(
+                        Messaging,
+                        evalId,
+                        this._config.remote,
+                        this.name,
+                    );
+                } else if ((this._config.transport = 'websocket')) {
+                    const address = new URI(this._config.remote, document.URL).normalize();
+                    const protocol = address.protocol() === 'https' ? 'wss' : 'ws';
+                    console.log(address, protocol);
+                    this._connection = new WebSocketConnection(
+                        Messaging,
+                        evalId,
+                        address.protocol(protocol).toString(),
+                        this.name,
+                    );
+                }
             }
+            this._connection.addHandlers(
+                'Language',
+                (conn, info) => console.log('Connected: ', conn, info),
+                (conn) => {
+                    console.log('Disconnected: ', conn);
+                    this._connection = null;
+                    if (this._mainShell) {
+                        this._mainShell.close();
+                        this._mainShell = null;
+                    }
+                    this._loading = false;
+                },
+            );
             await this._connection.connect();
-
+            this._mainTerminal = this._mainShell.terminal;
+            this._mainShell.mountTerminal();
+            if (!background) this._mainTerminal.select();
             await Messaging.send(
                 {
                     config: this._config,
@@ -167,6 +198,12 @@ export class Language {
             );
             this._initRes[0](this);
         } catch (e) {
+            this._mainShell = null;
+            this._loading = false;
+            if (this._connection) {
+                this._connection.close();
+                this._connection = null;
+            }
             this._initRes[1](e);
         }
         return this.promise;

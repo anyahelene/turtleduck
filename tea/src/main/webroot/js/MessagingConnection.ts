@@ -38,9 +38,9 @@ export abstract class MessagingConnection extends BaseConnection implements Lang
     };
 
     protected receiveMessage = (ev: MessageEvent<any>) => {
-        if (this.debugEnabled) console.log('%s: message event: %o', this.name, ev);
         let data = ev.data;
         if (typeof data === 'string') data = JSON.parse(data);
+        if (this.debugEnabled) console.log('%s: message event: %o', this.name, data);
         if (data instanceof Map) data = Messaging.fromMap(data);
         if (data.header?.msg_id === '_') {
             if (data.header.msg_type === 'pong') {
@@ -90,10 +90,14 @@ export abstract class MessagingConnection extends BaseConnection implements Lang
         });
     }
 
-    protected abstract postMessage(msg: any, transfers?: Transferable[]);
+    protected abstract postMessage(msg: any, transfers?: Transferable[]): void;
 
     public close() {
-        this.doClose(false, false);
+        try {
+            this.doClose(false, false);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     protected doClose(terminate: boolean, fromRemote: boolean): void {

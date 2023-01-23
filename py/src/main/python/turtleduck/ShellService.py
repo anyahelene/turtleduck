@@ -95,6 +95,7 @@ TRANSIENT = Key('data')
 
 
 cwd = '/'
+# the global environment of evaluated code
 context = {'__name__': '__main__',
            '__doc__': None,
            '__spec__': None,
@@ -106,11 +107,23 @@ context = {'__name__': '__main__',
 context['__builtins__']['pprint'] = pprint.pp
 
 completer = rlcompleter.Completer(context)
+
+# unique id for messages
 msg_id = 0
-
+# pending requests (sent messages we're waiting for a reply to)
 requests = {}
+# pending tasks (incomplete evals waiting for I/O)
 tasks = []
-
+# queue of messages to send before returning to event loop
+outgoing = []
+# things that should be shut down if we do an "emergency stop"
+closeables = set()
+# stack of currently running callbacks
+running = []
+# last result
+result = None
+# all results
+results = {}
 
 async def run_tasks():
     global tasks
@@ -141,6 +154,7 @@ async def receive(in_msg_id):
             except Exception as ex:
                 debug("reply handler failed", header, ex)
             await run_tasks()
+        flush_outgoing()
         return to_js(None)
 
     await run_tasks()
@@ -150,7 +164,7 @@ async def receive(in_msg_id):
     reply_header = {'ref_id': header['msg_id'], 'msg_id': f'{msg_id}'}
     reply = {'header': reply_header, 'content': {}}
     if msg_type == "eval_request":
-        reply_header['msg_type'] = 'evalReply'
+        reply_header['msg_type'] = 'eval_reply'
         e = Evaluation(content['code'], content['ref'], content['opts'], reply)
         if await e.run():
             debug('adding task')
@@ -206,6 +220,7 @@ async def receive(in_msg_id):
         reply['content'] = {'ename': 'unknown message type',
                             'evalue': '', 'traceback': [], 'data': msg}
         send(reply)
+    flush_outgoing()
 
 
 def gen_name(prefix):
@@ -229,6 +244,20 @@ def send_async(message):
     send(message, lambda content, header: fut.set_result(content))
     return fut
 
+def send_queued(message, handler=None):
+    global msg_id
+    msg_id = msg_id + 1
+    message['header']['msg_id'] = f'{msg_id}'
+    if handler:
+        requests[f'{msg_id}'] = handler
+    outgoing.append(message)
+    return message
+
+def flush_outgoing():
+    while len(outgoing) > 0:
+        message = outgoing.pop(0)
+        js._send(to_js(message))
+        message['header']['sent'] = True
 
 onValueHandler = None
 
@@ -263,13 +292,13 @@ class Evaluation:
 
         self.evalResult['status'] = 'ok'
         COMPLETE.putInto(self.evalResult, True)
-        SNIP_KIND.putInto(self.evalResult, 'py')
+        #SNIP_KIND.putInto(self.evalResult, 'py')
         d = {}
         CODE.putInto(d, code)
         COMPLETE.putInto(d, True)
         LOC.putInto(d, self.loc)
         REF.putInto(d, '')
-        SNIP_KIND.putInto(d, 'py')
+        #SNIP_KIND.putInto(d, 'py')
         self.resultData = d
         self.oldcontext = dict(context)
         self.changeMsg = {"old": self.oldcontext, "code": code}
@@ -278,18 +307,30 @@ class Evaluation:
         debug("running task:", self.code)
         if 'await' in self.code:
             try:
+                running.append((self,'await'))
                 #context['__stop__'] = self.resumer.stop
+                global result
                 result = await pyodide.eval_code_async(self.code, globals=context, locals=self.localVars, filename=self.loc)
+                results[self.ref] = result
                 self.encode_result(result)
             except unthrow.ResumableException as ex:
+                debug("throw", running)
                 raise ex
             except:
                 self.encode_except()
+            finally:
+                debug(running)
+                assert running.pop()[0] == self
             self.finish()
             return False
 
         if not self.resumer.finished:
-            self.resumer.run_once(self.loop, [])
+            running.append((self,'once'))
+            try:
+                self.resumer.run_once(self.loop, [])
+            finally:
+                debug(running)
+                assert running.pop()[0] == self
 
         if self.resumer.finished:
             self.finish()
@@ -300,8 +341,10 @@ class Evaluation:
     def loop(self):
         try:
             #context['__stop__'] = self.resumer.stop
+            global result
             result = pyodide.eval_code(
                 self.code, globals=context, locals=self.localVars, filename=self.loc)
+            results[self.ref] = result
             self.encode_result(result)
         except unthrow.ResumableException as ex:
             raise ex
@@ -317,9 +360,9 @@ class Evaluation:
             VALUE.putInto(self.resultData, rep)
             DISPLAY.putInto(self.resultData, disp)
             TYPE.putInto(self.resultData, typename)
-            VALUE.putInto(self.evalResult, VALUE.getFrom(self.resultData))
-            TYPE.putInto(self.evalResult, TYPE.getFrom(self.resultData))
-            DISPLAY.putInto(self.evalResult, DISPLAY.getFrom(self.resultData))
+            #VALUE.putInto(self.evalResult, VALUE.getFrom(self.resultData))
+            #TYPE.putInto(self.evalResult, TYPE.getFrom(self.resultData))
+            #DISPLAY.putInto(self.evalResult, DISPLAY.getFrom(self.resultData))
             if onValueHandler != None:
                 #debug("calling ", onValueHandler)
                 try:
@@ -653,7 +696,18 @@ def use_msg_io():
     sys.stderr = _msg_stderr
     context['__builtins__']['open'] = open_file
     context['__builtins__']['qrscan'] = read_qrcode
+    context['__builtins__']['load'] = load
 
+def load(path):
+    if '/' not in path:
+        path = f'./{path}'
+    with open_file(path) as f:
+        text = f.read()
+        code = compile(text, path, 'exec')
+        vars = {}
+        eval(code, context) # will add everything to current global context
+        print(vars)
+        return code
 
 def refresh_explorer():
     diffContext({}, context, '', 'refresh')

@@ -11,7 +11,6 @@ export class SockJSConnection extends MessagingConnection implements LanguageCon
 
         this._openPromise = new Promise((resolve, reject) => {
             this.sockjs.onmessage = (ev) => {
-                console.log(ev);
                 this.receiveMessage(ev);
             };
             this.sockjs.onopen = (ev) => {
@@ -19,10 +18,12 @@ export class SockJSConnection extends MessagingConnection implements LanguageCon
                     console.log('SockJS connection %s opened', this.id, this, ev);
                 console.log(this.sockjs.onmessage);
                 this.sockjs.onerror = (ev: Event) => {
+                    console.log('SockJS error  %s', this.id, this, ev);
                     this.lastEvent = ev;
                     this.handleError(ev);
                 };
                 this.sockjs.onclose = (ev: CloseEvent) => {
+                    console.log('SockJS close  %s', this.id, this, ev);
                     this.lastEvent = ev;
                     this.doClose(false, true);
                 };
@@ -37,6 +38,7 @@ export class SockJSConnection extends MessagingConnection implements LanguageCon
             this.sockjs.onclose = (ev: CloseEvent) => {
                 this.lastEvent = ev;
                 console.log('SockJS connection closed before opening %s', this.id, this, ev);
+                reject(new Error('SockJS connection failed'));
             };
         });
     }

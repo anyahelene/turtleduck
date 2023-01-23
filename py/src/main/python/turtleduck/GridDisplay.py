@@ -2,14 +2,43 @@ from turtleduck import ShellService
 import random
 
 class GridDisplay:
-    def __init__(self, width, height, title = None, initial = ''):
-        self.id = random.randbytes(4).hex()
-        self.title = title if title != None else self.id
+    def __init__(self, width, height, title = None, id = None, initial = ''):
+        self.id = None
+        self.title = title
         self.width = width
         self.height = height
         self.initial = initial
         self.data = [''] * (width*height);
-        ShellService.send({'header':{'msg_type':'grid-create'}, 'content':{'id':self.id,'title':title, 'width':width, 'height':height,'initial':initial}})
+        self.__msgqueue = []
+        self.__updates = None
+        msg = {'width':width, 'height':height}
+        if title != None:
+            msg['title'] = title
+        if id != None:
+            msg['id'] = id
+        if initial != '':
+            msg['initial'] = initial
+        ShellService.send({'header':{'msg_type':'grid_create'}, 'content':msg}, self.__created)
+
+    def __send(self, msg_type, content):
+        if self.id == None:
+            self.__msgqueue.append((msg_type, content))
+        elif msg_type == 'grid_update':
+            if self.__updates and not self.__updates['header'].get('sent'):
+                self.__updates['content']['updates'].extend(content['updates'])
+            else:
+                self.__updates = ShellService.send_queued({'header':{'msg_type':msg_type,'to':self.id}, 'content':content})
+        else:
+            ShellService.send({'header':{'msg_type':msg_type,'to':self.id}, 'content':content})
+
+    def __created(self, createReply, header):
+        if createReply.get('status') == 'ok' and createReply.get('id') != None:
+            self.id = createReply.get('id')
+            while len(self.__msgqueue) > 0:
+                (msg_type,content) = self.msgqueue.pop(0)
+                self.__send(msg_type, content)
+        else:
+            raise RuntimeError(f'grid initialization failed: {createReply}')
 
     @classmethod
     def from_string(cls, s):
@@ -31,12 +60,7 @@ class GridDisplay:
         """Set grid cell at [x,y] to value"""
         x, y = key
         self.data[y*self.width+x] = value
-        ShellService.send({'header':{'msg_type':'grid-update'},
-            'content':{
-                'id':self.id, 
-                'updates': [{'x':x, 'y':y,'text':value}]
-                }
-            })
+        self.__send('grid_update', {'updates': [{'x':x, 'y':y,'value':value}]})
         return value
 
 
@@ -65,8 +89,8 @@ class GridDisplay:
             cellstyle['height'] = f'{height}px'
             gridstyle['height'] = 'max-content'
 
-        self.styles(cellstyle, 'cell')
-        self.styles(gridstyle, 'grid')
+        self.style('cell', **cellstyle)
+        self.style('grid', **gridstyle)
 
     def background(self, value, selector = 'grid', size = None, position = None, repeat = None):
         """Set the background style.
@@ -76,6 +100,9 @@ class GridDisplay:
         selector -- Element selector: either a single character (style for 
             cells marked with that character), 'cell' (style for all cells),
             'grid' (style for the full grid)
+        size -- CSS background-size
+        position -- CSS background-position
+        repeat -- CSS background-repeat
         """
 
         if '.' in value and not value.startswith('url('):
@@ -91,10 +118,10 @@ class GridDisplay:
             styleset['background-position'] = position
         if repeat != None:
             styleset['background-repeat'] = repeat
-        self.styles(styleset, selector)
+        self.style(selector, **styleset)
         return self
 
-    def style(self, prop, value, selector):
+    def style(self, selector, **styleset):
         """Specify a style for an element
         
         Parameters:
@@ -103,35 +130,20 @@ class GridDisplay:
         selector -- Element selector: either a single character (style for 
             cells marked with that character), 'cell' (style for all cells),
             'grid' (style for the full grid)
-        """
-        ShellService.send({'header':{'msg_type':'grid-style'},
-            'content':{
-                'id':self.id, 
-                'selector': selector,
-                'property': prop,
-                'value': value
-                }
-            })
-        return self
+        **styleset -- a dict of CSS property and the corresponding values
 
-    def styles(self, styleset, selector):
-        """Specify several styles for an element
-        
-        Parameters:
-        styleset -- a dict of CSS property and the corresponding values
-        selector -- Element selector: either a single character (style for 
-            cells marked with that character), 'cell' (style for all cells),
-            'grid' (style for the full grid)
+        Underscores in property names are automatically translated to hyphens.
+        The selector may include pseudo-classes (e.g., `x:hover`), including special
+        pseudo-classes for grid edges (`:N`,`:S`,`:E`,`:W`,`:NE`,`:NW`,`:SE`,`:SW`)
         """
-        ShellService.send({'header':{'msg_type':'grid-style'},
-            'content':{
-                'id':self.id, 
+        
+        self.__send('grid_style', {
                 'selector': selector,
-                'styleset': styleset
-                }
-            })
+                'styleset': {prop.replace('_','-'):styleset[prop] for prop in styleset}
+                })
         return self
 
     def dispose(self):
         self.width = self.height = self.data = None
-        ShellService.send({'header':{'msg_type':'grid-dispose'}, 'content':{'id':self.id}})
+        self.__send('dispose', {})
+

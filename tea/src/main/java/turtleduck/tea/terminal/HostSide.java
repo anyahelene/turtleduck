@@ -1,5 +1,7 @@
 package turtleduck.tea.terminal;
 
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
@@ -12,6 +14,7 @@ import turtleduck.events.KeyEvent;
 import turtleduck.tea.Browser;
 
 import turtleduck.terminal.PtyHostSide;
+import turtleduck.text.TextCursor;
 import turtleduck.util.Logging;
 import xtermjs.IDisposable;
 import xtermjs.Terminal;
@@ -138,4 +141,28 @@ public class HostSide implements PtyHostSide {
 	public void flushToTerminal() {
 		// not using buffering, so do nothing
 	}
+
+    @Override
+    public TextCursor createCursor() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public InputStream hostIn() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PrintStream hostOut() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public PrintStream hostErr() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

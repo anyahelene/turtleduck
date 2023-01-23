@@ -49,6 +49,7 @@ function connect(port) {
         const msg_type = data.header.msg_type;
         const content = data.content;
         const LOG = `[${msg_id}: ${msg_type}]  `;
+        const initErrors = [];
 
         const pymsg = (e) => {
             if (self.debug) console.log(LOG, 'MSG:', e);
@@ -69,9 +70,14 @@ function connect(port) {
         async function runPython(code) {
             if (self.debug) console.log(LOG, 'python<<<', code);
             self._send = send;
-            const r1 = await self.pyodide.loadPackagesFromImports(code, pymsg, pyerr);
-            const r2 = await self.pyodide.runPythonAsync(code, pymsg, pyerr);
-            if (self.debug) console.log(LOG, 'python>>>', r2);
+            try {
+                const r1 = await self.pyodide.loadPackagesFromImports(code, pymsg, pyerr);
+                const r2 = await self.pyodide.runPythonAsync(code, pymsg, pyerr);
+                if (self.debug) console.log(LOG, 'python>>>', r2);
+            } catch (e) {
+                initErrors.push(e);
+                pyerr(e.name + ': ' + e.message);
+            }
         }
         function send(msg) {
             if (self.debug) {
@@ -190,6 +196,7 @@ function connect(port) {
                     return;
                 } else if ((LOG, msg_type === 'langInit')) {
                     const res = await initPython(content, runPython);
+                    if (initErrors[0]) throw initErrors[0];
                     pymsg('Python environment ready!');
                     send({
                         header: {
@@ -200,6 +207,7 @@ function connect(port) {
                         content: { status: 'ok' },
                     });
                 } else {
+                    console.log('forwarding to Python:', data);
                     self._msgs[msg_id] = data;
                     self._msg = data;
                     self._send = send;
