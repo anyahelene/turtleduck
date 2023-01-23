@@ -1,0 +1,65 @@
+# Hello
+Welcome to the first lesson! I am your friendly Python tutor, and I will guide you through this course. If you get *stuck* or have *questions* let me know by pressing the question mark or entering `?`. Don't worry about making mistakes – you will make lots of them! Also, you can't really damage anything here, and if anything goes wrong, I'll help you fix it.
+
+If you see something like this –
+
+```python:enter
+>>> "hello!"
+```
+
+– I want you to type it in to the command prompt below (and press enter/return).
+
+> Try it now!
+
+{{expect expr:str startswith("hello")}}
+
+If you see something like this –
+
+> How old are you?
+
+– it's me talking and you should pay attention because I want you to do something.
+
+{{expect chat:int range(0,120), saveTo("age", verbose) }
+{nag 5s > (That was a serious question! Please enter your age below!)}
+{nag 20s > (Are you paying attention? If you want to skip part of the lesson, press the *pass* button.)}}
+
+Python can do all the usual stuff with numbers – adding (`1+1`), multiplying (`2*3`), dividing (`1/4`), etc.
+
+> Have Python do some calculations for you – try different combinations and different operators (the most commonly used arithmetic operators in Python are `+`, `-`, `*`, `/`, `**`, `//` and `%`). When you're done experimenting, enter `pass`.
+
+{{expect expr:num until("pass")}
+{autoimport("math", verbose)}
+{info("+", "The `a + b` operator adds `a` and `b`. There's also a `sum(a,b,c,…)` function for adding many numbers.")}
+{info("-", "The `a - b` operator subtracts `b` from `a`.")}
+{info("*", "The `a * b` operator multiplies two numbers.")}
+{info("/", "The `a / b` operator divides `a` by `b` two numbers. If `a` is not divisible by `b`, the result will have a fractional part. (See `//`)")}
+{info("**", "The `a ** b` operator computes `a<sup>b</sup>`.")}
+{info("//", "The `a // b` operator does *whole integer division* of `a` by `b`. f `a` is not divisible by `b`, the result be rounded *down*, and `a % b` will give you the *remainder* of the division. (See `/` and `%`)")}
+{info("%", "The `a % b` computes the *remainder* from the integer division of `a` by `b`. I.e., the number you need to add to `(a // b) * b` to get `a`. Typically used just to obtain a number between 0 and `b`.)}
+{info("<<", "`a << b` shifts `a` (in binary) `b` bits to the left; same as multiplying by 2<sup>`b`</sup>")}
+{info(">>", "`a >> b` shifts `a` (in binary) `b` bits to the right; same as dividing by 2<sup>`b`</sup>")}
+{info("&", "`a & b` computes the *bitwise AND* of `a` and `b`. You probably won't use it much.")}
+{info("|", "`a | b` computes the *bitwise OR* of `a` and `b`. You probably won't use it much.")}
+{info("^", "`a ^ b` computes the *bitwise XOR* of `a` and `b`. You probably won't use it much.")}
+{whenDone praise(), roadmap("We will practice more math later.")}
+{example: `3 + 4 * 2`, `2 ** 5`, `10 / 2`, `9/2`, `9//2`, `5 - 7 * 3`, `(7 - 5) * 3`}
+}
+
+> Python is pretty good at being a calculator, but doing *just* math is boring. 
+> A while back you said you were $var("age") years old. I remember this because I stored your answer in a *variable*. Have a look for yourself:
+
+```python:enter
+>>> age
+```
+
+{{expect var("age"):int}
+{example: `age`}}
+
+You can use variables in expressions, just like numbers.
+
+> How old will you be in two years?
+
+{{expect expr:int, equals `age + 2`, using([operator("+"), var("age")])}
+{example: `age + 2`}
+
+}
