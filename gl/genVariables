@@ -1,0 +1,1 @@
+java -cp target/classes turtleduck.gl.objects.GenerateVariables src/main/java/turtleduck/gl/objects/Variables.java

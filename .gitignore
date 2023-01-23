@@ -33,3 +33,4 @@ fonts.zip
 deploy
 .classpath
 *.junk
+.externalToolBuilders

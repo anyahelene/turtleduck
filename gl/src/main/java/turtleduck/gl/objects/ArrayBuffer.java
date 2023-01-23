@@ -1,12 +1,11 @@
 package turtleduck.gl.objects;
 
-import static org.lwjgl.opengl.GL32C.*;
-
 import java.nio.ByteBuffer;
 
-import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL43C;
 
+import static turtleduck.gl.GLScreen.gl;
+import static turtleduck.gl.compat.GLA.*;
 import turtleduck.buffer.DataField;
 import turtleduck.buffer.DataFormat;
 import turtleduck.gl.GLScreen;
@@ -27,13 +26,13 @@ public class ArrayBuffer {
 	boolean debug = false;
 
 	public ArrayBuffer(int usage, int capacity) {
-		GL32C.glGenBuffers(buffers);
+		gl.glGenBuffers(buffers);
 		this.usage = usage == 0 ? GL_STATIC_DRAW : usage;
 		this.initCapacity = capacity == 0 ? 1024 : capacity;
 	}
 
 	public void dispose() {
-		GL32C.glDeleteBuffers(buffers);
+	    gl.glDeleteBuffers(buffers);
 		buffers[0] = 0;
 		buffers[1] = 0;
 	}
@@ -45,8 +44,8 @@ public class ArrayBuffer {
 		if (!isMapped[bufferIndex]) {
 			if (debug)
 				System.out.print("map..." + buffers[bufferIndex]);
-			glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
-			buffer = glMapBufferRange(GL_ARRAY_BUFFER, pos, bufferSizes[bufferIndex] - pos, mapBits, buffer);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
+			buffer = gl.glMapBufferRange(GL_ARRAY_BUFFER, pos, bufferSizes[bufferIndex] - pos, mapBits, buffer);
 			if (buffer == null) {
 				throw new OutOfMemoryError("couldn't map buffer");
 			} else {
@@ -68,35 +67,35 @@ public class ArrayBuffer {
 			int oldIndex = bufferIndex;
 			if (pos > 0)
 				bufferIndex = (bufferIndex + 1) % buffers.length;
-			glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
-			glBufferData(GL_ARRAY_BUFFER, newCap, usage);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
+			gl.glBufferData(GL_ARRAY_BUFFER, newCap, usage);
 			bufferSizes[bufferIndex] = newCap;
 			System.out.printf("to %d size %d (%sB)", buffers[bufferIndex], newCap,
 					TextUtil.humanFriendlyBinary(newCap));
 			if (pos > 0) {
-				glBindBuffer(GL_COPY_READ_BUFFER, buffers[oldIndex]);
+				gl.glBindBuffer(GL_COPY_READ_BUFFER, buffers[oldIndex]);
 				if (isMapped[oldIndex]) {
-					glUnmapBuffer(GL_COPY_READ_BUFFER);
+					gl.glUnmapBuffer(GL_COPY_READ_BUFFER);
 					isMapped[oldIndex] = false;
 				}
-				glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ARRAY_BUFFER, 0, 0, pos);
-				glBufferData(GL_COPY_READ_BUFFER, newCap, usage);
+				gl.glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ARRAY_BUFFER, 0, 0, pos);
+				gl.glBufferData(GL_COPY_READ_BUFFER, newCap, usage);
 				bufferSizes[oldIndex] = newCap;
-				if (GLScreen.glMajor >= 4 && GLScreen.glMinor >= 3)
-					GL43C.glInvalidateBufferData(buffers[oldIndex]);
-				glBindBuffer(GL_COPY_READ_BUFFER, 0);
+				//if (GLScreen.glMajor >= 4 && GLScreen.glMinor >= 3)
+				//    GL43C.glInvalidateBufferData(buffers[oldIndex]); // TODO
+				gl.glBindBuffer(GL_COPY_READ_BUFFER, 0);
 //				dump(current);
 				System.out.printf(", %sB copied", TextUtil.humanFriendlyBinary(pos));
 			}
 			System.out.println();
-			glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
-			buffer = glMapBufferRange(GL_ARRAY_BUFFER, pos, newCap - pos, mapBits, buffer);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
+			buffer = gl.glMapBufferRange(GL_ARRAY_BUFFER, pos, newCap - pos, mapBits, buffer);
 			if (buffer == null) {
 				throw new OutOfMemoryError("couldn't map buffer");
 			} else {
 				isMapped[bufferIndex] = true;
 			}
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 	}
 
@@ -150,18 +149,20 @@ public class ArrayBuffer {
 		if (!isMapped[bufferIndex]) {
 			throw new IllegalStateException("Writing after done()");
 		}
-		if (currentField != current.numFields())
+		if (currentField != current.numFields()) {
+		    System.err.println(current);
 			throw new IllegalStateException(
 					"Expected " + current.numFields() + " data fields, but got " + currentField);
+		}
 		current = null;
 		return pos;
 	}
 
 	public int done() {
 		if (isMapped[bufferIndex]) {
-			glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
-			glUnmapBuffer(GL_ARRAY_BUFFER);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, buffers[bufferIndex]);
+			gl.glUnmapBuffer(GL_ARRAY_BUFFER);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
 			isMapped[bufferIndex] = false;
 		}
 		return buffers[bufferIndex];
@@ -170,8 +171,8 @@ public class ArrayBuffer {
 	public void dump(DataFormat format, int maxVertices) {
 		if (format == null)
 			format = current;
-		glBindBuffer(GL_COPY_READ_BUFFER, buffers[bufferIndex]);
-		ByteBuffer b = glMapBufferRange(GL_COPY_READ_BUFFER, 0, bufferSizes[bufferIndex], GL_MAP_READ_BIT, null);
+		gl.glBindBuffer(GL_COPY_READ_BUFFER, buffers[bufferIndex]);
+		ByteBuffer b = gl.glMapBufferRange(GL_COPY_READ_BUFFER, 0, bufferSizes[bufferIndex], GL_MAP_READ_BIT, null);
 		int i = 0, j = 0;
 		while (b.remaining() >= format.numBytes()) {
 			DataField<?> field = format.field(i++);
@@ -184,7 +185,7 @@ public class ArrayBuffer {
 			if (maxVertices > 0 && j > maxVertices)
 				break;
 		}
-		glUnmapBuffer(GL_COPY_READ_BUFFER);
+		gl.glUnmapBuffer(GL_COPY_READ_BUFFER);
 
 	}
 
@@ -192,14 +193,14 @@ public class ArrayBuffer {
 		done();
 		if (debug)
 			System.out.print("clear..." + buffers[bufferIndex]);
-		glBindBuffer(GL_COPY_READ_BUFFER, buffers[bufferIndex]);
+		gl.glBindBuffer(GL_COPY_READ_BUFFER, buffers[bufferIndex]);
 		if (isMapped[bufferIndex]) {
-			glUnmapBuffer(GL_COPY_READ_BUFFER);
+			gl.glUnmapBuffer(GL_COPY_READ_BUFFER);
 			isMapped[bufferIndex] = false;
 		}
-		if (GLScreen.glMajor >= 4 && GLScreen.glMinor >= 3)
-			GL43C.glInvalidateBufferData(buffers[bufferIndex]);
-		glBindBuffer(GL_COPY_READ_BUFFER, 0);
+		//if (GLScreen.glMajor >= 4 && GLScreen.glMinor >= 3)
+		//	GL43C.glInvalidateBufferData(buffers[bufferIndex]); //TODO
+		gl.glBindBuffer(GL_COPY_READ_BUFFER, 0);
 		pos = 0;
 		current = null;
 		bufferIndex = (bufferIndex + 1) % buffers.length;

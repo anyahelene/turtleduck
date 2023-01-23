@@ -44,7 +44,7 @@ public interface Viewport {
 	int screenY();
 
 	/**
-	 * The view area is the part of the screen area that is actualy being rendered
+	 * The view area is the part of the screen area that is actually being rendered
 	 * to.
 	 * 
 	 * This may be less than {@link #screenArea()} in order to preserve the desired

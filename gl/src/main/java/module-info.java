@@ -14,5 +14,6 @@ module turtleduck.gl {
 	provides turtleduck.Launcher with turtleduck.gl.GLLauncher;
 	provides turtleduck.display.DisplayInfo with turtleduck.gl.GLDisplayInfo;
 	provides turtleduck.image.ImageFactory with turtleduck.gl.GLImageFactory;
-
+requires java.annotation;
+requires turtleduck.anno;
 }

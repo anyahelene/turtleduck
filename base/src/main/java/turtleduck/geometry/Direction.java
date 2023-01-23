@@ -6,7 +6,7 @@ import org.joml.Vector3dc;
 import turtleduck.geometry.impl.AngleImpl;
 import turtleduck.geometry.impl.DirVecImpl;
 
-public interface Direction {
+public interface Direction extends DirectionVector {
 	static final int DEGREES_NORTH = 90, DEGREES_WEST = 180, DEGREES_SOUTH = -90, DEGREES_EAST = 0;
 	static final Direction DUE_NORTH = absolute(DEGREES_NORTH), DUE_WEST = absolute(DEGREES_WEST),
 			DUE_SOUTH = absolute(DEGREES_SOUTH), DUE_EAST = absolute(DEGREES_EAST);
@@ -311,4 +311,5 @@ public interface Direction {
 
 	Direction rotateTo(double angle);
 
+	Point transform(Point point);
 }

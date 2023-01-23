@@ -1,4 +1,4 @@
-package turtleduck;
+package turtleduck.util;
 
 public class CloneableObject<T extends CloneableObject<T>> implements Cloneable {
 

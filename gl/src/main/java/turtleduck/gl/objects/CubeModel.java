@@ -1,7 +1,6 @@
 package turtleduck.gl.objects;
-
-import static org.lwjgl.opengl.GL30.*;
-
+import static turtleduck.gl.GLScreen.gl;
+import static turtleduck.gl.compat.GLA.*;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
@@ -33,27 +32,27 @@ public class CubeModel extends AbstractModel {
 		indices = new int[]{0,2,1,3,5,7,4,6,0,2,2,6,3,7,7,1,1,5,0,4};//,/*3*/6,7,7,5,5,1,4,0};
 
 		//2,3,6,7
-//		glBindVertexArray(vao);
+//		gl.glBindVertexArray(vao);
 
-		ebo = glGenBuffers();
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
-		glBindVertexArray(0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		ebo = gl.glGenBuffers();
+		gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+		gl.glBindVertexArray(0);
+		gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
 	public void render(GLScreen glm) {
 		renderStart(glm);
 		renderBindBuffers(glm);
-				glFrontFace(GL_CW);
-				glCullFace(GL_FRONT);
-				glEnable(GL_CULL_FACE);
-		//		glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
+				gl.glFrontFace(GL_CW);
+				gl.glCullFace(GL_FRONT);
+				gl.glEnable(GL_CULL_FACE);
+		//		gl.glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
 
-//				glEnable(GL_BLEND);
-//				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDrawElements(GL_TRIANGLE_STRIP, indices.length, GL_UNSIGNED_INT, 0);
-		glDisable(GL_CULL_FACE);
-//				glDisable(GL_BLEND);
+//				gl.glEnable(GL_BLEND);
+//				gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		gl.glDrawElements(GL_TRIANGLE_STRIP, indices.length, GL_UNSIGNED_INT, 0);
+		gl.glDisable(GL_CULL_FACE);
+//				gl.glDisable(GL_BLEND);
 	}
 }

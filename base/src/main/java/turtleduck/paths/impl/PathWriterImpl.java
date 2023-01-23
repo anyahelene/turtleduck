@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import org.joml.Matrix4f;
+
 import turtleduck.annotations.Internal;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
@@ -115,7 +117,7 @@ public class PathWriterImpl implements PathWriter {
 		}
 
 		public void closePath() {
-			options |= PathStroke.CLOSED;
+			options |= PathStroke.PATH_CLOSED;
 			if (points.size() > 1) {
 				if (!added) {
 					added = true;
@@ -246,7 +248,7 @@ public class PathWriterImpl implements PathWriter {
 	}
 
 	@Override
-	public Particles addParticles() {
+	public Particles addParticles(Matrix4f matrix) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -14,10 +14,11 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
+import turtleduck.display.MouseCursor;
 import turtleduck.display.Viewport;
 import turtleduck.display.impl.BaseScreen.Dimensions;
 
-public class GLMouse {
+public class GLMouse implements turtleduck.display.MouseCursor{
 	protected static final boolean DEBUG_MOUSE = false;
 	protected GLScreen screen;
 	protected Vector2f mouseNrmPos = new Vector2f();
@@ -99,12 +100,15 @@ public class GLMouse {
 						x, y, dx, dy, screen.camera3.orientation);
 			}
 			float zoom = (float) ((screen.camera3.fov - 10) / 120);
-			screen.camera3.orientation.rotateX(dy).rotateY(dx).normalize();
-			screen.camera3.position.add(dx * zoom, dy * zoom, 0, 0);
-			System.out.println(screen.camera3.position);
+//			screen.camera3.position.rotateX(-dy).rotateY(dx); // .normalize();
+ //           screen.camera3.orientation.rotateX(dy).rotateY(-dx); // .normalize();
+            screen.camera3.worldOrientation.rotateX(dy).rotateY(-dx); // .normalize();
+		//screen.camera3.position.add(dx * zoom, dy * zoom, 0, 0);
+			//System.out.println(screen.camera3.position);
 			// cameraFront.add(dy, dx, 0, 0).normalize();
 			but1ClickPos.set(mouseNrmPos);
 			screen.camera3.updateView();
+            screen.camera3.updateProjection();
 		}
 		if (DEBUG_MOUSE) {
 			System.out.println("mouseDevPos=" + mouseScrPos + ", mouseNrmPos=" + mouseNrmPos + ", mouseObjPos="
@@ -134,4 +138,16 @@ public class GLMouse {
 	public void screenPosition(Vector2i dest) {
 		dest.set(mouseScrPos);
 	}
+
+    @Override
+    public <T> T as(Class<T> type) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MouseCursor fromName(String cursorName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

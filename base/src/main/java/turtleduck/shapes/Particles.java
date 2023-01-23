@@ -1,7 +1,9 @@
 package turtleduck.shapes;
 
+import java.util.Collection;
 import java.util.function.Consumer;
 
+import turtleduck.canvas.Canvas;
 import turtleduck.colors.Color;
 import turtleduck.display.Camera;
 import turtleduck.geometry.Point;
@@ -13,66 +15,68 @@ import turtleduck.geometry.Point;
  *
  */
 public interface Particles {
-	/**
-	 * Start the shape at the given point
-	 * 
-	 * @param p A point
-	 * @return this
-	 */
-	Particles at(Point p);
+    /**
+     * Start the shape at the given point
+     * 
+     * @param p A point
+     * @return this
+     */
+    Particles at(Point p);
 
-	/**
-	 * Start the shape at the given point
-	 * 
-	 * @param x Point's x coordinate
-	 * @param y Point's y coordinate
-	 * @return this
-	 */
-	Particles at(double x, double y);
+    /**
+     * Start the shape at the given point
+     * 
+     * @param x Point's x coordinate
+     * @param y Point's y coordinate
+     * @return this
+     */
+    Particles at(double x, double y);
 
-	Point position();
+    Point position();
 
-	Particles nParticles(int n);
+    Particles nParticles(int n);
 
-	int nParticles();
+    int nParticles();
 
-	Particles particleSize(double size);
+    Particles particleSize(double size);
 
-	double particleSize();
+    double particleSize();
 
-	Particles update(Consumer<ParticleTemplate> updater);
+    Particles update(Consumer<ParticleTemplate> updater);
 
-	Particles add(Consumer<Particle> updater);
+    Particles add(Consumer<Particle> updater);
 
-	Particles camera(Camera cam);
+    Particles camera(Camera cam);
 
-	interface Particle {
-		Particle size(double start, double end);
+    ParticleTemplate template();
 
-		Particle t(double start, double end);
+    interface Particle {
+        Particle size(double start, double end);
 
-		Particle time(double start, double end);
+        Particle t(double start, double end);
 
-		Particle time(double interval);
+        Particle time(double start, double end);
 
-		Particle start(Point p);
+        Particle time(double interval);
 
-		Particle end(Point p);
+        Particle start(Point p);
 
-		Particle ctrl1(Point p);
+        Particle end(Point p);
 
-		Particle ctrl2(Point p);
+        Particle ctrl1(Point p);
 
-		Particle color(Color start, Color end);
+        Particle ctrl2(Point p);
 
-		Particle color(Color color);
+        Particle color(Color start, Color end);
 
-	}
+        Particle color(Color color);
 
-	interface ParticleTemplate extends Particle {
-		void save();
-	}
+    }
 
-	void draw();
+    interface ParticleTemplate extends Particle {
+        void save();
+    }
+
+    void draw();
 
 }

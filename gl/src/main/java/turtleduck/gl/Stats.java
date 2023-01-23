@@ -2,142 +2,205 @@ package turtleduck.gl;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
-public class Stats {
-	private static final double SMOOTHING = 0.99;
-	private double lastFrameTime;
-	private double lastPrintTime;
-	private double deltaTime;
-	private double currentFrameTime;
-	private double currentRenderTime;
-	private double targetFps = 6000.0;
-	private Stat frames = new Stat();
-	private Stat render = new Stat();
-	private Stat steps = new Stat();
+import turtleduck.FrameInfo;
+import turtleduck.display.Screen;
+import turtleduck.util.TextUtil;
 
-	public float startFrame() {
-		lastFrameTime = currentFrameTime;
-		currentFrameTime = currentRenderTime = glfwGetTime();
-		deltaTime = (float) (currentFrameTime - lastFrameTime);
-		if(lastFrameTime == 0)
-			deltaTime = 0;
-		frames.addSample(deltaTime);
-		// System.err.println(deltaTime);
-		return (float) deltaTime;
-	}
+public class Stats implements FrameInfo {
+    private static final double SMOOTHING = 0.99;
+    private double lastFrameTime;
+    private double lastPrintTime;
+    private double deltaTime;
+    private double currentFrameTime;
+    private double currentRenderTime;
+    private double targetFps = 60.0;
+    private Stat frames = new Stat("frames", "fps", true);
+    private Stat render = new Stat("gfx", "s", false);
+    private Stat steps = new Stat("model", "s", false);
 
-	public float startRender() {
-		currentRenderTime = glfwGetTime();
-		double delta = currentRenderTime - currentFrameTime;
-		steps.addSample(delta);
-		// System.err.println(deltaTime);
-		return (float) delta;
-	}
+    public float startFrame() {
+        lastFrameTime = currentFrameTime;
+        currentFrameTime = currentRenderTime = glfwGetTime();
+        deltaTime = (float) (currentFrameTime - lastFrameTime);
+        if (lastFrameTime == 0)
+            deltaTime = 0;
+        frames.addSample(deltaTime);
+        // System.err.println(deltaTime);
+        return (float) deltaTime;
+    }
 
-	public void endFrame(boolean sleep) {
-		double now = glfwGetTime();
-		double delta = now - currentRenderTime;
-		render.addSample(delta);
+    public float startRender() {
+        currentRenderTime = glfwGetTime();
+        double delta = currentRenderTime - currentFrameTime;
+        steps.addSample(delta);
+        // System.err.println(deltaTime);
+        return (float) delta;
+    }
 
-		double dt = (float) (now - currentFrameTime);
-		long sleepTime = (long) Math.max(0, 1000 * (1.0 / targetFps - dt));
-		if (sleep && sleepTime > 0) {
-			try {
-				// System.err.println("Sleeping " + sleepTime + " ms");
-				Thread.sleep(sleepTime);
-			} catch (InterruptedException e) {
-			}
-		}
-		if (currentFrameTime - lastPrintTime > 1) {
-			lastPrintTime = currentFrameTime;
-			System.err.printf("frames: %5d, ", frames.n);
-			frames.print("FPS", "fps", true);
-			System.err.printf("gfx: ");
-			render.print("Render", "s", false);
-			System.err.printf("model: ");
-			steps.print("Step", "s", false);
-			System.err.println();
-		}
-	}
+    public void endFrame(boolean sleep) {
+        double now = glfwGetTime();
+        double delta = now - currentRenderTime;
+        render.addSample(delta);
 
-	public int currentFrame() {
-		return (int) frames.n;
-	}
+        double dt = (float) (now - currentFrameTime);
+        long sleepTime = (long) Math.max(0, 1000 * (1.0 / targetFps - dt));
+        if (sleep && sleepTime > 0) {
+            try {
+                // System.err.println("Sleeping " + sleepTime + " ms");
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+            }
+        }
+        if (currentFrameTime - lastPrintTime > 1) {
+            lastPrintTime = currentFrameTime;
+            System.err.printf("frame %5.0f: %s gfx: %s model: %s%n", frames.n, frames, render, steps);
+            frames.reset();
+            render.reset();
+            steps.reset();
+        }
+    }
 
-	public double currentTime() {
-		return currentFrameTime;
-	}
+    public int currentFrame() {
+        return (int) frames.n;
+    }
 
-	public double deltaTime() {
-		return deltaTime;
-	}
+    public double currentTime() {
+        return currentFrameTime;
+    }
 
-	static class Stat {
-		double total = 0, sincePrint = 0, runningAverage = 0, max = Double.NEGATIVE_INFINITY,
-				min = Double.POSITIVE_INFINITY, current;
-		long n = 0, nSincePrint = 0;
+    public double deltaTime() {
+        return deltaTime;
+    }
 
-		void addSample(double value) {
-			current = value;
-			sincePrint += value;
-			nSincePrint++;
-			if (n++ == 0) {
-				runningAverage = value;
-			} else {
-				runningAverage = SMOOTHING * runningAverage + (1 - SMOOTHING) * value;
-			}
-			if (n > 100) {
-				total += value;
-				max = Math.max(max, value);
-				min = Math.min(min, value);
-			}
-		}
+    static class Stat implements FrameInfo.FrameStats {
+        double total = 0, sincePrint = 0, runningAverage = 0, max = Double.NEGATIVE_INFINITY,
+                min = Double.POSITIVE_INFINITY, current;
+        double n = 0;
+        int nSincePrint = 0;
+        private String name;
+        private String unit;
+        private boolean invert;
 
-		void print(String title, String unit, boolean invert) {
-			double c = sincePrint / nSincePrint;
-			double t = n > 100 ? total / (n - 100) : 0;
-			double ra = runningAverage;
-			double mn = min;
-			double mx = max;
-			if (invert) {
-				c = 1 / c;
-				t = 1 / t;
-				ra = 1 / ra;
-				mn = 1 / max;
-				mx = 1 / min;
-			}
-			if (Double.isInfinite(c)) {
-				c = 0;
-			}
-			if (Double.isInfinite(t)) {
-				t = 0;
-			}
-			if (Double.isInfinite(mn)) {
-				mn = 0;
-			}
-			if (Double.isInfinite(mx)) {
-				mx = 0;
-			}
-			double factor = 1;
-			if (unit != null) {
-				if (Math.abs(ra) < 1e-3) {
-					factor = 1e6;
-					unit = "µ" + unit;
-				} else if (Math.abs(ra) < 1) {
-					factor = 1e3;
-					unit = "m" + unit;
-				} else if (Math.abs(ra) >= 1e3) {
-					factor = 1e-3;
-					unit = "k" + unit;
-				}
-			} else {
-				unit = "";
-			}
+        protected Stat(String name, String unit, boolean invert) {
+            this.name = name;
+            this.unit = unit;
+            this.invert = invert;
+        }
 
-			System.err.printf("%5.1f %s, ~%5.1f %s, %.1f ≤ %.1f ≤ %.1f %-4s  ", c * factor, unit, t * factor, unit,
-					mn * factor, ra * factor, mx * factor, unit);
+        void addSample(double value) {
+            current = value;
+            sincePrint += value;
+            nSincePrint++;
+            if (n++ == 0) {
+                runningAverage = value;
+            } else {
+                runningAverage = SMOOTHING * runningAverage + (1 - SMOOTHING) * value;
+            }
+            if (n > 100) {
+                total += value;
+                max = Math.max(max, value);
+                min = Math.min(min, value);
+            }
+        }
+        
+        void reset() {
+            sincePrint = 0;
+            nSincePrint = 0;
+        }
 
-			sincePrint = 0;
-			nSincePrint = 0;
-		}
-	}
+        @Override
+        public String toString() {
+            int p = TextUtil.findSIPrefix(periodAverage());
+            String u = unit != null ? TextUtil.prefixes.get(p) + unit : "";
+            double scale = TextUtil.PREFIX_SCALE10[p];
+
+            return String.format("%5.1f %s, %.1f ≤ %.1f ≤ %.1f %-4s  ", periodAverage() * scale, u,
+                    min() * scale, runningAverage() * scale, max() * scale, u);
+        }
+
+        private double value(double val) {
+            if (invert)
+                val = 1 / val;
+            if (Double.isInfinite(val))
+                val = 0;
+            return val;
+        }
+
+        @Override
+        public double total() {
+            return value(total);
+        }
+
+        @Override
+        public double min() {
+            return invert ? value(max) : value(min);
+        }
+
+        @Override
+        public double max() {
+            return invert ? value(min) : value(max);
+        }
+
+        @Override
+        public double runningAverage() {
+            return value(runningAverage);
+        }
+
+        @Override
+        public double count() {
+            return n;
+        }
+
+        @Override
+        public double periodAverage() {
+            return value(sincePrint / nSincePrint);
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public String unit() {
+            return unit;
+        }
+
+    }
+
+    @Override
+    public double maxDeltaTime() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double realDeltaTime() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public FrameStats fpsStats() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public FrameStats modelStats() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public FrameStats renderStats() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Screen mainScreen() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

@@ -6,8 +6,32 @@ import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 
 public interface PathStroke {
-	int CLOSED = 1;
-	int TRIANGLE_STRIP = 2;
+	/**
+	 * Flag value for closed paths.
+	 * 
+	 * A closed path has an extra line from the last point back to the first point.
+	 */
+	int PATH_CLOSED = 1;
+	/**
+	 * Flag for filled triangle strip paths.
+	 * 
+	 * Fills the triangle formed by each added point and the two previous points (minimum three points).  
+	 * 
+	 */
+	int PATH_TRIANGLE_STRIP = 2;
+	/**
+	 * Flags for smooth paths.
+	 * 
+	 * @see {@link SmoothType#SMOOTH}
+	 */
+	int PATH_SMOOTH = 4;
+	/**
+	 * Flag for symmetric smooth paths.
+	 * 
+	 * No effect unless {@link #PATH_SMOOTH} is also set.
+	 * @see {@link SmoothType#SYMMETRIC}
+	 */
+	int PATH_SYMMETRIC = 8;
 
 	/**
 	 * Add a line

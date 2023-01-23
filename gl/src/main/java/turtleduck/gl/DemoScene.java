@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import turtleduck.FrameInfo;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 import turtleduck.colors.Color;
@@ -99,7 +100,8 @@ public class DemoScene implements TurtleDuckApp {
 	private double rotation = 0;
 
 	@Override
-	public void bigStep(double deltaTime) {
+	public void update(FrameInfo info) {
+        double deltaTime = info.deltaTime();
 		turtle.jumpTo(500, 500).turnTo(0);
 		turtle.spawn().jumpTo(500, 100).turnTo(0).strokeWidth(1).stroke(Color.color(.5, .5, .5, 1)).draw(200).turn(45)
 				.draw(200).turn(90).draw(200).turn(-90).draw(200);
@@ -191,12 +193,6 @@ public class DemoScene implements TurtleDuckApp {
 //		((GLLayer) canvas).drawTileMap(Point.point(0, 0), 48, 32, 32, 32, tileMap, tiles);
 
 //		System.out.println(deltaTime);
-
-	}
-
-	@Override
-	public void smallStep(double deltaTime) {
-		// TODO Auto-generated method stub
 
 	}
 

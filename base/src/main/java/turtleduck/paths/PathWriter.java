@@ -1,5 +1,8 @@
 package turtleduck.paths;
 
+
+import org.joml.Matrix4f;
+
 import turtleduck.shapes.Particles;
 
 public interface PathWriter {
@@ -11,6 +14,10 @@ public interface PathWriter {
 	 */
 	PathStroke addStroke();
 	
-	Particles addParticles();
+	Particles addParticles(Matrix4f matrix);
+	
+	default boolean is3d() {
+	    return false;
+	}
 
 }

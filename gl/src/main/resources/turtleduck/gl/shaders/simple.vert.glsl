@@ -1,5 +1,6 @@
+#version 300 es
 
-#version 410
+
 layout (location = 0) in vec4 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec3 aNormal;
@@ -8,7 +9,9 @@ layout (location = 4) in vec2 aGridCoord;
 
 uniform mat4 uModel;
 uniform mat4 uNormal;
+
 uniform mat4 uProjView;
+
 
 out vec2 fTexCoord;
 out vec4 fPos;
@@ -22,7 +25,7 @@ void main()
 	float b = 1.0 - r;
     fPos = uModel * aPos; // vec4(aPos.xyz, 1.0);
     //fPos = uModel * vec4(aPos.x,aPos.y,.5, 1.0);
-    gl_Position = uProjView * aPos; // uModel * vec4(aPos.xyz, 1.0);
+    gl_Position = uProjView * uModel * aPos; // uModel * vec4(aPos.xyz, 1.0);
     fColor = vec4(aColor); // vec4(aPos.xyz, 1.0);
     fTexCoord = aTexCoord;
     //fNormal = vec4(mat3(transpose(inverse(uProjView))) * mat3(transpose(inverse(uModel))) * (aNormal),0);

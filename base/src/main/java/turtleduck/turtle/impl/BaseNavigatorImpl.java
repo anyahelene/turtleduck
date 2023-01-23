@@ -1,5 +1,7 @@
 package turtleduck.turtle.impl;
 
+import org.joml.Vector2d;
+
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
 import turtleduck.geometry.PositionVector;
@@ -8,137 +10,124 @@ import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.turtle.Navigator;
 
 public abstract class BaseNavigatorImpl<T extends Navigator<T>> implements Navigator<T>, Cloneable {
-	protected boolean recordMoves = false;
-	protected boolean recordTurns = false;
-	protected PathPointImpl current;
-	protected Direction direction;
+    protected boolean recordMoves = false;
+    protected boolean recordTurns = false;
+    protected PathPointImpl current;
+    protected Direction direction;
 
-	public BaseNavigatorImpl(BaseNavigatorImpl<?> old) {
-		current = old.current.copy();
-		direction = old.direction;
-	}
+    public BaseNavigatorImpl(BaseNavigatorImpl<?> old) {
+        current = old.current.copy();
+        direction = old.direction;
+    }
 
-	public BaseNavigatorImpl(Point p, Direction b) {
-		current = new PathPointImpl();
-		current.point = p;
-		direction = b;
-		current.type = Path.PointType.POINT;
-	}
+    public BaseNavigatorImpl(Point p, Direction b) {
+        current = new PathPointImpl();
+        current.point = p != null ? p : Point.ZERO;
+        direction = b != null ? b : Direction.DUE_NORTH;
+        current.type = Path.PointType.POINT;
+    }
 
-	protected abstract void addPoint(PathPointImpl point);
+    protected abstract void addPoint(PathPointImpl point);
 
-	@Override
-	public Direction direction() {
-		return direction;
-	}
+    @Override
+    public Direction direction() {
+        return direction;
+    }
 
-	@Override
-	public Point point() {
-		return current.point;
-	}
+    @Override
+    public Point point() {
+        return current.point;
+    }
 
-	public T go(double dist) {
-		if (dist != 0) {
-			PathPointImpl pp = current.copy();
-			pp.point = pp.point.add(direction, dist);
-			addPoint(pp);
-			current = pp;
-		}
-		return (T) this;
-	}
+    @Override
+    public Point offset(double dx, double dy) {
+        Point p = direction.transform(Point.point(dx, dy));
+        return current.point.add(p);
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public T go(PositionVector off, RelativeTo rel) {
-		PathPointImpl pp = current.copy();
-		pp.point = findPoint(off, rel);
-		if (!pp.point.equals(current.point)) {
-			addPoint(pp);
-			current = pp;
-		}
-		return (T) this;
-	}
+    @Override
+    public Point offsetAxisAligned(double dx, double dy) {
+        return current.point.add(dx, dy);
+    }
 
-	@SuppressWarnings("unchecked")
-	public T turnTo(PositionVector dest) {
-		direction(current.point.directionTo(dest));
-		return (T) this;
-	}
+    public T go(double dist) {
+        if (dist != 0) {
+            PathPointImpl pp = current.copy();
+            pp.point = pp.point.add(direction, dist);
+            addPoint(pp);
+            current = pp;
+        }
+        return (T) this;
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public T direction(Direction dest) {
-		if (dest.isAbsolute())
-			direction = direction.rotateTo(dest);
-		else
-			direction = direction.add(dest);
-		return (T) this;
-	}
+    public T goTo(PositionVector p) {
+        if (!current.point.equals(p)) {
+            PathPointImpl pp = current.copy();
+            pp.point = Point.point(p);
+            addPoint(pp);
+            current = pp;
+        }
+        return (T) this;
+    }
 
-	@Override
-	public double x() {
-		return current.point.x();
-	}
+    public T go(Direction dir, double dist) {
+        if (dist != 0.0) {
+            PathPointImpl pp = current.copy();
+            pp.point = pp.point.add(dir, dist);
+            addPoint(pp);
+            current = pp;
+        }
+        return (T) this;
+    }
 
-	@Override
-	public double y() {
-		return current.point.y();
-	}
+    @SuppressWarnings("unchecked")
+    public T turnTo(PositionVector dest) {
+        direction(current.point.directionTo(dest));
+        return (T) this;
+    }
 
-	@Override
-	public double z() {
-		return current.point.z();
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public T direction(Direction dest) {
+        if (dest.isAbsolute())
+            direction = direction.rotateTo(dest);
+        else
+            direction = direction.add(dest);
+        return (T) this;
+    }
 
-	@Override
-	public double dirX() {
-		return direction.dirX();
-	}
+    @Override
+    public double x() {
+        return current.point.x();
+    }
 
-	@Override
-	public double dirY() {
-		return direction.dirY();
-	}
+    @Override
+    public double y() {
+        return current.point.y();
+    }
 
-	@Override
-	public double dirZ() {
-		return direction.dirZ();
-	}
+    @Override
+    public double z() {
+        return current.point.z();
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public T goTo(Point dest) {
-		if (!isAt(dest)) {
-			PathPointImpl pp = current.copy();
-			pp.point = dest;
-			addPoint(pp);
-			current = pp;
-		}
-		return (T) this;
-	}
+    @Override
+    public double dirX() {
+        return direction.dirX();
+    }
 
-	public boolean isAt(PositionVector p) {
-		return x() == p.x() && y() == p.y() && z() == p.z();
-	}
+    @Override
+    public double dirY() {
+        return direction.dirY();
+    }
 
-	@Override
-	public Point findPoint(PositionVector point, RelativeTo rel) {
-		Point dest;
-		switch (rel) {
-		case POSITION:
-			dest = current.point.add(point);
-			break;
-		case SELF:
-			dest = current.point.add(direction, point.y()); // TODO
-			break;
-		case WORLD:
-			dest = Point.point(point);
-			break;
-		default:
-			throw new IllegalStateException();
-		}
+    @Override
+    public double dirZ() {
+        return direction.dirZ();
+    }
 
-		return dest;
+    public boolean isAt(PositionVector p) {
+        return x() == p.x() && y() == p.y() && z() == p.z();
+    }
 
-	}
 }

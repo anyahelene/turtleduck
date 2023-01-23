@@ -1,7 +1,7 @@
 package turtleduck.gl.objects;
 
-import static org.lwjgl.opengl.GL32C.*;
-
+import static turtleduck.gl.GLScreen.gl;
+import static turtleduck.gl.compat.GLA.*;
 import java.util.Arrays;
 
 import org.joml.Vector2f;
@@ -24,7 +24,7 @@ public class VertexArray {
 		this.format = format;
 		this.buffer = buffer;
 		this.vaos = new int[buffer.numBuffers()];
-		glGenVertexArrays(this.vaos);
+		gl.glGenVertexArrays(this.vaos);
 	}
 
 	public VertexArray(VertexArrayFormat format, int usage, int capacity) {
@@ -33,13 +33,13 @@ public class VertexArray {
 		ownsBuffer = true;
 //		System.out.println(buffer);
 		this.vaos = new int[buffer.numBuffers()];
-		glGenVertexArrays(this.vaos);
+		gl.glGenVertexArrays(this.vaos);
 	}
 
 	public void setFormat() {
 		for (int i = 0; i < vaos.length; i++) {
-			glBindVertexArray(vaos[i]);
-			glBindBuffer(GL_ARRAY_BUFFER, buffer.bufferName(i));
+			gl.glBindVertexArray(vaos[i]);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, buffer.bufferName(i));
 			format.setVertexAttributes(0);
 
 			if (false) {
@@ -123,8 +123,8 @@ public class VertexArray {
 	public int bind() {
 		buffer.done();
 		int vao = vaos[buffer.currentBufferIndex()];
-//		glBindBuffer(GL_ARRAY_BUFFER, buffer.buffers[buffer.currentBufferIndex()]);
-		glBindVertexArray(vao);
+//		gl.glBindBuffer(GL_ARRAY_BUFFER, buffer.buffers[buffer.currentBufferIndex()]);
+		gl.glBindVertexArray(vao);
 		return vao;
 	}
 
@@ -139,7 +139,7 @@ public class VertexArray {
 			buffer.dispose();
 		}
 		buffer = null;
-		glDeleteVertexArrays(vaos);
+		gl.glDeleteVertexArrays(vaos);
 	}
 
 	public String toString() {

@@ -14,6 +14,7 @@ import org.joml.Vector3dc;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.DirectionVector;
 import turtleduck.geometry.Orientation;
+import turtleduck.geometry.Point;
 
 /**
  * 
@@ -482,4 +483,14 @@ public class AngleImpl implements DirectionVector, Orientation {
 	public Orientation rotateTo(double angle) {
 		return absolute(angle);
 	}
+	
+    @Override
+    public Point transform(Point point) {
+        double x = point.x();
+        double y = point.y();
+        double cos = cos(angle);
+        double sin = sin(angle);
+        return point.xy(y * cos + x * sin, y * sin - x * cos);
+    }
+
 }

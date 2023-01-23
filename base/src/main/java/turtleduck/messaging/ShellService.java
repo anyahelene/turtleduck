@@ -118,7 +118,7 @@ public interface ShellService extends ExecuteService, CodeService {
 	Key<Integer> HEAP_MAX = Key.intKey("heapMax");
 	Key<Double> CPU_TIME = Key.key("cpuTime", Double.class, 0.0);
 
-	@Request(replyType = "evalReply", replyFields = { "REF", "VALUE", "SNIP_KIND", "SNIP_ID", "CODE", "DEF", "SYMBOL",
+	@Request(replyFields = { "REF", "VALUE", "SNIP_KIND", "SNIP_ID", "CODE", "DEF", "SYMBOL",
 			"MULTI", "DIAG", "EXCEPTION" })
 	Async<Dict> eval(@MessageField("CODE") String code, @MessageField("REF") int ref,
 			@MessageField("OPTIONS") Dict opts);

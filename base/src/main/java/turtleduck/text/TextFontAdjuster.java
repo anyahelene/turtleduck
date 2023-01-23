@@ -3,6 +3,7 @@ package turtleduck.text;
 import turtleduck.display.Screen;
 import turtleduck.events.KeyCodes;
 import turtleduck.events.KeyEvent;
+import turtleduck.FrameInfo;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 
@@ -223,14 +224,9 @@ public class TextFontAdjuster implements TurtleDuckApp  {
 		setup();
 	}
 
-	@Override
-	public void smallStep(double deltaTime) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
-	public void bigStep(double deltaTime) {
+	public void update(FrameInfo info) {
 	}
 
 	public static String center(String s, int width) {

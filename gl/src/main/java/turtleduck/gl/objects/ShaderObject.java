@@ -1,129 +1,181 @@
 package turtleduck.gl.objects;
 
 import static turtleduck.gl.objects.Util.ioResourceToByteBuffer;
+import static turtleduck.gl.objects.Util.urlToByteBuffer;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchService;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.opengl.GL40C;
 
-import static org.lwjgl.opengl.GL32C.*;
+import turtleduck.gl.FileWatcher;
 
-public class ShaderObject extends DataHandle<ShaderObject, DataObject> {
-	public static final Map<String, Integer> SHADER_TYPES;
+import static turtleduck.gl.GLScreen.gl;
+import static turtleduck.gl.compat.GLA.*;
 
-	static {
-		Map<String, Integer> map = new HashMap<>();
-		map.put("vertex", GL_VERTEX_SHADER);
-		map.put("fragment", GL_FRAGMENT_SHADER);
-		map.put("geometry", GL_GEOMETRY_SHADER);
-		map.put("tess control", GL40C.GL_TESS_CONTROL_SHADER);
-		map.put("tess evaluation", GL40C.GL_TESS_EVALUATION_SHADER);
-		SHADER_TYPES = Collections.unmodifiableMap(map);
-	}
+public class ShaderObject {
+    public static final Map<String, Integer> SHADER_TYPES;
+    static Path shaderPath;
+    static {
+        Map<String, Integer> map = new HashMap<>();
+        map.put("vertex", GL_VERTEX_SHADER);
+        map.put("fragment", GL_FRAGMENT_SHADER);
+        map.put("geometry", GL40C.GL_GEOMETRY_SHADER); // TODO
+        map.put("tess control", GL40C.GL_TESS_CONTROL_SHADER); // TODO
+        map.put("tess evaluation", GL40C.GL_TESS_EVALUATION_SHADER); // TODO
+        SHADER_TYPES = Collections.unmodifiableMap(map);
+        String path = System.getenv("TD_SHADER_PATH");
+        if (path == null)
+            path = "/turtleduck/gl/shaders/";
+        shaderPath = Path.of(path);
+    }
 
-	private ShaderObject(DataObject data) {
-		super(data);
-	}
+    private final int type;
+    private int id;
+    private Path path;
+    private String code;
+    private boolean ready;
+    private List<ShaderChangeListener> changeListeners = new ArrayList<>();
 
-	public static ShaderObject createFromString(String code, int type) throws IOException {
-		DataObject data = DataObject.getCached(code, type, DataObject.class);
-		if (data != null) {
-			return new ShaderObject(data.open());
-		} else {
+    private ShaderObject(String pathName, String code, int type) {
+        this.type = type;
+        this.path = resolve(pathName);
+        this.code = code;
+    }
 
-		}
-		if (!SHADER_TYPES.values().contains(type)) {
-			throw new IllegalArgumentException("Unknown shader type: " + type);
-		}
-		int shader = glCreateShader(type);
-		try {
-			glShaderSource(shader, code);
-			glCompileShader(shader);
-			int compiled = glGetShaderi(shader, GL_COMPILE_STATUS);
-			String shaderLog = glGetShaderInfoLog(shader);
-			if (shaderLog.trim().length() > 0) {
-				System.err.println(code);
-				System.err.println(shaderLog);
-			}
-			if (compiled == 0) {
-				throw new AssertionError("Could not compile shader");
-			}
+    public static Path resolve(String pathName) {
+        if (pathName == null)
+            return null;
+        Path p = shaderPath.resolve(pathName);
+        if (Files.isReadable(p))
+            return p;
+        URL url = ShaderObject.class.getResource(pathName);
+        if (url == null)
+            url = ShaderObject.class.getResource(shaderPath.resolve(pathName).toString());
+        if (url != null) {
+            try {
+                return Path.of(url.toURI());
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+        }
+        return Path.of(pathName);
+    }
 
-			data = new DataObject(shader, type, code);
-			data.cacheIt();
-			System.err.printf("Loaded shader 0x%x: %s%n", shader, code.substring(0, code.indexOf('\n')));
-			shader = -1;
-			return new ShaderObject(data);
-		} finally {
-			if (shader >= 0) { // set to -1 on success
-				glDeleteShader(shader);
-			}
-		}
-	}
+    private boolean load() throws IOException {
+        if (path != null) {
+            String newCode = Files.readString(shaderPath.resolve(path));
+            if (!newCode.equals(code)) {
+                System.err.printf("Loaded shader source: %s%n", path);
+                code = newCode;
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public static ShaderObject create(String pathName, int type) throws IOException {
-		DataObject data = DataObject.getCached(pathName, type, DataObject.class);
-		if (data != null) {
-			return new ShaderObject(data.open());
-		} else {
+    private void reload() {
+        try {
+            if (load()) {
+                if (compile()) {
+                    for (ShaderChangeListener l : changeListeners)
+                        l.changed(this);
+                }
+            }
+        } catch (RuntimeException | IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-		}
-		if (!SHADER_TYPES.values().contains(type)) {
-			throw new IllegalArgumentException("Unknown shader type: " + type);
-		}
-		int shader = glCreateShader(type);
-		try {
-			ByteBuffer source = ioResourceToByteBuffer(pathName, 1024);
-			PointerBuffer strings = BufferUtils.createPointerBuffer(1);
-			IntBuffer lengths = BufferUtils.createIntBuffer(1);
-			strings.put(0, source);
-			lengths.put(0, source.remaining());
-			glShaderSource(shader, strings, lengths);
-			glCompileShader(shader);
-			int compiled = glGetShaderi(shader, GL_COMPILE_STATUS);
-			String shaderLog = glGetShaderInfoLog(shader);
-			if (shaderLog.trim().length() > 0) {
-				System.err.println(shaderLog);
-			}
-			if (compiled == 0) {
-				throw new AssertionError("Could not compile shader: " + pathName);
-			}
+    public static ShaderObject createFromString(String code, int type) throws IOException {
+        if (!SHADER_TYPES.values().contains(type)) {
+            throw new IllegalArgumentException("Unknown shader type: " + type);
+        }
+        ShaderObject so = new ShaderObject(null, code, type);
+        so.compile();
+        return so;
+    }
 
-			data = new DataObject(shader, type, pathName);
-			data.cacheIt();
-			System.err.printf("Loaded shader 0x%x: %s%n", shader, pathName);
-			shader = -1;
-			return new ShaderObject(data);
-		} finally {
-			if (shader >= 0) { // set to -1 on success
-				glDeleteShader(shader);
-			}
-		}
-	}
+    public static ShaderObject create(String pathName, int type) throws IOException {
+        if (!SHADER_TYPES.values().contains(type)) {
+            throw new IllegalArgumentException("Unknown shader type: " + type);
+        }
+        ShaderObject so = new ShaderObject(pathName, null, type);
+        so.load();
+        if (!so.compile())
+            throw new AssertionError("Could not compile shader");
+        if (so.path != null)
+            FileWatcher.watchFile(so.path, so::reload);
+        return so;
+    }
 
-	public int type() {
-		return data().type;
-	}
+    protected boolean compile() {
+        int shader = gl.glCreateShader(type);
+        try {
+            gl.glShaderSource(shader, code);
+            gl.glCompileShader(shader);
+            int compiled = gl.glGetShaderi(shader, GL_COMPILE_STATUS);
+            String shaderLog = gl.glGetShaderInfoLog(shader);
+            if (shaderLog.trim().length() > 0) {
+                System.err.println(code);
+                System.err.println(shaderLog);
+            }
+            if (compiled == 0) {
+                ready = false;
+                return false;
+            }
+            System.err.printf("Loaded shader 0x%x: %s \"%s…\"%n", shader, path, code.substring(0, code.indexOf('\n')));
+            if (id > 0)
+                gl.glDeleteShader(id);
+            id = shader;
+            shader = 0;
+            ready = true;
+        } finally {
+            if (shader > 0)
+                gl.glDeleteShader(shader);
+        }
+        return true;
+    }
 
-	@Override
-	protected void dispose(int id, DataObject data) {
-		glDeleteShader(id);
-	}
+    public void addChangeListener(ShaderChangeListener listener) {
+        changeListeners.add(listener);
+    }
 
-	@Override
-	protected void bind() {
-	}
+    public void removeChangeListener(ShaderChangeListener listener) {
+        changeListeners.remove(listener);
+    }
 
-	@Override
-	protected ShaderObject create(DataObject data) {
-		return new ShaderObject(data);
-	}
+    public int id() {
+        return id;
+    }
 
+    public int type() {
+        return type;
+    }
+
+    public void dispose() {
+        gl.glDeleteShader(id);
+        id = 0;
+    }
+
+    public interface ShaderChangeListener {
+        void changed(ShaderObject obj);
+    }
 }

@@ -57,7 +57,7 @@ public abstract class DataHandle<C extends DataHandle<?,?>, D extends DataObject
 		return data().id();
 	}
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		if(data == null) {
 			return;
 		}

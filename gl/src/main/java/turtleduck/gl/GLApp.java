@@ -43,19 +43,19 @@ public class GLApp {
 	public void mainLoop() {
 		while (!glfwWindowShouldClose(screen.window)) {
 //			screen.clear();
+		    FileWatcher.poll();
 			stats.startFrame();
 			if (step < 0 || screen.camera2.revision != cam2rev || screen.camera3.revision != cam3rev) {
 				cam2rev = screen.camera2.revision;
 				cam3rev = screen.camera3.revision;
 				screen.getGLLayer().clear();
-				app.smallStep(0);
 			} else if (autoClear) {
 				screen.getGLLayer().clear();
 			}
 			
 			if (!screen.paused) {
 				screen.startFrame(stats.deltaTime());
-				app.bigStep(stats.deltaTime());
+				app.update(stats);
 			}
 			stats.startRender();
 			screen.render();

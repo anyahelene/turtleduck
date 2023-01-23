@@ -4,7 +4,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFW.GLFW_DISCONNECTED;
 import static org.lwjgl.glfw.GLFW.glfwGetGamepadName;
 import static org.lwjgl.glfw.GLFW.glfwGetJoystickName;
-import static org.lwjgl.glfw.GLFW.glfwSetCursorEnterCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetCursorPosCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetJoystickCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
@@ -170,7 +169,7 @@ public class GLStick {
 //			db.flip();
 			boolean result = GLFW.glfwUpdateGamepadMappings(db);
 			System.out.println("Updating game pad mappings: " + result);
-			screen.checkError();
+			GLScreen.gl.checkError();
 
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block

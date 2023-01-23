@@ -4,6 +4,7 @@ import org.joml.Vector3d;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Orientation;
+import turtleduck.geometry.Point;
 
 public class DirVecImpl implements Direction {
 	private final Vector3d vec;
@@ -227,5 +228,12 @@ public class DirVecImpl implements Direction {
 	public Direction rotateTo(double angle) {
 		return new DirVecImpl(angle, absolute);
 	}
-
+    @Override
+    public Point transform(Point point) {
+        double x = point.x();
+        double y = point.y();
+        double cos = Math.cos(rads);
+        double sin = Math.sin(rads);
+        return point.xy(x * cos - y * sin, x * sin + y * cos);
+    }
 }

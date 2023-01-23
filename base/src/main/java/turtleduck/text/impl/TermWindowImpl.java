@@ -154,7 +154,7 @@ public class TermWindowImpl implements TextWindow {
 			terminal.writeToTerminal(cp.toString());
 		else
 			terminal.writeToTerminal("\u001b\u005b" + y + ";" + x + "H" + cp.toString());
-		this.x = x++;
+		this.x = x+1;
 		this.y = y;
 		return this;
 	}

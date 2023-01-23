@@ -9,4 +9,6 @@ public interface Uniform<T> {
 	public int typeId();
 
 	public int size();
+	public int location();
+	public boolean isDeclared();
 }

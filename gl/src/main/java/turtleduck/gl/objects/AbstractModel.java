@@ -1,9 +1,7 @@
 package turtleduck.gl.objects;
 
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
-import static org.lwjgl.opengl.GL33.*;
-
+import static turtleduck.gl.GLScreen.gl;
+import static turtleduck.gl.compat.GLA.*;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -138,9 +136,9 @@ public abstract class AbstractModel implements IModel {
 	@Override
 	public void renderBindBuffers(GLScreen glm) {
 		if (vao != 0) {
-			glBindVertexArray(vao);
+			gl.glBindVertexArray(vao);
 		} else if (vbo != 0) {
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		}
 	}
 

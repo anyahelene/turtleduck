@@ -4,81 +4,180 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class BitmapGenerator {
-	static String[] todo = { "1f", "1i", "3b", "3s", "3f", "4b", "4s", "4f" };
-	private static List<String> lines;
-	private static Path outDir;
+class BitmapGenerator {
+    /**
+     * Typenames converted to boxed type names
+     */
+    private static final Map<String, String> boxedNames = new HashMap<>();
+    /**
+     * Typenames as used in ByteBuffers get* / set* methods
+     */
+    private static final Map<String, String> bufferNames = new HashMap<>();
+    private static final String BASE_NAME = "Pixmap";
+    static String[] todo = { "1f", "1i", "3b", "3s", "3f", "4b", "4s", "4f" };
+    static String[] baseTypes = { "f", "i", "b", "s" };
+    private static Path outDir;
 
-	public static void main(String[] args) throws IOException {
-		lines = Files.readAllLines(Path.of(args[0]));
-		outDir = Path.of(args[1]);
-		Files.createDirectories(outDir);
-		for (String s : todo)
-			generate(s);
-	}
+    static {
+        boxedNames.put("byte", "Byte");
+        boxedNames.put("short", "Short");
+        boxedNames.put("int", "Integer");
+        boxedNames.put("long", "Long");
+        boxedNames.put("float", "Float");
+        boxedNames.put("double", "Double");
+        boxedNames.put("char", "Character");
+        bufferNames.put("byte", "");
+        bufferNames.put("short", "Short");
+        bufferNames.put("int", "Int");
+        bufferNames.put("long", "Long");
+        bufferNames.put("float", "Float");
+        bufferNames.put("double", "Double");
+        bufferNames.put("char", "Char");
+    }
 
-	private static void generate(String s) throws IOException {
-		int channels = s.charAt(0) - '0';
-		if (channels < 1 || channels > 4)
-			throw new IllegalArgumentException(s);
-		char typeChar = s.charAt(1);
-		String typeName;
-		String vectorName = "Vector" + s;
-		int byteSize;
-		switch (typeChar) {
-		case 'b':
-			typeName = "byte";
-			vectorName = "Vector" + channels + "i";
-			byteSize = 1;
-			break;
-		case 's':
-			typeName = "short";
-			vectorName = "Vector" + channels + "i";
-			byteSize = 2;
-			break;
-		case 'i':
-			typeName = "int";
-			byteSize = 4;
-			break;
-		case 'f':
-			typeName = "float";
-			byteSize = 4;
-			break;
-		case 'd':
-			typeName = "double";
-			byteSize = 8;
-			break;
-		default:
-			throw new IllegalArgumentException(s);
-		}
+    public static void main(String[] args) throws IOException {
+        Path srcDir = Path.of(args[0]);
 
-		StringBuffer sb = new StringBuffer();
-		for (String line : lines) {
-			line = line.replace("_Template", s);
-			line = line.replaceFirst("^class", "public class");
-			line = line.replace("BYTE_SIZE = 4", "BYTE_SIZE = " + byteSize);
-			line = line.replace("float", typeName);
-			line = line.replace("Float", typeName.substring(0, 1).toUpperCase() + typeName.substring(1));
-			line = line.replace("final int channels;", "static final int channels = " + channels + ";");
-			line = line.replace(", int channels,", ",");
-			line = line.replace("Vector4f", vectorName);
-			line = line.replace("getByte", "get").replace("putByte", "put");
-			if (line.contains("this.channels = channels;"))
-				continue;
-			if (channels < 2 && line.matches(".*// [GBA].*"))
-				continue;
-			if (channels < 3 && line.matches(".*// [BA].*"))
-				continue;
-			if (channels < 4 && line.contains("// A"))
-				continue;
-			if (channels > 1 && line.contains("// 1"))
-				continue;
-			line = line.replaceAll("// [RGBA1]", "");
-			sb.append(line);
-			sb.append("\n");
-		}
-		Files.writeString(outDir.resolve("Bitmap" + s + ".java"), sb.toString());
-	}
+        for (String s : todo)
+            new Generator(srcDir.resolve(BASE_NAME + "_CH__T__Template.java"), srcDir, s).generate();
+        ;
+
+        for (String s : baseTypes)
+            new Generator(srcDir.resolve("Float" + BASE_NAME + "_Template.java"), srcDir, "0" + s).generate();
+        ;
+
+        outDir = Path.of(args[1]);
+        Files.createDirectories(outDir);
+        for (String s : todo)
+            new Generator(srcDir.resolve(BASE_NAME + "Impl_CH__T__Template.java"), outDir, s).generate();
+        ;
+    }
+
+    static class Generator {
+        String typeName;
+        String vectorName;
+        int byteSize;
+        int channels;
+        char typeChar;
+        String s;
+        Path srcPath;
+        Path path;
+
+        Generator(Path srcPath, Path path, String s) {
+            this.s = s;
+            this.srcPath = srcPath;
+            this.path = path;
+            channels = s.charAt(0) - '0';
+            if (channels < 0 || channels > 4)
+                throw new IllegalArgumentException(s);
+            typeChar = s.charAt(1);
+            vectorName = "Vector" + s;
+            switch (typeChar) {
+                case 'b':
+                    typeName = "byte";
+                    vectorName = "Vector" + channels + "i";
+                    byteSize = 1;
+                    break;
+                case 's':
+                    typeName = "short";
+                    vectorName = "Vector" + channels + "i";
+                    byteSize = 2;
+                    break;
+                case 'i':
+                    typeName = "int";
+                    byteSize = 4;
+                    break;
+                case 'f':
+                    typeName = "float";
+                    byteSize = 4;
+                    break;
+                case 'd':
+                    typeName = "double";
+                    byteSize = 8;
+                    break;
+                default:
+                    throw new IllegalArgumentException(s);
+            }
+        }
+
+        public void generate() throws IOException {
+            List<String> lines = Files.readAllLines(srcPath);
+            StringBuffer sb = new StringBuffer();
+            sb.append("/*\n");
+            sb.append(" * WARNING: DO NOT EDIT!\n");
+            sb.append(" * This file is automatically generated from ");
+            sb.append(srcPath.getFileName().toString());
+            sb.append(" by ");
+            sb.append(BitmapGenerator.class.getTypeName());
+            sb.append("\n */\n\n");
+            for (String line : lines) {
+                line = replace(line);
+                if (line.contains("this.channels = channels;"))
+                    continue;
+                if (channels < 2 && line.matches(".*// [GBA].*"))
+                    continue;
+                if (channels < 3 && line.matches(".*// [BA].*"))
+                    continue;
+                if (channels < 4 && line.contains("// A"))
+                    continue;
+                if (channels != 1 && line.contains("// 1"))
+                    continue;
+                if (channels != 2 && line.contains("// 2"))
+                    continue;
+                if (channels != 3 && line.contains("// 3"))
+                    continue;
+                if (channels != 4 && line.contains("// 4"))
+                    continue;
+                if (typeChar != 'b' && line.contains("// b"))
+                    continue;
+                if (typeChar != 's' && line.contains("// s"))
+                    continue;
+                if (typeChar != 'i' && line.contains("// i"))
+                    continue;
+                if (typeChar != 'f' && line.contains("// f"))
+                    continue;
+                if (typeChar != 'd' && line.contains("// d"))
+                    continue;
+                if (typeChar == 'b' && line.contains("// !b"))
+                    continue;
+                if (typeChar == 's' && line.contains("// !s"))
+                    continue;
+                if (typeChar == 'i' && line.contains("// !i"))
+                    continue;
+                if (typeChar == 'f' && line.contains("// !f"))
+                    continue;
+                if (typeChar == 'd' && line.contains("// !d"))
+                    continue;
+                line = line.replaceAll("// !?[RGBA1234bsifd]", "");
+                sb.append(line);
+                sb.append("\n");
+            }
+            String outFile = replace(srcPath.getFileName().toString());
+            System.out.println("writing " + path.resolve(outFile));
+            Files.writeString(path.resolve(outFile), sb.toString());
+        }
+
+        public String replace(String line) {
+            line = line.replace("_CH_", "" + channels).replace("_T_", "" + typeChar);
+            line = line.replace("_TYPE_", typeName).replace("_Template", "");
+            line = line.replace("_BOXED_", boxedNames.get(typeName));
+            line = line.replace("_BYTE_SIZE_", "" + byteSize);
+            line = line.replaceFirst("^class", "public class");
+            line = line.replaceFirst("^interface", "public interface");
+            line = line.replace("BYTE_SIZE = 4", "BYTE_SIZE = " + byteSize);
+            line = line.replace("float", typeName);
+            line = line.replace("putFloat", "put" + bufferNames.get(typeName));
+            line = line.replace("getFloat", "get" + bufferNames.get(typeName));
+            line = line.replace("Float", boxedNames.get(typeName));
+            line = line.replace("final int channels;", "static final int channels = " + channels + ";");
+            line = line.replace(", int channels,", ",");
+            line = line.replace("Vector4f", vectorName);
+            line = line.replace("getByte", "get").replace("putByte", "put");
+            return line;
+        }
+    }
 }

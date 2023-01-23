@@ -5,7 +5,6 @@ import org.joml.Matrix3x2d;
 import turtleduck.canvas.Canvas;
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Point;
-import turtleduck.messaging.CanvasService;
 import turtleduck.paths.impl.PathPointImpl;
 import turtleduck.turtle.impl.BaseNavigatorImpl;
 import turtleduck.util.Array;

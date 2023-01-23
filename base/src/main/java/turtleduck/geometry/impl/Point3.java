@@ -2,9 +2,12 @@ package turtleduck.geometry.impl;
 
 import org.joml.Vector3d;
 import org.joml.Vector3f;
+import org.joml.Vector4d;
+import org.joml.Vector4f;
 import org.joml.Vector3d;
 
 import turtleduck.geometry.Direction;
+import turtleduck.geometry.DirectionVector;
 import turtleduck.geometry.Orientation;
 import turtleduck.geometry.IPoint3;
 import turtleduck.geometry.Point;
@@ -34,9 +37,8 @@ public class Point3 extends Point2 implements IPoint3 {
 	}
 
 	@Override
-	public Point add(Direction dir, double distance) {
-		Vector3d vec = dir.directionVector(new Vector3d()).mul((float)distance);
-		return new Point3(x+vec.x,y+vec.y,z+vec.z);
+	public Point add(DirectionVector dir, double distance) {
+		return new Point3(x+dir.dirX()*distance,y+dir.dirY()*distance,z+dir.dirZ()*distance);
 	}
 
 	@Override
@@ -105,5 +107,14 @@ public class Point3 extends Point2 implements IPoint3 {
 	public Vector3d toVector(Vector3d dest) {
 		return dest.set(x, y, z);
 	}
+    @Override
+    public Vector4f toVector(Vector4f dest) {
+        return dest.set(x, y, z, 1);
+    }
+
+    @Override
+    public Vector4d toVector(Vector4d dest) {
+        return dest.set(x, y, z, 1);
+    }
 
 }

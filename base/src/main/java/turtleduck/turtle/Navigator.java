@@ -25,24 +25,7 @@ public interface Navigator<T extends Navigator<T>> extends BaseNavigator<T> {
 	 * @param p the new position
 	 * @return {@code this}, for sending more draw commands
 	 */
-	default T goTo(Point p) {
-		return go(p, RelativeTo.WORLD);
-	}
-
-	/**
-	 * Turn to face the given point.
-	 *
-	 * <p>
-	 * Afterwards, <code>turtle.forward(turtle.distanceTo(to))</code> should leave
-	 * the turtle position at point <code>to</code>.
-	 * 
-	 * @param to the Point to turn towards
-	 * @return {@code this}, for sending more draw commands
-	 */
-	default T turnTo(PositionVector to, RelativeTo rel) {
-		Point p = findPoint(to, rel);
-		return direction(point().directionTo(p));
-	}
+	T goTo(PositionVector p) ;
 
 	/**
 	 * Adjust bearing by turning left given number of degrees
@@ -103,7 +86,5 @@ public interface Navigator<T extends Navigator<T>> extends BaseNavigator<T> {
 	 * @param dist    Distance to move
 	 * @return {@code this}, for sending more draw commands
 	 */
-	default T go(Direction dir, double dist) {
-		return go(Point.ZERO.add(dir, dist), RelativeTo.POSITION);
-	}
+	T go(Direction dir, double dist);
 }

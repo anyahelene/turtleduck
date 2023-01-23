@@ -1,11 +1,12 @@
 package turtleduck.demo;
 
+import turtleduck.FrameInfo;
 import turtleduck.Launcher;
 import turtleduck.TurtleDuckApp;
 import turtleduck.colors.Colors;
 import turtleduck.display.Screen;
 import turtleduck.events.KeyEvent;
-import turtleduck.shell.TShell;
+import turtleduck.shell.JavaShell;
 import turtleduck.text.TextCursor;
 import turtleduck.text.TextMode;
 import turtleduck.text.TextWindow;
@@ -18,10 +19,11 @@ public class ShellDemo implements TurtleDuckApp {
 	private Screen screen;
 	private TextWindow window;
 	private TextCursor printer;
-	private TShell tshell;
+	private JavaShell tshell;
 
 	@Override
-	public void bigStep(double deltaTime) {
+	public void update(FrameInfo info) {
+        double deltaTime = info.deltaTime();
 	}
 
 	private void printHelp() {
@@ -34,11 +36,6 @@ public class ShellDemo implements TurtleDuckApp {
 
 	}
 
-	@Override
-	public void smallStep(double deltaTime) {
-		// TODO Auto-generated method stub
-
-	}
 
 	@Override
 	public void start(Screen screen) {
@@ -52,7 +49,7 @@ public class ShellDemo implements TurtleDuckApp {
 		printer.foreground(Colors.GREEN);
 		printer.clearPage();
 		screen.useAlternateShortcut(true);
-		tshell = new TShell(screen, window, printer, null);
+		tshell = new JavaShell(screen, window, printer, null);
 		screen.setKeyPressedHandler((KeyEvent event) -> {
 		int code = event.getCode();
 			if ((event.keyType() & KeyEvent.KEY_TYPE_MODIFIER) != 0) {

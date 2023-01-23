@@ -1,139 +1,181 @@
 package turtleduck.bitmap;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer; // !i // !b
+import java.nio.IntBuffer; // i
 
 import org.joml.Vector4f; // G
 
-class Bitmap_Template {
-	private static final int BYTE_SIZE = 4;
-	private ByteBuffer data;
-	private final int width;
-	private final int height;
-	private final int channels;
+class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
 
-	public Bitmap_Template(int width, int height, int channels, ByteBuffer data) {
-		super();
-		this.data = data;
-		this.width = width;
-		this.height = height;
-		this.channels = channels;
-	}
+    private static final int BYTE_SIZE = Float.BYTES;
+    private ByteBuffer data;
+    private final int width;
+    private final int height;
+    private final int channels;
 
-	int index(int x, int y) {
-		return (x + y * width) * channels * BYTE_SIZE;
-	}
+    public PixmapImpl_CH__T__Template(int width, int height, int channels, ByteBuffer data) {
+        super();
+        this.data = data;
+        this.width = width;
+        this.height = height;
+        this.channels = channels;
+    }
 
-	float get(int x, int y, int ch) {
-		int idx = index(x, y);
-		return data.getFloat(idx + ch * BYTE_SIZE);
-	}
+    public int byteOffset(int x, int y) {
+        return (x + y * width) * channels * BYTE_SIZE;
+    }
 
-	float r(int x, int y) { // R
-		int idx = index(x, y); // R
-		return data.getFloat(idx + 0 * BYTE_SIZE); // R
-	} // R
+    public float get(int x, int y, int ch) {
+        int idx = byteOffset(x, y);
+        return data.getFloat(idx + ch * BYTE_SIZE);
+    }
 
-	float g(int x, int y) { // G
-		int idx = index(x, y); // G
-		return data.getFloat(idx + 1 * BYTE_SIZE); // G
-	} // G
+    public float r(int x, int y) { // R
+        int idx = byteOffset(x, y); // R
+        return data.getFloat(idx + 0 * BYTE_SIZE); // R
+    } // R
 
-	float b(int x, int y) { // B
-		int idx = index(x, y); // B
-		return data.getFloat(idx + 2 * BYTE_SIZE); // B
-	} // B
+    public float g(int x, int y) { // G
+        int idx = byteOffset(x, y); // G
+        return data.getFloat(idx + 1 * BYTE_SIZE); // G
+    } // G
 
-	float a(int x, int y) { // A
-		int idx = index(x, y); // A
-		return data.getFloat(idx + 3 * BYTE_SIZE); // A
-	} // A
+    public float b(int x, int y) { // B
+        int idx = byteOffset(x, y); // B
+        return data.getFloat(idx + 2 * BYTE_SIZE); // B
+    } // B
 
-	void set(int x, int y, int ch, float value) {
-		int idx = index(x, y);
-		data.putFloat(idx + ch * BYTE_SIZE, value);
-	}
+    public float a(int x, int y) { // A
+        int idx = byteOffset(x, y); // A
+        return data.getFloat(idx + 3 * BYTE_SIZE); // A
+    } // A
 
-	void r(int x, int y, float value) { // R
-		int idx = index(x, y); // R
-		data.putFloat(idx + 0 * BYTE_SIZE, value); // R
-	} // R
+    public Pixmap_CH__T__Template set(int x, int y, int ch, float value) {
+        int idx = byteOffset(x, y);
+        data.putFloat(idx + ch * BYTE_SIZE, value);
+        return this;
+    }
 
-	void g(int x, int y, float value) { // G
-		int idx = index(x, y); // G
-		data.putFloat(idx + 1 * BYTE_SIZE, value); // G
-	} // G
+    public Pixmap_CH__T__Template r(int x, int y, float value) { // R
+        int idx = byteOffset(x, y); // R
+        data.putFloat(idx + 0 * BYTE_SIZE, value); // R
+        return this; // R
+    } // R
 
-	void b(int x, int y, float value) { // B
-		int idx = index(x, y); // B
-		data.putFloat(idx + 2 * BYTE_SIZE, value); // B
-	} // B
+    public Pixmap_CH__T__Template g(int x, int y, float value) { // G
+        int idx = byteOffset(x, y); // G
+        data.putFloat(idx + 1 * BYTE_SIZE, value); // G
+        return this; // G
+    } // G
 
-	void a(int x, int y, float value) { // A
-		int idx = index(x, y); // A
-		data.putFloat(idx + 3 * BYTE_SIZE, value); // A
-	} // A
+    public Pixmap_CH__T__Template b(int x, int y, float value) { // B
+        int idx = byteOffset(x, y); // B
+        data.putFloat(idx + 2 * BYTE_SIZE, value); // B
+        return this; // B
+    } // B
 
-	void foreachLocation(LocationConsumer consumer) {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				consumer.accept(this, x, y);
-			}
-		}
-	}
+    public Pixmap_CH__T__Template a(int x, int y, float value) { // A
+        int idx = byteOffset(x, y); // A
+        data.putFloat(idx + 3 * BYTE_SIZE, value); // A
+        return this; // A
+    } // A
 
-	void foreach(PixelConsumerFloat consumer) {
-		int len = width * height * channels * BYTE_SIZE;
-		for (int i = 0; i < len; i += channels * BYTE_SIZE) {
-			consumer.accept(//
-					data.getFloat(i) // R
-					, data.getFloat(i + BYTE_SIZE) // G
-					, data.getFloat(i + 2 * BYTE_SIZE) // B
-					, data.getFloat(i + 3 * BYTE_SIZE) // A
-			);
-		}
-	}
+    public Pixmap_CH__T__Template foreachLocation(LocationConsumer consumer) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                consumer.accept(this, x, y);
+            }
+        }
+        return this;
+    }
 
-	void map(PixelFunctionFloat fun) { // G
-		Vector4f p = new Vector4f(); // G
-		int len = width * height * channels * BYTE_SIZE; // G
-		for (int i = 0; i < len; i += channels * BYTE_SIZE) { // G
-			p.x = data.getFloat(i + 0 * BYTE_SIZE); // G
-			p.y = data.getFloat(i + 1 * BYTE_SIZE); // G
-			p.z = data.getFloat(i + 2 * BYTE_SIZE); // B
-			p.w = data.getFloat(i + 3 * BYTE_SIZE); // A
-			Vector4f q = fun.apply(p); // G
-			data.putFloat(i + 0 * BYTE_SIZE, (float) q.x); // G
-			data.putFloat(i + 1 * BYTE_SIZE, (float) q.y); // G
-			data.putFloat(i + 2 * BYTE_SIZE, (float) q.z); // B
-			data.putFloat(i + 3 * BYTE_SIZE, (float) q.w); // A
-		} // G
-	} // G
+    public Pixmap_CH__T__Template foreach(PixelConsumer_CH__T__Template consumer) {
+        for (int i = 0, y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                consumer.accept(x, y//
+                        , data.getFloat(i) // R
+                        , data.getFloat(i + BYTE_SIZE) // G
+                        , data.getFloat(i + 2 * BYTE_SIZE) // B
+                        , data.getFloat(i + 3 * BYTE_SIZE) // A
+                );
+                i += channels * BYTE_SIZE;
+            }
+        }
+        return this;
+    }
 
-// 1	void map(PixelFunctionFloat fun) {
-// 1		int len = width * height * channels * BYTE_SIZE;
-// 1		for (int i = 0; i < len; i += channels * BYTE_SIZE) {
-// 1			data.putFloat(i, fun.apply(data.getFloat(i)));
-// 1		}
-// 1	} 
+    public Pixmap_CH__T__Template foreach(PixelConsumer_T__Template consumer) {
+        float[] array = new float[channels];
+        for (int i = 0, y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                array[0] = data.getFloat(i); // R
+                array[0] = data.getFloat(i + BYTE_SIZE); // G
+                array[0] = data.getFloat(i + 2 * BYTE_SIZE); // B
+                array[0] = data.getFloat(i + 3 * BYTE_SIZE); // A
+                consumer.accept(x, y, array);
+                i += channels * BYTE_SIZE;
+            }
+        }
+        return this;
+    }
 
-	public interface PixelFunctionFloat { // G
-		Vector4f apply(Vector4f p);// G
-	}// G
+    public Pixmap_CH__T__Template map(PixelFunction_CH__T__Template fun) { // G
+        Vector4f p = new Vector4f(); // G
+        int len = width * height * channels * BYTE_SIZE; // G
+        for (int i = 0; i < len; i += channels * BYTE_SIZE) { // G
+            p.x = data.getFloat(i + 0 * BYTE_SIZE); // G
+            p.y = data.getFloat(i + 1 * BYTE_SIZE); // G
+            p.z = data.getFloat(i + 2 * BYTE_SIZE); // B
+            p.w = data.getFloat(i + 3 * BYTE_SIZE); // A
+            Vector4f q = fun.apply(p); // G
+            data.putFloat(i + 0 * BYTE_SIZE, (float) q.x); // G
+            data.putFloat(i + 1 * BYTE_SIZE, (float) q.y); // G
+            data.putFloat(i + 2 * BYTE_SIZE, (float) q.z); // B
+            data.putFloat(i + 3 * BYTE_SIZE, (float) q.w); // A
+        } // G
+        return this; // G
+    } // G
 
-// 1	public interface PixelFunctionFloat {
-// 1		float apply(float x);
-// 1	}
+    @Override
+    public int width() {
+        return width;
+    }
 
-	public interface PixelConsumerFloat {
-		void accept(//
-				float r // R
-				, float g // G
-				, float b // B
-				, float a // A
-		);
-	}
+    @Override
+    public int height() {
+        return height;
+    }
 
-	public interface LocationConsumer {
-		void accept(Bitmap_Template bitmap, int x, int y);
-	}
+    @Override
+    public int dataSize() {
+        return BYTE_SIZE;
+    }
+
+    @Override
+    public ByteBuffer byteBuffer() {
+        return data;
+    }
+    @Override // !i // !b
+    public FloatBuffer floatBuffer() {  // !i // !b
+        return data.asFloatBuffer(); // !i // !b
+    } // !i // !b
+
+    @Override // i
+    public IntBuffer intBuffer() { // i
+        return data.asIntBuffer(); // i
+    } // i
+    @Override
+    public int channels() {
+        return channels;
+    }
+
+// 1    public Pixmap_CH__T__Template map(PixelFunction_CH__T__Template fun) {
+// 1        int len = width * height * channels * BYTE_SIZE;
+// 1        for (int i = 0; i < len; i += channels * BYTE_SIZE) {
+// 1            data.putFloat(i, fun.apply(data.getFloat(i)));
+// 1        }
+// 1        return this;
+// 1    } 
+
 }

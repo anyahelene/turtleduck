@@ -15,6 +15,7 @@ import org.joml.Vector3dc;
 
 import turtleduck.geometry.Direction;
 import turtleduck.geometry.Orientation;
+import turtleduck.geometry.Point;
 
 public class OrientImpl implements Orientation {
 	public static final Vector3d FORWARD_VEC = new Vector3d(1, 0, 0);
@@ -55,9 +56,9 @@ public class OrientImpl implements Orientation {
 //		q.rotateY(-Math.PI/2);
 		q.rotateY(Math.PI / 2);
 		Vector3d tmp2 = q.transform(new Vector3d(1, 0, 0));
-		q.add(LOOK_ALONG_Z);
+		//q.add(LOOK_ALONG_Z);
 		Vector3d tmp3 = q.transform(new Vector3d(1, 0, 0));
-		q.add(LOOK_ALONG_X);
+		//q.add(LOOK_ALONG_X);
 		Vector3d tmp4 = q.transform(new Vector3d(0, 0, 1));
 		return new OrientImpl(q, true);
 		}
@@ -102,7 +103,7 @@ public class OrientImpl implements Orientation {
 	public OrientImpl(Quaterniond newQ, boolean b) {
 		if(Math.abs(newQ.lengthSquared()-1) > 1e-9) {
 			
-			System.err.println("Assertion failed: " +newQ.lengthSquared() + " < 1e-9");
+			System.err.println("Assertion failed: " +newQ.lengthSquared() + " > 1e-9");
 			newQ.normalize();
 		}
 //		if (newQ.w < 0) {
@@ -380,4 +381,12 @@ public class OrientImpl implements Orientation {
 		return absoluteAz(angle);
 //		return AngleImpl.absolute(angle);
 	}
+	
+    @Override
+    public Point transform(Point point) {
+        Vector3d vec = point.toVector(new Vector3d());
+        q.transform(vec);
+        return point.xyz(vec.x, vec.y, vec.z);
+    }
+
 }

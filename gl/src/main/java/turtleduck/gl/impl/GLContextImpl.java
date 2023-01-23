@@ -7,7 +7,8 @@ import org.joml.Vector4f;
 
 import turtleduck.gl.GLContext;
 import turtleduck.gl.objects.ShaderProgram;
-import static org.lwjgl.opengl.GL33C.*;
+import static turtleduck.gl.GLScreen.gl;
+import static turtleduck.gl.compat.GLA.*;
 import static turtleduck.gl.Vectors.vec4;
 
 public class GLContextImpl implements GLContext {
@@ -66,9 +67,9 @@ public class GLContextImpl implements GLContext {
 			parent.depthTest(enabled);
 		} else if (enabled != depthTest) {
 			if (enabled)
-				glEnable(GL_DEPTH_TEST);
+				gl.glEnable(GL_DEPTH_TEST);
 			else
-				glDisable(GL_DEPTH_TEST);
+				gl.glDisable(GL_DEPTH_TEST);
 		}
 		depthTest = enabled;
 	}
@@ -84,7 +85,7 @@ public class GLContextImpl implements GLContext {
 		if (parent != null) {
 			parent.faceCulling(false);
 		} else if (change) {
-			glDisable(GL_CULL_FACE);
+			gl.glDisable(GL_CULL_FACE);
 		}
 		faceCulling = enabled;
 	}
@@ -99,11 +100,11 @@ public class GLContextImpl implements GLContext {
 			parent.faceCulling(faces, winding);
 		} else {
 			if (!faceCulling)
-				glEnable(GL_CULL_FACE);
+				gl.glEnable(GL_CULL_FACE);
 			if (faces != cullFace)
-				glCullFace(faces);
+				gl.glCullFace(faces);
 			if (winding != frontFace)
-				glFrontFace(winding);
+				gl.glFrontFace(winding);
 		}
 	}
 

@@ -1,7 +1,6 @@
 package turtleduck.gl.objects;
-
-import static org.lwjgl.opengl.GL32C.*;
-
+import static turtleduck.gl.GLScreen.gl;
+import static turtleduck.gl.compat.GLA.*;
 import java.nio.ByteBuffer;
 
 import org.joml.Vector2f;
@@ -33,9 +32,9 @@ public class VertexArrayBuilder {
 
 	public VertexArrayBuilder(VertexArrayFormat format, int usage, int capacity) {
 		this.format = format;
-		this.vao = glGenVertexArrays();
-		this.buffers[0] = glGenBuffers();
-		this.buffers[1] = glGenBuffers();
+		this.vao = gl.glGenVertexArrays();
+		this.buffers[0] = gl.glGenBuffers();
+		this.buffers[1] = gl.glGenBuffers();
 		this.usage = usage == 0 ? GL_STATIC_DRAW : usage;
 		ensureCapacity(capacity);
 		this.ownsGlObjects = true;
@@ -44,9 +43,9 @@ public class VertexArrayBuilder {
 
 	public VertexArrayBuilder(VertexArrayFormat format, int usage) {
 		this.format = format;
-		this.vao = glGenVertexArrays();
-		this.buffers[0] = glGenBuffers();
-		this.buffers[1] = glGenBuffers();
+		this.vao = gl.glGenVertexArrays();
+		this.buffers[0] = gl.glGenBuffers();
+		this.buffers[1] = gl.glGenBuffers();
 		this.usage = usage == 0 ? GL_STATIC_DRAW : usage;
 		ensureCapacity(16);
 		this.ownsGlObjects = true;
@@ -286,17 +285,17 @@ public class VertexArrayBuilder {
 		data.rewind();
 		data.limit(pos);
 		int vbo = buffers[currentBuffer];
-		glBindVertexArray(vao);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		gl.glBindVertexArray(vao);
+		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		if (!formatted) {
 			format.setVertexAttributes(0);
 			formatted = true;
 		}
 		if (pos > allocated[currentBuffer]) {
-			glBufferData(GL_ARRAY_BUFFER, data, usage);
+			gl.glBufferData(GL_ARRAY_BUFFER, data, usage);
 			allocated[currentBuffer] = pos;
 		} else {
-			glBufferSubData(GL_ARRAY_BUFFER, 0, data);
+			gl.glBufferSubData(GL_ARRAY_BUFFER, 0, data);
 		}
 		if (DEBUG) {
 			System.out.println("Array buffer: ");
@@ -319,8 +318,8 @@ public class VertexArrayBuilder {
 	public void dispose() {
 		clear();
 		if (ownsGlObjects) {
-			glDeleteBuffers(buffers);
-			glDeleteVertexArrays(vao);
+			gl.glDeleteBuffers(buffers);
+			gl.glDeleteVertexArrays(vao);
 		}
 		data = null;
 	}

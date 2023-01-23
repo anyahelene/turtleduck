@@ -220,7 +220,12 @@ public abstract class DataField<T> {
 			value.get(dest);
 			dest.position(dest.position() + 16);
 		}
-
+        public void write(ByteBuffer dest, float x, float y, float z) {
+            dest.putFloat(x);
+            dest.putFloat(y);
+            dest.putFloat(z);
+            dest.putFloat(1);
+        }
 		public void write(ByteBuffer dest, float x, float y, float z, float w) {
 			dest.putFloat(x);
 			dest.putFloat(y);
@@ -248,7 +253,12 @@ public abstract class DataField<T> {
 			dest.putFloat(color.blue());
 			dest.putFloat(color.alpha());
 		}
-
+        public void write(ByteBuffer dest, float x, float y, float z) {
+            dest.putFloat(x);
+            dest.putFloat(y);
+            dest.putFloat(z);
+            dest.putFloat(1);
+        }
 		public void write(ByteBuffer dest, float x, float y, float z, float w) {
 			dest.putFloat(x);
 			dest.putFloat(y);

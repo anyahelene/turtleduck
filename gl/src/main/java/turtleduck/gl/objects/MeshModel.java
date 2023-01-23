@@ -1,8 +1,8 @@
 package turtleduck.gl.objects;
 
 import static turtleduck.gl.objects.Util.ioResourceToByteBuffer;
-import static org.lwjgl.opengl.GL32C.*;
-
+import static turtleduck.gl.GLScreen.gl;
+import static turtleduck.gl.compat.GLA.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -62,17 +62,17 @@ public class MeshModel extends AbstractModel {
 			processNode(scene.mRootNode(), scene, builder);
 			builder.bindArrayBuffer();
 
-			ebo = glGenBuffers();
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+			ebo = gl.glGenBuffers();
+			gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 			IntBuffer buf2 = BufferUtils.createIntBuffer(idxBuffer.size());
 			for(int i : idxBuffer) {
 				buf2.put(i);
 			}
 			buf2.flip();
 			System.out.println("Mesh loaded, " + idxBuffer.size() + " indexes");
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, buf2, GL_STATIC_DRAW);
-			glBindVertexArray(0);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+			gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER, buf2, GL_STATIC_DRAW);
+			gl.glBindVertexArray(0);
+			gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -140,9 +140,9 @@ public class MeshModel extends AbstractModel {
 	public void render(GLScreen glm) {
 		renderStart(glm);
 		renderBindBuffers(glm);
-		glDisable(GL_CULL_FACE);
+		gl.glDisable(GL_CULL_FACE);
 
-		glDrawElements(GL_TRIANGLES, idxBuffer.size(), GL_UNSIGNED_INT, 0);
+		gl.glDrawElements(GL_TRIANGLES, idxBuffer.size(), GL_UNSIGNED_INT, 0);
 	}
 
 	public void transformMesh(Vector3f offset, Vector3f scale, Vector3f rotation) {
