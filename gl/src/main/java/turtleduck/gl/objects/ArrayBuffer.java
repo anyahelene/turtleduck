@@ -6,8 +6,9 @@ import org.lwjgl.opengl.GL43C;
 
 import static turtleduck.gl.GLScreen.gl;
 import static turtleduck.gl.compat.GLA.*;
-import turtleduck.buffer.DataField;
-import turtleduck.buffer.DataFormat;
+
+import turtleduck.buffer.VertexAttribute;
+import turtleduck.buffer.VertexLayout;
 import turtleduck.gl.GLScreen;
 import turtleduck.util.TextUtil;
 
@@ -19,7 +20,7 @@ public class ArrayBuffer {
 	int bufferIndex = 0;
 	long pos = 0;
 	ByteBuffer buffer;
-	DataFormat current;
+	VertexLayout current;
 	int currentField = 0;
 	private int initCapacity;
 	int mapBits = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT; // GL_MAP_READ_BIT
@@ -37,7 +38,7 @@ public class ArrayBuffer {
 		buffers[1] = 0;
 	}
 
-	public long begin(DataFormat format) {
+	public long begin(VertexLayout format) {
 		current = format;
 		currentField = 0;
 		ensureSpaceFor(format.numBytes());
@@ -99,46 +100,46 @@ public class ArrayBuffer {
 		}
 	}
 
-	public <T> void put(DataField<T> field, T data) {
+	public <T> void put(VertexAttribute<T> field, T data) {
 		checkWrite(field);
 		field.write(buffer, data);
 		pos += field.numBytes();
 		currentField++;
 	}
 
-	private <T> void checkWrite(DataField<T> field) {
+	private <T> void checkWrite(VertexAttribute<T> field) {
 		if (!isMapped[bufferIndex]) {
 			throw new IllegalStateException("Writing after done()");
 		}
-		if (field != current.field(currentField)) {
-			if (!field.equals(current.field(currentField)))
+		if (field != current.attribute(currentField)) {
+			if (!field.equals(current.attribute(currentField)))
 				throw new IllegalStateException(
-						"Expected data for " + current.field(currentField) + " but got " + field);
+						"Expected data for " + current.attribute(currentField) + " but got " + field);
 		}
 	}
 
-	public <T> void put(DataField<T> field, float x) {
+	public <T> void put(VertexAttribute<T> field, float x) {
 		checkWrite(field);
 		field.write(buffer, x);
 		pos += field.numBytes();
 		currentField++;
 	}
 
-	public <T> void put(DataField<T> field, float x, float y) {
+	public <T> void put(VertexAttribute<T> field, float x, float y) {
 		checkWrite(field);
 		field.write(buffer, x, y);
 		pos += field.numBytes();
 		currentField++;
 	}
 
-	public <T> void put(DataField<T> field, float x, float y, float z) {
+	public <T> void put(VertexAttribute<T> field, float x, float y, float z) {
 		checkWrite(field);
 		field.write(buffer, x, y, z);
 		pos += field.numBytes();
 		currentField++;
 	}
 
-	public <T> void put(DataField<T> field, float x, float y, float z, float w) {
+	public <T> void put(VertexAttribute<T> field, float x, float y, float z, float w) {
 		checkWrite(field);
 		field.write(buffer, x, y, z, w);
 		pos += field.numBytes();
@@ -149,10 +150,10 @@ public class ArrayBuffer {
 		if (!isMapped[bufferIndex]) {
 			throw new IllegalStateException("Writing after done()");
 		}
-		if (currentField != current.numFields()) {
+		if (currentField != current.numAttributes()) {
 		    System.err.println(current);
 			throw new IllegalStateException(
-					"Expected " + current.numFields() + " data fields, but got " + currentField);
+					"Expected " + current.numAttributes() + " data fields, but got " + currentField);
 		}
 		current = null;
 		return pos;
@@ -168,16 +169,16 @@ public class ArrayBuffer {
 		return buffers[bufferIndex];
 	}
 
-	public void dump(DataFormat format, int maxVertices) {
+	public void dump(VertexLayout format, int maxVertices) {
 		if (format == null)
 			format = current;
 		gl.glBindBuffer(GL_COPY_READ_BUFFER, buffers[bufferIndex]);
 		ByteBuffer b = gl.glMapBufferRange(GL_COPY_READ_BUFFER, 0, bufferSizes[bufferIndex], GL_MAP_READ_BIT, null);
 		int i = 0, j = 0;
 		while (b.remaining() >= format.numBytes()) {
-			DataField<?> field = format.field(i++);
+			VertexAttribute<?> field = format.attribute(i++);
 			System.out.print(field.read(b) + " ");
-			if (i >= format.numFields()) {
+			if (i >= format.numAttributes()) {
 				i = 0;
 				j++;
 				System.out.println();

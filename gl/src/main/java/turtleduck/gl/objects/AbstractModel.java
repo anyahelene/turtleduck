@@ -7,6 +7,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import turtleduck.buffer.VertexLayout;
 import turtleduck.gl.GLScreen;
 
 public abstract class AbstractModel implements IModel {
@@ -336,7 +337,7 @@ public abstract class AbstractModel implements IModel {
 		transform.transform(v);
 	}
 
-	protected VertexArrayBuilder buildVertexArray(VertexArrayFormat format) {
+	protected VertexArrayBuilder buildVertexArray(VertexLayout format) {
 		VertexArrayBuilder builder = new VertexArrayBuilder(format, GL_STATIC_DRAW);
 		vao = builder.vao();
 		return builder;

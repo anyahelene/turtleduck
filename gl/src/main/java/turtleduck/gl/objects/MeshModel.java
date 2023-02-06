@@ -23,17 +23,18 @@ import org.lwjgl.assimp.AIVector3D;
 import org.lwjgl.assimp.AIVector3D.Buffer;
 import org.lwjgl.assimp.Assimp;
 
+import turtleduck.buffer.VertexLayout;
 import turtleduck.gl.GLScreen;
 
 public class MeshModel extends AbstractModel {
 	List<Integer> idxBuffer = new ArrayList<>();
 	public MeshModel(String pathName) {
 		try {
-			VertexArrayFormat format = new VertexArrayFormat();
-			format.addField("aPos", Vector3f.class);
-			format.addField("aColor", Vector3f.class);
-			format.addField("aNormal", Vector3f.class);
-			format.addField("aTexCoord", Vector2f.class);
+			VertexLayout format = VertexLayout.create() //
+			.declare("aPos", Vector3f.class)
+			.declare("aColor", Vector3f.class)
+			.declare("aNormal", Vector3f.class)
+			.declare("aTexCoord", Vector2f.class).done();
 
 			VertexArrayBuilder builder = buildVertexArray(format);
 

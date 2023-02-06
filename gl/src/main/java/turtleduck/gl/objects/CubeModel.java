@@ -4,6 +4,7 @@ import static turtleduck.gl.compat.GLA.*;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
+import turtleduck.buffer.VertexLayout;
 import turtleduck.gl.GLScreen;
 
 public class CubeModel extends AbstractModel {
@@ -11,11 +12,11 @@ public class CubeModel extends AbstractModel {
 	private int[] indices;
 
 	public CubeModel() {
-		VertexArrayFormat format = new VertexArrayFormat();
-		format.addField("aPos",  Vector3f.class);
-		format.addField("aColor", Vector3f.class);
-		format.addField("aNormal", Vector3f.class);
-		format.addField("aTexCoord", Vector2f.class);	
+        VertexLayout format = VertexLayout.create() //
+        .declare("aPos", Vector3f.class)
+        .declare("aColor", Vector3f.class)
+        .declare("aNormal", Vector3f.class)
+        .declare("aTexCoord", Vector2f.class).done();
 		VertexArrayBuilder builder = buildVertexArray(format);
 
 		builder.vec3(-.5f,  .5f,  .5f).vec3(0,1,1).vec3(-.5f, .5f, .5f).vec2(0,1); // 0

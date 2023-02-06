@@ -7,15 +7,15 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
-import turtleduck.buffer.DataFormat;
 
-import turtleduck.buffer.DataField;
+import turtleduck.buffer.VertexAttribute;
+import turtleduck.buffer.VertexLayout;
 import turtleduck.colors.Color;
 import turtleduck.util.TextUtil;
 
 public class VertexArrayBuilder {
-	private VertexArrayFormat format;
-	private DataField<?> currentField;
+	private VertexLayout format;
+	private VertexAttribute<?> currentField;
 	private ByteBuffer data;
 	private int pos = 0;
 	private int start = 0;
@@ -30,7 +30,7 @@ public class VertexArrayBuilder {
 	private int usage;
 	private boolean DEBUG = false;
 
-	public VertexArrayBuilder(VertexArrayFormat format, int usage, int capacity) {
+	public VertexArrayBuilder(VertexLayout format, int usage, int capacity) {
 		this.format = format;
 		this.vao = gl.glGenVertexArrays();
 		this.buffers[0] = gl.glGenBuffers();
@@ -38,10 +38,10 @@ public class VertexArrayBuilder {
 		this.usage = usage == 0 ? GL_STATIC_DRAW : usage;
 		ensureCapacity(capacity);
 		this.ownsGlObjects = true;
-		currentField = format.field(0);
+		currentField = format.attribute(0);
 	}
 
-	public VertexArrayBuilder(VertexArrayFormat format, int usage) {
+	public VertexArrayBuilder(VertexLayout format, int usage) {
 		this.format = format;
 		this.vao = gl.glGenVertexArrays();
 		this.buffers[0] = gl.glGenBuffers();
@@ -49,7 +49,7 @@ public class VertexArrayBuilder {
 		this.usage = usage == 0 ? GL_STATIC_DRAW : usage;
 		ensureCapacity(16);
 		this.ownsGlObjects = true;
-		currentField = format.field(0);
+		currentField = format.attribute(0);
 	}
 
 	public void ensureCapacity(int minVertexCap) {
@@ -87,11 +87,11 @@ public class VertexArrayBuilder {
 					+ currentField + ", got " + currentSize);
 		}
 		start = pos;
-		loc = (loc + 1) % format.numFields();
+		loc = (loc + 1) % format.numAttributes();
 		if (loc == 0) {
 			nVertices++;
 		}
-		currentField = format.field(loc);
+		currentField = format.attribute(loc);
 	}
 
 	public VertexArrayBuilder flt(float x) {
@@ -213,7 +213,7 @@ public class VertexArrayBuilder {
 	}
 
 	public VertexArrayBuilder vec2(Vector2f vec) {
-		if (currentField.type() == DataFormat.Type.FLOAT) {
+		if (currentField.type() == VertexLayout.Type.FLOAT) {
 			check(2);
 			vec.get(pos, data);
 			pos += 2 * 4;
@@ -225,7 +225,7 @@ public class VertexArrayBuilder {
 	}
 
 	public VertexArrayBuilder vec3(Vector2f vec, float z) {
-		if (currentField.type() == DataFormat.Type.FLOAT) {
+		if (currentField.type() == VertexLayout.Type.FLOAT) {
 			check(3);
 			vec.get(pos, data);
 			pos += 2 * 4;
@@ -238,7 +238,7 @@ public class VertexArrayBuilder {
 	}
 
 	public VertexArrayBuilder vec3(Vector3f vec) {
-		if (currentField.type() == DataFormat.Type.FLOAT) {
+		if (currentField.type() == VertexLayout.Type.FLOAT) {
 			check(3);
 			vec.get(pos, data);
 			pos += 3 * 4;
@@ -250,7 +250,7 @@ public class VertexArrayBuilder {
 	}
 
 	public VertexArrayBuilder vec4(Vector4f vec) {
-		if (currentField.type() == DataFormat.Type.FLOAT) {
+		if (currentField.type() == VertexLayout.Type.FLOAT) {
 			check(4);
 			vec.get(pos, data);
 			pos += 4 * 4;
@@ -263,7 +263,7 @@ public class VertexArrayBuilder {
 
 	private void check(int n) {
 		if (currentField == null)
-			currentField = format.field(loc);
+			currentField = format.attribute(loc);
 		n *= currentField.numBytes();
 
 		if (pos + n > data.capacity()) {
@@ -288,7 +288,7 @@ public class VertexArrayBuilder {
 		gl.glBindVertexArray(vao);
 		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		if (!formatted) {
-			format.setVertexAttributes(0);
+			VertexArray.setVertexAttributes(format, 0, DEBUG);
 			formatted = true;
 		}
 		if (pos > allocated[currentBuffer]) {
@@ -312,7 +312,7 @@ public class VertexArrayBuilder {
 		data.clear();
 		start = pos = loc = 0;
 		nVertices = 0;
-		currentField = format.field(0);
+		currentField = format.attribute(0);
 	}
 
 	public void dispose() {
@@ -327,4 +327,7 @@ public class VertexArrayBuilder {
 	public int vao() {
 		return vao;
 	}
+	
+
+
 }

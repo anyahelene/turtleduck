@@ -1,28 +1,19 @@
 package turtleduck.gl.objects;
 
-import static turtleduck.gl.objects.Util.ioResourceToByteBuffer;
-import static turtleduck.gl.objects.Util.urlToByteBuffer;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
+
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.NoSuchFileException;
+
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchService;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
-import org.lwjgl.BufferUtils;
-import org.lwjgl.PointerBuffer;
 import org.lwjgl.opengl.GL40C;
 
 import turtleduck.gl.FileWatcher;

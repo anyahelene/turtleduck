@@ -14,8 +14,9 @@ import org.joml.Vector2fc;
 import org.joml.Vector3fc;
 import org.joml.Vector4fc;
 
-import turtleduck.gl.GLScreen;
-import turtleduck.gl.compat.GLConstants;
+import turtleduck.buffer.VertexLayout;
+import turtleduck.buffer.VertexLayout.LayoutBuilder;
+
 import turtleduck.gl.compat.ProgramInterfaceQuery;
 import turtleduck.gl.objects.Variables.AbstractUniform;
 import turtleduck.gl.objects.Variables.TypeDesc;
@@ -27,12 +28,12 @@ public class ShaderProgram implements ShaderObject.ShaderChangeListener {
     String log = "";
     boolean linked = false;
     Map<String, Uniform<?>> vars;
-    VertexArrayFormat inputFormat = new VertexArrayFormat();
-    VertexArrayFormat format = null;
+    VertexLayout inputFormat = VertexLayout.create().done();
+    VertexLayout format = null;
     private String name;
     private int id = 0;
 
-    private ShaderProgram(String name, VertexArrayFormat format, ShaderObject... shaders) {
+    private ShaderProgram(String name, VertexLayout format, ShaderObject... shaders) {
         this.name = name;
         if (format != null)
             this.format = format;
@@ -55,7 +56,7 @@ public class ShaderProgram implements ShaderObject.ShaderChangeListener {
         return id;
     }
 
-    public static ShaderProgram createProgram(String name, VertexArrayFormat format, ShaderObject... shaders)
+    public static ShaderProgram createProgram(String name, VertexLayout format, ShaderObject... shaders)
             throws IOException {
         ShaderProgram prog = new ShaderProgram(name, format, shaders);
         for (ShaderObject sh : shaders)
@@ -173,10 +174,12 @@ public class ShaderProgram implements ShaderObject.ShaderChangeListener {
         }
         List<Integer> locations = new ArrayList<>(fieldNames.keySet());
         Collections.sort(locations);
-        inputFormat = new VertexArrayFormat();
+        LayoutBuilder l = VertexLayout.create();
         for (int i : locations) {
-            inputFormat.addField(fieldNames.get(i), i, fieldTypes.get(i));
+            TypeDesc typeDesc = fieldTypes.get(i);
+            l.declare(fieldNames.get(i), i, typeDesc.jomlClass);
         }
+        inputFormat = l.done();
         if (debug)
             System.out.println("Input format: " + inputFormat);
     }
@@ -214,11 +217,11 @@ public class ShaderProgram implements ShaderObject.ShaderChangeListener {
         return gl.glGetUniformi(id, getUniformLocation(name));
     }
 
-    public VertexArrayFormat format() {
+    public VertexLayout format() {
         return format != null ? format : inputFormat;
     }
 
-    public void format(VertexArrayFormat format) {
+    public void format(VertexLayout format) {
         this.format = format;
     }
 

@@ -29,6 +29,7 @@ import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
+import turtleduck.buffer.VertexLayout;
 import turtleduck.canvas.Canvas;
 import turtleduck.canvas.CanvasImpl;
 import turtleduck.colors.Color;
@@ -45,7 +46,6 @@ import turtleduck.gl.compat.GLA;
 import turtleduck.gl.objects.FloatMath;
 import turtleduck.gl.objects.ShaderObject;
 import turtleduck.gl.objects.ShaderProgram;
-import turtleduck.gl.objects.VertexArrayFormat;
 import turtleduck.scene.SceneNode;
 import turtleduck.scene.SceneObject2;
 import turtleduck.scene.SceneObject3;
@@ -337,18 +337,18 @@ public class GLScreen extends BaseScreen implements Screen {
         System.out.println("Enable debug: " + gl + debugProc);
 //		glEnable(GL_MULTISAMPLE);
 
-	//	createBuffers();
+        // createBuffers();
 
         try {
-            VertexArrayFormat format = new VertexArrayFormat();
-            format.addField("aPos", Vector4f.class);
-            format.addField("aColor", Color.class);
-            format.addField("aTexCoord", Vector2f.class);
-            VertexArrayFormat format3 = new VertexArrayFormat();
-            format3.addField("aPos", Vector4f.class);
-            format3.addField("aColor", Color.class);
-            format3.addField("aNormal", Vector3f.class);
-            format3.addField("aTexCoord", Vector2f.class);
+            VertexLayout format = VertexLayout.create() //
+                    .declare("aPos", Vector4f.class)
+                    .declare("aColor", Color.class)
+                    .declare("aTexCoord", Vector2f.class).done();
+            VertexLayout format3 = VertexLayout.create()
+                    .declare("aPos", Vector4f.class)
+                    .declare("aColor", Color.class)
+                    .declare("aNormal", Vector3f.class)
+                    .declare("aTexCoord", Vector2f.class).done();
 
             ShaderObject vs = ShaderObject.create("simple.vert.glsl", GL_VERTEX_SHADER);
             ShaderObject fs = ShaderObject.create("color.frag.glsl", GL_FRAGMENT_SHADER);
@@ -614,14 +614,14 @@ public class GLScreen extends BaseScreen implements Screen {
             camera3.updateBoth();
         }
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-            //camera2.orientation.rotateLocalZ(FloatMath.PI / 64);
+            // camera2.orientation.rotateLocalZ(FloatMath.PI / 64);
             camera2.updateBoth();
             camera3.orientation.rotateLocalY(-FloatMath.PI / 64);
             camera3.updateBoth();
         }
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
             System.out.println(amount);
-            //camera2.orientation.rotateLocalZ(-FloatMath.PI / 64);
+            // camera2.orientation.rotateLocalZ(-FloatMath.PI / 64);
             camera2.updateBoth();
             camera3.orientation.rotateLocalY(FloatMath.PI / 64);
             camera3.updateBoth();

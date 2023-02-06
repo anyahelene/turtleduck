@@ -10,15 +10,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import org.joml.Matrix3x2d;
+
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL11;
+
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL32C;
 import org.slf4j.Logger;
 
-import turtleduck.buffer.DataField;
-import turtleduck.canvas.Canvas;
+
 import turtleduck.colors.Color;
 import turtleduck.display.Camera;
 import turtleduck.geometry.Point;
@@ -27,12 +26,11 @@ import turtleduck.gl.compat.GLConstants;
 import turtleduck.gl.objects.ShaderObject;
 import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Uniform;
-import turtleduck.gl.objects.VertexArrayFormat;
-import turtleduck.messaging.Router;
-import turtleduck.scene.GfxNodeImpl;
+import turtleduck.gl.objects.VertexArray;
+
 import turtleduck.shapes.Particles;
 import turtleduck.util.Logging;
-import turtleduck.util.MathUtil;
+
 
 public class GLParticles  implements Particles {
     protected static final Logger logger = Logging.getLogger(GLParticles.class);
@@ -209,7 +207,7 @@ public class GLParticles  implements Particles {
                 vao = gl.glGenVertexArrays();
                 gl.glBindVertexArray(vao);
                 gl.glBindBuffer(GL_ARRAY_BUFFER, vbo);
-                obj.shader.format().setVertexAttributes(0);
+                VertexArray.setVertexAttributes(obj.shader.format(), 0, false);
             } else {
                 gl.glBindVertexArray(vao);
                 gl.glBindBuffer(GL_ARRAY_BUFFER, vbo);

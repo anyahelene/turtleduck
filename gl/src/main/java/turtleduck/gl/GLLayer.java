@@ -17,7 +17,8 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import earcut4j.Earcut;
-import turtleduck.buffer.DataField;
+import turtleduck.buffer.VertexAttribute;
+import turtleduck.buffer.VertexLayout;
 import turtleduck.colors.Color;
 import turtleduck.colors.Colors;
 import turtleduck.display.Camera;
@@ -31,7 +32,6 @@ import turtleduck.gl.objects.ShaderProgram;
 import turtleduck.gl.objects.Texture;
 import turtleduck.gl.objects.Uniform;
 import turtleduck.gl.objects.VertexArray;
-import turtleduck.gl.objects.VertexArrayFormat;
 import turtleduck.image.Image;
 import turtleduck.image.Tiles;
 import turtleduck.paths.Path;
@@ -56,17 +56,17 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
     List<DrawObject> drawObjects = new ArrayList<>();
     private Map<String, ShaderProgram> programs = new HashMap<>();
     int depth = 0;
-    private VertexArrayFormat format;
-    private DataField<Vector4f> aPosVec3;
-    private DataField<Color> aColorVec4;
-    private DataField<Vector3f> a3Normal3;
-    private DataField<Vector2f> a3TexCoord2;
-    private VertexArrayFormat format3;
-    private DataField<Vector4f> a3PosVec3;
-    private DataField<Color> a3ColorVec4;
+    private VertexLayout format;
+    private VertexAttribute<Vector4f> aPosVec3;
+    private VertexAttribute<Color> aColorVec4;
+    private VertexAttribute<Vector3f> a3Normal3;
+    private VertexAttribute<Vector2f> a3TexCoord2;
+    private VertexLayout format3;
+    private VertexAttribute<Vector4f> a3PosVec3;
+    private VertexAttribute<Color> a3ColorVec4;
     private Camera camera2;
     private Camera camera3;
-    private DataField<Vector2f> aTexCoord2;
+    private VertexAttribute<Vector2f> aTexCoord2;
 
     public GLLayer(String layerId, GLScreen screen, Camera camera2, Camera camera3, double width, double height) {
         super(layerId, screen, width, height);
@@ -77,13 +77,14 @@ public class GLLayer extends BaseLayer<GLScreen> implements Layer {
         pathWriter = new GLPathWriter(camera3);
         pathWriter3 = new GLPathWriter3(camera3);
 
-        aPosVec3 = format.setField("aPos", Vector4f.class);
-        aColorVec4 = format.setField("aColor", Color.class);
-        aTexCoord2 = format.setField("aTexCoord", Vector2f.class);
-        a3PosVec3 = format3.setField("aPos", Vector4f.class);
-        a3ColorVec4 = format3.setField("aColor", Color.class);
-        a3Normal3 = format3.setField("aNormal", Vector3f.class);
-        a3TexCoord2 = format3.setField("aTexCoord", Vector2f.class);
+        //format.specifyInputFormat().setInputFormat(name, type)
+        aPosVec3 = format.attribute("aPos"); //.setField("aPos", Vector4f.class);
+        aColorVec4 = format.attribute("aColor");//, Color.class);
+        aTexCoord2 = format.attribute("aTexCoord");//, Vector2f.class);
+        a3PosVec3 = format3.attribute("aPos");//, Vector4f.class);
+        a3ColorVec4 = format3.attribute("aColor");//, Color.class);
+        a3Normal3 = format3.attribute("aNormal");//, Vector3f.class);
+        a3TexCoord2 = format3.attribute("aTexCoord");//, Vector2f.class);
         streamBuffer = new ArrayBuffer(GL_STREAM_DRAW, format.numBytes() * 1024 * 1024);
         streamArray = new VertexArray(format, streamBuffer);
         streamArray.setFormat();
