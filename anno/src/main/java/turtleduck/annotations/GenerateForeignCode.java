@@ -134,14 +134,14 @@ public class GenerateForeignCode implements ElementVisitor<Void, Integer> {
 
     @Override
     public Void visit(Element e, Integer indent) {
-        System.out.println("visit:" + e);
+        //System.out.println("visit:" + e);
         return null;
     }
 
     @Override
     public Void visitPackage(PackageElement e, Integer indent) {
         // ignore
-        append("visitPackage:" + e);
+        //append("visitPackage:" + e);
         return null;
     }
 
@@ -189,8 +189,8 @@ public class GenerateForeignCode implements ElementVisitor<Void, Integer> {
         }
         keep.retainAll(e.getModifiers());
         List<Modifier> dropped = e.getModifiers().stream().filter(m -> !keep.contains(m)).collect(Collectors.toList());
-        if (!dropped.isEmpty())
-            System.out.println("Dropping modifiers for " + e.getKind());
+        //if (!dropped.isEmpty())
+         //   System.out.println("Dropping modifiers for " + e.getKind());
         String mods = keep.stream().map(m -> m.toString()).collect(Collectors.joining(" "));
         String keyword = e instanceof TypeElement ? e.getKind().toString().toLowerCase() : "";
         return String.join(" ", mods, keyword);
@@ -262,7 +262,7 @@ public class GenerateForeignCode implements ElementVisitor<Void, Integer> {
             visitVariable(parameter, 0);
         }
         append(") :", typeOf(e), ";", newline(indent));
-        System.out.println("visitExecutable:" + e);
+       // System.out.println("visitExecutable:" + e);
         return null;
     }
 
@@ -416,7 +416,6 @@ public class GenerateForeignCode implements ElementVisitor<Void, Integer> {
         private Element element;
 
         public ProcessingException(String msg, Element elt) {
-            super(msg);
             this.element = elt;
         }
 

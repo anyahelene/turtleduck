@@ -107,17 +107,19 @@
 			</properties>
 		</profile>
 	</profiles>
-
 	<properties>
 		<lwjgl.version>3.3.0</lwjgl.version>
 		<joml.version>1.9.25</joml.version>
 	</properties>
-
-
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>turtleduck-base</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>turtleduck-codegen</artifactId>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
@@ -153,7 +155,8 @@
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opengl</artifactId>
 			<version>${lwjgl.version}</version>
-		</dependency>		<dependency>
+		</dependency>
+		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opencl</artifactId>
 			<version>${lwjgl.version}</version>
@@ -222,4 +225,28 @@
 			<version>2.2.2</version>
 		</dependency>
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>run-codegen</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>codegen.GenerateVariables</mainClass>
+							<arguments>
+								<argument>${project.basedir}/src/main/java/turtleduck/gl/objects/Variables.java</argument>
+							</arguments>
+							<skip>false</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

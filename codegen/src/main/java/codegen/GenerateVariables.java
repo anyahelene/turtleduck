@@ -1,4 +1,4 @@
-package turtleduck.gl.objects;
+package codegen;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -18,7 +18,7 @@ public class GenerateVariables {
 	public static String[] vecLetters = { "i", "u", "", "d" };
 	public static String[] baseObjectTypes = { "Integer", "Integer", "Float", "Double" };
 	public static String[] prefixes = { "gl.", "gl.", "gl.", "GL43C." };
-    public static String[] constPrefixes = { "GLA.", "GLA.", "GLA.", "GL43C." };
+	public static String[] constPrefixes = { "GLA.", "GLA.", "GLA.", "GL43C." };
 	private static String[] vectorElements = { "x", "y", "z", "w" };
 
 	public static void main(String[] as) throws FileNotFoundException, IOException {
@@ -51,8 +51,8 @@ public class GenerateVariables {
 					String letter = baseType.substring(0, 1);
 					String jLetter = baseJavaType.substring(0, 1);
 					String glType = baseGlTypes[b];
-                    String prefix = prefixes[b];
-                    String constPrefix = constPrefixes[b];
+					String prefix = prefixes[b];
+					String constPrefix = constPrefixes[b];
 					String type = baseType;
 					String jType = baseJavaType;
 					String className = "Uniform";
@@ -130,7 +130,8 @@ public class GenerateVariables {
 								i, letter, bufferTypes[b]);
 					}
 					output += String.format("\t\tpublic String typeName() {\n\t\t\treturn \"%s\";\n\t\t}\n\n", type); //
-					output += String.format("\t\tpublic int typeId() {\n\t\t\treturn %s%s;\n\t\t}\n\n", constPrefix, glType); //
+					output += String.format("\t\tpublic int typeId() {\n\t\t\treturn %s%s;\n\t\t}\n\n", constPrefix,
+							glType); //
 					output += String.format("\t\tpublic int size() {\n\t\t\treturn %d;\n\t\t}\n\n",
 							baseTypeSizes[b] * i * j);
 
@@ -138,9 +139,9 @@ public class GenerateVariables {
 					glslTypes.put(type, className);
 					glTypes.put(constPrefix + glType, className);
 					jTypes.put(jType, className);
-					init += String.format("\n\t\ttype = new TypeDesc(%s%s, \"%s\", \"%s\", %s.class, %d, %d);\n", constPrefix, glType,
-							type, baseType, jType, i, j);
-					init += String.format("\t\tGL_TYPES.put(%s%s, type);\n",constPrefix, glType);
+					init += String.format("\n\t\ttype = new TypeDesc(%s%s, \"%s\", \"%s\", %s.class, %d, %d);\n",
+							constPrefix, glType, type, baseType, jType, i, j);
+					init += String.format("\t\tGL_TYPES.put(%s%s, type);\n", constPrefix, glType);
 					init += String.format("\t\tGLSL_TYPES.put(\"%s\", type);\n", type);
 					init += String.format("\t\tJOML_TYPES.put(%s.class, type);\n", jType);
 				}
@@ -192,11 +193,14 @@ public class GenerateVariables {
 		output += "\t\t}\n";
 		output += "\t}\n\n";
 
+		StringBuffer orig = new StringBuffer();
 		StringBuffer buf = new StringBuffer();
 		try (BufferedReader reader = new BufferedReader(new FileReader(as[0]))) {
 			boolean skip[] = { false };
 			String mainContent = init + output;
 			reader.lines().forEachOrdered((line) -> {
+				orig.append(line);
+				orig.append("\n");
 				if (line.contains("### BEGIN GENERATED CONTENT ###")) {
 					skip[0] = true;
 				} else if (line.contains("### END GENERATED CONTENT ###")) {
@@ -211,8 +215,16 @@ public class GenerateVariables {
 			});
 		}
 
-		try (PrintWriter writer = new PrintWriter(as[0])) {
-			writer.print(buf);
+		String oldSource = orig.toString();
+		String newSource = buf.toString();
+
+		if (oldSource.equals(newSource)) {
+			System.err.println(as[0] + " not changed");
+		} else {
+			try (PrintWriter writer = new PrintWriter(as[0])) {
+				System.err.println("Writing " + as[0]);
+				writer.print(buf);
+			}
 		}
 
 	}
