@@ -1,6 +1,7 @@
 package turtleduck.colors;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 import turtleduck.colors.Colors.Gamma;
@@ -435,6 +436,52 @@ public class ColorRGB implements Color {
         return ((r & 0xff) << 16) | ((g & 0xff) << 8) | ((b & 0xff) << 0) | ((a & 0xff) << 24);
     }
 
+    @Override
+    public void toARGB(ByteBuffer buf) {
+        int r = (int) (Gamma.gammaCompress(red) * 255);
+        int g = (int) (Gamma.gammaCompress(green) * 255);
+        int b = (int) (Gamma.gammaCompress(blue) * 255);
+        int a = (int) (alpha * 255);
+        buf.put((byte) (a & 0xff));
+        buf.put((byte) (r & 0xff));
+        buf.put((byte) (g & 0xff));
+        buf.put((byte) (b & 0xff));
+    }
+
+    @Override
+    public void toBGRA(ByteBuffer buf) {
+        int r = (int) (Gamma.gammaCompress(red) * 255);
+        int g = (int) (Gamma.gammaCompress(green) * 255);
+        int b = (int) (Gamma.gammaCompress(blue) * 255);
+        int a = (int) (alpha * 255);
+        buf.put((byte) (b & 0xff));
+        buf.put((byte) (g & 0xff));
+        buf.put((byte) (r & 0xff));
+        buf.put((byte) (a & 0xff));
+    }
+    @Override
+    public void toARGB(ByteBuffer buf, int index) {
+        int r = (int) (Gamma.gammaCompress(red) * 255);
+        int g = (int) (Gamma.gammaCompress(green) * 255);
+        int b = (int) (Gamma.gammaCompress(blue) * 255);
+        int a = (int) (alpha * 255);
+        buf.put(index, (byte) (a & 0xff));
+        buf.put(index+1, (byte) (r & 0xff));
+        buf.put(index+2, (byte) (g & 0xff));
+        buf.put(index+3, (byte) (b & 0xff));
+    }
+
+    @Override
+    public void toBGRA(ByteBuffer buf, int index) {
+        int r = (int) (Gamma.gammaCompress(red) * 255);
+        int g = (int) (Gamma.gammaCompress(green) * 255);
+        int b = (int) (Gamma.gammaCompress(blue) * 255);
+        int a = (int) (alpha * 255);
+        buf.put(index, (byte) (b & 0xff));
+        buf.put(index+1, (byte) (g & 0xff));
+        buf.put(index+2, (byte) (r & 0xff));
+        buf.put(index+3, (byte) (a & 0xff));
+    }
     @Override
     public Color writeTo(short[] data, int offset) {
         data[offset++] = MathUtil.toShortUNorm(red);

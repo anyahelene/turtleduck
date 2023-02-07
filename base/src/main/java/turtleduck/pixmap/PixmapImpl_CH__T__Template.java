@@ -1,10 +1,13 @@
-package turtleduck.bitmap;
+package turtleduck.pixmap;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer; // !i // !b
 import java.nio.IntBuffer; // i
 
 import org.joml.Vector4f; // G
+
+import turtleduck.colors.Color;
+import turtleduck.util.MathUtil;
 
 class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
 
@@ -156,8 +159,9 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
     public ByteBuffer byteBuffer() {
         return data;
     }
+
     @Override // !i // !b
-    public FloatBuffer floatBuffer() {  // !i // !b
+    public FloatBuffer floatBuffer() { // !i // !b
         return data.asFloatBuffer(); // !i // !b
     } // !i // !b
 
@@ -165,9 +169,56 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
     public IntBuffer intBuffer() { // i
         return data.asIntBuffer(); // i
     } // i
+
     @Override
     public int channels() {
         return channels;
+    }
+
+    @Override
+    public Color get(int x, int y) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pixmap_CH__T__Template set(int x, int y //
+            , float r // R
+            , float g // G
+            , float b // B
+            , float a// A
+    ) {
+        int idx = byteOffset(x, y);
+        data.putFloat(idx + 0 * BYTE_SIZE, r); // R
+        data.putFloat(idx + 1 * BYTE_SIZE, g); // G
+        data.putFloat(idx + 2 * BYTE_SIZE, b); // B
+        data.putFloat(idx + 3 * BYTE_SIZE, a); // A
+
+        return this;
+    }
+
+    @Override
+    public Pixmap_CH__T__Template set(int x, int y, Color c) {
+        int idx = byteOffset(x, y);
+        int col = c.toARGB(); // b
+        data.put(idx + 0 * BYTE_SIZE, (byte) ((col >> 16) & 0xff)); // R // b
+        data.put(idx + 1 * BYTE_SIZE, (byte) ((col >> 8) & 0xff)); // G // b
+        data.put(idx + 2 * BYTE_SIZE, (byte) ((col >> 0) & 0xff)); // B // b
+        data.put(idx + 3 * BYTE_SIZE, (byte) ((col >> 24) & 0xff)); // A // b
+        data.putFloat(idx + 0 * BYTE_SIZE, c.red()); // R // !b // !s // !i
+        data.putFloat(idx + 1 * BYTE_SIZE, c.green()); // G // !b // !s // !i
+        data.putFloat(idx + 2 * BYTE_SIZE, c.blue()); // B // !b // !s // !i
+        data.putFloat(idx + 3 * BYTE_SIZE, c.alpha()); // A // !b // !s // !i
+        data.putInt(idx + 0 * BYTE_SIZE, MathUtil.toIntUNorm(c.red())); // R // i
+        data.putInt(idx + 1 * BYTE_SIZE, MathUtil.toIntUNorm(c.green())); // G // i
+        data.putInt(idx + 2 * BYTE_SIZE, MathUtil.toIntUNorm(c.blue())); // B // i
+        data.putInt(idx + 3 * BYTE_SIZE, MathUtil.toIntUNorm(c.alpha())); // A // i
+        data.putShort(idx + 0 * BYTE_SIZE, MathUtil.toShortUNorm(c.red())); // R // s
+        data.putShort(idx + 1 * BYTE_SIZE, MathUtil.toShortUNorm(c.green())); // G // s
+        data.putShort(idx + 2 * BYTE_SIZE, MathUtil.toShortUNorm(c.blue())); // B // s
+        data.putShort(idx + 3 * BYTE_SIZE, MathUtil.toShortUNorm(c.alpha())); // A // s
+
+        return this;
     }
 
 // 1    public Pixmap_CH__T__Template map(PixelFunction_CH__T__Template fun) {

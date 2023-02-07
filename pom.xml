@@ -1,34 +1,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
 	<groupId>org.nuthatchery</groupId>
 	<artifactId>turtleduck</artifactId>
 	<version>0.1.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-
 	<name>TurtleDuck POM Parent</name>
 	<url>http://maven.apache.org</url>
+	<!--
 	<repositories>
 		<repository>
 			<id>turtleduck-maven</id>
 			<url>https://retting.ii.uib.no/api/v4/projects/17116/packages/maven</url>
 		</repository>
 	</repositories>
+	-->
 	<distributionManagement>
 		<repository>
 			<id>turtleduck-maven</id>
-			<url>https://retting.ii.uib.no/api/v4/projects/17116/packages/maven</url>
+			<url>https://retting.ii.uib.no/api/v4/projects/1716/packages/maven</url>
 		</repository>
 		<snapshotRepository>
 			<id>turtleduck-maven</id>
-			<url>https://retting.ii.uib.no/api/v4/projects/17116/packages/maven</url>
+			<url>https://retting.ii.uib.no/api/v4/projects/7116/packages/maven</url>
 		</snapshotRepository>
 		<!-- repository>
 			<id>internal</id>
 			<url>file://${project.build.directory}/repository</url>
 		</!repository -->
 	</distributionManagement>
-
 	<properties>
 		<project.java.version>17</project.java.version>
 		<maven.compiler.target>17</maven.compiler.target>
@@ -44,7 +43,6 @@
 		<jackson.version>2.12.3</jackson.version>
 		<turtleduck.version>0.1.1-SNAPSHOT</turtleduck.version>
 	</properties>
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -60,6 +58,11 @@
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>turtleduck-base</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>turtleduck-codegen</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -89,7 +92,6 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -113,8 +115,6 @@
 			<version>4.2.1</version>
 		</dependency-->
 	</dependencies>
-
-
 	<build>
 		<plugins>
 			<plugin>
@@ -280,11 +280,10 @@
 	</reporting>
 	<modules>
 		<module>anno</module>
+		<module>codegen</module>
 		<module>base</module>
 		<module>demo</module>
 		<module>shell</module>
 		<module>gl</module>
 	</modules>
-
-
 </project>

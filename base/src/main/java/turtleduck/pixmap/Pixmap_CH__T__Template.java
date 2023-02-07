@@ -1,6 +1,8 @@
-package turtleduck.bitmap;
+package turtleduck.pixmap;
 
 import org.joml.Vector4f; // G
+
+import turtleduck.colors.Color;
 
 /**
  * Interface for _TYPE_-pixmaps with _CH_ colour channels. // G
@@ -23,7 +25,8 @@ import org.joml.Vector4f; // G
 interface Pixmap_CH__T__Template extends FloatPixmap_Template {
 
     /**
-     * @return Number of channels (values per pixel) of the pixmap (always _CH_ for Pixmap_CH__T__Template).
+     * @return Number of channels (values per pixel) of the pixmap (always _CH_ for
+     *         Pixmap_CH__T__Template).
      */
     int channels();
 
@@ -39,6 +42,27 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * @return The value of channel ch at (x,y)
      */
     float get(int x, int y, int ch);
+
+    /**
+     * Read the color value at (x,y)
+     * 
+     * Color components interpreted as
+     * linear color values in single-precision float format (0.0–1.0) // f
+     * linear color values in double-precision float format (0.0–1.0) // d
+     * sRGB color values, as normalized unsigned bytes (0–255) // b
+     * linear color values, as normalized unsigned shorts (0–65535) // s
+     * linear color values, as normalized unsigned ints (0–(2^32-1)) // i
+     * 
+     * The green and blue channels will be set equal to the red channel, // 1
+     * and alpha channel will be 1.0 // 1
+     * The blue channel will be set to 0.0 and the alpha channel to 1.0 // 2
+     * The alpha channel will be set to 1.0 // 3
+     * 
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @return The color at (x,y)
+     */
+    Color get(int x, int y);
 
     /**
      * Read the value of the channel 0 (red) component // R
@@ -92,6 +116,43 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * @param value The new value for (x,y)
      */
     Pixmap_CH__T__Template set(int x, int y, int ch, float value);
+
+    /**
+     * Set the color value at (x,y)
+     * 
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param r Red component // R
+     * @param g Green component // G
+     * @param b Blue component // B
+     * @param a Alpha component // A
+     */
+    Pixmap_CH__T__Template set(int x, int y //
+            ,float r // R
+            ,float g // G
+            ,float b // B
+            ,float a// A
+    );
+
+    /**
+     * Set the color value at (x,y)
+     * 
+     * Color components are stored as
+     * linear color values in single-precision float format (0.0–1.0) // f
+     * linear color values in double-precision float format (0.0–1.0) // d
+     * sRGB color values, as normalized unsigned bytes (0–255) // b
+     * linear color values, as normalized unsigned shorts (0–65535) // s
+     * linear color values, as normalized unsigned ints (0–(2^32-1)) // i
+     * 
+     * The green, blue and alpha channels will be discarded // 1
+     * The blue and alpha channels will be discarded // 2
+     * The alpha channel will be discarded // 3
+     * 
+     * @param x     X coordinate
+     * @param y     Y coordinate
+     * @param color The color
+     */
+    Pixmap_CH__T__Template set(int x, int y, Color c);
 
     /**
      * Set the value of the channel 0 (red) component // R
@@ -149,6 +210,7 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * @param consumer A consumer, will receive (r,g,b,a) // 4
      */
     Pixmap_CH__T__Template foreach(PixelConsumer_CH__T__Template consumer);
+
     Pixmap_CH__T__Template foreach(PixelConsumer_T__Template consumer);
 
     /**

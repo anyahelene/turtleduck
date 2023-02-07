@@ -1,8 +1,10 @@
-package turtleduck.bitmap;
+package turtleduck.pixmap;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer; // !b // !i
 import java.nio.IntBuffer; // i
+
+import turtleduck.colors.Color;
 
 /**
  * Interface for _TYPE_-pixmaps with an unknown number of colour channels.
@@ -61,7 +63,39 @@ interface FloatPixmap_Template {
      * @return The value of channel ch at (x,y)
      */
     float get(int x, int y, int ch);
-
+    
+    /**
+     * Read the color value at (x,y)
+     * 
+     * Color components interpreted as
+     * linear color values in single-precision float format (0.0–1.0) // f
+     * linear color values in double-precision float format (0.0–1.0) // d
+     * sRGB color values, as normalized unsigned bytes (0–255) // b
+     * linear color values, as normalized unsigned shorts (0–65535) // s
+     * linear color values, as normalized unsigned ints (0–(2^32-1)) // i
+     * 
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @return The color at (x,y)
+     */
+    Color get(int x, int y);
+    
+    /**
+     * Set the color value at (x,y)
+     * 
+     * Color components are stored as
+     * linear color values in single-precision float format (0.0–1.0) // f
+     * linear color values in double-precision float format (0.0–1.0) // d
+     * sRGB color values, as normalized unsigned bytes (0–255) // b
+     * linear color values, as normalized unsigned shorts (0–65535) // s
+     * linear color values, as normalized unsigned ints (0–(2^32-1)) // i
+     * 
+     * 
+     * @param x     X coordinate
+     * @param y     Y coordinate
+     * @param color The color
+     */
+    FloatPixmap_Template set(int x, int y, Color c);
     /**
      * Set the value of a channel at (x,y)
      * 

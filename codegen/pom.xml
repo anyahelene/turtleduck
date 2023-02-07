@@ -6,12 +6,11 @@
 		<groupId>org.nuthatchery</groupId>
 		<artifactId>turtleduck</artifactId>
 		<version>0.1.1-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<properties></properties>
-	<artifactId>turtleduck-anno</artifactId>
+	<artifactId>turtleduck-codegen</artifactId>
 	<packaging>jar</packaging>
-	<name>TurtleDuck Annotations Library</name>
+	<name>TurtleDuck Code Generators</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.joml</groupId>
@@ -19,4 +18,9 @@
 			<version>${joml.version}</version>
 		</dependency>
 	</dependencies>
+	<build>
+		<plugins>
+
+		</plugins>
+	</build>
 </project>

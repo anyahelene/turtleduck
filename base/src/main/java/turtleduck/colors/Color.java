@@ -1,5 +1,6 @@
 package turtleduck.colors;
 
+import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 import turtleduck.annotations.Icon;
@@ -255,7 +256,7 @@ public interface Color {
      * @return a new colour with <code>alpha() == a</code>, and the other components
      *         changed accordingly
      */
-    //Color opacity(double a);
+    // Color opacity(double a);
 
     Color mix(Color other, double proportion);
 
@@ -383,4 +384,54 @@ public interface Color {
     }
 
     String toCssFunctional();
+
+    /**
+     * Write the color to a buffer as sRGB bytes
+     * 
+     * The color components are compressed from linear form to sRGB, alpha remains
+     * linear.
+     * 
+     * The byte order is ARGB (i.e., 0xaarrggbb in big endian order).
+     * 
+     * @param buf A byte buffer
+     */
+    void toARGB(ByteBuffer buf);
+
+    /**
+     * Write the color to a buffer as sRGB bytes
+     * 
+     * The color components are compressed from linear form to sRGB, alpha remains
+     * linear.
+     * 
+     * The byte order is BGRA (i.e., 0xaarrggbb in little endian order).
+     * 
+     * @param buf A byte buffer
+     */
+    void toBGRA(ByteBuffer buf);
+    
+    /**
+     * Write the color to a buffer as sRGB bytes
+     * 
+     * The color components are compressed from linear form to sRGB, alpha remains
+     * linear.
+     * 
+     * The byte order is ARGB (i.e., 0xaarrggbb in big endian order).
+     * 
+     * @param buf A byte buffer
+     * @param index byte index of first byte
+     */
+    void toARGB(ByteBuffer buf, int index);
+
+    /**
+     * Write the color to a buffer as sRGB bytes
+     * 
+     * The color components are compressed from linear form to sRGB, alpha remains
+     * linear.
+     * 
+     * The byte order is BGRA (i.e., 0xaarrggbb in little endian order).
+     * 
+     * @param buf A byte buffer
+     * @param index byte index of first byte
+     */
+    void toBGRA(ByteBuffer buf, int index);
 }
