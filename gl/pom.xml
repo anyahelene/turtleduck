@@ -9,6 +9,7 @@
 	<artifactId>turtleduck-gl</artifactId>
 	<packaging>jar</packaging>
 	<name>TurtleDuck OpenGL Backend</name>
+	<properties></properties>
 	<profiles>
 		<profile>
 			<id>lwjgl-natives-linux-amd64</id>
@@ -107,10 +108,6 @@
 			</properties>
 		</profile>
 	</profiles>
-	<properties>
-		<lwjgl.version>3.3.0</lwjgl.version>
-		<joml.version>1.9.25</joml.version>
-	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>

@@ -3,7 +3,9 @@ package turtleduck.gl.objects;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 
 import java.nio.file.Path;
@@ -13,7 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.io.File;
 import org.lwjgl.opengl.GL40C;
 
 import turtleduck.gl.FileWatcher;
@@ -23,7 +25,7 @@ import static turtleduck.gl.compat.GLA.*;
 
 public class ShaderObject {
     public static final Map<String, Integer> SHADER_TYPES;
-    static Path shaderPath;
+    static List<Path> shaderPath;
     static {
         Map<String, Integer> map = new HashMap<>();
         map.put("vertex", GL_VERTEX_SHADER);
@@ -34,47 +36,67 @@ public class ShaderObject {
         SHADER_TYPES = Collections.unmodifiableMap(map);
         String path = System.getenv("TD_SHADER_PATH");
         if (path == null)
-            path = "/turtleduck/gl/shaders/";
-        shaderPath = Path.of(path);
+            path = File.pathSeparator + "/turtleduck/gl/shaders/";
+        shaderPath = List.of(path.split(File.pathSeparator)).stream().map(s -> Path.of(s)).toList();
     }
 
     private final int type;
     private int id;
     private Path path;
+    private URL url;
     private String code;
     private boolean ready;
     private List<ShaderChangeListener> changeListeners = new ArrayList<>();
 
     private ShaderObject(String pathName, String code, int type) {
         this.type = type;
-        this.path = resolve(pathName);
+        resolve(pathName);
         this.code = code;
     }
 
-    public static Path resolve(String pathName) {
+    private void resolve(String pathName) {
         if (pathName == null)
-            return null;
-        Path p = shaderPath.resolve(pathName);
-        if (Files.isReadable(p))
-            return p;
-        URL url = ShaderObject.class.getResource(pathName);
-        if (url == null)
-            url = ShaderObject.class.getResource(shaderPath.resolve(pathName).toString());
-        if (url != null) {
-            try {
-                return Path.of(url.toURI());
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
+            return;
+        // if we find an actual file in the file system, use that (enables file watching)
+        for (Path dir : shaderPath) {
+            Path p = dir.resolve(pathName);
+            if (Files.isReadable(p)) {
+                path = p;
+                return;
             }
         }
-        return Path.of(pathName);
+        // otherwise we'll read the shader as a resource (probably from a jar file)
+        for (Path dir : shaderPath) {
+            URL url = ShaderObject.class.getResource(dir.resolve(pathName).toString());
+            if (url != null) {
+                System.out.println(pathName + ", " + url + ", " + url.getProtocol());
+                if (url.getProtocol().equals("file")) {
+                    try {
+                        path = Path.of(url.toURI());
+                        return;
+                    } catch (URISyntaxException e) {
+                        e.printStackTrace();
+                    }
+                }
+                this.url = url;
+                return;
+            }
+        }
     }
 
     private boolean load() throws IOException {
         if (path != null) {
-            String newCode = Files.readString(shaderPath.resolve(path));
+            String newCode = Files.readString(path);
             if (!newCode.equals(code)) {
                 System.err.printf("Loaded shader source: %s%n", path);
+                code = newCode;
+                return true;
+            }
+        } else if (url != null) {
+            ByteBuffer buffer = Util.urlToByteBuffer(url, 8192);
+            String newCode = Charset.defaultCharset().decode(buffer).toString();
+            if (!newCode.equals(code)) {
+                System.err.printf("Loaded shader source: %s%n", url);
                 code = newCode;
                 return true;
             }
