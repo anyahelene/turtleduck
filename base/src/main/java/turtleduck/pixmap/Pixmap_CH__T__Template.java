@@ -1,6 +1,9 @@
 package turtleduck.pixmap;
 
+import java.nio.ByteBuffer;
+
 import org.joml.Vector4f; // G
+import org.joml.Vector4fc; // G
 
 import turtleduck.colors.Color;
 
@@ -24,6 +27,14 @@ import turtleduck.colors.Color;
  */
 interface Pixmap_CH__T__Template extends FloatPixmap_Template {
 
+    static Pixmap_CH__T__Template create(int width, int height) {
+        return new PixmapImpl_CH__T__Template(width, height, null);
+    }
+
+    static Pixmap_CH__T__Template create(int width, int height, ByteBuffer data) {
+        return new PixmapImpl_CH__T__Template(width, height, data);
+    }
+
     /**
      * @return Number of channels (values per pixel) of the pixmap (always _CH_ for
      *         Pixmap_CH__T__Template).
@@ -41,7 +52,7 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * @param ch The channel (0–3) // 4
      * @return The value of channel ch at (x,y)
      */
-    float get(int x, int y, int ch);
+    float getChannel(int x, int y, int ch);
 
     /**
      * Read the color value at (x,y)
@@ -62,7 +73,18 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * @param y Y coordinate
      * @return The color at (x,y)
      */
-    Color get(int x, int y);
+    Color getColor(int x, int y);
+
+    /**
+     * Read the value at (x, y)
+     * 
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @return The value at (x,y)
+     */
+    Vector4f // G
+    // 1 float
+    get(int x, int y);
 
     /**
      * Read the value of the channel 0 (red) component // R
@@ -115,7 +137,7 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * @param ch    The channel (0–3) // 4
      * @param value The new value for (x,y)
      */
-    Pixmap_CH__T__Template set(int x, int y, int ch, float value);
+    Pixmap_CH__T__Template setChannel(int x, int y, int ch, float value);
 
     /**
      * Set the color value at (x,y)
@@ -128,11 +150,20 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * @param a Alpha component // A
      */
     Pixmap_CH__T__Template set(int x, int y //
-            ,float r // R
-            ,float g // G
-            ,float b // B
-            ,float a// A
+            , float r // R
+            , float g // G
+            , float b // B
+            , float a// A
     );
+
+    /**
+     * Set the value at (x,y)
+     * 
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param v value
+     */
+    Pixmap_CH__T__Template set(int x, int y, Vector4fc v); // G
 
     /**
      * Set the color value at (x,y)
@@ -152,7 +183,7 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * @param y     Y coordinate
      * @param color The color
      */
-    Pixmap_CH__T__Template set(int x, int y, Color c);
+    Pixmap_CH__T__Template setColor(int x, int y, Color c);
 
     /**
      * Set the value of the channel 0 (red) component // R
@@ -199,7 +230,7 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      * 
      * @param consumer A consumer, will receive (this bitmap, x, y)
      */
-    Pixmap_CH__T__Template foreachLocation(LocationConsumer consumer);
+    Pixmap_CH__T__Template foreachLocation(LocationConsumer_CH__T__Template consumer);
 
     /**
      * Do something for each value in the bitmap
@@ -220,12 +251,16 @@ interface Pixmap_CH__T__Template extends FloatPixmap_Template {
      */
     Pixmap_CH__T__Template map(PixelFunction_CH__T__Template fun);
 
+    public interface LocationConsumer_CH__T__Template {
+        void accept(Pixmap_CH__T__Template bitmap, int x, int y);
+    }
+
     public interface PixelFunction_CH__T__Template { // G
-        Vector4f apply(Vector4f p);// G
+        Vector4f apply(int x, int y, Vector4f p);// G
     }// G
 
 // 1    public interface PixelFunction_CH__T__Template {
-// 1        float apply(float x);
+// 1        float apply(int x, int y, float r);
 // 1    }
 
     public interface PixelConsumer_CH__T__Template {

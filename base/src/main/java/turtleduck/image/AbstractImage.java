@@ -75,6 +75,7 @@ public abstract class AbstractImage implements Image {
 
 	@Override
 	public Color readPixel(double x, double y) {
+	    // TODO: interpolation
 		return readPixel((int) Math.round(x), (int) Math.round(y));
 	}
 

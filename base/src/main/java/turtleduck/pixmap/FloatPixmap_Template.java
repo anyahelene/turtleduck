@@ -23,8 +23,15 @@ import turtleduck.colors.Color;
  * @author anya
  *
  */
-interface FloatPixmap_Template {
+interface FloatPixmap_Template extends Pixmap {
     Class<Float> DATA_TYPE = Float.class;
+
+    // R static FloatPixmap_Template create(int width, int height, int depth) {
+    // R return Pixmap.createFloatPixmap_Template(width, height, depth);
+    // R }
+    // R static FloatPixmap_Template create(int width, int height, int depth, ByteBuffer data) {
+    // R return Pixmap.createFloatPixmap_Template(width, height, depth, data);
+    // R }
 
     /**
      * Find the buffer byte offset of particular pixel.
@@ -62,8 +69,8 @@ interface FloatPixmap_Template {
      * @param ch The channel
      * @return The value of channel ch at (x,y)
      */
-    float get(int x, int y, int ch);
-    
+    float getChannel(int x, int y, int ch);
+
     /**
      * Read the color value at (x,y)
      * 
@@ -78,8 +85,8 @@ interface FloatPixmap_Template {
      * @param y Y coordinate
      * @return The color at (x,y)
      */
-    Color get(int x, int y);
-    
+    Color getColor(int x, int y);
+
     /**
      * Set the color value at (x,y)
      * 
@@ -95,7 +102,8 @@ interface FloatPixmap_Template {
      * @param y     Y coordinate
      * @param color The color
      */
-    FloatPixmap_Template set(int x, int y, Color c);
+    FloatPixmap_Template setColor(int x, int y, Color c);
+
     /**
      * Set the value of a channel at (x,y)
      * 
@@ -104,7 +112,7 @@ interface FloatPixmap_Template {
      * @param ch    The channel
      * @param value The new value for (x,y)
      */
-    FloatPixmap_Template set(int x, int y, int ch, float value);
+    FloatPixmap_Template setChannel(int x, int y, int ch, float value);
 
     /**
      * Do something for each location in the bitmap
@@ -114,17 +122,29 @@ interface FloatPixmap_Template {
     FloatPixmap_Template foreachLocation(LocationConsumer consumer);
 
     /**
+     * Do something for each location in the bitmap
+     * 
+     * @param consumer A consumer, will receive (this bitmap, x, y)
+     */
+    FloatPixmap_Template foreachLocation(LocationConsumer_T__Template consumer);
+
+    /**
      * Do something for each value in the bitmap.
      * 
      * The consumer should not store a reference to the array – the array will be
      * reused for the next call, so this is unsafe.
      * 
-     * @param consumer A consumer, will receive an array of {@link #channels()} elements.
+     * @param consumer A consumer, will receive an array of {@link #channels()}
+     *                 elements.
      */
     FloatPixmap_Template foreach(PixelConsumer_T__Template consumer);
 
     public interface PixelConsumer_T__Template {
         void accept(int x, int y, float[] pixel);
+    }
+
+    public interface LocationConsumer_T__Template {
+        void accept(FloatPixmap_Template bitmap, int x, int y);
     }
 
     /**
@@ -139,10 +159,7 @@ interface FloatPixmap_Template {
      */
     ByteBuffer byteBuffer();
 
-    public interface LocationConsumer {
-        void accept(FloatPixmap_Template bitmap, int x, int y);
-    }
-
     FloatBuffer floatBuffer(); // !b // !i
+
     IntBuffer intBuffer(); // i
 }

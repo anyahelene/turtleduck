@@ -5,9 +5,10 @@ import java.nio.FloatBuffer; // !i // !b
 import java.nio.IntBuffer; // i
 
 import org.joml.Vector4f; // G
+import org.joml.Vector4fc; // G
 
 import turtleduck.colors.Color;
-import turtleduck.util.MathUtil;
+import turtleduck.util.MathUtil; // !f // !b
 
 class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
 
@@ -15,21 +16,25 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
     private ByteBuffer data;
     private final int width;
     private final int height;
-    private final int channels;
+// 1    private static final int channels = 1;
+// 2    private static final int channels = 2;
+// 3    private static final int channels = 3;
+    private static final int channels = 4; // 4
 
-    public PixmapImpl_CH__T__Template(int width, int height, int channels, ByteBuffer data) {
+    public PixmapImpl_CH__T__Template(int width, int height, ByteBuffer data) {
         super();
+        if (data == null)
+            data = ByteBuffer.allocate(width * height * channels * BYTE_SIZE);
         this.data = data;
         this.width = width;
         this.height = height;
-        this.channels = channels;
     }
 
     public int byteOffset(int x, int y) {
         return (x + y * width) * channels * BYTE_SIZE;
     }
 
-    public float get(int x, int y, int ch) {
+    public float getChannel(int x, int y, int ch) {
         int idx = byteOffset(x, y);
         return data.getFloat(idx + ch * BYTE_SIZE);
     }
@@ -54,7 +59,7 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
         return data.getFloat(idx + 3 * BYTE_SIZE); // A
     } // A
 
-    public Pixmap_CH__T__Template set(int x, int y, int ch, float value) {
+    public Pixmap_CH__T__Template setChannel(int x, int y, int ch, float value) {
         int idx = byteOffset(x, y);
         data.putFloat(idx + ch * BYTE_SIZE, value);
         return this;
@@ -93,6 +98,24 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
         return this;
     }
 
+    public Pixmap_CH__T__Template foreachLocation(LocationConsumer_CH__T__Template consumer) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                consumer.accept(this, x, y);
+            }
+        }
+        return this;
+    }
+
+    public Pixmap_CH__T__Template foreachLocation(LocationConsumer_T__Template consumer) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                consumer.accept(this, x, y);
+            }
+        }
+        return this;
+    }
+
     public Pixmap_CH__T__Template foreach(PixelConsumer_CH__T__Template consumer) {
         for (int i = 0, y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -123,19 +146,44 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
         return this;
     }
 
+    public Pixmap_CH__T__Template foreach(ColorPixelConsumer consumer) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color c = getColor(x, y);
+                consumer.accept(x, y, c);
+
+            }
+        }
+        return this;
+    }
+
+    public Pixmap_CH__T__Template map(ColorPixelFunction fun) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color c = getColor(x, y);
+                Color d = fun.apply(x, y, c);
+                if (c != d)
+                    setColor(x, y, d);
+            }
+        }
+        return this;
+    }
+
     public Pixmap_CH__T__Template map(PixelFunction_CH__T__Template fun) { // G
         Vector4f p = new Vector4f(); // G
-        int len = width * height * channels * BYTE_SIZE; // G
-        for (int i = 0; i < len; i += channels * BYTE_SIZE) { // G
-            p.x = data.getFloat(i + 0 * BYTE_SIZE); // G
-            p.y = data.getFloat(i + 1 * BYTE_SIZE); // G
-            p.z = data.getFloat(i + 2 * BYTE_SIZE); // B
-            p.w = data.getFloat(i + 3 * BYTE_SIZE); // A
-            Vector4f q = fun.apply(p); // G
-            data.putFloat(i + 0 * BYTE_SIZE, (float) q.x); // G
-            data.putFloat(i + 1 * BYTE_SIZE, (float) q.y); // G
-            data.putFloat(i + 2 * BYTE_SIZE, (float) q.z); // B
-            data.putFloat(i + 3 * BYTE_SIZE, (float) q.w); // A
+        for (int i = 0, y = 0; y < height; y++) {// G
+            for (int x = 0; x < width; x++) { // G
+                p.x = data.getFloat(i + 0 * BYTE_SIZE); // G
+                p.y = data.getFloat(i + 1 * BYTE_SIZE); // G
+                p.z = data.getFloat(i + 2 * BYTE_SIZE); // B
+                p.w = data.getFloat(i + 3 * BYTE_SIZE); // A
+                Vector4f q = fun.apply(x, y, p); // G
+                data.putFloat(i + 0 * BYTE_SIZE, (float) q.x); // G
+                data.putFloat(i + 1 * BYTE_SIZE, (float) q.y); // G
+                data.putFloat(i + 2 * BYTE_SIZE, (float) q.z); // B
+                data.putFloat(i + 3 * BYTE_SIZE, (float) q.w); // A
+                i += channels * BYTE_SIZE; // G
+            } // G
         } // G
         return this; // G
     } // G
@@ -176,7 +224,7 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
     }
 
     @Override
-    public Color get(int x, int y) {
+    public Color getColor(int x, int y) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -198,7 +246,31 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
     }
 
     @Override
-    public Pixmap_CH__T__Template set(int x, int y, Color c) {
+    public Pixmap_CH__T__Template set(int x, int y, Vector4fc v) { // G
+        int idx = byteOffset(x, y); // G
+        data.putFloat(idx + 0 * BYTE_SIZE, (float) v.x()); // G
+        data.putFloat(idx + 1 * BYTE_SIZE, (float) v.y()); // G
+        data.putFloat(idx + 2 * BYTE_SIZE, (float) v.z()); // B
+        data.putFloat(idx + 3 * BYTE_SIZE, (float) v.w()); // A
+        // G
+        return this; // G
+    } // G
+
+    // 1 public float
+    public Vector4f // G
+            get(int x, int y) {
+        int idx = byteOffset(x, y);
+        Vector4f p = new Vector4f(); // G
+        p.x = data.getFloat(idx + 0 * BYTE_SIZE); // G
+        p.y = data.getFloat(idx + 1 * BYTE_SIZE); // G
+        p.z = data.getFloat(idx + 2 * BYTE_SIZE); // B
+        p.w = data.getFloat(idx + 3 * BYTE_SIZE); // A
+        return p; // G
+        // 1 return data.getFloat(idx);
+    }
+
+    @Override
+    public Pixmap_CH__T__Template setColor(int x, int y, Color c) {
         int idx = byteOffset(x, y);
         int col = c.toARGB(); // b
         data.put(idx + 0 * BYTE_SIZE, (byte) ((col >> 16) & 0xff)); // R // b
@@ -222,9 +294,11 @@ class PixmapImpl_CH__T__Template implements Pixmap_CH__T__Template {
     }
 
 // 1    public Pixmap_CH__T__Template map(PixelFunction_CH__T__Template fun) {
-// 1        int len = width * height * channels * BYTE_SIZE;
-// 1        for (int i = 0; i < len; i += channels * BYTE_SIZE) {
-// 1            data.putFloat(i, fun.apply(data.getFloat(i)));
+// 1       for (int i = 0, y = 0; y < height; y++) {
+// 1          for (int x = 0; x < width; x++) {
+// 1              data.putFloat(i, fun.apply(x, y, data.getFloat(i)));
+// 1              i += channels * BYTE_SIZE;
+// 1            }
 // 1        }
 // 1        return this;
 // 1    } 
