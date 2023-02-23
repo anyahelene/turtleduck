@@ -34,3 +34,6 @@ deploy
 .classpath
 *.junk
 .externalToolBuilders
+*.launch
+*.code-workspace
+error-log.txt
