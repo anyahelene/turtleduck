@@ -6,27 +6,18 @@
 	<packaging>pom</packaging>
 	<name>TurtleDuck POM Parent</name>
 	<url>http://maven.apache.org</url>
-	<!--
 	<repositories>
 		<repository>
 			<id>turtleduck-maven</id>
-			<url>https://retting.ii.uib.no/api/v4/projects/17116/packages/maven</url>
+			<url>https://puffling.no/maven/</url>
 		</repository>
 	</repositories>
-	-->
 	<distributionManagement>
 		<repository>
-			<id>turtleduck-maven</id>
-			<url>https://retting.ii.uib.no/api/v4/projects/1716/packages/maven</url>
-		</repository>
-		<snapshotRepository>
-			<id>turtleduck-maven</id>
-			<url>https://retting.ii.uib.no/api/v4/projects/7116/packages/maven</url>
-		</snapshotRepository>
-		<!-- repository>
 			<id>internal</id>
-			<url>file://${project.build.directory}/repository</url>
-		</!repository -->
+			<name>Staging area</name>
+			<url>file://${project.build.directory}/m2</url>
+		</repository>
 	</distributionManagement>
 	<properties>
 		<project.java.version>17</project.java.version>
@@ -35,13 +26,14 @@
 		<maven.compiler.release>17</maven.compiler.release>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<junit.jupiter.version>5.5.2</junit.jupiter.version>
+		<junit.jupiter.version>5.9.2</junit.jupiter.version>
 		<teavm.version>0.6.1</teavm.version>
-		<slf4j.version>1.7.30</slf4j.version>
+		<slf4j.version>2.0.6</slf4j.version>
 		<vertx.version>4.0.0.CR1</vertx.version>
-		<joml.version>1.9.25</joml.version>
+		<joml.version>1.10.5</joml.version>
 		<jackson.version>2.12.3</jackson.version>
 		<turtleduck.version>0.1.1-SNAPSHOT</turtleduck.version>
+		<lwjgl.version>3.3.1</lwjgl.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>

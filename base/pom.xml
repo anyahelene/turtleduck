@@ -69,9 +69,11 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
+					<!--
 					<excludes>
 						<exclude>**/*_Template.java</exclude>
 					</excludes>
+					-->
 					<generatedSourcesDirectory>${project.build.directory}/generated-sources/</generatedSourcesDirectory>
 					<annotationProcessorPaths>
 						<annotationProcessorPath>
