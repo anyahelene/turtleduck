@@ -3,6 +3,8 @@ package turtleduck.colors;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
+import org.joml.Vector3d;
+
 import turtleduck.annotations.Icon;
 
 @Icon("🎨")
@@ -88,6 +90,10 @@ public interface Color {
         return format.decode(bytes, offset);
     }
 
+    static Color fromXYZ(double x, double y, double z, WhitePoint wp) {
+        Vector3d rgb = wp.transformXYZtoRGB(new Vector3d(x, y, z));
+        return new ColorRGB((float) rgb.x, (float) rgb.y, (float) rgb.z, 1f, true);
+    }
     /**
      * Create a new grey color
      * 
